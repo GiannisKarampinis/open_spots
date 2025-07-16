@@ -1,0 +1,46 @@
+/* venue_list.css - styles for venue list page */
+
+.venue-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    padding: 20px;
+    gap: 20px;
+    scroll-snap-type: x mandatory;
+}
+
+.venue-card {
+    background-color: #2a2a2a;
+    border-radius: 10px;
+    padding: 20px;
+    width: 300px;
+    flex: 0 0 auto;
+    color: white;
+    scroll-snap-align: start;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.venue-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.venue-card h3 {
+    margin: 10px 0 5px;
+}
+
+.venue-card a {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #555;
+    border-radius: 5px;
+    color: white;
+    text-decoration: none;
+}
+
+.venue-card a:hover {
+    background-color: #777;
+}

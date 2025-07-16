@@ -1,0 +1,61 @@
+{% extends "includes/base.html" %}
+{% load static %}
+
+{% block title %}Verify Email{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'accounts/verify_code.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="verification-container">
+  <h2>Verify Your Email</h2>
+  <p>Please enter the 6-digit code we sent to your email address.</p>
+
+  <form method="post" class="verification-form">
+    {% csrf_token %}
+    <input type="text" name="code" maxlength="6" required pattern="\d{6}" placeholder="Enter 6-digit code" autofocus>
+    <button type="submit">Verify</button>
+  </form>
+
+  <form method="post" action="{% url 'resend_code' %}" style="margin-top: 1em;">
+    {% csrf_token %}
+    <button type="submit" class="resend-button">Resend Code</button>
+  </form>
+</div>
+
+{% if remaining_seconds %}
+<div id="countdown">
+  Verification code expires in <span id="timer">{{ remaining_seconds }}</span> seconds.
+  <div id="countdown-bar-bg">
+    <div id="countdown-bar-fill"></div>
+  </div>
+</div>
+
+<script>
+  const timer           = document.getElementById("timer");
+  const barFill         = document.getElementById("countdown-bar-fill");
+  let seconds           = parseInt(timer.innerText);
+  const totalSeconds    = seconds;
+
+  const interval = setInterval(() => {
+    seconds--;
+    timer.innerText = seconds;
+
+    // Update bar width percentage
+    let percent = (seconds / totalSeconds) * 100;
+    barFill.style.width = percent + "%";
+
+    if (seconds <= 0) {
+      clearInterval(interval);
+      document.getElementById("countdown").innerText = "Verification code has expired.";
+
+      setTimeout(() => {
+        window.location.href = "{% url 'confirm_code' %}";
+      }, 2000);
+    }
+  }, 1000);
+</script>
+{% endif %}
+
+{% endblock %}

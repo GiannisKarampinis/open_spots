@@ -1,0 +1,39 @@
+{% extends "includes/base.html" %}
+{% load static %}
+{% load socialaccount %}
+
+{% block title %}Login{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'accounts/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <h2>Welcome Back</h2>
+
+    <div class="google-login-container">
+        <a href="{% provider_login_url 'google' method='oauth2' process='login' %}" class="google-login-link" aria-label="Login with Google">
+            <img src="{% static 'accounts/google-icon.svg' %}" alt="Google logo" class="google-icon">
+            Login with Google
+        </a>
+    </div>
+
+    <div class="divider"><span>or</span></div>
+
+    <form method="post" class="login-form">
+        {% csrf_token %}
+        <label for="id_username">Username</label>
+        {{ form.username }}
+        
+        <label for="id_password">Password</label>
+        {{ form.password }}
+        
+        <input type="submit" value="Login" class="btn primary-btn">
+    </form>
+
+    <p class="signup-prompt">
+        Don't have an account? <a href="{% url 'signup' %}">Sign up</a>
+    </p>
+</div>
+{% endblock %}

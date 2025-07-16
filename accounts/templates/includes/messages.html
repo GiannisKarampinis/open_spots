@@ -1,0 +1,10 @@
+{% if messages %}
+  <div class="messages-container">
+    {% for message in messages %}
+      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} fade-message">
+        {{ message }}
+        <span class="close-btn" onclick="this.parentElement.style.display='none';">&times;</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

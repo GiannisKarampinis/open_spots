@@ -1,0 +1,19 @@
+{% extends "includes/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'venues/book_venue.css' %}">
+{% endblock %}
+
+{% block title %}Book at {{ venue.name }}{% endblock %}
+
+{% block content %}
+<div class="booking-container">
+    <h2>Book a Table at {{ venue.name }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Confirm Booking</button>
+    </form>
+</div>
+{% endblock %}

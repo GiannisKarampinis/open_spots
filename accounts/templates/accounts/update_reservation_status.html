@@ -1,0 +1,22 @@
+{% extends "includes/base.html" %}
+
+{% block title %}Update Reservation Status{% endblock %}
+
+{% block content %}
+<h2>Update Status for Reservation</h2>
+
+<p><strong>Reservation:</strong> {{ reservation.name }} at {{ reservation.venue.name }} on {{ reservation.date }} at {{ reservation.time }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    <label for="status">Select new status:</label>
+    <select id="status" name="status">
+        {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if reservation.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn">Update</button>
+    <a href="{% url 'venue_dashboard' %}">Cancel</a>
+</form>
+
+{% endblock %}

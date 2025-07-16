@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Cancel Reservation{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-8 p-6 bg-white rounded shadow">
+    <h2 class="text-xl font-semibold mb-4">Cancel Reservation</h2>
+    <p>Are you sure you want to cancel your reservation at <strong>{{ reservation.venue.name }}</strong> on <strong>{{ reservation.date }}</strong> at <strong>{{ reservation.time }}</strong>?</p>
+
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Yes, Cancel</button>
+        <a href="{% url 'my_reservations' %}" class="ml-4 text-blue-600">No, go back</a>
+    </form>
+</div>
+{% endblock %}

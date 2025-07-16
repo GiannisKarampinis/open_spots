@@ -1,0 +1,202 @@
+/* Reset & base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1c1c1c;
+    color: #f1f1f1;
+    line-height: 1.6;
+}
+
+/* Links */
+a {
+    color: #aaa;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+/* Scoped block display + margin only for links inside main content */
+.main-content a {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* Header */
+header {
+    background-color: #2a2a2a;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.site-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #eee;
+}
+
+/* Navigation */
+.main-nav a {
+    color: #ddd;
+    font-weight: 600;
+}
+
+.main-nav a:hover {
+    color: #fff;
+}
+
+/* Dropdown Menu */
+.user-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.user-menu-btn {
+    background: none;
+    border: none;
+    color: #ddd;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Main & Footer */
+main {
+    padding: 40px 30px;
+    max-width: 900px;
+    margin: auto;
+}
+
+footer {
+    background-color: #2a2a2a;
+    text-align: center;
+    padding: 20px 0;
+    color: #888;
+    font-size: 0.9rem;
+    margin-top: 40px;
+}
+
+/* Triangle arrow animation */
+.triangle {
+    display: inline-block;
+    margin-left: 5px;
+    transition: transform 0.3s ease;
+}
+
+.triangle.rotate {
+    transform: rotate(180deg);
+}
+
+.user-dropdown {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: #2a2a2a;
+    min-width: 180px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    border-radius: 5px;
+    z-index: 1000;
+    padding: 5px 0;
+}
+
+.user-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Style both links and logout button the same way */
+.user-dropdown a,
+.logout-form .logout-link {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    color: #ccc;
+    padding: 12px 16px;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    line-height: 1.5;
+    vertical-align: middle;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.user-dropdown a:hover,
+.logout-form .logout-link:hover {
+    background-color: #444;
+    color: #fff;
+    text-decoration: none;
+}
+
+.dashboard-link {
+    margin-right: 15px;
+    font-weight: bold;
+    color: #007bff;
+    text-decoration: none;
+}
+.dashboard-link:hover {
+    text-decoration: underline;
+}
+
+/* Error messages under fields */
+ul.errorlist {
+    list-style: none;
+    padding: 0;
+    margin: -10px 0 10px;
+    color: #ff4d4f;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* Flash messages (non-field) */
+.flash-messages {
+    margin-bottom: 20px;
+}
+
+.flash-message {
+    padding: 12px 18px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+/* Different colors based on message type */
+.flash-message.error {
+    background-color: #ff4d4f;
+    color: white;
+}
+
+.flash-message.success {
+    background-color: #28a745;
+    color: white;
+}
+
+.flash-message.warning {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.flash-message.info {
+    background-color: #17a2b8;
+    color: white;
+}

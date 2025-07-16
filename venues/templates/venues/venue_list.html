@@ -1,0 +1,29 @@
+{% extends "includes/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'venues/venue_list.css' %}">
+{% endblock %}
+
+{% block title %}Browse Venues{% endblock %}
+{% block content %}
+<h2 style="text-align:center;">Book a Venue</h2>
+
+<div class="venue-scroll-container">
+    {% for venue in venues %}
+        <div class="venue-card">
+            {% if venue.image %}
+                <img src="{{ venue.image.url }}" alt="{{ venue.name }}">
+            {% endif %}
+            <h3>{{ venue.name }}</h3>
+            <p><strong>Type:</strong> {{ venue.get_kind_display }}</p>
+            <p><strong>Location:</strong> {{ venue.location }}</p>
+            <p><strong>Available Tables:</strong> {{ venue.available_tables }}</p>
+            <p><strong>Rating:</strong> {{ venue.average_rating }}</p>
+            <a href="{% url 'book_venue' venue.id %}">Book now</a>
+        </div>
+    {% empty %}
+        <p>No venues available.</p>
+    {% endfor %}
+</div>
+{% endblock %}

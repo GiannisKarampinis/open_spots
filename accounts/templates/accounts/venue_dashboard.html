@@ -1,0 +1,66 @@
+{% extends "includes/base.html" %}
+{% load static %}
+
+{% block title %}Venue Dashboard{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'accounts/venue_dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h2>Welcome, {{ user.username }} — Your Venue Dashboard</h2>
+
+    {% if venues %}
+        <div class="dashboard-section">
+            <h3>Your Venues</h3>
+            {% for venue in venues %}
+                <div class="venue-box">
+                    <p><strong>Name:</strong> {{ venue.name }}</p>
+                    <p><strong>Type:</strong> {{ venue.get_kind_display }}</p>
+                    <p><strong>Location:</strong> {{ venue.location }}</p>
+                    <p><strong>Capacity:</strong> {{ venue.capacity }}</p>
+                    <p><strong>Available Tables:</strong> {{ venue.available_tables }}</p>
+                    <p><strong>Average Rating:</strong> {{ venue.average_rating }}</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="dashboard-section">
+            <h3>Bookings</h3>
+            {% if bookings %}
+                <ul>
+                {% for booking in bookings %}
+                    <li>
+                        {{ booking.user.username }} — {{ booking.venue.name }} on {{ booking.date }} at {{ booking.time }} for {{ booking.num_people }} people
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p>No bookings yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-section">
+            <h3>Reservations</h3>
+            {% if reservations %}
+                <ul>
+                {% for reservation in reservations %}
+                    <li>
+                        {{ reservation.name }} ({{ reservation.email }}) — {{ reservation.venue.name }} on {{ reservation.date }} at {{ reservation.time }} ({{ reservation.status }})
+                        {% if user == reservation.venue.owner %}
+                            - <a href="{% url 'update_reservation_status' reservation.id %}">Edit Status</a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p>No reservations yet.</p>
+            {% endif %}
+        </div>
+
+    {% else %}
+        <p>You don't have any venues yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

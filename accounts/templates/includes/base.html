@@ -1,0 +1,99 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    
+    <title>{% block title %}OpenSpots{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{% static 'accounts/base.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/messages.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <header>
+        <h1><a href="{% url 'venue_list' %}" class="site-title">OpenSpots</a></h1>
+        <nav class="main-nav">
+            {% if user.is_authenticated %}
+                <div class="user-menu">
+                     {% if user.user_type == 'venue_admin' %}
+                        <a href="{% url 'venue_dashboard' %}" class="dashboard-link">Dashboard</a>
+                    {% endif %}
+                    
+                    <button class="user-menu-btn" id="userMenuBtn">
+                        {{ user.username }} 
+                        <span class="triangle">&#x25BC;</span>
+                    </button>
+                    
+                    <div class="user-dropdown" id="userDropdown" role="menu" aria-labelledby="userMenuBtn">
+                        <a href="{% url 'profile' %}" role="menuitem">Profile</a>
+
+                        <form method="post" action="{% url 'logout' %}" class="logout-form" role="none">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-link" role="menuitem">Logout</button>
+                        </form>
+                    </div>
+
+                </div>
+            {% else %}
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'login' %}" class="nav-link">Login</a>
+                    <span class="separator">|</span>
+                    <a href="{% url 'signup' %}" class="nav-link">Sign Up</a>
+                {% endif %}
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        {% include 'includes/messages.html' %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        &copy; 2025 OpenSpots. All rights reserved.
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('userMenuBtn');
+            const dropdown = document.getElementById('userDropdown');
+            const triangle = btn.querySelector('.triangle');
+
+            if (btn && dropdown) {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('show');
+                    triangle.classList.toggle('rotate');
+                });
+
+                document.addEventListener('click', () => {
+                    dropdown.classList.remove('show');
+                    triangle.classList.remove('rotate');
+                });
+
+                dropdown.addEventListener('click', e => e.stopPropagation());
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const alerts = document.querySelectorAll('.fade-message');
+            alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.style.display = 'none', 600);
+            }, 2000);
+            });
+        });
+
+    </script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,166 @@
+/* Container for the entire login form area */
+.login-container {
+    background-color: #2a2a2a;        /* Dark gray background */
+    padding: 40px;        /* Padding inside the box, more at bottom */
+    border-radius: 10px;                /* Rounded corners */
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.12); /* Soft white glow */
+    max-width: 500px;                   /* Max width of the container */
+    margin: 60px auto;                  /* Center horizontally with top margin */
+    color: white;                     /* Text color inside container */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean readable font */
+}
+
+
+/* Header/title inside login container */
+.login-container h2 {
+    text-align: center;                 /* Centered heading */
+    margin-bottom: 30px;                /* Space below heading */
+    font-weight: 700;                   /* Bold font weight */
+    font-size: 2rem;                    /* Large font size */
+    color: #eee;                      /* Light gray color */
+}
+
+/* Google Login Button Styling */
+.google-login-link {
+    display: inline-flex;               /* Inline flexbox for icon + text */
+    align-items: center;                /* Vertically center contents */
+    padding: 8px 15px;                  /* Inner padding */
+    background-color: #4285f4;        /* Google blue */
+    color: white;                     /* Text color */
+    font-weight: 600;                   /* Semi-bold */
+    border-radius: 5px;                 /* Rounded corners */
+    text-decoration: none;              /* Remove underline */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;   /* Smooth hover effects */
+}
+
+/* Hover state for Google Login Button */
+.google-login-link:hover {
+    background-color: #357ae8;                      /* Darker blue */
+    box-shadow: 0 0 8px rgba(53, 122, 232, 0.6);    /* Blue glow */
+    text-decoration: none;                            /* Keep no underline */
+}
+
+/* Google Icon inside the button */
+.google-icon {
+    width: 20px;                                        /* Fixed size */
+    height: 20px;
+    vertical-align: middle;
+    display: inline-block;                              /* Needed to apply transform properly */
+    margin-right: 8px;                                  /* Space between icon and text */
+    transition: transform 0.3s ease, filter 0.3s ease;  /* Smooth scaling and brightness on hover */
+    transform-origin: center center;                    /* Scale from center */
+    will-change: transform;                             /* Hint for browser optimization */
+}
+
+/* Hover effect on the Google icon */
+.google-login-link:hover .google-icon {
+    filter: brightness(1.2);                            /* Slight brightening */
+    transform: scale(1.1);                              /* Slight enlargement */
+}
+
+/* Container to center the Google login button */
+.google-login-container {
+    display: flex;                                      /* Flexbox */
+    justify-content: center;                            /* Center horizontally */
+    margin-bottom: 30px;                                /* Space below the button */
+}
+
+/* Divider with the text "or" between social login and form */
+.divider {
+    text-align: center;                                 /* Center the text */
+    margin: 20px 0;                                     /* Vertical spacing */
+    position: relative;                                 /* For positioning the line */
+}
+
+/* Styling the "or" text inside divider */
+.divider span {
+    background: #2a2a2a;                              /* Matches container background to cover line */
+    padding: 0 15px;                                    /* Horizontal padding */
+    color: #888;                                      /* Gray color */
+    font-weight: 600;                                   /* Semi-bold */
+    font-size: 0.9rem;                                  /* Slightly smaller text */
+    position: relative;
+    z-index: 1;                                         /* Place above the line */
+}
+
+/* Horizontal line behind the "or" text */
+.divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;                                           /* Vertically center */
+    left: 0;
+    width: 100%;                                        /* Full width */
+    height: 1px;                                        /* Thin line */
+    background: #555;                                 /* Medium gray */
+    z-index: 0;                                         /* Behind the text */
+}
+
+/* Form label styling */
+.login-form label {
+    display: block;                                     /* Labels take full width */
+    margin: 10px 0 6px;                                 /* Space around label */
+    font-weight: 600;                                   /* Semi-bold */
+    color: #ddd;                                      /* Light gray */
+}
+
+/* Text and password input fields */
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    width: 100%;                                        /* Full width inputs */
+    padding: 12px 15px;                                 /* Padding inside inputs */
+    border-radius: 6px;                                 /* Rounded corners */
+    border: 1px solid #555;                           /* Dark border */
+    background-color: #3a3a3a;                        /* Dark input background */
+    color: #eee;                                      /* Light text */
+    font-size: 1rem;                                    /* Readable font size */
+    transition: border-color 0.3s ease;                 /* Smooth focus effect */
+}
+
+/* Input fields focus state */
+.login-form input[type="text"]:focus,
+.login-form input[type="password"]:focus {
+    border-color: #4285F4;                             /* Blue border on focus */
+    outline: none;                                       /* Remove default outline */
+}
+
+/* Primary button styling */
+.btn.primary-btn {
+    background-color: #007bff;                          /* Bootstrap blue */
+    color: white;                                       /* Button text color */
+    font-weight: 700;                                     /* Bold */
+    border: none;                                         /* No border */
+    border-radius: 6px;                                   /* Rounded corners */
+    padding: 14px;                                        /* Padding inside button */
+    cursor: pointer;                                      /* Pointer cursor */
+    width: 100%;                                          /* Full width */
+    font-size: 1.1rem;                                    /* Larger font */
+    transition: background-color 0.3s ease;               /* Smooth hover */
+    margin-top: 20px;                                     /* Space above button */
+}
+
+/* Hover effect for primary button */
+.btn.primary-btn:hover {
+    background-color: #0056b3;                          /* Darker blue on hover */
+}
+
+/* Signup prompt below the form */
+.signup-prompt {
+    margin-top: 22px;                                       /* Space above prompt */
+    text-align: center;                                     /* Center text */
+    font-size: 0.95rem;                                     /* Slightly smaller font */
+    color: #bbb;                                          /* Light gray */
+}
+
+/* Links inside signup prompt */
+.signup-prompt a {
+    color: #007bff;                                       /* Blue color for links */
+    font-weight: 600;                                       /* Semi-bold */
+    text-decoration: none;                                  /* No underline */
+    transition: color 0.3s ease;                            /* Smooth hover color */
+}
+
+/* Hover state for signup prompt links */
+.signup-prompt a:hover {
+    color: #0056b3;                                        /* Darker blue */
+    text-decoration: underline;                              /* Underline on hover */
+}

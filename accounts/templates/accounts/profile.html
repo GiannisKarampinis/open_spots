@@ -1,0 +1,137 @@
+{% extends "includes/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'accounts/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <h1>Welcome, {{ user.username }}!</h1>
+
+    {% if not user.email_verified %}
+    <div class="alert alert-warning">
+        Your email (<strong>{{ user.unverified_email|default:user.email }}</strong>) is not yet verified.
+        <a href="{% url 'confirm_code' %}" class="verify-now-btn">Verify Now</a>
+    </div>
+    {% endif %}
+
+    <div class="profile-section">
+        <h2>User Information</h2>
+
+        <!-- Email field -->
+        <div class="profile-info-row">
+            <div class="profile-info-label">Email:</div>
+
+            <div class="profile-info-value">
+                <div id="email-view" class="profile-view-mode" {% if request.GET.edit == "email" %}style="display:none"{% endif %}>
+                    <span>{{ user.unverified_email|default:user.email }}</span>
+                    <button class="profile-edit-button" onclick="toggleEdit('email')">Edit</button>
+                </div>
+
+                <form method="POST" action="{% url 'profile' %}" id="email-form" class="profile-form" {% if not request.GET.edit == "email" %}style="display:none"{% endif %}>
+                    {% csrf_token %}
+                    <input type="email" name="email" value="{{ user.unverified_email|default:user.email }}" required>
+                    <button type="submit">Save</button>
+                    <button type="button" class="btn-cancel" onclick="cancelEdit('email')">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Phone number field -->
+        <div class="profile-info-row">
+            <div class="profile-info-label">Phone:</div>
+
+            <div class="profile-info-value">
+                <div id="phone-view" class="profile-view-mode" {% if request.GET.edit == "phone" %}style="display:none"{% endif %}>
+                    <span>{{ user.phone_number|default:"—" }}</span>
+                    <button class="profile-edit-button" onclick="toggleEdit('phone')">Edit</button>
+                </div>
+
+                <form method="POST" action="{% url 'profile' %}" id="phone-form" class="profile-form" {% if not request.GET.edit == "phone" %}style="display:none"{% endif %}>
+                    {% csrf_token %}
+                    <input type="text" name="phone_number" value="{{ user.phone_number }}">
+                    <button type="submit">Save</button>
+                    <button type="button" class="btn-cancel" onclick="cancelEdit('phone')">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="reservations-section">
+        <h2>Upcoming Reservations</h2>
+        {% if upcoming_reservations %}
+        <table class="reservations-table">
+            <caption>Upcoming</caption>
+            <thead>
+                <tr>
+                    <th>Venue</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>People</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in upcoming_reservations %}
+                <tr>
+                    <td>{{ reservation.venue.name }}</td>
+                    <td>{{ reservation.date }}</td>
+                    <td>{{ reservation.time }}</td>
+                    <td>{{ reservation.number_of_people }}</td>
+                    <td>{{ reservation.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No upcoming reservations.</p>
+        {% endif %}
+    </div>
+
+    <div class="reservations-section">
+        <h2>Past Reservations</h2>
+        {% if past_reservations %}
+        <table class="reservations-table">
+            <caption>Past</caption>
+            <thead>
+                <tr>
+                    <th>Venue</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>People</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in past_reservations %}
+                <tr>
+                    <td>{{ reservation.venue.name }}</td>
+                    <td>{{ reservation.date }}</td>
+                    <td>{{ reservation.time }}</td>
+                    <td>{{ reservation.number_of_people }}</td>
+                    <td>{{ reservation.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No past reservations.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Toggle edit form visibility
+    function toggleEdit(field) {
+        document.getElementById(`${field}-view`).style.display = 'none';
+        document.getElementById(`${field}-form`).style.display = 'flex';
+    }
+
+    function cancelEdit(field) {
+        document.getElementById(`${field}-form`).style.display = 'none';
+        document.getElementById(`${field}-view`).style.display = 'flex';
+    }
+</script>
+{% endblock %}
