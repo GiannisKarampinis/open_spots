@@ -1,6 +1,11 @@
 {% extends "includes/base.html" %}
+{% load static %}
 
 {% block title %}Make a Reservation{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'venues/make_reservation.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="max-w-xl mx-auto mt-8 p-6 bg-white rounded shadow">
