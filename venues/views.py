@@ -1,60 +1,15 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import redirect_to_login
 from .models import Venue, Reservation
-from .forms import BookingForm, ReservationForm
+from .forms import ReservationForm, VenueApplicationForm
 from .utils import send_reservation_emails
 from django.contrib import messages
-from django.core.mail import send_mail
-from django.conf import settings
 
 
 def venue_list(request):
     venues = Venue.objects.all()
     return render(request, 'venues/venue_list.html', {'venues': venues})
 
-
-def book_venue(request, venue_id):
-    venue = get_object_or_404(Venue, id=venue_id)
-
-    if request.method == 'POST':
-        form = BookingForm(request.POST)
-        if form.is_valid():
-            cleaned_data = form.cleaned_data
-
-            # If the user is not logged in, store booking info in session and redirect
-            if not request.user.is_authenticated:
-                booking_date = cleaned_data.get('date')
-                if booking_date:
-                    booking_date = booking_date.isoformat()
-                else:
-                    booking_date = None
-
-                request.session['booking_data'] = {
-                    'booking_date': booking_date,
-                    'number_of_people': int(cleaned_data.get('num_people', 1)),
-                }
-                request.session['booking_venue_id'] = venue.id
-                return redirect_to_login(request.get_full_path())
-
-            # If user is authenticated, save the booking
-            booking = form.save(commit=False)
-            booking.user = request.user
-            booking.venue = venue
-            booking.save()
-
-            # Optionally reduce available tables
-            venue.available_tables = max(0, venue.available_tables - 1)
-            venue.save()
-
-            return redirect('venue_list')  # or redirect to a success page
-    else:
-        form = BookingForm()
-
-    return render(request, 'venues/book_venue.html', {
-        'venue': venue,
-        'form': form
-    })
 
 def make_reservation(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
@@ -91,3 +46,15 @@ def cancel_reservation(request, reservation_id):
         messages.success(request, 'Reservation cancelled.')
         return redirect('my_reservations')
     return render(request, 'venues/confirm_cancel.html', {'reservation': reservation})
+
+
+def apply_venue(request):
+    if request.method == 'POST':
+        form = VenueApplicationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your venue application has been submitted.')
+            return redirect('venue_list')
+    else:
+        form = VenueApplicationForm()
+    return render(request, 'venues/apply_venue.html', {'form': form})

@@ -1,19 +1,15 @@
 from django import forms
-from .models import Booking, Reservation
+from .models import Reservation, VenueApplication
 from .utils import generate_time_choices
 import datetime
 
-class BookingForm(forms.ModelForm):
-    class Meta:
-        model = Booking
-        fields = ['date', 'time', 'num_people']
-        widgets = {
-            'date': forms.DateInput(attrs={'type': 'date'}),
-            'time': forms.TimeInput(attrs={'type': 'time'}),
-        }
 
 class ReservationForm(forms.ModelForm):
-    time = forms.ChoiceField(choices=generate_time_choices(), label="Time")
+    time = forms.TypedChoiceField(
+        choices=generate_time_choices(),
+        label="Time",
+        coerce=lambda val: datetime.datetime.strptime(val, '%H:%M').time()
+    )
 
     class Meta:
         model = Reservation
@@ -21,3 +17,12 @@ class ReservationForm(forms.ModelForm):
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         }
+
+
+class VenueApplicationForm(forms.ModelForm):
+    class Meta:
+        model = VenueApplication
+        fields = [
+            'venue_name', 'venue_type', 'location', 'description',
+            'capacity', 'admin_name', 'admin_email', 'phone'
+        ]

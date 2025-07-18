@@ -12,6 +12,6 @@
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Reserve</button>
     </form>
 
-    <a href="{% url 'venue_detail' venue.id %}" class="text-blue-500 text-sm mt-4 inline-block">← Back to Venue</a>
+    {% comment %} <a href="{% url 'venue_detail' venue.id %}" class="text-blue-500 text-sm mt-4 inline-block">← Back to Venue</a> {% endcomment %}
 </div>
 {% endblock %}

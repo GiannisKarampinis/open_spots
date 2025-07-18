@@ -1,0 +1,139 @@
+/* Container for the apply form */
+.apply-container {
+    background-color:      #2a2a2a;                 /* Dark gray background */
+    padding:               40px;                    /* Padding inside container */
+    border-radius:         10px;                    /* Rounded corners */
+    box-shadow:            0 0 25px rgba(255,255,255,0.1); /* Soft white glow */
+    max-width:             500px;                   /* Max container width */
+    margin:                60px auto;               /* Centered with top/bottom margin */
+    color:                 white;                   /* Text color */
+    font-family:           'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean readable font */
+}
+
+.apply-container h2 {
+    text-align:            center;                  /* Center heading */
+    margin-bottom:         30px;                    /* Space below heading */
+    font-weight:           700;                     /* Bold heading */
+    font-size:             2rem;                    /* Larger font size */
+    color:                 #eee;                    /* Light gray */
+}
+
+.apply-container label {
+    display:               block;                   /* Block layout for labels */
+    margin:                10px 0 5px;              /* Spacing around labels */
+}
+
+/* Input fields & selects */
+.apply-container input[type="text"],
+.apply-container input[type="email"],
+.apply-container input[type="password"],
+.apply-container input[type="tel"],
+.apply-container input[type="number"],
+.apply-container textarea,
+.apply-container select {
+    width:                 100%;                    /* Full width */
+    padding:               12px 15px;               /* Inner padding */
+    background-color:      #3a3a3a;                 /* Dark field background */
+    border:                1px solid #555;          /* Border color */
+    color:                 white;                   /* Text color */
+    border-radius:         6px;                     /* Rounded corners */
+    margin-bottom:         15px;                    /* Space below fields */
+    font-size:             1rem;                    /* Consistent font size */
+    transition:            border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth interaction */
+    outline:               none;                    /* Remove default focus outline */
+}
+
+/* Focus style for accessibility */
+.apply-container input:focus,
+.apply-container textarea:focus,
+.apply-container select:focus {
+    border-color:          #4a90e2;                 /* Blue highlight on focus */
+    box-shadow:            0 0 6px #4a90e2;         /* Blue glow */
+}
+
+/* Submit Button */
+.apply-container .btn.primary-btn {
+    width:                 100%;                    /* Full width button */
+    padding:               14px;                    /* Inner spacing */
+    margin-top:            20px;                    /* Space above button */
+    background-color:      #4a90e2;                 /* Brighter blue for apply */
+    color:                 white;                   /* White text */
+    border-radius:         6px;                     /* Rounded corners */
+    border:                none;                    /* No border */
+    cursor:                pointer;                 /* Pointer cursor on hover */
+    font-size:             1.1rem;                  /* Larger button text */
+    font-weight:           700;                     /* Bold font */
+    transition:            background-color 0.3s ease;
+}
+
+.apply-container .btn.primary-btn:hover {
+    background-color:      #357ABD;                 /* Darker blue on hover */
+}
+
+/* Error messages under fields */
+.apply-container ul.errorlist {
+    list-style:            none;                    /* No bullet points */
+    padding:               0;                       /* No padding */
+    margin:                -10px 0 10px;            /* Tight spacing */
+    color:                 #ff4d4f;                 /* Red error color */
+    font-size:             0.95rem;                 /* Slightly smaller font */
+    font-weight:           500;                     /* Medium weight */
+    animation:             fadeIn 0.3s ease forwards; /* Smooth fade-in */
+}
+
+/* Input/Select error style */
+.apply-container input[aria-invalid="true"],
+.apply-container select[aria-invalid="true"],
+.apply-container textarea[aria-invalid="true"] {
+    border-color:          #ff4d4f !important;      /* Red border */
+    box-shadow:            0 0 6px #ff4d4f;         /* Red glow */
+}
+
+/* Optional success styling */
+.apply-container input.valid,
+.apply-container select.valid,
+.apply-container textarea.valid {
+    border-color:          #28a745;                 /* Green for valid */
+    box-shadow:            0 0 6px #28a745;         /* Green glow */
+}
+
+/* Flash messages (non-field) */
+.apply-container .flash-messages {
+    margin-bottom:         20px;                    /* Spacing below */
+}
+
+.apply-container .flash-message {
+    padding:               12px 18px;               /* Inner padding */
+    border-radius:         6px;                     /* Rounded corners */
+    margin-bottom:         10px;                    /* Spacing below message */
+    font-weight:           600;                     /* Bold text */
+    font-size:             0.95rem;                 /* Slightly smaller text */
+    text-align:            center;                  /* Centered text */
+}
+
+/* Message types */
+.apply-container .flash-message.error {
+    background-color:      #ff4d4f;
+    color:                 white;
+}
+
+.apply-container .flash-message.success {
+    background-color:      #28a745;
+    color:                 white;
+}
+
+.apply-container .flash-message.warning {
+    background-color:      #ffc107;
+    color:                 #333;
+}
+
+.apply-container .flash-message.info {
+    background-color:      #17a2b8;
+    color:                 white;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}

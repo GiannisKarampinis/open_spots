@@ -200,3 +200,17 @@ ul.errorlist {
     background-color: #17a2b8;
     color: white;
 }
+
+.apply-venue-btn {
+    background-color: #4a90e2;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.apply-venue-btn:hover {
+    background-color: #357ABD;
+}

@@ -9,5 +9,5 @@ urlpatterns = [
     #path('venue/<int:venue_id>/reserve/', views.make_reservation, name='make_reservation'),
     path('my-reservations/', views.my_reservations, name='my_reservations'),
     path('reservation/<int:reservation_id>/cancel/', views.cancel_reservation, name='cancel_reservation'),
-
+    path('apply-venue/', views.apply_venue, name='apply_venue'),
 ]

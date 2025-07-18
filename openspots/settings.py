@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-jhul#ukpn-4(-lqkg-6idl44!m0mpx7*(_v)t_#z-zm#6bwo0t'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -58,8 +61,8 @@ SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
             # Google OAuth2 client credentials
-            'client_id': '1047955682999-p63gcn2fojjtk64uebt7v7p7jg1bgk4h.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': os.getenv('GOOGLE_CLIENT_ID'),
+            'secret': os.getenv('GOOGLE_SECRET'),
             'key': ''  # Not required for Google, can remain empty
         },
         'AUTH_PARAMS': {
@@ -182,12 +185,16 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 MEDIA_URL           = '/media/'
 MEDIA_ROOT          = BASE_DIR / 'media'
 
-DEFAULT_FROM_EMAIL  = 'OpenSpots <noreply@openspots.com>'
-
 EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST          = 'smtp-relay.brevo.com'
 EMAIL_PORT          = 587
 EMAIL_USE_TLS       = True
-EMAIL_HOST_USER     = '9241dd001@smtp-brevo.com'
-EMAIL_HOST_PASSWORD = "REMOVED CODE"
-DEFAULT_FROM_EMAIL  = 'ioanniskarampinis.prf@gmail.com'
+
+EMAIL_HOST_USER     = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL  = os.getenv('DEFAULT_FROM_EMAIL')
+
+
+
+if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+    raise Exception("EMAIL credentials are missing. Check your environment variables.")
