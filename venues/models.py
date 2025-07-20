@@ -65,7 +65,11 @@ class Reservation(models.Model):
     date = models.DateField()
     time = models.TimeField()
     guests = models.PositiveIntegerField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=10, choices=[
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected')
+    ], default='pending')
     table = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
