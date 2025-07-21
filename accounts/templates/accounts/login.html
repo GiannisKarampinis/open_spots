@@ -13,7 +13,7 @@
     <h2>Welcome Back</h2>
 
     <div class="google-login-container">
-        <a href="{% provider_login_url 'google' method='oauth2' process='login' %}" class="google-login-link" aria-label="Login with Google">
+        <a href="{% provider_login_url 'google' process='login' %}" class="google-login-link" aria-label="Login with Google">
             <img src="{% static 'accounts/google-icon.svg' %}" alt="Google logo" class="google-icon">
             Login with Google
         </a>
