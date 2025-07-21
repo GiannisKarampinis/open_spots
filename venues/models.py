@@ -2,6 +2,11 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from datetime import datetime
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
+
 
 class Venue(models.Model):
     VENUE_TYPES = [
@@ -19,9 +24,12 @@ class Venue(models.Model):
     capacity = models.PositiveIntegerField()
     available_tables = models.PositiveIntegerField()
     image = models.ImageField(upload_to='venues/', blank=True, null=True)
-    average_rating = models.FloatField(default=0.0)  # If reviews are added later, make this computed
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    average_rating = models.FloatField(default=0.0)
+    is_full = models.BooleanField(default=False)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    email = models.EmailField(null=True, blank=True)   
+    phone = models.CharField(max_length=20, blank=True)
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -29,12 +37,15 @@ class Venue(models.Model):
         blank=True,
         related_name='owned_venues'
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
 
     class Meta:
         ordering = ['name']
+
 
 
 class Table(models.Model):
@@ -51,12 +62,6 @@ class Table(models.Model):
 
 
 class Reservation(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('confirmed', 'Confirmed'),
-        ('cancelled', 'Cancelled'),
-    )
-
     venue = models.ForeignKey('Venue', on_delete=models.CASCADE, related_name='reservations')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=100)
@@ -108,3 +113,48 @@ class VenueApplication(models.Model):
 
     class Meta:
         ordering = ['-submitted_at']
+        
+class VenueVisit(models.Model):
+    venue = models.ForeignKey(Venue, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    session_key = models.CharField(max_length=40, blank=True, null=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        if self.user:
+            return f"{self.user.username} visited {self.venue.name} at {self.timestamp}"
+        return f"Anonymous visit to {self.venue.name} at {self.timestamp}"
+    
+
+
+User = get_user_model()
+
+@receiver(post_save, sender=Venue)
+def create_admin_user_for_venue(sender, instance, created, **kwargs):
+    if created and not instance.owner and instance.email:
+        username = instance.email
+        raw_password = User.objects.make_random_password()
+
+        if not User.objects.filter(username=username).exists():
+            user = User.objects.create_user(username=username, email=instance.email, password=raw_password)
+            user.is_staff = True
+            user.save()
+
+            instance.owner = user
+            instance.save(update_fields=['owner'])
+
+            try:
+                send_mail(
+                    subject='Venue Admin Account Created',
+                    message=(
+                        f'Admin account created for venue "{instance.name}".\n'
+                        f'Login: {username}\nPassword: {raw_password}'
+                    ),
+                    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'openspots.application@gmail.com'),
+                    recipient_list=[instance.email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                # Handle case where email sending fails (log or ignore)
+                print(f"Failed to send email: {e}")

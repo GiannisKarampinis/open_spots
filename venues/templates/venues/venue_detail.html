@@ -1,0 +1,48 @@
+{% extends 'includes/base.html' %}
+{% load static %}
+
+{% block title %}{{ venue.name }} - OpenSpots{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'venues/venue_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Venue Image -->
+<div class="container-fluid p-0">
+    <img
+        src="{% if venue.image %}{{ venue.image.url }}{% else %}{% static 'images/default_venue.jpg' %}{% endif %}"
+        alt="{{ venue.name }}"
+        class="img-fluid w-100"
+        style="max-height: 30rem; object-fit: cover;"
+    >
+</div>
+
+<!-- Description and Reservation Section -->
+<div class="container py-5">
+    <div class="row">
+        <!-- Description -->
+        <div class="col-md-8">
+            <h2 class="mb-4">{{ venue.name }}</h2>
+            <p class="text-muted fs-5">{{ venue.description }}</p>
+        </div>
+
+        <!-- Reservation Dropdown -->
+        <div class="col-md-4 text-end">
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#reservationForm" aria-expanded="false" aria-controls="reservationForm">
+                Make Reservation
+            </button>
+
+            <div class="collapse mt-3" id="reservationForm">
+                <div class="card card-body shadow">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" class="btn btn-success w-100 mt-3">Submit Reservation</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

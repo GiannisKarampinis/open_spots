@@ -1,5 +1,5 @@
 from django import forms
-from .models import Reservation, VenueApplication
+from .models import Reservation, VenueApplication, Venue
 from .utils import generate_time_choices
 from django.utils.timezone import now
 import datetime
@@ -54,3 +54,8 @@ class VenueApplicationForm(forms.ModelForm):
             'venue_name', 'venue_type', 'location', 'description',
             'capacity', 'admin_name', 'admin_email', 'phone'
         ]
+
+class VenueSignupForm(forms.ModelForm):
+    class Meta:
+        model = Venue
+        exclude = ['owner']

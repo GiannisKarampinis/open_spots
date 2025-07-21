@@ -1,11 +1,18 @@
 from django.contrib import admin
-from .models import Venue, Table, Reservation, VenueApplication
+from .models import Venue, Table, Reservation, VenueApplication, VenueVisit
+from django.utils.html import format_html
 
 @admin.register(Venue)
 class VenueAdmin(admin.ModelAdmin):
-    list_display = ('name', 'kind', 'location', 'capacity', 'available_tables', 'average_rating')
-    search_fields = ('name', 'location', 'kind')
-    list_filter = ('kind',)
+    list_display = ('name', 'kind', 'location', 'capacity', 'available_tables', 'average_rating', 'image_tag')
+    readonly_fields = ['image_tag']
+
+    def image_tag(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="height: 50px;" />', obj.image.url)
+        return "No Image"
+
+    image_tag.short_description = 'Image'
 
 
 @admin.register(Table)
@@ -29,3 +36,8 @@ class VenueApplicationAdmin(admin.ModelAdmin):
     list_filter = ('reviewed', 'accepted')
     search_fields = ('venue_name', 'admin_email')
     ordering = ('-submitted_at',)
+
+@admin.register(VenueVisit)
+class VenueVisitAdmin(admin.ModelAdmin):
+    list_display = ('venue', 'user', 'ip_address', 'timestamp')
+    list_filter = ('venue', 'timestamp')
