@@ -116,3 +116,23 @@
     }
 }
 
+/* Main page heading */
+h2 {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 700;
+    font-size: 2rem;
+    text-align: center;
+    margin: 2rem 0 2.5rem 0;
+    letter-spacing: 0.04em;
+    user-select: none;
+    color: #ff6f61; /* warm coral - energetic and inviting */
+    text-shadow: 0 1px 3px rgba(255, 111, 97, 0.6);
+}
+
+/* Responsive smaller size on narrow screens */
+@media (max-width: 600px) {
+    h2 {
+        font-size: 1.5rem;
+        margin: 1.5rem 0 2rem 0;
+    }
+}
