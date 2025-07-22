@@ -16,7 +16,11 @@
 
 <body>
     <header>
-        <h1><a href="{% url 'venue_list' %}" class="site-title">OpenSpots</a></h1>
+        <a href="{% url 'venue_list' %}" class="site-title">
+            <svg class="logo-svg" xmlns="/media/openspots_logo.svg" viewBox="0 0 200 60" fill="none">
+                <text x="0" y="40" font-size="36" fill="currentColor" font-family="Arial">OpenSpots</text>
+            </svg>
+        </a>
         <nav class="main-nav">
             {% if user.is_authenticated %}
                 <div class="user-menu">
