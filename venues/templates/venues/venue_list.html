@@ -10,8 +10,11 @@
 {% block content %}
 <h2 style="text-align:center;">Book a Venue</h2>
 
+<h3 class="section-title">Cafes & Bars</h3>
 <div class="venue-scroll-container">
-    {% for venue in venues %}
+    {% with cafes_bars=venues|dictsort:"name" %}
+    {% for venue in cafes_bars %}
+        {% if venue.kind in 'cafe bar' %}
         <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
             <div class="venue-card">
                 {% if venue.image %}
@@ -25,26 +28,51 @@
                 <div class="book-button">View Details</div>
             </div>
         </a>
+        {% endif %}
     {% empty %}
-        <p>No venues available.</p>
+        <p>No cafes or bars available.</p>
     {% endfor %}
+    {% endwith %}
 </div>
+
+<h3 class="section-title">Restaurants</h3>
+<div class="venue-scroll-container">
+    {% with restaurants=venues|dictsort:"name" %}
+    {% for venue in restaurants %}
+        {% if venue.kind == 'restaurant' %}
+        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+            <div class="venue-card">
+                {% if venue.image %}
+                    <img src="{{ venue.image.url }}" alt="{{ venue.name }}">
+                {% endif %}
+                <h3>{{ venue.name }}</h3>
+                <p><strong>Type:</strong> {{ venue.get_kind_display }}</p>
+                <p><strong>Location:</strong> {{ venue.location }}</p>
+                <p><strong>Available Tables:</strong> {{ venue.available_tables }}</p>
+                <p><strong>Rating:</strong> {{ venue.average_rating }}</p>
+                <div class="book-button">View Details</div>
+            </div>
+        </a>
+        {% endif %}
+    {% empty %}
+        <p>No restaurants available.</p>
+    {% endfor %}
+    {% endwith %}
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const scrollContainer = document.querySelector('.venue-scroll-container');
+        const scrollContainers = document.querySelectorAll('.venue-scroll-container');
 
-        if (scrollContainer) {
+        scrollContainers.forEach(function(scrollContainer) {
             scrollContainer.addEventListener('wheel', function (e) {
-                // Only apply horizontal scroll if content overflows
                 if (e.deltaY !== 0 && scrollContainer.scrollWidth > scrollContainer.clientWidth) {
                     e.preventDefault();
                     scrollContainer.scrollLeft += e.deltaY;
                 }
             }, { passive: false });
-        }
+        });
     });
 </script>
 
-
 {% endblock %}
-

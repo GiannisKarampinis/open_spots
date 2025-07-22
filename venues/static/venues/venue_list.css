@@ -13,7 +13,6 @@
     border-bottom: 1px solid #333;
     background-color: #1e1e1e;
     width: 100%;
-    max-width: 1200px;
     margin: 0 auto;
     height: 350px; /* Ensure it has a consistent height */
 }
@@ -94,3 +93,26 @@
 .book-button:hover {
     background-color: #777;
 }
+
+/* Section Titles for Cafes & Bars and Restaurants */
+.section-title {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 600;
+    font-size: 1.6rem;
+    color: #2c3e50;
+    margin: 1.5rem 0 0.75rem 0;
+    padding-left: 0.5rem;
+    border-left: 4px solid #2980b9;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    user-select: none;
+}
+
+/* Responsive smaller size on narrow screens */
+@media (max-width: 600px) {
+    .section-title {
+        font-size: 1.3rem;
+        margin: 1rem 0 0.5rem 0;
+    }
+}
+
