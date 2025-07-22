@@ -73,7 +73,7 @@ header {
 /* Main & Footer */
 main {
     padding: 40px 30px;
-    max-width: 900px;
+    max-width: 70%;
     margin: auto;
 }
 
@@ -213,4 +213,18 @@ ul.errorlist {
 
 .apply-venue-btn:hover {
     background-color: #357ABD;
+}
+
+.logo-svg {
+    height: 50px;
+    width: auto;
+    display: inline-block;
+    vertical-align: middle;
+    color: #eee; /* or inherit */
+    transition: transform 0.2s ease;
+}
+
+.logo-svg:hover {
+    transform: scale(1.05);
+    color: #fff;
 }

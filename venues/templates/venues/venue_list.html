@@ -29,5 +29,22 @@
         <p>No venues available.</p>
     {% endfor %}
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const scrollContainer = document.querySelector('.venue-scroll-container');
+
+        if (scrollContainer) {
+            scrollContainer.addEventListener('wheel', function (e) {
+                // Only apply horizontal scroll if content overflows
+                if (e.deltaY !== 0 && scrollContainer.scrollWidth > scrollContainer.clientWidth) {
+                    e.preventDefault();
+                    scrollContainer.scrollLeft += e.deltaY;
+                }
+            }, { passive: false });
+        }
+    });
+</script>
+
+
 {% endblock %}
 
