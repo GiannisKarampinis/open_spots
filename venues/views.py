@@ -57,7 +57,7 @@ def venue_detail(request, venue_id):
             else:
                 reservation.save()
                 send_reservation_emails(reservation)
-                return render(request, 'reservation_success.html', {
+                return render(request, 'venues/reservation_success.html', {
                     'venue': venue,
                     'reservation': reservation
                 })
