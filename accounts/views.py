@@ -1,5 +1,5 @@
 from django.shortcuts               import render, redirect, get_object_or_404
-from django.contrib.auth            import login, authenticate
+from django.contrib.auth            import login, authenticate, get_backends
 from django.contrib                 import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth            import views as auth_views
@@ -15,32 +15,30 @@ from datetime                       import timedelta
 from django.views.decorators.cache  import never_cache
 from django.utils.timezone          import now
 from .forms                         import CustomUserCreationForm
-from .models                        import EmailVerificationCode
+from .models                        import EmailVerificationCode, CustomUser
 
 
 def signup_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password1']
-            user = authenticate(request, username=username, password=password)
+            user = form.save(commit=False)
+            user.user_type = 'customer'
+            user.unverified_email = user.email
+            user.email_verified = False
+            user.save()
 
-            if user:
-                login(request, user)
-                user.unverified_email = user.email
-                user.email_verified = False
-                user.save()
-                send_verification_code(user)
-                messages.info(request, "Please verify your email address before continuing.")
-                return redirect('profile')
-            else:
-                form.add_error(None, 'Authentication failed after signup.')
+            send_verification_code(user)
+            request.session['pending_user_id'] = user.id
+            request.session['code_already_sent'] = True
+
+            messages.info(request, "We’ve sent a 6-digit verification code to your email.")
+            return redirect('confirm_code')
     else:
         form = CustomUserCreationForm()
 
     return render(request, 'accounts/signup.html', {'form': form})
+
 
 
 @login_required
@@ -71,6 +69,8 @@ def profile_view(request):
             if email_changed:
                 EmailVerificationCode.objects.filter(user=updated_user).delete()
                 send_verification_code(updated_user)
+                request.session['pending_user_id'] = updated_user.id
+                request.session['code_already_sent'] = True
                 messages.info(request, "Verification code sent to your new email. Please verify.")
                 return redirect('confirm_code')
 
@@ -82,10 +82,15 @@ def profile_view(request):
     return render(request, 'accounts/profile.html', {'form': form})
 
 
-@never_cache
-@login_required
+
+
 def confirm_code_view(request):
-    user = request.user
+    user_id = request.session.get('pending_user_id')
+    if not user_id:
+        messages.error(request, "Session expired or invalid access to verification page.")
+        return redirect('signup')  # or login page
+
+    user = get_object_or_404(CustomUser, id=user_id)
     context = {}
 
     if request.method == 'POST':
@@ -108,14 +113,20 @@ def confirm_code_view(request):
         user.save()
         code_obj.delete()
 
-        messages.success(request, "Your email has been verified.")
+        backend = get_backends()[0]
+        login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)  # Now log the user in
+        request.session.pop('pending_user_id', None)
+        request.session.pop('code_already_sent', None)  # NEW
+
+        messages.success(request, "Your email has been verified. Welcome!")
         return redirect('profile')
 
-    # If GET request: delete old code, send a new one, and set fresh timer
-    EmailVerificationCode.objects.filter(user=user).delete()
-    send_verification_code(user)
-
-    # Get the new code and calculate remaining time
+    # GET request: send a new code
+    if not request.session.get('code_already_sent'):
+        EmailVerificationCode.objects.filter(user=user).delete()
+        send_verification_code(user)
+        request.session['code_already_sent'] = True
+    
     new_code = EmailVerificationCode.objects.filter(user=user).latest('created_at')
     remaining = max(0, int((new_code.created_at + timedelta(minutes=2) - now()).total_seconds()))
     context['remaining_seconds'] = remaining

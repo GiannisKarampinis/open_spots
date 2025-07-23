@@ -15,10 +15,24 @@ from django.conf import settings
 from django.contrib.auth.models import User  # For admin email in venue signup
 
 
+from django.core.serializers.json import DjangoJSONEncoder
+from django.utils.safestring import mark_safe
+import json
 
 def venue_list(request):
     venues = Venue.objects.all()
-    return render(request, 'venues/venue_list.html', {'venues': venues})
+    venue_data = [
+        {
+            'name': v.name,
+            'lat': v.latitude,
+            'lng': v.longitude,
+            'id': v.id
+        } for v in venues if v.latitude and v.longitude
+    ]
+    return render(request, 'venues/venue_list.html', {
+        'venues': venues,
+        'venue_data_json': mark_safe(json.dumps(venue_data, cls=DjangoJSONEncoder))
+    })
 
 
 def venue_detail(request, venue_id):

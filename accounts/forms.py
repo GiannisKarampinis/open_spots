@@ -14,9 +14,14 @@ import re
 class CustomUserCreationForm(UserCreationForm): 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'user_type', 'password1', 'password2')
-
-
+        fields = ('username', 'email', 'phone_number', 'password1', 'password2')
+        
+    def save(self, commit=True):
+            user = super().save(commit=False)
+            user.user_type = 'customer'
+            if commit:
+                user.save()
+            return user
 
 class ProfileEditForm(forms.ModelForm):
     class Meta:

@@ -2,13 +2,41 @@
 {% load static %}
 
 {% block extra_css %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="{% static 'venues/venue_list.css' %}">
 {% endblock %}
+
 
 {% block title %}Browse Venues{% endblock %}
 
 {% block content %}
+{% comment %} <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script id="venue-data" type="application/json">{{ venue_data_json }}</script> {% endcomment %}
+
 <h2 style="text-align:center;">Explore &amp; Reserve Your Perfect Spot</h2>
+
+{% comment %} <h3 class="section-title">Map View</h3>
+<div id="venue-map" style="height: 400px; margin-bottom: 2em;"></div> {% endcomment %}
+
+{% comment %} <script>
+    const venues = JSON.parse(document.getElementById('venue-data').textContent);
+
+    const defaultCoords = [37.9838, 23.7275]; // Example: Athens
+
+    const map = L.map('venue-map').setView(
+        venues.length ? [venues[0].lat, venues[0].lng] : defaultCoords,
+        13
+    );
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    venues.forEach(v => {
+        const marker = L.marker([v.lat, v.lng]).addTo(map);
+        marker.bindPopup(`<a href="/venues/${v.id}/">${v.name}</a>`);
+    });
+</script> {% endcomment %}
 
 <h3 class="section-title">Cafes & Bars</h3>
 <div class="venue-scroll-container">
