@@ -17,7 +17,11 @@ from django.contrib.auth.models import User  # For admin email in venue signup
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.safestring import mark_safe
+from django.contrib.auth import get_user_model
+
 import json
+
+User = get_user_model()
 
 def venue_list(request):
     venues = Venue.objects.all()
@@ -90,7 +94,8 @@ def apply_venue(request):
         if form.is_valid():
             venue_application = form.save()
 
-            # Send email notification to admins (from shops code)
+            print("Form data:", form.cleaned_data)  # Debugging
+
             send_mail(
                 'New Venue Application',
                 f'New venue application submitted:\n\n{venue_application}',
