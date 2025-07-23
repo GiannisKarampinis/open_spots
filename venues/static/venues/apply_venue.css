@@ -23,7 +23,6 @@
 /* Labels */
 .apply-container .form-group label {
     display:               block;                     /* Full width */
-    margin:                10px 0 5px;                /* Spacing around labels */
     color:                 white;                   /* Keep white */
 }
 
@@ -65,7 +64,6 @@
 .apply-container .form-group.email-verify-wrapper > label {
     width: 100%;
     display: block;
-    margin-bottom: 5px;  /* Align with signup-container label margin */
 }
 
 /* Email verify wrapper flex stays same */
