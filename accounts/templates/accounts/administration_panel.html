@@ -1,0 +1,23 @@
+{% extends "includes/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'venues/venue_list.css' %}">
+    <link rel="stylesheet" href="{% static 'venues/venue_cards.css' %}">
+{% endblock %}
+
+{% block title %}Your Venue Dashboard{% endblock %}
+
+{% block content %}
+    <h2>Welcome, {{ user.username }} — Your Venue Dashboard</h2>
+
+    {% if venues %}
+        <div class="venue-list">
+        {% for venue in venues %}
+            {% include "venues/venue_cards.html" with venue=venue %}
+        {% endfor %}
+        </div>
+    {% else %}
+        <p>You don't have any venues yet.</p>
+    {% endif %}
+{% endblock %}

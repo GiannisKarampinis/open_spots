@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="{% static 'venues/venue_list.css' %}">
 {% endblock %}
 
-
 {% block title %}Browse Venues{% endblock %}
 
 {% block content %}
@@ -42,27 +41,9 @@
 <div class="venue-scroll-container">
     {% with cafes_bars=venues|dictsort:"name" %}
     {% for venue in cafes_bars %}
-        {% if venue.kind in 'cafe bar' %}
+        {% if venue.kind == 'cafe' or venue.kind == 'bar' %}
         <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-            <div class="venue-card">
-                {% if venue.image %}
-                    <img src="{{ venue.image.url }}" alt="{{ venue.name }}">
-                {% endif %}
-                <h3>{{ venue.name }}</h3>
-                <div class="venue-info">
-                    <div class="venue-info-item location">
-                        <!-- Optional icon -->
-                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5 14.5 7.62 14.5 9 13.38 11.5 12 11.5z"/></svg>
-                        <span>{{ venue.location }}</span>
-                    </div>
-
-                    <div class="venue-info-item rating">
-                        <!-- Optional star icon -->
-                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                        <span>{{ venue.average_rating }}</span>
-                    </div>
-                </div>
-            </div>
+            {% include "venues/venue_cards.html" with venue=venue %}
         </a>
         {% endif %}
     {% empty %}
@@ -77,25 +58,7 @@
     {% for venue in restaurants %}
         {% if venue.kind == 'restaurant' %}
         <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-            <div class="venue-card">
-                {% if venue.image %}
-                    <img src="{{ venue.image.url }}" alt="{{ venue.name }}">
-                {% endif %}
-                <h3>{{ venue.name }}</h3>
-                <div class="venue-info">
-                    <div class="venue-info-item location">
-                        <!-- Optional icon -->
-                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5 14.5 7.62 14.5 9 13.38 11.5 12 11.5z"/></svg>
-                        <span>{{ venue.location }}</span>
-                    </div>
-
-                    <div class="venue-info-item rating">
-                        <!-- Optional star icon -->
-                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                        <span>{{ venue.average_rating }}</span>
-                    </div>
-                </div>
-            </div>
+            {% include "venues/venue_cards.html" with venue=venue %}
         </a>
         {% endif %}
     {% empty %}

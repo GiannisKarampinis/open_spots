@@ -1,32 +1,41 @@
-from django import forms
-from django.contrib.auth.forms import UserCreationForm 
-from .models import CustomUser
 import re
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from .models import CustomUser
 
 
-#   This form extends Django's built-in UserCreationForm to support the CustomUser model.
-#   It is used during user registration to collect necessary fields:
-#   username, email, user type, and password (with confirmation).
-#   By linking to CustomUser, it allows saving extra user info (e.g., user_type) during sign-up.
-#   Django automatically handles password validation and user creation through this form.
-
-
-class CustomUserCreationForm(UserCreationForm): 
+class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = ('username', 'email', 'phone_number', 'password1', 'password2')
-        
+
     def save(self, commit=True):
-            user = super().save(commit=False)
-            user.user_type = 'customer'
-            if commit:
-                user.save()
-            return user
+        user = super().save(commit=False)
+        user.user_type = 'customer'
+        if commit:
+            user.save()
+        return user
+
+class AdminUserCreationForm(UserCreationForm):
+    """Admin form to create any type of user, with user_type selection."""
+    user_type = forms.ChoiceField(choices=CustomUser.USER_TYPE_CHOICES, required=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'email', 'phone_number', 'user_type', 'password1', 'password2')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.user_type = self.cleaned_data['user_type']
+        if commit:
+            user.save()
+        return user
+
 
 class ProfileEditForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ['email', 'phone_number']  # <- match model field name exactly
+        fields = ['email', 'phone_number']
         widgets = {
             'email': forms.EmailInput(attrs={'required': True}),
             'phone_number': forms.TextInput(attrs={'required': False}),

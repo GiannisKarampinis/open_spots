@@ -19,6 +19,8 @@ urlpatterns = [
     
     path('reservation/<int:reservation_id>/cancel/', views.cancel_reservation, name='cancel_reservation'),
     path('reservation/<int:reservation_id>/status/<str:status>/', views.update_reservation_status, name='update_reservation_status'),
+    path('reservation/<int:reservation_id>/edit-status/', views.edit_reservation_status, name='edit_reservation_status'),
+
 
     # Venue analytics / visits
     path('analytics/<int:venue_id>/', views.venue_visits_analytics, name='venue_visits_analytics'),

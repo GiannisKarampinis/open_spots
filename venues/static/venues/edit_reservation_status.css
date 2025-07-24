@@ -1,0 +1,175 @@
+/* Modal Overlay - full screen dimmed background */
+.modal-overlay {
+  position: fixed;
+  inset: 0; /* shorthand for top:0; left:0; right:0; bottom:0 */
+  background-color: rgba(30, 30, 30, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Modal box */
+.modal-content {
+  background: #fefefe;
+  padding: 2rem 2.5rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  color: #222;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  user-select: text;
+}
+
+/* Close button */
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.75rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #555;
+  transition: color 0.25s ease;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
+}
+
+.modal-close:hover,
+.modal-close:focus {
+  color: #111;
+  outline: none;
+}
+
+/* Modal heading */
+.modal-content h2 {
+  margin: 0 0 1.25rem;
+  font-weight: 700;
+  font-size: 1.75rem;
+  color: #111;
+  user-select: text;
+}
+
+/* Reservation info */
+.reservation-info p {
+  margin: 0.3rem 0;
+  font-size: 1rem;
+  color: #444;
+  font-weight: 500;
+  user-select: text;
+}
+
+/* Form */
+form {
+  margin-top: 1.5rem;
+}
+
+/* Form group spacing */
+.mb-3 {
+  margin-bottom: 1.25rem;
+}
+
+/* Label styling */
+.mb-3 label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+  color: #222;
+}
+
+/* Select box */
+select, .form-select {
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1.5px solid #bbb;
+  background: #fff;
+  appearance: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  font-weight: 500;
+  color: #222;
+}
+
+select:focus, .form-select:focus {
+  border-color: #005fcc;
+  outline: none;
+  box-shadow: 0 0 8px rgba(0, 95, 204, 0.5);
+}
+
+/* Error messages */
+.text-danger {
+  color: #d32f2f;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-top: 0.3rem;
+}
+
+/* Buttons container */
+.d-flex {
+  display: flex;
+  justify-content: center; /* center buttons container */
+  gap: 1rem;               /* space between buttons */
+  align-items: center;
+}
+
+
+/* Buttons base */
+.btn {
+  padding: 0.55rem 1.4rem;
+  font-size: 1.1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.2s ease;
+  min-width: 130px;
+  text-align: center;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Primary button */
+.btn-primary {
+  min-width: 130px; /* keep or reduce */
+  background-color: #005fcc;
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(0, 95, 204, 0.5);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #004bb5;
+  box-shadow: 0 4px 12px rgba(0, 75, 181, 0.6);
+  outline: none;
+}
+
+/* Secondary button */
+.btn-secondary {
+  min-width: 90px; /* smaller than default 130px */
+  padding-left: 1rem;
+  padding-right: 1rem;
+  background-color: #6c757d;
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(108, 117, 125, 0.5);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus {
+  background-color: #565e64;
+  box-shadow: 0 4px 12px rgba(86, 94, 100, 0.6);
+  outline: none;
+}
+
+

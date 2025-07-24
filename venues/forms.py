@@ -59,3 +59,12 @@ class VenueSignupForm(forms.ModelForm):
     class Meta:
         model = Venue
         exclude = ['owner']
+
+
+class ReservationStatusForm(forms.ModelForm):
+    class Meta:
+        model = Reservation
+        fields = ['status']
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-select'})
+        }

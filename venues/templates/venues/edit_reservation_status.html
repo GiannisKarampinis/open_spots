@@ -1,0 +1,110 @@
+{% extends "includes/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'venues/edit_reservation_status.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div id="editStatusModal" class="modal-overlay">
+    <!-- Modal content box -->
+    <div class="modal-content">
+        <button class="modal-close" aria-label="Close modal">&times;</button>
+
+        <h2>Edit Reservation Status</h2>
+
+        <div class="reservation-info">
+        <p><strong>Customer:</strong> {{ reservation.user.username }}</p>
+        <p><strong>Date:</strong> {{ reservation.date }}</p>
+        <p><strong>Time:</strong> {{ reservation.time }}</p>
+        <p><strong>Party Size:</strong> {{ reservation.party_size }}</p>
+        </div>
+
+        <form id="updateStatusForm" method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="mb-3">
+            {{ form.status.label_tag }}
+            {{ form.status }}
+            {% for error in form.status.errors %}
+            <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">Update Status</button>
+            <a href="{% url 'venue_dashboard' reservation.venue.id %}" class="btn btn-secondary modal-close">Cancel</a>
+        </div>
+        </form>
+
+        <!-- Confirmation Modal -->
+        <div id="confirmModal" class="modal-overlay">
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmDesc">
+                <h2 id="confirmTitle">Confirm Update</h2>
+                <p id="confirmDesc">Are you sure you want to update the reservation status?</p>
+                <div class="d-flex">
+                    <button id="confirmCancel" class="btn btn-secondary">Cancel</button>
+                    <button id="confirmOk" class="btn btn-primary">Yes, Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const editModal = document.getElementById('editStatusModal');
+            const confirmModal = document.getElementById('confirmModal');
+
+            // Close buttons on edit modal (close button and Cancel link)
+            const closeButtons = editModal.querySelectorAll('.modal-close');
+
+            closeButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();  // prevent default link or button action
+                // Redirect to dashboard
+                window.location.href = "{% url 'venue_dashboard' reservation.venue.id %}";
+            });
+            });
+
+            // Close edit modal if clicked outside modal-content
+            editModal.addEventListener('click', (e) => {
+            if (e.target === editModal) {
+                window.location.href = "{% url 'venue_dashboard' reservation.venue.id %}";
+            }
+            });
+
+            // Show the edit modal
+            editModal.classList.add('show');
+
+            // Confirmation modal buttons
+            const confirmCancel = document.getElementById('confirmCancel');
+            const confirmOk = document.getElementById('confirmOk');
+            
+            const updateForm = document.getElementById('updateStatusForm');
+            
+            // Show confirmation modal on form submit
+            updateForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            confirmModal.classList.add('show');
+            });
+
+            // Cancel confirmation modal (just hide modal, no redirect)
+            confirmCancel.addEventListener('click', () => {
+            confirmModal.classList.remove('show');
+            });
+
+            // Confirm and submit form
+            confirmOk.addEventListener('click', () => {
+            confirmModal.classList.remove('show');
+            updateForm.submit();
+            });
+
+            // Close confirmation modal if click outside modal-content
+            confirmModal.addEventListener('click', (e) => {
+            if (e.target === confirmModal) {
+                confirmModal.classList.remove('show');
+            }
+            });
+        });
+    </script>
+{% endblock %}

@@ -25,8 +25,9 @@
             {% if user.is_authenticated %}
                 <div class="user-menu">
                     {% if user.user_type == 'venue_admin' %}
-                        <a href="{% url 'venue_dashboard' %}" class="dashboard-link">Dashboard</a>
+                        <a href="{% url 'administration_panel' %}" class="dashboard-link">Dashboard</a>
                     {% endif %}
+
 
                     <button class="user-menu-btn" id="userMenuBtn">
                         {{ user.username }} 

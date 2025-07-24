@@ -6,19 +6,18 @@ from django.db.models import Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
 from django.utils.timezone import now
 from datetime import datetime, timedelta
-
+from django.utils import timezone
 from .models import Venue, VenueVisit, Reservation
-from .forms import ReservationForm, VenueApplicationForm
+from .forms import ReservationForm, VenueApplicationForm, ReservationStatusForm
 from .utils import send_reservation_emails, get_client_ip  # make sure this exists or adapt accordingly
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.models import User  # For admin email in venue signup
-
-
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.safestring import mark_safe
 from django.contrib.auth import get_user_model
-
+from django.http import HttpResponseForbidden
+from django.core.exceptions import PermissionDenied
 import json
 
 User = get_user_model()
@@ -112,24 +111,32 @@ def apply_venue(request):
 @login_required
 def venue_dashboard(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
-    print(venue.name)
-    print(venue.owner, request.user)
-    if venue.owner != request.user:
-        return redirect('venue_list')
+    reservations = venue.reservations.all()  # or your related_name
 
-    reservations = Reservation.objects.filter(venue=venue).order_by('-date', 'time')
-    return render(request, 'venues/venue_dashboard.html', {'venue': venue, 'reservations': reservations})
+    now = timezone.now().date()
+
+    upcoming_reservations = reservations.filter(date__gte=now).order_by('date', 'time')
+    past_reservations = reservations.filter(date__lt=now).order_by('-date', '-time')
+
+    context = {
+        'venue': venue,
+        'upcoming_reservations': upcoming_reservations,
+        'past_reservations': past_reservations,
+    }
+    return render(request, 'venues/venue_dashboard.html', context)
 
 
 @login_required
 @require_POST
 def toggle_venue_full(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
+
     if venue.owner != request.user:
-        return redirect('venue_list')
+        raise PermissionDenied
 
     venue.is_full = not venue.is_full
-    venue.save()
+    venue.save(update_fields=['is_full'])
+
     return redirect('venue_dashboard', venue_id=venue.id)
 
 
@@ -137,10 +144,12 @@ def toggle_venue_full(request, venue_id):
 def update_reservation_status(request, reservation_id, status):
     reservation = get_object_or_404(Reservation, id=reservation_id)
     if reservation.venue.owner != request.user:
-        return redirect('venue_list')
+        raise PermissionDenied
 
-    reservation.status = status
-    reservation.save()
+    if status in ['accepted', 'rejected'] and reservation.status == 'pending':
+        reservation.status = status
+        reservation.save(update_fields=['status'])
+
     return redirect('venue_dashboard', venue_id=reservation.venue.id)
 
 
@@ -164,7 +173,7 @@ def cancel_reservation(request, reservation_id):
 def venue_visits_analytics(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
     if venue.owner != request.user:
-        return redirect('venue_list')
+        return HttpResponseForbidden("You do not have permission to view this dashboard.")
 
     grouping = request.GET.get('group', 'daily')
 
@@ -243,3 +252,29 @@ def make_reservation(request, venue_id):
         form = ReservationForm()
 
     return render(request, 'venues/make_reservation.html', {'form': form, 'venue': venue})
+
+
+
+@login_required
+def edit_reservation_status(request, reservation_id):
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+
+    # Check if the current user is the owner/admin of the venue
+    if reservation.venue.owner != request.user:
+        messages.error(request, "You do not have permission to edit this reservation.")
+        return redirect('venue_dashboard', venue_id=reservation.venue.id)
+
+    if request.method == 'POST':
+        form = ReservationStatusForm(request.POST, instance=reservation)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Reservation status updated successfully.")
+            return redirect('venue_dashboard', venue_id=reservation.venue.id)
+    else:
+        form = ReservationStatusForm(instance=reservation)
+
+    context = {
+        'form': form,
+        'reservation': reservation,
+    }
+    return render(request, 'venues/edit_reservation_status.html', context)

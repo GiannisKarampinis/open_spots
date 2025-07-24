@@ -1,0 +1,14 @@
+{% extends "includes/base.html" %}
+{% block content %}
+  <h2>Summary for {{ request.user.username }}</h2>
+
+  <p><strong>Total Venues:</strong> {{ venues.count }}</p>
+  <p><strong>Total Reservations:</strong> {{ total_reservations }}</p>
+
+  <h3>Venues</h3>
+  <ul>
+    {% for venue in venues %}
+      <li>{{ venue.name }} – {{ venue.kind }} ({{ venue.location }})</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

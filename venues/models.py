@@ -21,7 +21,6 @@ class Venue(models.Model):
     kind = models.CharField(max_length=20, choices=VENUE_TYPES, default='other')
     location = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    capacity = models.PositiveIntegerField()
     available_tables = models.PositiveIntegerField()
     image = models.ImageField(upload_to='venues/', blank=True, null=True)
     average_rating = models.FloatField(default=0.0)
@@ -62,8 +61,8 @@ class Table(models.Model):
 
 
 class Reservation(models.Model):
-    venue = models.ForeignKey('Venue', on_delete=models.CASCADE, related_name='reservations')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
+    venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='reservations')
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True)  # Optional phone number

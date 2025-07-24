@@ -6,7 +6,9 @@
     max-width:             500px;                     /* Max container width */
     margin:                60px auto;                 /* Center horizontally, top/bottom margin */
     color:                 white;                   /* Text color */
-    font-family:           'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean readable font */
+    /* font-family:           'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; Clean readable font */
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
 }
 
 .signup-container h2 {

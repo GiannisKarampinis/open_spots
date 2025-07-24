@@ -1,5 +1,12 @@
 {% extends 'includes/base.html' %}
+{%load static%}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'venues/venue_dashboard.css' %}">
+{% endblock %}
+
+
 {% block title %}Venue Dashboard{% endblock %}
+
 {% block content %}
 <a href="{% url 'venue_visits_analytics' venue.id %}">📊 Visitor Analytics</a>
 
@@ -19,51 +26,96 @@
         </form>
     </div>
 
-    <h2 class="mb-3">Your Reservations</h2>
-
-    {% if reservations %}
-    <div class="table-responsive">
-        <table class="table table-striped table-hover shadow-sm">
-            <thead class="table-dark">
-                <tr>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Party Size</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in reservations %}
-                <tr>
-                    <td>{{ r.user }}</td>
-                    <td>{{ r.date }}</td>
-                    <td>{{ r.time }}</td>
-                    <td>{{ r.party_size }}</td>
-                    <td>
-                        <span class="badge 
-                            {% if r.status == 'pending' %}bg-warning text-dark
-                            {% elif r.status == 'accepted' %}bg-success
-                            {% else %}bg-danger{% endif %}">
-                            {{ r.status|capfirst }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if r.status == 'pending' %}
-                        <a href="{% url 'update_reservation_status' r.id 'accepted' %}" class="btn btn-success btn-sm me-1">✅ Accept</a>
-                        <a href="{% url 'update_reservation_status' r.id 'rejected' %}" class="btn btn-danger btn-sm">❌ Reject</a>
-                        {% else %}
-                        <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <!-- Upcoming Reservations Section -->
+    <h2 class="mb-3">Upcoming Reservations</h2>
+    {% if upcoming_reservations %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover shadow-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Party Size</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in upcoming_reservations %}
+                    <tr>
+                        <td>{{ r.user.username }}</td>
+                        <td>{{ r.date }}</td>
+                        <td>{{ r.time }}</td>
+                        <td>{{ r.party_size }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if r.status == 'pending' %}bg-warning text-dark
+                                {% elif r.status == 'accepted' %}bg-success
+                                {% else %}bg-danger{% endif %}">
+                                {{ r.status|capfirst }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if r.status == 'pending' %}
+                                <a href="{% url 'update_reservation_status' r.id 'accepted' %}" class="btn btn-success btn-sm me-1">✅ Accept</a>
+                                <a href="{% url 'update_reservation_status' r.id 'rejected' %}" class="btn btn-danger btn-sm">❌ Reject</a>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                            <a href="{% url 'edit_reservation_status' r.id %}" class="btn btn-sm btn-edit-status">Edit Status</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
-    <div class="alert alert-info mt-4">No reservations yet.</div>
+        <div class="alert alert-info mt-4">No upcoming reservations.</div>
     {% endif %}
+
+    <hr>
+
+    <!-- Past Reservations Section -->
+    <h2 class="mb-3">Past Reservations</h2>
+    {% if past_reservations %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover shadow-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Party Size</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in past_reservations %}
+                    <tr>
+                        <td>{{ r.user }}</td>
+                        <td>{{ r.date }}</td>
+                        <td>{{ r.time }}</td>
+                        <td>{{ r.party_size }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if r.status == 'pending' %}bg-warning text-dark
+                                {% elif r.status == 'accepted' %}bg-success
+                                {% else %}bg-danger{% endif %}">
+                                {{ r.status|capfirst }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'edit_reservation_status' r.id %}" class="btn btn-sm btn-edit-status">Edit Status</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info mt-4">No past reservations.</div>
+    {% endif %}
+
 </div>
 {% endblock %}

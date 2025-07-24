@@ -1,21 +1,15 @@
-from django.shortcuts               import render, redirect, get_object_or_404
-from django.contrib.auth            import login, authenticate, get_backends
-from django.contrib                 import messages
+from datetime import timedelta
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, get_backends
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth            import views as auth_views
-from django.contrib.auth.tokens     import default_token_generator
-from django.utils.http              import urlsafe_base64_decode
-from django.utils                   import timezone
-from django.contrib.auth            import get_user_model
-from django.views.decorators.http   import require_POST
-from .tools                         import send_verification_code
-from django.shortcuts               import render, redirect
-from .forms                         import ProfileEditForm
-from datetime                       import timedelta
-from django.views.decorators.cache  import never_cache
-from django.utils.timezone          import now
-from .forms                         import CustomUserCreationForm
-from .models                        import EmailVerificationCode, CustomUser
+from django.views.decorators.http import require_POST
+from django.utils.timezone import now
+from .forms import CustomUserCreationForm, ProfileEditForm
+from .models import CustomUser, EmailVerificationCode
+from .tools import send_verification_code
+from venues.models import Venue
+
 
 
 def signup_view(request):
@@ -40,29 +34,24 @@ def signup_view(request):
     return render(request, 'accounts/signup.html', {'form': form})
 
 
-
 @login_required
 def profile_view(request):
     user = request.user
     old_email = user.email.strip().lower() if user.email else ''
+
     if request.method == 'POST':
         form = ProfileEditForm(request.POST, instance=user)
         if form.is_valid():
-            
             updated_user = form.save(commit=False)
 
-            # Normalize email for comparison
             new_email = form.cleaned_data['email'].strip().lower() if form.cleaned_data.get('email') else ''
-
             email_changed = False
-            
-            print(f"Old email: '{old_email}', New email: '{new_email}'")
-            
+
             if new_email != old_email:
                 updated_user.unverified_email = updated_user.email
                 updated_user.email_verified = False
                 email_changed = True
-                updated_user.email = user.email  # Keep old email until verified
+                updated_user.email = user.email  # keep old email until verified
 
             updated_user.save()
 
@@ -76,19 +65,18 @@ def profile_view(request):
 
             messages.success(request, "Profile updated successfully.")
             return redirect('profile')
+
     else:
         form = ProfileEditForm(instance=user)
 
     return render(request, 'accounts/profile.html', {'form': form})
 
 
-
-
 def confirm_code_view(request):
     user_id = request.session.get('pending_user_id')
     if not user_id:
         messages.error(request, "Session expired or invalid access to verification page.")
-        return redirect('signup')  # or login page
+        return redirect('signup')
 
     user = get_object_or_404(CustomUser, id=user_id)
     context = {}
@@ -114,21 +102,25 @@ def confirm_code_view(request):
         code_obj.delete()
 
         backend = get_backends()[0]
-        login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)  # Now log the user in
+        login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)
         request.session.pop('pending_user_id', None)
-        request.session.pop('code_already_sent', None)  # NEW
+        request.session.pop('code_already_sent', None)
 
         messages.success(request, "Your email has been verified. Welcome!")
         return redirect('profile')
 
-    # GET request: send a new code
+    # GET request: send a new code if not already sent recently
     if not request.session.get('code_already_sent'):
         EmailVerificationCode.objects.filter(user=user).delete()
         send_verification_code(user)
         request.session['code_already_sent'] = True
-    
-    new_code = EmailVerificationCode.objects.filter(user=user).latest('created_at')
-    remaining = max(0, int((new_code.created_at + timedelta(minutes=2) - now()).total_seconds()))
+
+    latest_code = EmailVerificationCode.objects.filter(user=user).order_by('-created_at').first()
+    if latest_code:
+        remaining = max(0, int((latest_code.created_at + timedelta(minutes=2) - now()).total_seconds()))
+    else:
+        remaining = 0
+
     context['remaining_seconds'] = remaining
 
     return render(request, 'accounts/verify_code.html', context)
@@ -140,8 +132,18 @@ def is_venue_admin(user):
 
 @login_required
 @user_passes_test(is_venue_admin)
-def venue_dashboard_view(request):
-    return render(request, 'accounts/venue_dashboard.html')  # Will be built later
+def administration_panel(request):
+    # Φέρνουμε όλα τα venues που ανήκουν στον τρέχοντα user
+    venues = Venue.objects.filter(owner=request.user)
+
+    context = {
+        'venues': venues,
+        'show_dashboard_button': True,
+    }
+    return render(request, 'accounts/administration_panel.html', context)
+
+
+
 
 @require_POST
 @login_required
