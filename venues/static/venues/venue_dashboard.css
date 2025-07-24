@@ -123,26 +123,17 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     cursor: not-allowed;
 }
 
-/* === Filter/Search Input === */
-.dataTables_wrapper .dataTables_filter {
-    /* display: flex; */
-    /* justify-content:flex-end; */
-    /* flex: 1 1 100%; */
-    /* width:400px; */
-}
-.dataTables_wrapper input[type="search"] {
-    width: 100%;
-    padding: 8px 14px;
-    font-size: 0.95rem;
-    border: 1px solid #555;
+/* === Top Controls Wrapper (Search + Entries) === */
+.datatable-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: #1f1f1f;
     border-radius: 6px;
-    background-color: #2c2c2c;
-    color: #f1f1f1;
-    transition: border-color 0.3s ease;
-}
-.dataTables_wrapper input[type="search"]:focus {
-    border-color: #4a90e2;
-    outline: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+    gap: 1rem;
 }
 
 /* === Show Entries Dropdown === */
@@ -150,34 +141,98 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     display: flex;
     align-items: center;
     font-size: 0.95rem;
-    color: #ccc;
+    color: #a0c8ff;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 150px;
 }
+
+.dataTables_wrapper .dataTables_length label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+    font-weight: 600;
+    color: #a0c8ff;
+}
+
 .dataTables_wrapper .dataTables_length select {
-    margin-left: 8px;
-    padding: 6px 10px;
-    font-size: 0.9rem;
+    padding: 8px 14px;
+    font-size: 0.95rem;
     border-radius: 6px;
-    border: 1px solid #555;
-    background-color: #2c2c2c;
-    color: #f1f1f1;
-    transition: border-color 0.3s ease;
+    border: 1px solid #444;
+    background-color: #1f1f1f;
+    color: #a0c8ff;
+    transition: all 0.3s ease;
+    min-width: 65px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
+
+.dataTables_wrapper .dataTables_length select:hover {
+    background-color: #2a2a2a;
+    border-color: #555;
+}
+
 .dataTables_wrapper .dataTables_length select:focus {
     border-color: #4a90e2;
     outline: none;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    background-color: #2a2a2a;
 }
 
-/* === Labels === */
-.dataTables_wrapper label {
-    font-weight: normal;
+/* === Filter/Search Input === */
+.dataTables_wrapper .dataTables_filter {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+}
+
+.dataTables_wrapper .dataTables_filter label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+    font-weight: 600;
+    color: #a0c8ff;
     width: 100%;
 }
 
-/* === Top Controls Wrapper (Search + Entries) === */
-.datatable-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+.dataTables_wrapper input[type="search"] {
+    flex: 1;
+    width: 100%;
+    max-width: 400px;
+    padding: 8px 14px;
+    font-size: 0.95rem;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background-color: #1f1f1f;
+    color: #e0e0e0;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.dataTables_wrapper input[type="search"]:hover {
+    background-color: #2a2a2a;
+    border-color: #555;
+}
+
+.dataTables_wrapper input[type="search"]:focus {
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    background-color: #2a2a2a;
+}
+
+.dataTables_wrapper input[type="search"]::placeholder {
+    color: #888;
+    font-style: normal;
+}
+
+/* === Hide Default DataTables Controls (since we're using custom) === */
+.dataTables_wrapper .dataTables_length:not(.datatable-controls .dataTables_length),
+.dataTables_wrapper .dataTables_filter:not(.datatable-controls .dataTables_filter) {
+    display: none;
 }
 
 /* === Buttons === */
@@ -294,15 +349,37 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 }
 
 /* === Responsive Adjustments === */
-@media (min-width: 576px) {
-    .dataTables_wrapper .dataTables_length { float: left; }
-    .dataTables_wrapper .dataTables_filter { float: right; }
+@media (max-width: 768px) {
+    .datatable-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .dataTables_wrapper .dataTables_filter {
+        max-width: none;
+    }
+    
+    .dataTables_wrapper input[type="search"] {
+        min-width: 200px;
+    }
+    
+    .dataTables_wrapper .dataTables_length {
+        justify-content: center;
+    }
 }
 
 @media (max-width: 575px) {
-    .dataTables_wrapper .dataTables_length,
-    .dataTables_wrapper .dataTables_filter {
-        flex-direction: column;
-        align-items: flex-start;
+    .datatable-controls {
+        padding: 0.75rem;
+    }
+    
+    .dataTables_wrapper input[type="search"] {
+        min-width: 150px;
+        font-size: 0.9rem;
+    }
+    
+    .dataTables_wrapper .dataTables_length select {
+        min-width: 60px;
     }
 }
