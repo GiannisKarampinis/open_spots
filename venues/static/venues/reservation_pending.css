@@ -1,0 +1,285 @@
+/* reservation_success.css - styles for reservation success page */
+
+.success-message {
+    max-width: 600px;
+    margin: 80px auto;
+    padding: 40px;
+    background-color: #2a2a2a;
+    border-radius: 12px;
+    color: #ffffff;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.6s ease-out;
+}
+
+.success-message h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #00ffae;
+}
+
+.success-message p {
+    font-size: 16px;
+    margin-bottom: 30px;
+}
+
+.success-message a {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #555;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    font-weight: bold;
+}
+
+.success-message a:hover {
+    background-color: #777;
+}
+
+/* Optional: smooth fade-in effect */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+:root {
+  --glass-color: #919EB3;
+  --frame-color: #C19875;
+  --sand-color: #EDD0AA;
+}
+
+
+.box-canvas {
+  position: relative;
+  margin: auto;
+  display: block;
+  margin-top: 8%;
+  margin-bottom: 8%;
+  width: 180px;
+  height: 300px;
+}
+
+/* The hourglass frame container */
+.frame {
+  position: absolute;
+  width: 180px;
+  height: 200px;
+  border-top: 10px solid var(--frame-color);
+  border-bottom: 10px solid var(--frame-color);
+  animation: rotateFrame 5s infinite;
+  overflow: hidden; /* prevent children overflow */
+}
+
+/* Frame rotation animation */
+@keyframes rotateFrame {
+  0% {
+    transform: none;
+  }
+  
+  90% {
+    transform: none;
+  }
+  
+  100% {
+    transform: rotate(180deg);
+  }
+}
+
+/* Top half of hourglass */
+/* Changed clip-path to cover full width (left 10% to right 90%) */
+.top {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 100px;
+  clip-path: polygon(
+    40% 100%,  /* bottom-left */
+    60% 100%,  /* bottom-right */
+    100% 0,    /* top-right */
+    0 0        /* top-left */
+  );
+  overflow: hidden;
+}
+
+/* Sand inside top half */
+/* Left aligned, full width to fill entire clipped area */
+.top::before {
+  content: '';
+  position: absolute;
+  width: 160px;
+  height: 80px;
+  bottom: 0;
+  left: 0;
+  background: var(--sand-color);
+  animation: lowerTopSand 5s infinite;
+}
+
+/* Animation moving sand down in top half */
+@keyframes lowerTopSand {
+  0% {
+    transform: none;
+  }
+  
+  100% {
+    transform: translateY(80px);
+  }
+}
+
+/* Bottom half of hourglass */
+/* Changed clip-path to cover full trapezoid shape, wider than before */
+.bottom {
+  position: absolute;
+  left: 50%;
+  top: 100px; /* directly below top */
+  transform: translateX(-50%);
+  width: 160px;
+  height: 100px;
+  clip-path: polygon(
+    40% 0,    /* top-left */
+    60% 0,    /* top-right */
+    100% 100%,/* bottom-right */
+    0 100%    /* bottom-left */
+  );
+  overflow: hidden;
+}
+
+/* Sand inside bottom half */
+/* Left aligned, full width, and translateX removed from parent to keep left aligned */
+.bottom::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 160px;
+  height: 80px;
+  background: var(--sand-color);
+  animation: raiseBottomSand 5s infinite;
+  border-radius: 50% 50% 0 0;
+}
+
+/* The blob of sand that grows and shrinks */
+.blob {
+  position: absolute;
+  left: 50%;
+  top: 60px;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--sand-color);
+  animation: raiseMound 5s infinite;
+}
+
+/* Animation for blob mound size and position */
+@keyframes raiseMound {
+  0% {
+    transform: translate(-50%, 30px);
+    width: 160px;
+  }
+  
+  100% {
+    transform: translateX(-50%);
+    width: 30px;
+  }
+}
+
+/* Animation raising the bottom sand */
+@keyframes raiseBottomSand {
+  0% {
+    transform: translateY(80px);
+    border-radius: 0;
+  }
+  
+  100% {
+    transform: translateY(0);
+    border-radius: 50% 50% 0 0;
+  }
+}
+
+/* Dripping sand from top to bottom */
+.drip {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 0;
+  height: 30px;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 10px solid var(--sand-color);
+  animation: fadeDrip 5s infinite;
+}
+
+/* Drip animation fade */
+@keyframes fadeDrip {
+  0% {
+    opacity: 1;
+  }
+  
+  70% {
+    opacity: 1;
+  }
+  
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Drip stripes inside */
+.drip::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  width: 3px;
+  height: 100px;
+  background: repeating-linear-gradient(to bottom,
+    var(--sand-color),
+    var(--sand-color) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+  animation: drip 5s infinite;
+}
+
+/* Drip falling animation */
+@keyframes drip {
+  0% {
+    transform: translateY(-150px);
+    opacity: 1;
+  }
+  
+  99% {
+    opacity: 1;
+  }
+  
+  100% {
+    transform: translateY(30px);
+  }
+}
+
+/* Glass overlay on bottom half */
+/* Changed white to semi-transparent to avoid blocking sand on edges */
+.glass {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 160px;
+  height: 100px;
+  background: conic-gradient(
+    from 0deg, 
+    rgba(255 255 255 / 0.3) 0deg, 
+    transparent 90deg,
+    rgba(255 255 255 / 0.3) 180deg
+  );
+}
+
+/* Debug outlines - uncomment for testing */
+/*
+.top, .bottom, .frame {
+  outline: 1px dashed lime;
+}
+*/

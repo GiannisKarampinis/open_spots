@@ -1,0 +1,29 @@
+{% extends "includes/base.html" %}
+{% load static %}
+
+{% block title %}Reservation Pending{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'venues/reservation_pending.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="success-message">
+    <div class="box-canvas">
+        <div class="frame">
+        <div class="top"></div>
+        <div class="bottom">
+            <div class="drip"></div>
+            <div class="blob"></div>
+            <div class="glass"></div>
+        </div>
+        
+        </div>
+    </div>
+    <h2>Reservation Pending</h2>
+    <p>Thank you for your booking request. Your reservation is currently pending and requires confirmation from the venue administrator.</p>
+    <p>You’ll receive a confirmation or update shortly via email.</p>
+    <a href="{% url 'venue_list' %}">Back to Venue List</a>
+</div>
+
+{% endblock %}
