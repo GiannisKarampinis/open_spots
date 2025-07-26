@@ -54,6 +54,10 @@ def venue_detail(request, venue_id):
 
     # Reservation handling
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            messages.error(request, "Please Log in to make a reservation.")
+            return redirect('login')  # or use 'login' if that's your login URL name
+
         form = ReservationForm(request.POST)
         if form.is_valid():
             reservation = form.save(commit=False)
