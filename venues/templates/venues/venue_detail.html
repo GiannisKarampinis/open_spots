@@ -5,6 +5,8 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'venues/venue_detail.css' %}">
+    <!-- Include Leaflet.js and CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 {% endblock %}
 
 {% block content %}
@@ -25,7 +27,66 @@
         <div class="col-md-8">
             <h2 class="mb-4">{{ venue.name }}</h2>
             <p class="text-muted fs-5">{{ venue.description }}</p>
+            <!-- Google Maps Link -->
+            {% if venue.location %}
+                <p class="col-md-4 text-end">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#reservationForm" aria-expanded="false" aria-controls="reservationForm">
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ venue.location|urlencode }}" target="_blank">
+                            View on Google Maps
+                        </a>
+                    </button>
+                </p>
+            {% endif %}
+            <!-- Initialize the map -->
+            <p>Lat: {{ venue.latitude }}, Lng: {{ venue.longitude }}</p>
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const defaultLat = 40.6401;
+                    const defaultLng = 22.9444;
+                    const hasCoords = {{ venue.latitude|yesno:"true,false" }} && {{ venue.longitude|yesno:"true,false" }};
+
+                    const map = L.map('venue-map').setView(
+                        hasCoords ? [{{ venue.latitude }}, {{ venue.longitude }}] : [defaultLat, defaultLng],
+                        15
+                    );
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+
+                    if (hasCoords) {
+                        L.marker([{{ venue.latitude }}, {{ venue.longitude }}]).addTo(map)
+                        .bindPopup("<b>{{ venue.name }}</b><br>{{ venue.location }}")
+                        .openPopup();
+                    } else {
+                        // Add an invisible marker with tooltip for "no location available"
+                        const invisibleMarker = L.circleMarker([defaultLat, defaultLng], {
+                            radius: 10,
+                            opacity: 0,
+                            fillOpacity: 0,
+                        }).addTo(map);
+
+                        invisibleMarker.bindTooltip("No Location available", {
+                            permanent: false,
+                            direction: 'top',
+                            opacity: 0.8,
+                            className: 'leaflet-tooltip-no-location'
+                        });
+
+                        // Show tooltip on mouseover, hide on mouseout
+                        invisibleMarker.on('mouseover', function(e) {
+                            this.openTooltip();
+                        });
+                        invisibleMarker.on('mouseout', function(e) {
+                            this.closeTooltip();
+                        });
+                    }
+                });
+            </script>
         </div>
+
+        <!-- Add map container -->
+        <div id="venue-map" style="height: 300px;" class="my-4 rounded shadow"></div>
 
         <!-- Reservation Dropdown -->
         <div class="col-md-4 text-end">
@@ -55,4 +116,5 @@
         </div>
     </div>
 </div>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 {% endblock %}

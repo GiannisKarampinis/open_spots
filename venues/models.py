@@ -6,7 +6,17 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
+import requests
 
+def get_coords_nominatim(address):
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {"q": address, "format": "json", "limit": 1}
+    headers = {'User-Agent': 'Openspots/1.0 (openspots.application@gmail.com)'}
+    response = requests.get(url, params=params, headers=headers)
+    if response.status_code == 200 and response.json():
+        result = response.json()[0]
+        return float(result['lat']), float(result['lon'])
+    return None, None
 
 class Venue(models.Model):
     VENUE_TYPES = [
@@ -25,8 +35,8 @@ class Venue(models.Model):
     image = models.ImageField(upload_to='venues/', blank=True, null=True)
     average_rating = models.FloatField(default=0.0)
     is_full = models.BooleanField(default=False)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    latitude = models.DecimalField(max_digits=18, decimal_places=12, blank=True, null=True)
+    longitude = models.DecimalField(max_digits=18, decimal_places=12, blank=True, null=True)
     email = models.EmailField(null=True, blank=True)   
     phone = models.CharField(max_length=20, blank=True)
     owner = models.ForeignKey(
@@ -45,7 +55,17 @@ class Venue(models.Model):
     class Meta:
         ordering = ['name']
 
-
+@receiver(post_save, sender=Venue)
+def update_venue_coordinates(sender, instance, created, **kwargs):
+    # Only fetch if latitude or longitude are missing and location is set
+    if instance.location and (instance.latitude is None or instance.longitude is None):
+        lat, lon = get_coords_nominatim(instance.location)
+        if lat and lon:
+            # Update instance with fetched coordinates
+            instance.latitude = lat
+            instance.longitude = lon
+            # Avoid recursion by updating without sending signal again
+            Venue.objects.filter(pk=instance.pk).update(latitude=lat, longitude=lon)
 
 class Table(models.Model):
     venue = models.ForeignKey('Venue', on_delete=models.CASCADE, related_name='tables')
