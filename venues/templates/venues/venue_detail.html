@@ -29,13 +29,9 @@
             <p class="text-muted fs-5">{{ venue.description }}</p>
             <!-- Google Maps Link -->
             {% if venue.location %}
-                <p class="col-md-4 text-end">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#reservationForm" aria-expanded="false" aria-controls="reservationForm">
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ venue.location|urlencode }}" target="_blank">
-                            View on Google Maps
-                        </a>
-                    </button>
-                </p>
+                <a href="https://www.google.com/maps/search/?api=1&query={{ venue.location|urlencode }}" target="_blank" style="color: red" class="btn btn-outline-danger">
+                    View on Google Maps
+                </a>
             {% endif %}
             <!-- Initialize the map -->
             <script>
@@ -95,11 +91,9 @@
                 </button>
             {% else %}
                 <!-- Show login prompt with ?next -->
-                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#reservationForm" aria-expanded="false" aria-controls="reservationForm">
-                    <a class="btn btn-outline-primary" href="{% url 'account_login' %}?next={{ request.path }}">
-                        Log in to make a reservation
-                    </a>
-                </button>
+                <a class="btn btn-outline-primary" href="{% url 'account_login' %}?next={{ request.path }}" style="color: red">
+                    Log in to make a reservation
+                </a>
             {% endif %}
 
 
