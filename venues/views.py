@@ -38,6 +38,8 @@ def venue_list(request):
     })
 
 
+import requests
+
 def venue_detail(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
 

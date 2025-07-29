@@ -7,6 +7,9 @@ from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 import requests
+from django.utils.crypto import get_random_string
+import logging
+
 
 def get_coords_nominatim(address):
     url = "https://nominatim.openstreetmap.org/search"
@@ -148,32 +151,51 @@ class VenueVisit(models.Model):
 
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Venue)
 def create_admin_user_for_venue(sender, instance, created, **kwargs):
-    if created and not instance.owner and instance.email:
-        username = instance.email
-        raw_password = User.objects.make_random_password()
+    logger.info(f"Signal triggered for venue '{instance.name}', created={created}")
+
+    if not created:
+        return
+
+    if not instance.email:
+        logger.warning(f"No email provided for venue '{instance.name}', skipping admin user creation.")
+        return
+
+    try:
+        raw_password = get_random_string(12)
+        username = instance.name.lower().replace(" ", "_") + "_admin"
 
         if not User.objects.filter(username=username).exists():
-            user = User.objects.create_user(username=username, email=instance.email, password=raw_password)
+            user = User.objects.create_user(
+                username=username,
+                email=instance.email,
+                password=raw_password
+            )
             user.is_staff = True
+            user.is_venue_admin = True  # if applicable
             user.save()
 
             instance.owner = user
-            instance.save(update_fields=['owner'])
+            instance.save(update_fields=["owner"])
 
-            try:
-                send_mail(
-                    subject='Venue Admin Account Created',
-                    message=(
-                        f'Admin account created for venue "{instance.name}".\n'
-                        f'Login: {username}\nPassword: {raw_password}'
-                    ),
-                    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'openspots.application@gmail.com'),
-                    recipient_list=[instance.email],
-                    fail_silently=False,
-                )
-            except Exception as e:
-                # Handle case where email sending fails (log or ignore)
-                print(f"Failed to send email: {e}")
+            send_mail(
+                subject='Your OpenSpots Venue Admin Account',
+                message=(
+                    f"Welcome to OpenSpots!\n\nYour admin account is ready:\n"
+                    f"Username: {username}\n"
+                    f"Email: {instance.email}\n"
+                    f"Password: {raw_password}\n\n"
+                    f"Login and change your password ASAP."
+                ),
+                from_email='openspots.application@gmail.com',
+                recipient_list=[instance.email],
+                fail_silently=False,
+            )
+
+            logger.info(f"Admin user created and email sent for venue '{instance.name}'.")
+
+    except Exception as e:
+        logger.error(f"Failed to create admin user or send email for venue '{instance.name}': {e}")
