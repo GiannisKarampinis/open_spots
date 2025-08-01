@@ -8,7 +8,7 @@ from django.utils.timezone import now
 from datetime import datetime, timedelta
 from django.utils import timezone
 from .models import Venue, VenueVisit, Reservation
-from .forms import ReservationForm, VenueApplicationForm, ReservationStatusForm
+from .forms import ReservationForm, VenueApplicationForm, ReservationStatusForm, ArrivalStatusForm
 from .utils import send_reservation_emails, get_client_ip  # make sure this exists or adapt accordingly
 from django.core.mail import send_mail
 from django.conf import settings
@@ -19,6 +19,7 @@ from django.contrib.auth import get_user_model
 from django.http import HttpResponseForbidden
 from django.core.exceptions import PermissionDenied
 import json
+
 
 User = get_user_model()
 
@@ -117,20 +118,34 @@ def apply_venue(request):
 @login_required
 def venue_dashboard(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
-    reservations = venue.reservations.all()  # or your related_name
-
     now = timezone.now().date()
 
-    upcoming_reservations = reservations.filter(date__gte=now).order_by('date', 'time')
+    reservations = venue.reservations.all()
+
+    # Only include reservations still waiting for accept/reject
+    upcoming_reservations = reservations.filter(
+        date__gte=now,
+        status='pending'
+    ).order_by('date', 'time')
+
+    # Past reservations regardless of status
     past_reservations = reservations.filter(date__lt=now).order_by('-date', '-time')
+
+    # Accepted reservations that are waiting for the guest to arrive
+    arrivals = reservations.filter(
+        date__gte=now,
+        status='accepted',
+        # arrival_status='pending'
+    ).order_by('date', 'time')
 
     context = {
         'venue': venue,
         'upcoming_reservations': upcoming_reservations,
         'past_reservations': past_reservations,
+        'arrivals': arrivals,
     }
-    return render(request, 'venues/venue_dashboard.html', context)
 
+    return render(request, 'venues/venue_dashboard.html', context)
 
 @login_required
 @require_POST
@@ -260,14 +275,28 @@ def make_reservation(request, venue_id):
     return render(request, 'venues/make_reservation.html', {'form': form, 'venue': venue})
 
 
-
 @login_required
 def edit_reservation_status(request, reservation_id):
     reservation = get_object_or_404(Reservation, id=reservation_id)
 
-    # Check if the current user is the owner/admin of the venue
+    # ✅ Check if the current user is the owner/admin of the venue
     if reservation.venue.owner != request.user:
         messages.error(request, "You do not have permission to edit this reservation.")
+        return redirect('venue_dashboard', venue_id=reservation.venue.id)
+
+    # ✅ Check if reservation is in the past
+    if not reservation.is_upcoming():
+        messages.warning(request, "You cannot edit the status of past reservations.")
+        return redirect('venue_dashboard', venue_id=reservation.venue.id)
+
+    # ✅ Block edit if it's still waiting admin decision
+    if reservation.status == 'pending':
+        messages.warning(request, "You must accept or reject the reservation before editing its status.")
+        return redirect('venue_dashboard', venue_id=reservation.venue.id)
+
+    # ✅ Block edit if arrival_status is already finalized
+    if reservation.arrival_status in ['checked_in', 'no_show']:
+        messages.warning(request, f"This reservation has already been marked as '{reservation.arrival_status.replace('_', ' ')}'.")
         return redirect('venue_dashboard', venue_id=reservation.venue.id)
 
     if request.method == 'POST':
@@ -284,3 +313,64 @@ def edit_reservation_status(request, reservation_id):
         'reservation': reservation,
     }
     return render(request, 'venues/edit_reservation_status.html', context)
+
+
+# @login_required
+# def update_arrival_status(request, reservation_id, arrival_status):
+#     reservation = get_object_or_404(Reservation, id=reservation_id)
+
+#     # Check if current user owns the venue
+#     if reservation.venue.owner != request.user:
+#         messages.error(request, "You do not have permission to update this arrival status.")
+#         return redirect('venue_dashboard', venue_id=reservation.venue.id)
+
+#     # Check if reservation is accepted and arrival_status is still pending
+#     if reservation.status != 'accepted':
+#         messages.warning(request, "Only accepted reservations can have their arrival status updated.")
+#         return redirect('venue_dashboard', venue_id=reservation.venue.id)
+
+#     if reservation.arrival_status != 'pending':
+#         messages.warning(request, f"This reservation's arrival status is already set to '{reservation.arrival_status.replace('_', ' ')}'.")
+#         return redirect('venue_dashboard', venue_id=reservation.venue.id)
+
+#     # Optional: prevent updating arrival status of past reservations
+#     if not reservation.is_upcoming():
+#         messages.warning(request, "You cannot update the arrival status of past reservations.")
+#         return redirect('venue_dashboard', venue_id=reservation.venue.id)
+
+#     # Check that the arrival_status passed is valid
+#     if arrival_status not in ['checked_in', 'no_show']:
+#         messages.error(request, "Invalid arrival status.")
+#         return redirect('venue_dashboard', venue_id=reservation.venue.id)
+
+#     if request.method == 'POST':
+#         form = ArrivalStatusForm(request.POST, instance=reservation)
+#         if form.is_valid():
+#             reservation.arrival_status = arrival_status
+#             reservation.save()
+#             messages.success(request, f"Arrival status updated to '{arrival_status.replace('_', ' ').title()}'.")
+#             return redirect('venue_dashboard', venue_id=reservation.venue.id)
+#     else:
+#         form = ArrivalStatusForm(instance=reservation)
+
+#     context = {
+#         'form': form,
+#         'reservation': reservation,
+#         'selected_status': arrival_status,
+#     }
+#     return render(request, 'venues/update_arrival_status.html', context)
+
+
+@login_required
+def update_arrival_status(request, reservation_id, arrival_status):
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+    if reservation.venue.owner != request.user:
+        raise PermissionDenied
+
+    print(reservation.arrival_status)
+    if arrival_status in ['checked_in', 'no_show'] and reservation.arrival_status == 'pending':
+        reservation.arrival_status = arrival_status
+        reservation.save(update_fields=['arrival_status'])
+        print(reservation.arrival_status)
+
+    return redirect('venue_dashboard', venue_id=reservation.venue.id)
