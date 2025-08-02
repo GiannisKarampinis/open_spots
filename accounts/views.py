@@ -9,8 +9,20 @@ from .forms import CustomUserCreationForm, ProfileEditForm
 from .models import CustomUser, EmailVerificationCode
 from .tools import send_verification_code
 from venues.models import Venue
+from django.contrib.auth.views import LoginView
+from django.urls import reverse
 
+class CustomLoginView(LoginView):
+    template_name = 'accounts/login.html'
 
+    def get_success_url(self):
+        user = self.request.user
+        if user.is_authenticated and user.user_type == 'venue_admin':
+            venue = get_object_or_404(Venue, owner=user)
+            return reverse('venue_dashboard', kwargs={'venue_id': venue.id})
+        return reverse('customer_home')
+
+    
 
 def signup_view(request):
     if request.method == 'POST':
