@@ -10,6 +10,8 @@ from django.utils.crypto import get_random_string
 import logging
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from accounts.tools import send_verification_code
+
 
 
 def get_coords_nominatim(address):
@@ -198,16 +200,20 @@ def create_admin_user_for_venue(sender, instance, created, **kwargs):
         if not User.objects.filter(username=username).exists():
             user = User.objects.create_user(
                 username=username,
-                email=instance.email,
+                email='',
                 password=raw_password
             )
             user.is_staff = True
-            user.is_venue_admin = True  # if applicable
+            user.user_type = 'venue_admin'
+            user.unverified_email = instance.email
+            user.email_verified = False
             user.save()
             assign_venue_permissions(user)
 
             instance.owner = user
             instance.save(update_fields=["owner"])
+
+            send_verification_code(user)  # Send verification code to unverified_email
 
             send_mail(
                 subject='Your OpenSpots Venue Admin Account',
