@@ -21,13 +21,22 @@ def signup_view(request):
             user.unverified_email = user.email
             user.email_verified = False
             user.save()
+            print("Saved user ID:", user.id)
 
-            send_verification_code(user)
-            request.session['pending_user_id'] = user.id
-            request.session['code_already_sent'] = True
+            # Ensure user ID is set
+            if not user.id:
+                user.refresh_from_db()
 
-            messages.info(request, "We’ve sent a 6-digit verification code to your email.")
-            return redirect('confirm_code')
+            if user.id:
+                send_verification_code(user)
+                request.session['pending_user_id'] = user.id
+                request.session['code_already_sent'] = True
+
+                messages.info(request, "We’ve sent a 6-digit verification code to your email.")
+                return redirect('confirm_code')
+            else:
+                messages.error(request, "An unexpected error occurred during signup. Please try again.")
+                return redirect('signup')
     else:
         form = CustomUserCreationForm()
 
@@ -79,7 +88,16 @@ def confirm_code_view(request):
         return redirect('signup')
 
     user = get_object_or_404(CustomUser, id=user_id)
-    context = {}
+
+    # If user already verified, block further code confirmation
+    if user.email_verified:
+        messages.info(request, "Email already verified.")
+        return redirect('profile')
+
+    # If unverified_email is missing, stop here
+    if not user.unverified_email:
+        messages.error(request, "No unverified email found. Please sign up again.")
+        return redirect('signup')
 
     if request.method == 'POST':
         code_entered = request.POST.get('code', '').strip()
@@ -94,23 +112,27 @@ def confirm_code_view(request):
             messages.error(request, "Verification code expired. Please request a new one.")
             return redirect('confirm_code')
 
-        # Valid code
+        # Valid code: finalize email verification
         user.email = user.unverified_email
         user.unverified_email = ''
         user.email_verified = True
         user.save()
+
         code_obj.delete()
 
         backend = get_backends()[0]
         login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)
+
+        # Clean session
         request.session.pop('pending_user_id', None)
         request.session.pop('code_already_sent', None)
 
         messages.success(request, "Your email has been verified. Welcome!")
         return redirect('profile')
 
-    # GET request: send a new code if not already sent recently
+    # Handle GET: optionally resend a code
     if not request.session.get('code_already_sent'):
+        # Clean up any previous codes
         EmailVerificationCode.objects.filter(user=user).delete()
         send_verification_code(user)
         request.session['code_already_sent'] = True
@@ -121,10 +143,11 @@ def confirm_code_view(request):
     else:
         remaining = 0
 
-    context['remaining_seconds'] = remaining
+    context = {
+        'remaining_seconds': remaining
+    }
 
     return render(request, 'accounts/verify_code.html', context)
-
 
 def is_venue_admin(user):
     return user.is_authenticated and user.user_type == 'venue_admin'

@@ -8,7 +8,9 @@ from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 import logging
-import requests
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
+
 
 def get_coords_nominatim(address):
     url = "https://nominatim.openstreetmap.org/search"
@@ -167,7 +169,13 @@ class VenueVisit(models.Model):
             return f"{self.user.username} visited {self.venue.name} at {self.timestamp}"
         return f"Anonymous visit to {self.venue.name} at {self.timestamp}"
     
-
+def assign_venue_permissions(user):
+    content_type = ContentType.objects.get_for_model(Venue)
+    perms = Permission.objects.filter(content_type=content_type, codename__in=[
+        'view_venue', 'change_venue'
+    ])
+    user.user_permissions.set(perms)
+    user.save()
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -196,6 +204,7 @@ def create_admin_user_for_venue(sender, instance, created, **kwargs):
             user.is_staff = True
             user.is_venue_admin = True  # if applicable
             user.save()
+            assign_venue_permissions(user)
 
             instance.owner = user
             instance.save(update_fields=["owner"])
