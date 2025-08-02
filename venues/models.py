@@ -6,10 +6,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
-import requests
 from django.utils.crypto import get_random_string
 import logging
-
+import requests
 
 def get_coords_nominatim(address):
     url = "https://nominatim.openstreetmap.org/search"
@@ -84,27 +83,47 @@ class Table(models.Model):
 
 
 class Reservation(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
-    venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='reservations')
-    name = models.CharField(max_length=100)
-    email = models.EmailField()
-    phone = models.CharField(max_length=20, blank=True)  # Optional phone number
-    date = models.DateField()
-    time = models.TimeField()
-    guests = models.PositiveIntegerField()
-    status = models.CharField(max_length=10, choices=[
+    # existing fields
+    STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('accepted', 'Accepted'),
-        ('rejected', 'Rejected')
-    ], default='pending')
-    table = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True)
+        ('rejected', 'Rejected'),
+    ]
+    
+    ARRIVAL_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('checked_in', 'Checked-in'),
+        ('no_show', 'No-show'),
+    ]
+    
+    user    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
+    venue   = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='reservations')
+    name    = models.CharField(max_length=100)
+    email   = models.EmailField()
+    phone   = models.CharField(max_length=20, blank=True)  # Optional phone number
+    date    = models.DateField()
+    time    = models.TimeField()
+    guests  = models.PositiveIntegerField()
+    status  = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    arrival_status = models.CharField(max_length=20, choices=ARRIVAL_STATUS_CHOICES, default='pending')
+    table   = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"{self.name} - {self.date} at {self.time} ({self.venue.name})"
 
+
     def is_upcoming(self):
-        reservation_datetime = datetime.combine(self.date, self.time)
+        reservation_datetime = timezone.make_aware(
+            datetime.combine(self.date, self.time),
+            timezone.get_current_timezone()
+        )
         return reservation_datetime >= timezone.now()
+
+    def save(self, *args, **kwargs):
+        # If status is accepted and arrival_status is not pending, reset arrival_status to pending
+        if self.status == 'accepted' and self.arrival_status not in ['pending', 'checked_in', 'no_show']:
+            self.arrival_status = 'pending'
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-date', 'time']

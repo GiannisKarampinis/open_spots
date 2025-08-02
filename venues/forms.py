@@ -68,3 +68,11 @@ class ReservationStatusForm(forms.ModelForm):
         widgets = {
             'status': forms.Select(attrs={'class': 'form-select'})
         }
+
+class ArrivalStatusForm(forms.ModelForm):
+    class Meta:
+        model = Reservation
+        fields = ['arrival_status']
+        widgets = {
+            'arrival_status': forms.Select(attrs={'class': 'form-control'}),
+        }

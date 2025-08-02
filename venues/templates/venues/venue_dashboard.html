@@ -1,34 +1,64 @@
 {% extends 'includes/base.html' %}
-{%load static%}
+{% load static %}
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'venues/venue_dashboard.css' %}">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="{% static 'venues/venue_dashboard.css' %}">
+
+    <style>
+
+    </style>
 {% endblock %}
 
 {% block extra_js %}
+  <!-- jQuery (MUST be first) -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+  <!-- Bootstrap JS (bundle includes Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- DataTables -->
   <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  
+  <!-- DataTables Bootstrap 5 integration -->
   <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
   <script>
     $(document).ready(function () {
-      // Initialize upcoming table (no custom controls)
-      $('#upcomingTable').DataTable();
-      
-      // Initialize past table
-      var pastTable = $('#pastTable').DataTable();
+        const upcomingTable = $('#upcomingTable').DataTable();
+        const pastTable = $('#pastTable').DataTable();
+        const specialTable = $('#specialTable').DataTable();
 
-      // Wait for DataTables to fully render, then move controls
-      setTimeout(function() {
-        // Move the controls to custom containers for pastTable only
-        var lengthControl = $('#pastTable_wrapper .dataTables_length').detach();
-        var filterControl = $('#pastTable_wrapper .dataTables_filter').detach();
-        
-        $('#show-entries-wrapper').append(lengthControl);
-        $('#search-wrapper').append(filterControl);
-      }, 100);
+        setTimeout(function () {
+            $('#upcoming-show-entries-wrapper').append($('#upcomingTable_wrapper .dataTables_length').detach());
+            $('#upcoming-search-wrapper').append($('#upcomingTable_wrapper .dataTables_filter').detach());
+            $('#show-entries-wrapper').append($('#pastTable_wrapper .dataTables_length').detach());
+            $('#search-wrapper').append($('#pastTable_wrapper .dataTables_filter').detach());
+            $('#special-show-entries-wrapper').append($('#specialTable_wrapper .dataTables_length').detach());
+            $('#special-search-wrapper').append($('#specialTable_wrapper .dataTables_filter').detach());
+        }, 100);
+
+        // Manual Tabs JS
+        const tabButtons = document.querySelectorAll('.tabs button');
+        const tabContents = document.querySelectorAll('.tab-content > div');
+
+        tabButtons.forEach(button => {
+          button.addEventListener('click', () => {
+            // Remove active from all buttons
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active to clicked button
+            button.classList.add('active');
+
+            // Hide all tab contents
+            tabContents.forEach(content => content.classList.remove('active'));
+            // Show the content linked to clicked button
+            const tabId = button.getAttribute('data-tab');
+            document.getElementById(tabId).classList.add('active');
+          });
+        });
     });
   </script>
 {% endblock %}
+
 
 {% block title %}Venue Dashboard{% endblock %}
 
@@ -51,101 +81,165 @@
         </form>
     </div>
 
-    <!-- Upcoming Reservations Section -->
-    <h2 class="mb-3">Upcoming Reservations</h2>
-    {% if upcoming_reservations %}
-        <div class="table-responsive">
-            <table id="upcomingTable" class="table table-striped table-hover shadow-sm">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Customer</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Party Size</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in upcoming_reservations %}
-                    <tr>
-                        <td>{{ r.user.username }}</td>
-                        <td>{{ r.date }}</td>
-                        <td>{{ r.time }}</td>
-                        <td>{{ r.party_size }}</td>
-                        <td>
-                            <span class="badge 
-                                {% if r.status == 'pending' %}bg-warning text-dark
-                                {% elif r.status == 'accepted' %}bg-success
-                                {% else %}bg-danger{% endif %}">
-                                {{ r.status|capfirst }}
-                            </span>
-                        </td>
-                        <td>
-                            {% if r.status == 'pending' %}
-                                <a href="{% url 'update_reservation_status' r.id 'accepted' %}" class="btn btn-success btn-sm me-1">✅ Accept</a>
-                                <a href="{% url 'update_reservation_status' r.id 'rejected' %}" class="btn btn-danger btn-sm">❌ Reject</a>
-                            {% else %}
-                                <span class="text-muted">—</span>
-                            {% endif %}
-                            <a href="{% url 'edit_reservation_status' r.id %}" class="btn btn-sm btn-edit-status">Edit Status</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- Manual Tab Navigation -->
+    <div class="tabs">
+      <button type="button" class="active" data-tab="requests">Reservation Requests</button>
+      <button type="button" data-tab="history">Reservation History</button>
+      <button type="button" data-tab="special">Guest Arrivals</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+
+        <!-- Reservation Requests Tab -->
+        <div id="requests" class="active">
+            {% if upcoming_reservations %}
+                <div class="table-responsive">
+                    <div class="datatable-controls mb-2">
+                        <div id="upcoming-show-entries-wrapper"></div>
+                        <div id="upcoming-search-wrapper"></div>
+                    </div>
+                    <table id="upcomingTable" class="table table-striped table-hover shadow-sm">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Party Size</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in upcoming_reservations %}
+                            <tr>
+                                <td>{{ r.user.username }}</td>
+                                <td>{{ r.date }}</td>
+                                <td>{{ r.time }}</td>
+                                <td>{{ r.party_size }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if r.status == 'pending' %}bg-warning text-dark
+                                        {% elif r.status == 'accepted' %}bg-success
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ r.status|capfirst }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if r.status == 'pending' %}
+                                        <a href="{% url 'update_reservation_status' r.id 'accepted' %}" class="btn btn-success btn-sm me-1">✅ Accept</a>
+                                        <a href="{% url 'update_reservation_status' r.id 'rejected' %}" class="btn btn-danger btn-sm">❌ Reject</a>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                    
+                                    {% if r.status != 'pending' %}
+                                        <a href="{% url 'edit_reservation_status' r.id %}" class="btn btn-sm btn-edit-status">Edit Status</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info mt-4">No upcoming reservations.</div>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="alert alert-info mt-4">No upcoming reservations.</div>
-    {% endif %}
 
-    <hr>
-
-    <!-- Past Reservations Section -->
-    <h2 class="mb-3">Past Reservations</h2>
-    {% if past_reservations %}
-        <div class="table-responsive">
-            <div class="datatable-controls">
-                <div id="show-entries-wrapper"></div>
-                <div id="search-wrapper"></div>
-            </div>
-            <table id="pastTable" class="table table-striped table-hover shadow-sm">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Customer</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Party Size</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in past_reservations %}
-                    <tr>
-                        <td>{{ r.user }}</td>
-                        <td>{{ r.date }}</td>
-                        <td>{{ r.time }}</td>
-                        <td>{{ r.party_size }}</td>
-                        <td>
-                            <span class="badge 
-                                {% if r.status == 'pending' %}bg-warning text-dark
-                                {% elif r.status == 'accepted' %}bg-success
-                                {% else %}bg-danger{% endif %}">
-                                {{ r.status|capfirst }}
-                            </span>
-                        </td>
-                        <td>
-                            <a href="{% url 'edit_reservation_status' r.id %}" class="btn btn-sm btn-edit-status">Edit Status</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- Reservation History Tab -->
+        <div id="history">
+            {% if past_reservations %}
+                <div class="table-responsive">
+                    <div class="datatable-controls">
+                        <div id="show-entries-wrapper"></div>
+                        <div id="search-wrapper"></div>
+                    </div>
+                    <table id="pastTable" class="table table-striped table-hover shadow-sm">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Party Size</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in past_reservations %}
+                            <tr>
+                                <td>{{ r.user }}</td>
+                                <td>{{ r.date }}</td>
+                                <td>{{ r.time }}</td>
+                                <td>{{ r.party_size }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if r.status == 'pending' %}bg-warning text-dark
+                                        {% elif r.status == 'accepted' %}bg-success
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ r.status|capfirst }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info mt-4">No past reservations.</div>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="alert alert-info mt-4">No past reservations.</div>
-    {% endif %}
 
+        <!-- Guest Arrivals Tab -->
+        <div id="special">
+            {% if arrivals %}
+                <div class="table-responsive">
+                    <div class="datatable-controls">
+                        <div id="special-show-entries-wrapper"></div>
+                        <div id="special-search-wrapper"></div>
+                    </div>
+                    <table id="specialTable" class="table table-striped table-hover shadow-sm">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Customer</th>
+                                <th>Request Date</th>
+                                <th>Details</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in arrivals %}
+                            <tr>
+                                <td>{{ r.user.username }}</td>
+                                <td>{{ r.date }}</td>
+                                <td>{{ r.details }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if r.arrival_status == 'pending' %}bg-warning text-dark
+                                        {% elif r.arrival_status == 'checked_in' %}bg-success
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ r.arrival_status|capfirst }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if r.arrival_status == 'pending' %}
+                                        <a href="{% url 'update_arrival_status' r.id 'checked_in' %}" class="btn btn-success btn-sm me-1">✅ Checked-in</a>
+                                        <a href="{% url 'update_arrival_status' r.id 'no_show' %}" class="btn btn-danger btn-sm">❌ No-show</a>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info mt-4">No special requests.</div>
+            {% endif %}
+        </div>
+
+    </div>
 </div>
 {% endblock %}

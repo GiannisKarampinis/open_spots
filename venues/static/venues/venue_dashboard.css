@@ -201,7 +201,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 .dataTables_wrapper input[type="search"] {
     flex: 1;
     width: 100%;
-    max-width: 400px;
+    max-width: none;
     padding: 8px 14px;
     font-size: 0.95rem;
     border: 1px solid #444;
@@ -239,10 +239,11 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 .table .btn-sm {
     font-size: 0.8rem;
     padding: 4px 10px;
-    margin: 0 4px;
+    margin: 4px 4px;
     border-radius: 6px;
     font-weight: 600;
     transition: background-color 0.3s ease;
+    display: inline-block;
 }
 
 .btn-success {
@@ -328,7 +329,8 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 }
 .modal-card .btn-group {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
+    flex: wrap;
     gap: 10px;
     margin-top: 16px;
 }
@@ -346,6 +348,34 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     justify-content: center;
     align-items: center;
     min-height: 80vh;
+}
+
+/* Manual tabs styles */
+.tabs {
+display: flex;
+gap: 1rem;
+margin-bottom: 1rem;
+border-bottom: 2px solid #dee2e6;
+}
+.tabs button {
+background: none;
+border: none;
+padding: 0.5rem 1rem;
+font-size: 1.1rem;
+cursor: pointer;
+border-bottom: 3px solid transparent;
+transition: border-color 0.3s;
+}
+.tabs button.active {
+border-color: #0d6efd;
+color: #0d6efd;
+font-weight: 600;
+}
+.tab-content > div {
+display: none;
+}
+.tab-content > div.active {
+display: block;
 }
 
 /* === Responsive Adjustments === */
