@@ -8,18 +8,38 @@ from django.utils.timezone import now
 from .forms import CustomUserCreationForm, ProfileEditForm
 from .models import CustomUser, EmailVerificationCode
 from .tools import send_verification_code
+from django.utils.http import url_has_allowed_host_and_scheme
 from venues.models import Venue
 from django.contrib.auth.views import LoginView
 from django.urls import reverse
+from django.contrib.auth import logout
+
 
 class CustomLoginView(LoginView):
     template_name = 'accounts/login.html'
 
+    def form_valid(self, form):
+        user = form.get_user()
+
+        login(self.request, user)
+
+        if not user.email_verified:
+            # Set session for email verification flow
+            self.request.session['pending_user_id'] = user.id
+            self.request.session['code_already_sent'] = False  # Optional: so you can trigger resend logic
+            messages.warning(self.request, "Please verify your email before continuing.")
+            return redirect('confirm_code')
+
+        return redirect(self.get_success_url())
+
     def get_success_url(self):
         user = self.request.user
-        if user.is_authenticated and user.user_type == 'venue_admin':
-            venue = get_object_or_404(Venue, owner=user)
-            return reverse('venue_dashboard', kwargs={'venue_id': venue.id})
+        if user.user_type == 'venue_admin':
+            venue = Venue.objects.filter(owner=user).first()
+            if venue:
+                return reverse('venue_dashboard', kwargs={'venue_id': venue.id})
+            else:
+                return reverse('apply_venue')
         return reverse('customer_home')
 
     
