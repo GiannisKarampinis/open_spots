@@ -57,6 +57,27 @@
             </div>
         </div>
 
+        <!-- Password Change -->
+        <div class="profile-info-row">
+            <div class="profile-info-label">Password:</div>
+            <div class="profile-info-value">
+                <div id="password-view" class="profile-view-mode">
+                    <span>********</span>
+                    <button class="profile-edit-button" onclick="toggleEdit('password')">Change</button>
+                </div>
+
+                <form method="POST" action="{% url 'profile' %}" id="password-form" class="profile-form" style="display:none; flex-direction: column;">
+                    {% csrf_token %}
+                    {{ password_form.non_field_errors }}
+                    <input type="password" name="old_password" placeholder="Old password" required>
+                    <input type="password" name="new_password1" placeholder="New password" required>
+                    <input type="password" name="new_password2" placeholder="Confirm new password" required>
+                    <button type="submit">Save</button>
+                    <button type="button" class="btn-cancel" onclick="cancelEdit('password')">Cancel</button>
+                </form>
+            </div>
+        </div>
+
     </div>
 
     <div class="reservations-section">

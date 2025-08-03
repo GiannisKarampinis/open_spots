@@ -13,6 +13,8 @@ from venues.models import Venue
 from django.contrib.auth.views import LoginView
 from django.urls import reverse
 from django.contrib.auth import logout
+from .forms import ProfileEditForm, PasswordChangeRequestForm
+
 
 
 class CustomLoginView(LoginView):
@@ -79,33 +81,52 @@ def signup_view(request):
 def profile_view(request):
     user = request.user
     old_email = user.email.strip().lower() if user.email else ''
+    profile_form = ProfileEditForm(instance=user)
+    password_form = PasswordChangeRequestForm(user=user)
 
     if request.method == 'POST':
-        form = ProfileEditForm(request.POST, instance=user)
-        if form.is_valid():
-            updated_user = form.save(commit=False)
+        if 'email' in request.POST or 'phone_number' in request.POST:
+            profile_form  = ProfileEditForm(request.POST, instance=user)
+            if profile_form.is_valid():
+                updated_user = profile_form.save(commit=False)
 
-            new_email = form.cleaned_data['email'].strip().lower() if form.cleaned_data.get('email') else ''
-            email_changed = False
+                new_email = profile_form.cleaned_data['email'].strip().lower() if profile_form.cleaned_data.get('email') else ''
+                email_changed = False
 
-            if new_email != old_email:
-                updated_user.unverified_email = updated_user.email
-                updated_user.email_verified = False
-                email_changed = True
-                updated_user.email = user.email  # keep old email until verified
+                if new_email != old_email:
+                    updated_user.unverified_email = updated_user.email
+                    updated_user.email_verified = False
+                    email_changed = True
+                    updated_user.email = user.email  # keep old email until verified
 
-            updated_user.save()
+                updated_user.save()
 
-            if email_changed:
-                EmailVerificationCode.objects.filter(user=updated_user).delete()
-                send_verification_code(updated_user)
-                request.session['pending_user_id'] = updated_user.id
+                if email_changed:
+                    EmailVerificationCode.objects.filter(user=updated_user).delete()
+                    send_verification_code(updated_user)
+                    request.session['pending_user_id'] = updated_user.id
+                    request.session['code_already_sent'] = True
+                    messages.info(request, "Verification code sent to your new email. Please verify.")
+                    return redirect('confirm_code')
+
+                messages.success(request, "Profile updated successfully.")
+                return redirect('profile')
+            
+        elif 'old_password' in request.POST:
+            password_form = PasswordChangeRequestForm(user=user, data=request.POST)
+            if password_form.is_valid():
+                new_password = password_form.cleaned_data['new_password1']
+                user.set_password(new_password)
+                user.email_verified = False
+                user.unverified_email = user.email
+                user.save()
+
+                EmailVerificationCode.objects.filter(user=user).delete()
+                send_verification_code(user)
+                request.session['pending_user_id'] = user.id
                 request.session['code_already_sent'] = True
-                messages.info(request, "Verification code sent to your new email. Please verify.")
+                messages.info(request, "Password updated. Please verify your email.")
                 return redirect('confirm_code')
-
-            messages.success(request, "Profile updated successfully.")
-            return redirect('profile')
 
     else:
         form = ProfileEditForm(instance=user)

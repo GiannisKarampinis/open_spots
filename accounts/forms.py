@@ -2,6 +2,7 @@ import re
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
+from django.contrib.auth import password_validation
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -48,3 +49,38 @@ class ProfileEditForm(forms.ModelForm):
             if not re.match(r'^\+?\d{7,15}$', phone):
                 raise forms.ValidationError("Enter a valid phone number (7–15 digits, optional +).")
         return phone
+    
+class PasswordChangeRequestForm(forms.Form):
+    old_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'placeholder': 'Old password'}),
+        label="Old Password"
+    )
+    new_password1 = forms.CharField(
+        widget=forms.PasswordInput(attrs={'placeholder': 'New password'}),
+        label="New Password",
+    )
+    new_password2 = forms.CharField(
+        widget=forms.PasswordInput(attrs={'placeholder': 'Confirm new password'}),
+        label="Confirm New Password",
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_old_password(self):
+        old_password = self.cleaned_data['old_password']
+        if not self.user.check_password(old_password):
+            raise forms.ValidationError("Old password is incorrect.")
+        return old_password
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get("new_password1")
+        p2 = cleaned_data.get("new_password2")
+
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("The new passwords do not match.")
+
+        password_validation.validate_password(p1, self.user)
+        return cleaned_data
