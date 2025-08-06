@@ -49,7 +49,35 @@ class ProfileEditForm(forms.ModelForm):
             if not re.match(r'^\+?\d{7,15}$', phone):
                 raise forms.ValidationError("Enter a valid phone number (7–15 digits, optional +).")
         return phone
-    
+
+class PasswordResetRequestForm(forms.Form):
+    email = forms.EmailField(label="Email", required=True)
+
+
+class PasswordResetForm(forms.Form):
+    new_password1 = forms.CharField(
+        label="New Password",
+        strip=False,
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+    )
+    new_password2 = forms.CharField(
+        label="Confirm New Password",
+        strip=False,
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("new_password1")
+        password2 = cleaned_data.get("new_password2")
+
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("Passwords do not match.")
+
+        password_validation.validate_password(password1)
+        return cleaned_data
+
+
 class PasswordChangeRequestForm(forms.Form):
     old_password = forms.CharField(
         widget=forms.PasswordInput(attrs={'placeholder': 'Old password'}),

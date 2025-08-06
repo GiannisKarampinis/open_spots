@@ -14,25 +14,143 @@ from django.contrib.auth.views import LoginView
 from django.urls import reverse
 from django.contrib.auth import logout
 from .forms import ProfileEditForm, PasswordChangeRequestForm
+from .forms import PasswordResetRequestForm, PasswordResetForm
 
+
+
+### This function is only used for developing/testing purposes 
+def password_recover_request(request):
+    if request.method == 'POST':
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email'].strip().lower()
+            user = CustomUser.objects.filter(email__iexact=email).first()
+            print('Password recover:', user.username)
+
+            if user:
+                request.session['pending_user_id'] = user.id
+                request.session['verification_reason'] = 'password_recovery'
+                request.session['code_already_sent'] = False
+                return redirect('confirm_code')
+            else:
+                messages.error(request, "No user found with that email.")
+                return redirect('password_recover')
+    else:
+        form = PasswordResetRequestForm()
+
+    return render(request, 'accounts/password_recover.html', {'form': form})
+
+
+
+### This function will be used later when: email = models.EmailField(unique=True) in CustomUser
+# def password_recover_request(request):
+#     if request.method == 'POST':
+#         form = PasswordResetRequestForm(request.POST)
+#         if form.is_valid():
+#             email = form.cleaned_data['email'].strip().lower()
+#             try:
+#                 user = CustomUser.objects.get(email=email)
+#                 user.unverified_email = email  # Assign temporarily
+#                 user.email_verified = False
+#                 user.save()
+
+#                 EmailVerificationCode.objects.filter(user=user).delete()
+#                 send_verification_code(user)
+
+#                 request.session['pending_user_id'] = user.id
+#                 request.session['recovery_flow'] = True
+#                 messages.info(request, "Verification code sent. Please check your email.")
+#                 return redirect('confirm_code')
+#             except CustomUser.DoesNotExist:
+#                 messages.error(request, "No account found with that email.")
+#     else:
+#         form = PasswordResetRequestForm()
+#     return render(request, 'accounts/password_recover.html', {'form': form})
+
+### This function is only used for developing/testing purposes 
+def password_reset(request):
+    user_id = request.session.get('pending_user_id')
+    verified = request.session.get('password_recovery_verified')
+
+    if not user_id or not verified:
+        messages.error(request, "Invalid access. Start password recovery again.")
+        return redirect('password_recover')
+
+    user = get_object_or_404(CustomUser, id=user_id)
+
+    if request.method == 'POST':
+        form = PasswordResetForm(request.POST)  # Simple two-field form
+        if form.is_valid():
+            new_password = form.cleaned_data['new_password1']
+            user.set_password(new_password)
+            user.email_verified = True  # ✅ Consider email verified
+            user.unverified_email = ''  # ✅ Clear unverified email
+            user.save()
+
+            # Clear session
+            request.session.flush()
+
+            messages.success(request, "Password reset successfully. You may now log in.")
+            return redirect('login')
+    else:
+        form = PasswordResetForm()
+
+    return render(request, 'accounts/password_reset.html', {'form': form})
+
+
+### This function will be used later when: email = models.EmailField(unique=True) in CustomUser
+# def password_reset(request):
+#     user_id = request.session.get('pending_user_id')
+#     if not user_id or not request.session.get('recovery_flow'):
+#         messages.error(request, "Invalid access.")
+#         return redirect('login')
+
+#     user = get_object_or_404(CustomUser, id=user_id)
+
+#     if request.method == 'POST':
+#         form = PasswordResetForm(request.POST)
+#         if form.is_valid():
+#             password = form.cleaned_data['new_password1']
+#             user.set_password(password)
+#             user.email_verified = True
+#             user.unverified_email = ''
+#             user.save()
+
+#             EmailVerificationCode.objects.filter(user=user).delete()
+
+#             # Clear session
+#             request.session.pop('pending_user_id', None)
+#             request.session.pop('recovery_flow', None)
+#             request.session.pop('code_already_sent', None)
+
+#             messages.success(request, "Password reset successful. Please log in.")
+#             return redirect('login')
+#     else:
+#         form = PasswordResetForm()
+#     return render(request, 'accounts/password_reset.html', {'form': form})
 
 
 class CustomLoginView(LoginView):
     template_name = 'accounts/login.html'
-
     def form_valid(self, form):
         user = form.get_user()
-
-        login(self.request, user)
-
+        print('Login:', user.email_verified)
         if not user.email_verified:
-            # Set session for email verification flow
             self.request.session['pending_user_id'] = user.id
-            self.request.session['code_already_sent'] = False  # Optional: so you can trigger resend logic
+            self.request.session['code_already_sent'] = False
+
+            # ✅ Set verification reason
+            self.request.session['verification_reason'] = 'signup'
+
             messages.warning(self.request, "Please verify your email before continuing.")
             return redirect('confirm_code')
 
+        login(self.request, user)
         return redirect(self.get_success_url())
+    
+    def form_invalid(self, form):
+        print("❌ form_invalid called")
+        return super().form_invalid(form)
 
     def get_success_url(self):
         user = self.request.user
@@ -42,10 +160,9 @@ class CustomLoginView(LoginView):
                 return reverse('venue_dashboard', kwargs={'venue_id': venue.id})
             else:
                 return reverse('apply_venue')
-        return reverse('customer_home')
+        return reverse('venue_list')
 
     
-
 def signup_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -116,41 +233,57 @@ def profile_view(request):
             password_form = PasswordChangeRequestForm(user=user, data=request.POST)
             if password_form.is_valid():
                 new_password = password_form.cleaned_data['new_password1']
+                
+                # Capture current verified email BEFORE invalidating
+                current_verified_email = user.email.strip().lower()
                 user.set_password(new_password)
                 user.email_verified = False
-                user.unverified_email = user.email
+                user.unverified_email = current_verified_email
+                print('Profile view:', user.unverified_email)
                 user.save()
 
                 EmailVerificationCode.objects.filter(user=user).delete()
                 send_verification_code(user)
                 request.session['pending_user_id'] = user.id
                 request.session['code_already_sent'] = True
+                request.session['verification_reason'] = 'password_change'
                 messages.info(request, "Password updated. Please verify your email.")
                 return redirect('confirm_code')
+            else:
+                messages.error(request, "Invalid form: something went wrong, please try again")
 
-    else:
-        form = ProfileEditForm(instance=user)
+    context = {
+        'profile_form': profile_form,
+        'password_form': password_form,
+    }
 
-    return render(request, 'accounts/profile.html', {'form': form})
+    return render(request, 'accounts/profile.html', context)
 
 
 def confirm_code_view(request):
     user_id = request.session.get('pending_user_id')
-    if not user_id:
+    verification_reason = request.session.get('verification_reason')
+    print('Confirm code:', verification_reason)
+    print('Confirm code:', request.method)  
+    if not user_id or not verification_reason:
         messages.error(request, "Session expired or invalid access to verification page.")
-        return redirect('signup')
+        return redirect('login')
 
     user = get_object_or_404(CustomUser, id=user_id)
+    print('Confirm code:', user.unverified_email)
+    print('Confirm code:', user.email_verified)
+    print('Confirm code:', user.username)
 
     # If user already verified, block further code confirmation
-    if user.email_verified:
+    if verification_reason == 'signup' and user.email_verified:
+        print('lalalalal')
         messages.info(request, "Email already verified.")
-        return redirect('profile')
+        return redirect('login')
 
     # If unverified_email is missing, stop here
-    if not user.unverified_email:
+    if verification_reason not in ['password_recovery', 'password_change'] and not user.unverified_email:
         messages.error(request, "No unverified email found. Please sign up again.")
-        return redirect('signup')
+        return redirect('login')
 
     if request.method == 'POST':
         code_entered = request.POST.get('code', '').strip()
@@ -165,23 +298,49 @@ def confirm_code_view(request):
             messages.error(request, "Verification code expired. Please request a new one.")
             return redirect('confirm_code')
 
-        # Valid code: finalize email verification
-        user.email = user.unverified_email
-        user.unverified_email = ''
-        user.email_verified = True
-        user.save()
-
         code_obj.delete()
 
-        backend = get_backends()[0]
-        login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)
+        if verification_reason in ['signup', 'email_update']:
+            user.email = user.unverified_email
+            user.unverified_email = ''
+            user.email_verified = True
+            user.save()
 
-        # Clean session
-        request.session.pop('pending_user_id', None)
-        request.session.pop('code_already_sent', None)
+          # Only clear what's necessary
+            request.session.pop('pending_user_id', None)
+            request.session.pop('code_already_sent', None)
+            request.session.pop('verification_reason', None)
 
-        messages.success(request, "Your email has been verified. Welcome!")
-        return redirect('profile')
+
+            # Log the user in manually
+            backend = get_backends()[0]
+            login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)
+            messages.success(request, "Your email has been verified. You may now use your account.")
+            return redirect('profile')  # or another landing page
+
+        elif verification_reason == 'password_recovery':
+            # Do not log in yet!
+            # Clean old sessions but keep ID to use on password reset
+            request.session['password_recovery_verified'] = True
+            return redirect('password_reset')  # You need to create this view
+        
+        elif verification_reason == 'password_change':
+            user.email = user.unverified_email
+            user.unverified_email = ''
+            user.email_verified = True
+            user.save()
+
+            request.session.flush()  # Clear session to avoid conflicts
+
+            # request.session.pop('pending_user_id', None)
+            # request.session.pop('code_already_sent', None)
+            # request.session.pop('verification_reason', None)
+
+            backend = get_backends()[0]
+            login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)
+            messages.success(request, "Password changed and email verified.")
+            return redirect('profile')
+
 
     # Handle GET: optionally resend a code
     if not request.session.get('code_already_sent'):
@@ -217,8 +376,6 @@ def administration_panel(request):
         'show_dashboard_button': True,
     }
     return render(request, 'accounts/administration_panel.html', context)
-
-
 
 
 @require_POST
