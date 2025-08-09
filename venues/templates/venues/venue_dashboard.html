@@ -3,243 +3,295 @@
 {% block extra_css %}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="{% static 'venues/venue_dashboard.css' %}">
-
-    <style>
-
-    </style>
 {% endblock %}
 
 {% block extra_js %}
-  <!-- jQuery (MUST be first) -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- jQuery (MUST be first) -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-  <!-- Bootstrap JS (bundle includes Popper) -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS (bundle includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- DataTables -->
-  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-  
-  <!-- DataTables Bootstrap 5 integration -->
-  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    
+    <!-- DataTables Bootstrap 5 integration -->
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
-  <script>
-    $(document).ready(function () {
-        const upcomingTable = $('#upcomingTable').DataTable();
-        const pastTable = $('#pastTable').DataTable();
-        const specialTable = $('#specialTable').DataTable();
+    <!-- Plotly for Analytics -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
 
+    <script>
+        // Move DataTables length and filter controls to custom wrappers
         setTimeout(function () {
-            $('#upcoming-show-entries-wrapper').append($('#upcomingTable_wrapper .dataTables_length').detach());
-            $('#upcoming-search-wrapper').append($('#upcomingTable_wrapper .dataTables_filter').detach());
-            $('#show-entries-wrapper').append($('#pastTable_wrapper .dataTables_length').detach());
-            $('#search-wrapper').append($('#pastTable_wrapper .dataTables_filter').detach());
-            $('#special-show-entries-wrapper').append($('#specialTable_wrapper .dataTables_length').detach());
-            $('#special-search-wrapper').append($('#specialTable_wrapper .dataTables_filter').detach());
+            $('#upcoming-show-entries-wrapper').append($('#upcomingTable_length').detach());
+            $('#upcoming-search-wrapper').append($('#upcomingTable_filter').detach());
+
+            $('#show-entries-wrapper').append($('#pastTable_length').detach());
+            $('#search-wrapper').append($('#pastTable_filter').detach());
+
+            $('#special-show-entries-wrapper').append($('#specialTable_length').detach());
+            $('#special-search-wrapper').append($('#specialTable_filter').detach());
         }, 100);
 
-        // Manual Tabs JS
-        const tabButtons = document.querySelectorAll('.tabs button');
-        const tabContents = document.querySelectorAll('.tab-content > div');
+        // Animation for accept/reject buttons
+        document.querySelectorAll('.btn-accept-reservation').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const url = this.href;
+                const row = this.closest('tr');
 
-        tabButtons.forEach(button => {
-          button.addEventListener('click', () => {
-            // Remove active from all buttons
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            // Add active to clicked button
-            button.classList.add('active');
+                row.classList.add('fade-out-slide');
 
-            // Hide all tab contents
-            tabContents.forEach(content => content.classList.remove('active'));
-            // Show the content linked to clicked button
-            const tabId = button.getAttribute('data-tab');
-            document.getElementById(tabId).classList.add('active');
-          });
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 400); // CSS animation duration must match
+            });
         });
+
+        $(document).ready(function () {
+            $('#upcomingTable').DataTable({
+                lengthChange: true,
+                searching: true,
+                // add other options if needed
+            });
+
+            $('#pastTable').DataTable({
+                lengthChange: true,
+                searching: true,
+            });
+
+            $('#specialTable').DataTable({
+                lengthChange: true,
+                searching: true,
+            });
+
+            
+            const tabButtons = document.querySelectorAll('.tabs button');
+            const tabContents = document.querySelectorAll('.tab-content > div, #analytics-tab');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+
+                if (tabId === 'analytics') {
+                    document.getElementById('analytics-tab').classList.add('active');
+                    loadAnalyticsPartial();
+                } else {
+                    document.getElementById(tabId).classList.add('active');
+                }
+                });
+            });
+
+        function attachGroupSelectListener() {
+            const groupSelect = document.getElementById("group");
+            if (!groupSelect) return;
+
+            groupSelect.addEventListener("change", (e) => {
+            loadAnalyticsPartial(e.target.value);
+            });
+        }
+
+        function loadAnalyticsPartial(grouping = "daily") {
+            const venueId = document.querySelector("#venue-dashboard").dataset.venueId;
+            fetch(`/venues/${venueId}/analytics/partial?group=${grouping}`)
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById("analytics-tab").innerHTML = html;
+                attachGroupSelectListener();
+            })
+            .catch(console.error);
+        }
     });
   </script>
-{% endblock %}
 
+{% endblock %}
 
 {% block title %}Venue Dashboard{% endblock %}
 
 {% block content %}
-<a href="{% url 'venue_visits_analytics' venue.id %}">📊 Visitor Analytics</a>
-
-<div class="container mt-5">
+<div class="container mt-5" id="venue-dashboard" data-venue-id="{{ venue.id }}">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="fw-bold">{{ venue.name }}</h1>
-        <form action="{% url 'toggle_venue_full' venue.id %}" method="post">
+        <form action="{% url 'toggle_venue_full' venue.id %}" method="post" class="venue-status-toggle">
             {% csrf_token %}
             {% if venue.is_full %}
                 <span class="badge bg-danger me-2">🚫 Full</span>
-                <button type="submit" class="btn btn-outline-success btn-sm">✅ Mark as Available</button>
+                <button type="submit" class="btn btn-outline-success btn-sm mark-availability">✅ Mark as Available</button>
             {% else %}
                 <span class="badge bg-success me-2">✅ Available</span>
-                <button type="submit" class="btn btn-outline-danger btn-sm">🚫 Mark as Full</button>
+                <button type="submit" class="btn btn-outline-danger btn-sm mark-availability">🚫 Mark as Full</button>
             {% endif %}
         </form>
     </div>
 
     <!-- Manual Tab Navigation -->
     <div class="tabs">
-      <button type="button" class="active" data-tab="requests">Reservation Requests</button>
-      <button type="button" data-tab="history">Reservation History</button>
-      <button type="button" data-tab="special">Guest Arrivals</button>
+        <button type="button" class="active" data-tab="requests">Reservation Requests & Guest Arrivals</button>
+        <button type="button" data-tab="history">Reservation History</button>
+        <button type="button" data-tab="analytics">📊 Analytics</button>
     </div>
 
     <!-- Tab Content -->
     <div class="tab-content">
 
-        <!-- Reservation Requests Tab -->
-        <div id="requests" class="active">
-            {% if upcoming_reservations %}
-                <div class="table-responsive">
-                    <div class="datatable-controls mb-2">
-                        <div id="upcoming-show-entries-wrapper"></div>
-                        <div id="upcoming-search-wrapper"></div>
-                    </div>
-                    <table id="upcomingTable" class="table table-striped table-hover shadow-sm">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Party Size</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for r in upcoming_reservations %}
-                            <tr>
-                                <td>{{ r.user.username }}</td>
-                                <td>{{ r.date }}</td>
-                                <td>{{ r.time }}</td>
-                                <td>{{ r.party_size }}</td>
-                                <td>
-                                    <span class="badge 
-                                        {% if r.status == 'pending' %}bg-warning text-dark
-                                        {% elif r.status == 'accepted' %}bg-success
-                                        {% else %}bg-danger{% endif %}">
-                                        {{ r.status|capfirst }}
-                                    </span>
-                                </td>
-                                <td>
-                                    {% if r.status == 'pending' %}
-                                        <a href="{% url 'update_reservation_status' r.id 'accepted' %}" class="btn btn-success btn-sm me-1">✅ Accept</a>
-                                        <a href="{% url 'update_reservation_status' r.id 'rejected' %}" class="btn btn-danger btn-sm">❌ Reject</a>
-                                    {% else %}
-                                        <span class="text-muted">—</span>
-                                    {% endif %}
-                                    
-                                    {% if r.status != 'pending' %}
-                                        <a href="{% url 'edit_reservation_status' r.id %}" class="btn btn-sm btn-edit-status">Edit Status</a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="alert alert-info mt-4">No upcoming reservations.</div>
-            {% endif %}
-        </div>
+    <!-- Requests Tab -->
+    <div id="requests" class="active">
+        {% if upcoming_reservations %}
+        <h2 class="mt-4">📝 Pending Reservation Requests</h2>
+        <div class="table-responsive">
+            <div class="datatable-controls mb-2">
+                <div id="upcoming-show-entries-wrapper"></div>
+                <div id="upcoming-search-wrapper"></div>
+            </div>
+            <table id="upcomingTable" class="table table-striped table-hover shadow-sm">
+                <thead class="table-dark">
+                    <tr>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Party Size</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in upcoming_reservations %}
+                    <tr>
+                    <td>{{ r.user.username }}</td>
+                    <td>{{ r.date }}</td>
+                    <td>{{ r.time }}</td>
+                    <td>{{ r.party_size }}</td>
+                    <td>
+                        <span class="badge 
+                        {% if r.status == 'pending' %}bg-warning text-dark
+                        {% elif r.status == 'accepted' %}bg-success
+                        {% else %}bg-danger{% endif %}">
+                        {{ r.status|capfirst }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if r.status == 'pending' %}
+                        <a href="{% url 'update_reservation_status' r.id 'accepted' %}" class="btn btn-success btn-sm me-1 btn-accept-reservation">✅ Accept</a>
+                        <a href="{% url 'update_reservation_status' r.id 'rejected' %}" class="btn btn-danger btn-sm btn-accept-reservation">❌ Reject</a>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
 
-        <!-- Reservation History Tab -->
-        <div id="history">
-            {% if past_reservations %}
-                <div class="table-responsive">
-                    <div class="datatable-controls">
-                        <div id="show-entries-wrapper"></div>
-                        <div id="search-wrapper"></div>
-                    </div>
-                    <table id="pastTable" class="table table-striped table-hover shadow-sm">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Party Size</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for r in past_reservations %}
-                            <tr>
-                                <td>{{ r.user }}</td>
-                                <td>{{ r.date }}</td>
-                                <td>{{ r.time }}</td>
-                                <td>{{ r.party_size }}</td>
-                                <td>
-                                    <span class="badge 
-                                        {% if r.status == 'pending' %}bg-warning text-dark
-                                        {% elif r.status == 'accepted' %}bg-success
-                                        {% else %}bg-danger{% endif %}">
-                                        {{ r.status|capfirst }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="alert alert-info mt-4">No past reservations.</div>
-            {% endif %}
+                        {% if r.status != 'pending' %}
+                        <a href="{% url 'edit_reservation_status' r.id %}" class="btn btn-sm btn-edit-status">Edit Status</a>
+                        {% endif %}
+                    </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+        {% else %}
+        <div class="alert alert-info mt-4">No upcoming reservation requests.</div>
+        {% endif %}
 
-        <!-- Guest Arrivals Tab -->
-        <div id="special">
-            {% if arrivals %}
-                <div class="table-responsive">
-                    <div class="datatable-controls">
-                        <div id="special-show-entries-wrapper"></div>
-                        <div id="special-search-wrapper"></div>
-                    </div>
-                    <table id="specialTable" class="table table-striped table-hover shadow-sm">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Customer</th>
-                                <th>Request Date</th>
-                                <th>Details</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for r in arrivals %}
-                            <tr>
-                                <td>{{ r.user.username }}</td>
-                                <td>{{ r.date }}</td>
-                                <td>{{ r.details }}</td>
-                                <td>
-                                    <span class="badge 
-                                        {% if r.arrival_status == 'pending' %}bg-warning text-dark
-                                        {% elif r.arrival_status == 'checked_in' %}bg-success
-                                        {% else %}bg-danger{% endif %}">
-                                        {{ r.arrival_status|capfirst }}
-                                    </span>
-                                </td>
-                                <td>
-                                    {% if r.arrival_status == 'pending' %}
-                                        <a href="{% url 'update_arrival_status' r.id 'checked_in' %}" class="btn btn-success btn-sm me-1">✅ Checked-in</a>
-                                        <a href="{% url 'update_arrival_status' r.id 'no_show' %}" class="btn btn-danger btn-sm">❌ No-show</a>
-                                    {% else %}
-                                        <span class="text-muted">—</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="alert alert-info mt-4">No special requests.</div>
-            {% endif %}
+        {% if arrivals %}
+        <h2 class="mt-5">🚪 Guest Arrivals</h2>
+        <div class="table-responsive">
+            <div class="datatable-controls mb-2">
+                <div id="special-show-entries-wrapper"></div>
+                <div id="special-search-wrapper"></div>
+            </div>
+            <table id="specialTable" class="table table-striped table-hover shadow-sm">
+                <thead class="table-dark">
+                    <tr>
+                    <th>Customer</th>
+                    <th>Request Date</th>
+                    <th>Details</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in arrivals %}
+                    <tr>
+                    <td>{{ r.user.username }}</td>
+                    <td>{{ r.date }}</td>
+                    <td>{{ r.details }}</td>
+                    <td>
+                        <span class="badge 
+                        {% if r.arrival_status == 'pending' %}bg-warning text-dark
+                        {% elif r.arrival_status == 'checked_in' %}bg-success
+                        {% else %}bg-danger{% endif %}">
+                        {{ r.arrival_status|capfirst }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if r.arrival_status == 'pending' %}
+                        <a href="{% url 'update_arrival_status' r.id 'checked_in' %}" class="btn btn-success btn-sm me-1">✅ Checked-in</a>
+                        <a href="{% url 'update_arrival_status' r.id 'no_show' %}" class="btn btn-danger btn-sm">❌ No-show</a>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-
+        {% else %}
+        <div class="alert alert-info mt-4">No expected arrivals at the moment.</div>
+        {% endif %}
     </div>
+
+    <!-- Reservation History Tab -->
+    <div id="history">
+        {% if past_reservations %}
+        <div class="table-responsive">
+            <div class="datatable-controls">
+                <div id="show-entries-wrapper"></div>
+                <div id="search-wrapper"></div>
+            </div>
+            <table id="pastTable" class="table table-striped table-hover shadow-sm">
+                <thead class="table-dark">
+                    <tr>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Party Size</th>
+                    <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in past_reservations %}
+                    <tr>
+                    <td>{{ r.user }}</td>
+                    <td>{{ r.date }}</td>
+                    <td>{{ r.time }}</td>
+                    <td>{{ r.party_size }}</td>
+                    <td>
+                        <span class="badge 
+                        {% if r.status == 'pending' %}bg-warning text-dark
+                        {% elif r.status == 'accepted' %}bg-success
+                        {% else %}bg-danger{% endif %}">
+                        {{ r.status|capfirst }}
+                        </span>
+                    </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info mt-4">No past reservations.</div>
+        {% endif %}
+    </div>
+
+    <!-- Analytics Tab -->
+    <div id="analytics-tab" class="tab-pane">
+        <div id="analytics-content"></div>
+    </div>
+
 </div>
 {% endblock %}

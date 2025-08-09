@@ -1,0 +1,63 @@
+{% block content %}
+<div class="analytics-container" data-venue-id="{{ venue.id }}"> 
+    {% comment %} 
+        data-venue-id="{{ venue.id }}" → HTML data attributes 
+        let you store custom data inside HTML elements. 
+        Here, it stores the venue’s ID so JavaScript can later use it 
+        to request data for this specific venue. 
+    {% endcomment %}
+    
+    <h1 class="mt-4 text-center" style="color: #cacaca; margin-bottom: 2rem;">
+        📊 {{ venue.name }}
+    </h1>
+
+    <!-- Quick Stats -->
+    <div id="analytics-stats">
+        {% if chart_div %}
+            <div class="analytics-stats">
+                <div class="stat-card">
+                    <div class="stat-value">{{ total_visits|default:"0" }}</div>
+                    <div class="stat-label">Total Visits</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ avg_daily_visits|default:"0" }}</div>
+                    <div class="stat-label">Avg Daily Visits</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ peak_visits|default:"0" }}</div>
+                    <div class="stat-label">Peak {{ grouping|capfirst }} Visits</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ total_reservations|default:"0" }}</div>
+                    <div class="stat-label">Total Reservations</div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Grouping Selection -->
+    <form id="analyticsForm" method="get" class="analytics-form">
+        <label for="group">📈 Group by:</label>
+        <select name="group" id="group">
+            <option value="daily"   {% if grouping == 'daily' %}    selected    {% endif %}> 📅 Daily (Last 30 days)    </option>
+            <option value="weekly"  {% if grouping == 'weekly' %}   selected    {% endif %}> 📆 Weekly (Last 12 weeks)  </option>
+            <option value="monthly" {% if grouping == 'monthly' %}  selected    {% endif %}> 🗓️ Monthly (Last 12 months)</option>
+            <option value="yearly"  {% if grouping == 'yearly' %}   selected    {% endif %}> 📊 Yearly (Last 3 years)   </option>
+        </select>
+    </form>
+
+    <!-- Chart -->
+    <div id="analytics-chart">
+        {% if chart_div %}
+            <div class="plotly-chart-container">
+                {{ chart_div|safe }}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <h4>📊 No analytics data available</h4>
+                <p>Once your venue gets visits and reservations, analytics will appear here.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

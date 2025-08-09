@@ -9,44 +9,53 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from .models import Venue, VenueVisit, Reservation
 from .forms import ReservationForm, VenueApplicationForm, ReservationStatusForm, ArrivalStatusForm
-from .utils import send_reservation_emails, get_client_ip  # make sure this exists or adapt accordingly
+from .utils import *
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.models import User  # For admin email in venue signup
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.safestring import mark_safe
 from django.contrib.auth import get_user_model
-from django.http import HttpResponseForbidden
 from django.core.exceptions import PermissionDenied
+from .decorators import venue_admin_required
 import json
+import plotly.graph_objs as go
+from plotly.offline import plot
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+
 
 
 User = get_user_model()
 
+###########################################################################################
+
+###########################################################################################
 def venue_list(request):
     venues = Venue.objects.all()
     venue_data = [
         {
-            'name': v.name,
-            'lat': v.latitude,
-            'lng': v.longitude,
-            'id': v.id
+            'name':     v.name,
+            'lat':      v.latitude,
+            'lng':      v.longitude,
+            'id':       v.id
         } for v in venues if v.latitude and v.longitude
     ]
     return render(request, 'venues/venue_list.html', {
         'venues': venues,
         'venue_data_json': mark_safe(json.dumps(venue_data, cls=DjangoJSONEncoder))
     })
+    
+###########################################################################################
 
-
-import requests
-
+###########################################################################################
 def venue_detail(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
 
     # Log visit
     if not request.session.session_key:
         request.session.save()
+    
     VenueVisit.objects.create(
         venue=venue,
         user=request.user if request.user.is_authenticated else None,
@@ -92,8 +101,10 @@ def venue_detail(request, venue_id):
         'venue': venue,
         'form': form
     })
+    
+###########################################################################################
 
-
+###########################################################################################
 def apply_venue(request):
     if request.method == 'POST':
         form = VenueApplicationForm(request.POST)
@@ -114,39 +125,171 @@ def apply_venue(request):
         form = VenueApplicationForm()
     return render(request, 'venues/apply_venue.html', {'form': form})
 
+###########################################################################################
 
+###########################################################################################
+def get_venue_visits_analytics_data(venue, grouping='daily'):
+    if grouping == 'weekly':
+        trunc_fn = TruncWeek
+        days_back = 60
+    elif grouping == 'monthly':
+        trunc_fn = TruncMonth
+        days_back = 180
+    else:
+        trunc_fn = TruncDay
+        days_back = 30
+
+    start_date = now().date() - timedelta(days=days_back)
+
+    # Visits
+    visits = (
+        VenueVisit.objects
+        .filter(venue=venue, timestamp__date__gte=start_date)
+        .annotate(period=trunc_fn('timestamp'))
+        .values('period')
+        .annotate(count=Count('id'))
+        .order_by('period')
+    )
+    visit_labels = [v['period'].strftime('%Y-%m-%d') for v in visits]
+    visit_values = [v['count'] for v in visits]
+
+    # Reservations
+    reservations = (
+        Reservation.objects
+        .filter(venue=venue, date__gte=start_date)
+        .annotate(period=trunc_fn('date'))
+        .values('period')
+        .annotate(count=Count('id'))
+        .order_by('period')
+    )
+    reservation_labels = [r['period'].strftime('%Y-%m-%d') for r in reservations]
+    reservation_values = [r['count'] for r in reservations]
+
+    # Chart
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=visit_labels, y=visit_values,
+        mode='lines+markers', name='Visits',
+        line=dict(color='royalblue')
+    ))
+    fig.add_trace(go.Scatter(
+        x=reservation_labels, y=reservation_values,
+        mode='lines+markers', name='Reservations',
+        line=dict(color='orange')
+    ))
+    fig.update_layout(
+        title=f"Visits and Reservations for {venue.name}",
+        xaxis_title='Date',
+        yaxis_title='Count',
+        template='plotly_dark'
+    )
+        
+    chart_div = plot(fig, output_type='div', include_plotlyjs=True)
+
+    # Stats
+    total_visits        = sum(visit_values)
+    total_reservations  = sum(reservation_values)
+    days_count          = max((now().date() - start_date).days, 1)
+    avg_daily_visits    = round(total_visits / days_count, 2)
+    peak_visits         = max(visit_values) if visit_values else 0
+
+    return {
+        'grouping': grouping,
+        'total_visits': total_visits,
+        'avg_daily_visits': avg_daily_visits,
+        'peak_visits': peak_visits,
+        'total_reservations': total_reservations,
+        'chart_div': chart_div,
+    }
+
+###########################################################################################
+
+###########################################################################################
 @login_required
+@venue_admin_required
 def venue_dashboard(request, venue_id):
-    venue = get_object_or_404(Venue, id=venue_id)
-    now = timezone.now().date()
+    venue   = get_object_or_404(Venue, id=venue_id)
+    now     = timezone.now().date()
 
     reservations = venue.reservations.all()
+    
+    # OPTIMIZATION: 
+    # 1. use select_related() or prefetch_related() 
+    # 2. Hit one query and do the filtering in python for small datasets,
+    # 3. Consider converting each reservation queryset to .values() or .values_list() if you're rendering to a JS frontend and want lighter payloads.
+    # Alternatively, serialize and send as JSON (if using AJAX).
 
-    # Only include reservations still waiting for accept/reject
     upcoming_reservations = reservations.filter(
         date__gte=now,
         status='pending'
     ).order_by('date', 'time')
 
-    # Past reservations regardless of status
-    past_reservations = reservations.filter(date__lt=now).order_by('-date', '-time')
+    past_reservations = reservations.filter(
+        date__lt=now
+    ).order_by('-date', '-time')
 
-    # Accepted reservations that are waiting for the guest to arrive
-    arrivals = reservations.filter(
+    arrivals = reservations.filter( # Accepted reservations that are waiting for the guest to arrive
         date__gte=now,
         status='accepted',
         # arrival_status='pending'
     ).order_by('date', 'time')
 
+    grouping        = request.GET.get('group', 'daily')
+    analytics_data  = get_venue_visits_analytics_data(venue, grouping)
+
     context = {
-        'venue': venue,
-        'upcoming_reservations': upcoming_reservations,
-        'past_reservations': past_reservations,
-        'arrivals': arrivals,
+        'venue':                    venue,
+        'upcoming_reservations':    upcoming_reservations,
+        'past_reservations':        past_reservations,
+        'arrivals':                 arrivals,
+        **analytics_data,
     }
 
     return render(request, 'venues/venue_dashboard.html', context)
 
+###########################################################################################
+
+###########################################################################################
+def venue_visits_analytics_api(request, venue_id):
+    venue = get_object_or_404(Venue, id=venue_id)
+
+    # Get grouping param from query string (default to 'daily')
+    grouping = request.GET.get('group', 'daily')
+
+    # Get analytics data dict
+    analytics_data = get_venue_visits_analytics_data(venue, grouping)
+
+    # if request.GET.get('format') == 'json' or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+    #     return JsonResponse({
+    #         "chart_div": analytics_data['chart_div'],
+    #         "total_visits": analytics_data['total_visits'],
+    #         "avg_daily_visits": analytics_data['avg_daily_visits'],
+    #         "peak_visits": analytics_data['peak_visits'],
+    #         "grouping": grouping,
+    #         "total_reservations": analytics_data['total_reservations'],
+    #     })
+
+    # If not AJAX, render the full analytics page (or redirect to dashboard)
+    context = {
+        "venue": venue,
+        "chart_div": analytics_data['chart_div'],
+        "total_visits": analytics_data['total_visits'],
+        "avg_daily_visits": analytics_data['avg_daily_visits'],
+        "peak_visits": analytics_data['peak_visits'],
+        "grouping": grouping,
+        "total_reservations": analytics_data['total_reservations'],
+    }
+        
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        html = render_to_string("venues/_analytics_tab_content.html", context, request=request)
+        return HttpResponse(html)
+    
+    return render(request, "venues/_analytics_tab_content.html", context)
+
+
+###########################################################################################
+
+###########################################################################################
 @login_required
 @require_POST
 def toggle_venue_full(request, venue_id):
@@ -160,7 +303,9 @@ def toggle_venue_full(request, venue_id):
 
     return redirect('venue_dashboard', venue_id=venue.id)
 
+###########################################################################################
 
+###########################################################################################
 @login_required
 def update_reservation_status(request, reservation_id, status):
     reservation = get_object_or_404(Reservation, id=reservation_id)
@@ -173,13 +318,17 @@ def update_reservation_status(request, reservation_id, status):
 
     return redirect('venue_dashboard', venue_id=reservation.venue.id)
 
+###########################################################################################
 
+###########################################################################################
 @login_required
 def my_reservations(request):
     reservations = Reservation.objects.filter(user=request.user).order_by('-date', 'time')
     return render(request, 'venues/my_reservations.html', {'reservations': reservations})
 
+###########################################################################################
 
+###########################################################################################
 @login_required
 def cancel_reservation(request, reservation_id):
     reservation = get_object_or_404(Reservation, id=reservation_id, user=request.user)
@@ -190,46 +339,9 @@ def cancel_reservation(request, reservation_id):
         return redirect('my_reservations')
     return render(request, 'venues/confirm_cancel.html', {'reservation': reservation})
 
+###########################################################################################
 
-def venue_visits_analytics(request, venue_id):
-    venue = get_object_or_404(Venue, id=venue_id)
-    if venue.owner != request.user:
-        return HttpResponseForbidden("You do not have permission to view this dashboard.")
-
-    grouping = request.GET.get('group', 'daily')
-
-    if grouping == 'weekly':
-        trunc_fn = TruncWeek
-        days_back = 60
-    elif grouping == 'monthly':
-        trunc_fn = TruncMonth
-        days_back = 180
-    else:
-        trunc_fn = TruncDay
-        days_back = 7
-
-    start_date = now().date() - timedelta(days=days_back)
-
-    visits = (
-        VenueVisit.objects
-        .filter(venue=venue, timestamp__date__gte=start_date)
-        .annotate(period=trunc_fn('timestamp'))
-        .values('period')
-        .annotate(count=Count('id'))
-        .order_by('period')
-    )
-
-    labels = [v['period'].strftime('%Y-%m-%d') for v in visits]
-    values = [v['count'] for v in visits]
-
-    return render(request, 'venues/venue_analytics.html', {
-        'venue': venue,
-        'labels': labels,
-        'values': values,
-        'grouping': grouping,
-    })
-
-
+###########################################################################################
 def make_reservation(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
 

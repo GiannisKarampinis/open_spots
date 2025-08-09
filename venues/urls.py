@@ -23,7 +23,7 @@ urlpatterns = [
     path('venues/reservation/<int:reservation_id>/update-arrival/<str:arrival_status>/', views.update_arrival_status, name='update_arrival_status'),
 
     # Venue analytics / visits
-    path('analytics/<int:venue_id>/', views.venue_visits_analytics, name='venue_visits_analytics'),
+    path('<int:venue_id>/analytics/partial/', views.venue_visits_analytics_api, name='venue_analytics_partial'),
 
 ]
 

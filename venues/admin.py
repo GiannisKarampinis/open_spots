@@ -11,24 +11,16 @@ class TableInline(admin.TabularInline):
 
 @admin.register(Venue)
 class VenueAdmin(admin.ModelAdmin):
-    readonly_fields = ['image_tag', 'owner']
-    inlines = [TableInline]
+    readonly_fields     = ['image_tag']
+    inlines             = [TableInline]
 
-    list_display = ('name', 'kind', 'location', 'available_tables', 'average_rating', 'image_tag', 'open_dashboard')
+    list_display = ('name', 'kind', 'location', 'available_tables', 'average_rating', 'image_tag', 'owner')
     
     def image_tag(self, obj):
         if obj.image:
             return format_html('<img src="{}" style="height: 50px;" />', obj.image.url)
         return "No Image"
     image_tag.short_description = 'Image'
-
-    @admin.display(description="Venue Dashboard")
-    def open_dashboard(self, obj):
-        try:
-            url = reverse('venue_dashboard', kwargs={'venue_id': obj.id})
-            return format_html('<a href="{}" target="_blank">Open Dashboard</a>', url)
-        except Exception:
-            return "Unavailable"
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

@@ -14,7 +14,7 @@ h1.fw-bold {
 }
 
 /* === Analytics Link === */
-a[href*="venue_visits_analytics"] {
+/* a[href*="venue_visits_analytics"] {
     display: inline-block;
     margin-bottom: 1rem;
     font-size: 0.95rem;
@@ -25,6 +25,54 @@ a[href*="venue_visits_analytics"] {
 a[href*="venue_visits_analytics"]:hover {
     color: #6fb3ff;
     text-decoration: underline;
+} */
+
+.venue-status-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    padding: 6px 0;
+}
+
+/* Unified style for availability toggle buttons */
+.mark-availability {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    min-width: 160px;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Green version - Available */
+.btn-outline-success.mark-availability {
+    background-color: #28a745 !important;
+    color: #e0ffe0 !important;
+    border: none !important;
+    box-shadow: 0 0 8px #28a745cc;
+}
+.btn-outline-success.mark-availability:hover {
+    background-color: #3bda65 !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px #3bda65dd;
+}
+
+/* Red version - Full */
+.btn-outline-danger.mark-availability {
+    background-color: #dc3545 !important;
+    color: #ffe0e0 !important;
+    border: none !important;
+    box-shadow: 0 0 8px #dc3545cc;
+}
+.btn-outline-danger.mark-availability:hover {
+    background-color: #e96275 !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px #e96275dd;
 }
 
 /* === Status Badges === */
@@ -124,10 +172,8 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 }
 
 /* === Top Controls Wrapper (Search + Entries) === */
-.datatable-controls {
+.datatable-controls.mb-2 {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;
     background-color: #1f1f1f;
@@ -136,103 +182,20 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     gap: 1rem;
 }
 
-/* === Show Entries Dropdown === */
-.dataTables_wrapper .dataTables_length {
-    display: flex;
-    align-items: center;
-    font-size: 0.95rem;
-    color: #a0c8ff;
-    white-space: nowrap;
-    flex-shrink: 0;
-    min-width: 150px;
+.datatable-controls.mb-2 #upcoming-show-entries-wrapper,
+.datatable-controls.mb-2 #special-show-entries-wrapper {
+    flex: 2;
 }
 
-.dataTables_wrapper .dataTables_length label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 0;
-    font-weight: 600;
-    color: #a0c8ff;
+.datatable-controls.mb-2 #upcoming-search-wrapper,
+.datatable-controls.mb-2 #special-search-wrapper {
+    flex: 8;
 }
 
-.dataTables_wrapper .dataTables_length select {
-    padding: 8px 14px;
-    font-size: 0.95rem;
-    border-radius: 6px;
-    border: 1px solid #444;
-    background-color: #1f1f1f;
-    color: #a0c8ff;
-    transition: all 0.3s ease;
-    min-width: 65px;
-    font-weight: 600;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.dataTables_wrapper .dataTables_length select:hover {
-    background-color: #2a2a2a;
-    border-color: #555;
-}
-
-.dataTables_wrapper .dataTables_length select:focus {
-    border-color: #4a90e2;
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-    background-color: #2a2a2a;
-}
-
-/* === Filter/Search Input === */
-.dataTables_wrapper .dataTables_filter {
-    flex: 1;
-    min-width: 0;
-    max-width: none;
-}
-
-.dataTables_wrapper .dataTables_filter label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 0;
-    font-weight: 600;
-    color: #a0c8ff;
-    width: 100%;
-}
-
-.dataTables_wrapper input[type="search"] {
-    flex: 1;
-    width: 100%;
-    max-width: none;
-    padding: 8px 14px;
-    font-size: 0.95rem;
-    border: 1px solid #444;
-    border-radius: 6px;
-    background-color: #1f1f1f;
-    color: #e0e0e0;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.dataTables_wrapper input[type="search"]:hover {
-    background-color: #2a2a2a;
-    border-color: #555;
-}
-
-.dataTables_wrapper input[type="search"]:focus {
-    border-color: #4a90e2;
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-    background-color: #2a2a2a;
-}
-
-.dataTables_wrapper input[type="search"]::placeholder {
-    color: #888;
-    font-style: normal;
-}
-
-/* === Hide Default DataTables Controls (since we're using custom) === */
-.dataTables_wrapper .dataTables_length:not(.datatable-controls .dataTables_length),
-.dataTables_wrapper .dataTables_filter:not(.datatable-controls .dataTables_filter) {
-    display: none;
+.datatable-controls.mb-2 #upcoming-search-wrapper input,
+.datatable-controls.mb-2 #special-search-wrapper input {
+    margin-right: 1rem;
+    width: 85%;
 }
 
 /* === Buttons === */
@@ -310,7 +273,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 .modal-card h3 {
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
-    color: #ffffff;
+    color: #cacaca;
 }
 .modal-card form {
     display: flex;
@@ -330,7 +293,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 .modal-card .btn-group {
     display: flex;
     justify-content: center;
-    flex: wrap;
+    flex-wrap: wrap;
     gap: 10px;
     margin-top: 16px;
 }
@@ -352,64 +315,166 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 
 /* Manual tabs styles */
 .tabs {
-display: flex;
-gap: 1rem;
-margin-bottom: 1rem;
-border-bottom: 2px solid #dee2e6;
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    border-bottom: 2px solid #cacaca;
 }
 .tabs button {
-background: none;
-border: none;
-padding: 0.5rem 1rem;
-font-size: 1.1rem;
-cursor: pointer;
-border-bottom: 3px solid transparent;
-transition: border-color 0.3s;
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-bottom: 5px solid transparent;
+    transition: border-color 0.3s;
+    color: #cacaca;
 }
 .tabs button.active {
-border-color: #0d6efd;
-color: #0d6efd;
-font-weight: 600;
+    border-color: #0d6efd;
+    color: #0d6efd;
+    font-weight: 600;
 }
 .tab-content > div {
-display: none;
+    display: none;
 }
 .tab-content > div.active {
-display: block;
+    display: block;
 }
 
-/* === Responsive Adjustments === */
+.tab-content h2 {
+    margin-top: 3rem;
+    color: #cacaca;
+}
+
+/* For fading/removal animation */
+.fade-out-slide {
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+
+.analytics-container {
+    margin: 2rem auto;
+    max-width: 1200px;
+}
+
+.analytics-form {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: #1f1f1f;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+    text-align: center;
+}
+
+.analytics-form label {
+    color: #a0c8ff;
+    font-weight: 600;
+    margin-right: 1rem;
+    font-size: 1.1rem;
+}
+
+.analytics-form select {
+    padding: 10px 16px;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+    transition: all 0.3s ease;
+    min-width: 140px;
+    font-weight: 500;
+}
+
+.analytics-form select:hover {
+    background-color: #3a3a3a;
+    border-color: #555;
+    transform: translateY(-1px);
+}
+
+.analytics-form select:focus {
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+    background-color: #3a3a3a;
+}
+
+.plotly-chart-container {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+    min-height: 500px;
+}
+
+.analytics-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: #1f1f1f;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+    border: 1px solid #444;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #4a90e2;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #a0c8ff;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Plotly specific overrides for dark theme */
+/* .plotly .modebar {
+    background-color: rgba(42, 42, 42, 0.9) !important;
+    border-radius: 4px;
+}
+
+.plotly .modebar-btn {
+    color: #a0c8ff !important;
+}
+
+.plotly .modebar-btn:hover {
+    background-color: rgba(74, 144, 226, 0.3) !important;
+}
+
+.plotly .modebar-btn.active {
+    background-color: rgba(74, 144, 226, 0.5) !important;
+}
+*/
+.plotly-chart-container > div {
+  height: 400px;
+  width: 100%;
+}
+
+
 @media (max-width: 768px) {
-    .datatable-controls {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 1rem;
+    .analytics-form {
+        padding: 1rem;
     }
-    
-    .dataTables_wrapper .dataTables_filter {
-        max-width: none;
+    .analytics-form label {
+        display: block;
+        margin-bottom: 0.5rem;
+        margin-right: 0;
     }
-    
-    .dataTables_wrapper input[type="search"] {
-        min-width: 200px;
-    }
-    
-    .dataTables_wrapper .dataTables_length {
-        justify-content: center;
-    }
-}
 
-@media (max-width: 575px) {
-    .datatable-controls {
-        padding: 0.75rem;
-    }
-    
-    .dataTables_wrapper input[type="search"] {
-        min-width: 150px;
-        font-size: 0.9rem;
-    }
-    
-    .dataTables_wrapper .dataTables_length select {
-        min-width: 60px;
+    .plotly-chart-container {
+        padding: 1rem;
+        min-height: 400px;
     }
 }

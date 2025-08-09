@@ -10,6 +10,7 @@ from django.utils.crypto import get_random_string
 import logging
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+import requests
 from accounts.tools import send_verification_code
 
 
