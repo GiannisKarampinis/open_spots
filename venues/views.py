@@ -286,7 +286,6 @@ def venue_visits_analytics_api(request, venue_id):
     
     return render(request, "venues/_analytics_tab_content.html", context)
 
-
 ###########################################################################################
 
 ###########################################################################################

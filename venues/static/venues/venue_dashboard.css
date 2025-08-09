@@ -13,20 +13,6 @@ h1.fw-bold {
     color: #f1f1f1;
 }
 
-/* === Analytics Link === */
-/* a[href*="venue_visits_analytics"] {
-    display: inline-block;
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
-    text-decoration: none;
-    color: #4a90e2;
-    transition: color 0.3s ease;
-}
-a[href*="venue_visits_analytics"]:hover {
-    color: #6fb3ff;
-    text-decoration: underline;
-} */
-
 .venue-status-toggle {
     display: flex;
     align-items: center;
@@ -172,7 +158,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 }
 
 /* === Top Controls Wrapper (Search + Entries) === */
-.datatable-controls.mb-2 {
+.datatable-controls {
     display: flex;
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;
@@ -180,23 +166,80 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.7);
     gap: 1rem;
+    height: auto;
 }
 
-.datatable-controls.mb-2 #upcoming-show-entries-wrapper,
-.datatable-controls.mb-2 #special-show-entries-wrapper {
+.datatable-controls #upcoming-show-entries-wrapper,
+.datatable-controls #special-show-entries-wrapper,
+.datatable-controls #history-show-entries-wrapper {
     flex: 2;
 }
 
-.datatable-controls.mb-2 #upcoming-search-wrapper,
-.datatable-controls.mb-2 #special-search-wrapper {
+.datatable-controls #upcoming-search-wrapper,
+.datatable-controls #special-search-wrapper,
+.datatable-controls #history-search-wrapper {
     flex: 8;
 }
 
-.datatable-controls.mb-2 #upcoming-search-wrapper input,
-.datatable-controls.mb-2 #special-search-wrapper input {
+.datatable-controls #upcoming-search-wrapper input,
+.datatable-controls #special-search-wrapper input,
+.datatable-controls #history-search-wrapper input {
     margin-right: 1rem;
     width: 85%;
 }
+
+/* Search input fields inside datatable controls */
+.datatable-controls input[type="search"],
+.datatable-controls input[type="text"] {
+    background-color: #2c2c2c;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.7);
+    width: 100%;
+    /* max-width: 300px; prevent overly large search bars */
+}
+
+/* On focus: highlight border and background */
+.datatable-controls input[type="search"]:focus,
+.datatable-controls input[type="text"]:focus {
+    background-color: #3a3a3a;
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
+}
+
+/* Dropdown (select) inside show-entries wrappers */
+.datatable-controls select {
+    background-color: #2c2c2c;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.7);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    /* min-width: 90px; */
+}
+
+/* On hover and focus for dropdown */
+.datatable-controls select:hover {
+    background-color: #3a3a3a;
+    border-color: #777;
+    cursor: pointer;
+}
+
+.datatable-controls select:focus {
+    background-color: #3a3a3a;
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
+}
+
 
 /* === Buttons === */
 .table .btn-sm {

@@ -14,7 +14,6 @@ import requests
 from accounts.tools import send_verification_code
 
 
-
 def get_coords_nominatim(address):
     url = "https://nominatim.openstreetmap.org/search"
     params = {"q": address, "format": "json", "limit": 1}

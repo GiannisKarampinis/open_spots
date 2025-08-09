@@ -27,8 +27,8 @@
             $('#upcoming-show-entries-wrapper').append($('#upcomingTable_length').detach());
             $('#upcoming-search-wrapper').append($('#upcomingTable_filter').detach());
 
-            $('#show-entries-wrapper').append($('#pastTable_length').detach());
-            $('#search-wrapper').append($('#pastTable_filter').detach());
+            $('#history-show-entries-wrapper').append($('#pastTable_length').detach());
+            $('#history-search-wrapper').append($('#pastTable_filter').detach());
 
             $('#special-show-entries-wrapper').append($('#specialTable_length').detach());
             $('#special-search-wrapper').append($('#specialTable_filter').detach());
@@ -145,7 +145,7 @@
         {% if upcoming_reservations %}
         <h2 class="mt-4">📝 Pending Reservation Requests</h2>
         <div class="table-responsive">
-            <div class="datatable-controls mb-2">
+            <div class="datatable-controls">
                 <div id="upcoming-show-entries-wrapper"></div>
                 <div id="upcoming-search-wrapper"></div>
             </div>
@@ -199,7 +199,7 @@
         {% if arrivals %}
         <h2 class="mt-5">🚪 Guest Arrivals</h2>
         <div class="table-responsive">
-            <div class="datatable-controls mb-2">
+            <div class="datatable-controls">
                 <div id="special-show-entries-wrapper"></div>
                 <div id="special-search-wrapper"></div>
             </div>
@@ -250,8 +250,8 @@
         {% if past_reservations %}
         <div class="table-responsive">
             <div class="datatable-controls">
-                <div id="show-entries-wrapper"></div>
-                <div id="search-wrapper"></div>
+                <div id="history-show-entries-wrapper"></div>
+                <div id="history-search-wrapper"></div>
             </div>
             <table id="pastTable" class="table table-striped table-hover shadow-sm">
                 <thead class="table-dark">
