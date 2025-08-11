@@ -143,148 +143,144 @@
     <!-- Requests Tab -->
     <div id="requests" class="active">
         {% if upcoming_reservations %}
-        <h2 class="mt-4">📝 Pending Reservation Requests</h2>
-        <div class="table-responsive">
-            <div class="datatable-controls">
-                <div id="upcoming-show-entries-wrapper"></div>
-                <div id="upcoming-search-wrapper"></div>
+            <h2 class="mt-4">📝 Pending Reservation Requests</h2>
+            <div class="table-responsive">
+                <div class="datatable-controls">
+                    <div id="upcoming-show-entries-wrapper"></div>
+                    <div id="upcoming-search-wrapper"></div>
+                </div>
+                <table id="upcomingTable" class="table table-striped table-hover shadow-sm">
+                    <thead class="table-dark">
+                        <tr>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Party Size</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in upcoming_reservations %}
+                            <tr>
+                            <td>{{ r.user.username }}</td>
+                            <td>{{ r.date }}</td>
+                            <td>{{ r.time }}</td>
+                            <td>{{ r.party_size }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if r.status == 'pending' %}bg-warning text-dark
+                                    {% elif r.status == 'accepted' %}bg-success
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ r.status|capfirst }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if r.status == 'pending' %}
+                                    <a href="{% url 'update_reservation_status' r.id 'accepted' %}" class="btn btn-success btn-sm me-1 btn-accept-reservation">✅ Accept</a>
+                                    <a href="{% url 'update_reservation_status' r.id 'rejected' %}" class="btn btn-danger btn-sm btn-accept-reservation">❌ Reject</a>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <table id="upcomingTable" class="table table-striped table-hover shadow-sm">
-                <thead class="table-dark">
-                    <tr>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Party Size</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in upcoming_reservations %}
-                    <tr>
-                    <td>{{ r.user.username }}</td>
-                    <td>{{ r.date }}</td>
-                    <td>{{ r.time }}</td>
-                    <td>{{ r.party_size }}</td>
-                    <td>
-                        <span class="badge 
-                        {% if r.status == 'pending' %}bg-warning text-dark
-                        {% elif r.status == 'accepted' %}bg-success
-                        {% else %}bg-danger{% endif %}">
-                        {{ r.status|capfirst }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if r.status == 'pending' %}
-                        <a href="{% url 'update_reservation_status' r.id 'accepted' %}" class="btn btn-success btn-sm me-1 btn-accept-reservation">✅ Accept</a>
-                        <a href="{% url 'update_reservation_status' r.id 'rejected' %}" class="btn btn-danger btn-sm btn-accept-reservation">❌ Reject</a>
-                        {% else %}
-                        <span class="text-muted">—</span>
-                        {% endif %}
-
-                        {% if r.status != 'pending' %}
-                        <a href="{% url 'edit_reservation_status' r.id %}" class="btn btn-sm btn-edit-status">Edit Status</a>
-                        {% endif %}
-                    </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
         {% else %}
-        <div class="alert alert-info mt-4">No upcoming reservation requests.</div>
+            <div class="alert alert-info mt-4">No upcoming reservation requests.</div>
         {% endif %}
 
         {% if arrivals %}
-        <h2 class="mt-5">🚪 Guest Arrivals</h2>
-        <div class="table-responsive">
-            <div class="datatable-controls">
-                <div id="special-show-entries-wrapper"></div>
-                <div id="special-search-wrapper"></div>
+            <h2 class="mt-5">🚪 Guest Arrivals</h2>
+            <div class="table-responsive">
+                <div class="datatable-controls">
+                    <div id="special-show-entries-wrapper"></div>
+                    <div id="special-search-wrapper"></div>
+                </div>
+                <table id="specialTable" class="table table-striped table-hover shadow-sm">
+                    <thead class="table-dark">
+                        <tr>
+                        <th>Customer</th>
+                        <th>Request Date</th>
+                        <th>Details</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in arrivals %}
+                            <tr>
+                            <td>{{ r.user.username }}</td>
+                            <td>{{ r.date }}</td>
+                            <td>{{ r.details }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if r.arrival_status == 'pending' %}bg-warning text-dark
+                                    {% elif r.arrival_status == 'checked_in' %}bg-success
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ r.arrival_status|capfirst }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if r.arrival_status == 'pending' %}
+                                    <a href="{% url 'update_arrival_status' r.id 'checked_in' %}" class="btn btn-success btn-sm me-1">✅ Checked-in</a>
+                                    <a href="{% url 'update_arrival_status' r.id 'no_show' %}" class="btn btn-danger btn-sm">❌ No-show</a>
+                                {% else %}
+                                    <a href="{% url 'edit_reservation_status' r.id %}" class="btn btn-sm btn-edit-status">Edit Status</a>
+                                {% endif %}
+                            </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <table id="specialTable" class="table table-striped table-hover shadow-sm">
-                <thead class="table-dark">
-                    <tr>
-                    <th>Customer</th>
-                    <th>Request Date</th>
-                    <th>Details</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in arrivals %}
-                    <tr>
-                    <td>{{ r.user.username }}</td>
-                    <td>{{ r.date }}</td>
-                    <td>{{ r.details }}</td>
-                    <td>
-                        <span class="badge 
-                        {% if r.arrival_status == 'pending' %}bg-warning text-dark
-                        {% elif r.arrival_status == 'checked_in' %}bg-success
-                        {% else %}bg-danger{% endif %}">
-                        {{ r.arrival_status|capfirst }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if r.arrival_status == 'pending' %}
-                        <a href="{% url 'update_arrival_status' r.id 'checked_in' %}" class="btn btn-success btn-sm me-1">✅ Checked-in</a>
-                        <a href="{% url 'update_arrival_status' r.id 'no_show' %}" class="btn btn-danger btn-sm">❌ No-show</a>
-                        {% else %}
-                        <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
         {% else %}
-        <div class="alert alert-info mt-4">No expected arrivals at the moment.</div>
+            <div class="alert alert-info mt-4">No expected arrivals at the moment.</div>
         {% endif %}
     </div>
 
     <!-- Reservation History Tab -->
     <div id="history">
         {% if past_reservations %}
-        <div class="table-responsive">
-            <div class="datatable-controls">
-                <div id="history-show-entries-wrapper"></div>
-                <div id="history-search-wrapper"></div>
+            <div class="table-responsive">
+                <div class="datatable-controls">
+                    <div id="history-show-entries-wrapper"></div>
+                    <div id="history-search-wrapper"></div>
+                </div>
+                <table id="pastTable" class="table table-striped table-hover shadow-sm">
+                    <thead class="table-dark">
+                        <tr>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Party Size</th>
+                        <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in past_reservations %}
+                            <tr>
+                            <td>{{ r.user }}</td>
+                            <td>{{ r.date }}</td>
+                            <td>{{ r.time }}</td>
+                            <td>{{ r.party_size }}</td>
+                            <td>
+                                <span class="badge 
+                                {% if r.status == 'pending' %}bg-warning text-dark
+                                {% elif r.status == 'accepted' %}bg-success
+                                {% else %}bg-danger{% endif %}">
+                                {{ r.status|capfirst }}
+                                </span>
+                            </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <table id="pastTable" class="table table-striped table-hover shadow-sm">
-                <thead class="table-dark">
-                    <tr>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Party Size</th>
-                    <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in past_reservations %}
-                    <tr>
-                    <td>{{ r.user }}</td>
-                    <td>{{ r.date }}</td>
-                    <td>{{ r.time }}</td>
-                    <td>{{ r.party_size }}</td>
-                    <td>
-                        <span class="badge 
-                        {% if r.status == 'pending' %}bg-warning text-dark
-                        {% elif r.status == 'accepted' %}bg-success
-                        {% else %}bg-danger{% endif %}">
-                        {{ r.status|capfirst }}
-                        </span>
-                    </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
         {% else %}
-        <div class="alert alert-info mt-4">No past reservations.</div>
+            <div class="alert alert-info mt-4">No past reservations.</div>
         {% endif %}
     </div>
 

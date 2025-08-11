@@ -61,13 +61,13 @@ class VenueSignupForm(forms.ModelForm):
         exclude = ['owner']
 
 
-class ReservationStatusForm(forms.ModelForm):
-    class Meta:
-        model = Reservation
-        fields = ['status']
-        widgets = {
-            'status': forms.Select(attrs={'class': 'form-select'})
-        }
+# class ReservationStatusForm(forms.ModelForm):
+#     class Meta:
+#         model = Reservation
+#         fields = ['arrival_status']
+#         widgets = {
+#             'arrival_status': forms.Select(attrs={'class': 'form-select'})
+#         }
 
 class ArrivalStatusForm(forms.ModelForm):
     class Meta:

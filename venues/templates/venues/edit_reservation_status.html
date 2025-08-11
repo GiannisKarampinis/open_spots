@@ -25,10 +25,10 @@
         {{ form.non_field_errors }}
 
         <div class="mb-3">
-            {{ form.status.label_tag }}
-            {{ form.status }}
-            {% for error in form.status.errors %}
-            <div class="text-danger small">{{ error }}</div>
+            {{ form.arrival_status.label_tag }}
+            {{ form.arrival_status }}
+            {% for error in form.arrival_status.errors %}
+                <div class="text-danger small">{{ error }}</div>
             {% endfor %}
         </div>
 
@@ -51,6 +51,7 @@
         </div>
     </div>
     
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const editModal = document.getElementById('editStatusModal');
@@ -108,4 +109,5 @@
             });
         });
     </script>
+
 {% endblock %}

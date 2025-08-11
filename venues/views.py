@@ -8,7 +8,7 @@ from django.utils.timezone import now
 from datetime import datetime, timedelta
 from django.utils import timezone
 from .models import Venue, VenueVisit, Reservation
-from .forms import ReservationForm, VenueApplicationForm, ReservationStatusForm, ArrivalStatusForm
+from .forms import ReservationForm, VenueApplicationForm, ArrivalStatusForm
 from .utils import *
 from django.core.mail import send_mail
 from django.conf import settings
@@ -387,41 +387,27 @@ def make_reservation(request, venue_id):
 
 
 @login_required
+# @venue_admin_required
 def edit_reservation_status(request, reservation_id):
     reservation = get_object_or_404(Reservation, id=reservation_id)
-
-    # ✅ Check if the current user is the owner/admin of the venue
-    if reservation.venue.owner != request.user:
-        messages.error(request, "You do not have permission to edit this reservation.")
-        return redirect('venue_dashboard', venue_id=reservation.venue.id)
-
-    # ✅ Check if reservation is in the past
-    if not reservation.is_upcoming():
-        messages.warning(request, "You cannot edit the status of past reservations.")
-        return redirect('venue_dashboard', venue_id=reservation.venue.id)
 
     # ✅ Block edit if it's still waiting admin decision
     if reservation.status == 'pending':
         messages.warning(request, "You must accept or reject the reservation before editing its status.")
         return redirect('venue_dashboard', venue_id=reservation.venue.id)
 
-    # ✅ Block edit if arrival_status is already finalized
-    if reservation.arrival_status in ['checked_in', 'no_show']:
-        messages.warning(request, f"This reservation has already been marked as '{reservation.arrival_status.replace('_', ' ')}'.")
-        return redirect('venue_dashboard', venue_id=reservation.venue.id)
-
     if request.method == 'POST':
-        form = ReservationStatusForm(request.POST, instance=reservation)
+        form = ArrivalStatusForm(request.POST, instance=reservation)
         if form.is_valid():
             form.save()
             messages.success(request, "Reservation status updated successfully.")
             return redirect('venue_dashboard', venue_id=reservation.venue.id)
     else:
-        form = ReservationStatusForm(instance=reservation)
+        form = ArrivalStatusForm(instance=reservation)
 
     context = {
-        'form': form,
-        'reservation': reservation,
+        'form':         form,
+        'reservation':  reservation
     }
     return render(request, 'venues/edit_reservation_status.html', context)
 

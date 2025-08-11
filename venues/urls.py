@@ -17,9 +17,9 @@ urlpatterns = [
     path('book/<int:venue_id>/', views.make_reservation, name='book_venue'), # OK
     path('my-reservations/', views.my_reservations, name='my_reservations'), # OK
     
-    path('reservation/<int:reservation_id>/cancel/', views.cancel_reservation, name='cancel_reservation'),
-    path('reservation/<int:reservation_id>/status/<str:status>/', views.update_reservation_status, name='update_reservation_status'),
-    path('reservation/<int:reservation_id>/edit-status/', views.edit_reservation_status, name='edit_reservation_status'),
+    path('reservation/<int:reservation_id>/cancel/',                views.cancel_reservation,           name='cancel_reservation'),
+    path('reservation/<int:reservation_id>/status/<str:status>/',   views.update_reservation_status,    name='update_reservation_status'),
+    path('reservation/<int:reservation_id>/edit-status/',           views.edit_reservation_status,      name='edit_reservation_status'),
     path('venues/reservation/<int:reservation_id>/update-arrival/<str:arrival_status>/', views.update_arrival_status, name='update_arrival_status'),
 
     # Venue analytics / visits
