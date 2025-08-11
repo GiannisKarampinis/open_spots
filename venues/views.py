@@ -23,8 +23,7 @@ import plotly.graph_objs as go
 from plotly.offline import plot
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-
-
+from django.http import JsonResponse
 
 User = get_user_model()
 
@@ -128,7 +127,16 @@ def apply_venue(request):
 ###########################################################################################
 
 ###########################################################################################
-def get_venue_visits_analytics_data(venue, grouping='daily'):
+def get_venue_visits_analytics_json(request, venue_id, grouping = 'daily'):
+    if not venue_id:
+        return JsonResponse({'error': 'Venue ID missing'}, status=400)
+
+    try:
+        venue = Venue.objects.get(id=venue_id)
+    except Venue.DoesNotExist:
+        return JsonResponse({'error': 'Venue not found'}, status=404)
+
+    # Grouping selection
     if grouping == 'weekly':
         trunc_fn = TruncWeek
         days_back = 60
@@ -141,7 +149,7 @@ def get_venue_visits_analytics_data(venue, grouping='daily'):
 
     start_date = now().date() - timedelta(days=days_back)
 
-    # Visits
+    # Visits query
     visits = (
         VenueVisit.objects
         .filter(venue=venue, timestamp__date__gte=start_date)
@@ -153,7 +161,7 @@ def get_venue_visits_analytics_data(venue, grouping='daily'):
     visit_labels = [v['period'].strftime('%Y-%m-%d') for v in visits]
     visit_values = [v['count'] for v in visits]
 
-    # Reservations
+    # Reservations query
     reservations = (
         Reservation.objects
         .filter(venue=venue, date__gte=start_date)
@@ -165,7 +173,7 @@ def get_venue_visits_analytics_data(venue, grouping='daily'):
     reservation_labels = [r['period'].strftime('%Y-%m-%d') for r in reservations]
     reservation_values = [r['count'] for r in reservations]
 
-    # Chart
+    # Build Plotly figure
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=visit_labels, y=visit_values,
@@ -181,10 +189,26 @@ def get_venue_visits_analytics_data(venue, grouping='daily'):
         title=f"Visits and Reservations for {venue.name}",
         xaxis_title='Date',
         yaxis_title='Count',
-        template='plotly_dark'
+        template='plotly_dark',
+        height=400
     )
-        
-    chart_div = plot(fig, output_type='div', include_plotlyjs=True)
+
+    # Keep config so frontend can use it in Plotly.newPlot
+    config = {
+        'displayModeBar': True,
+        'displaylogo': False,
+        'modeBarButtonsToRemove': [
+            'pan2d', 'lasso2d', 'select2d', 'autoScale2d',
+            'resetScale2d', 'toggleSpikelines'
+        ],
+        'toImageButtonOptions': {
+            'format': 'png',
+            'filename': f'{venue.name}_{grouping}_analytics',
+            'height': 450,
+            'width': 800,
+            'scale': 1
+        }
+    }
 
     # Stats
     total_visits        = sum(visit_values)
@@ -193,14 +217,16 @@ def get_venue_visits_analytics_data(venue, grouping='daily'):
     avg_daily_visits    = round(total_visits / days_count, 2)
     peak_visits         = max(visit_values) if visit_values else 0
 
-    return {
+    data = {
         'grouping': grouping,
         'total_visits': total_visits,
         'avg_daily_visits': avg_daily_visits,
         'peak_visits': peak_visits,
         'total_reservations': total_reservations,
-        'chart_div': chart_div,
+        'figure': fig.to_json(),  # serialized Plotly figure
+        'config': config          # send config separately
     }
+    return data
 
 ###########################################################################################
 
@@ -235,7 +261,7 @@ def venue_dashboard(request, venue_id):
     ).order_by('date', 'time')
 
     grouping        = request.GET.get('group', 'daily')
-    analytics_data  = get_venue_visits_analytics_data(venue, grouping)
+    analytics_data  = get_venue_visits_analytics_json(request, venue_id = venue_id, grouping = grouping)
 
     context = {
         'venue':                    venue,
@@ -257,7 +283,7 @@ def venue_visits_analytics_api(request, venue_id):
     grouping = request.GET.get('group', 'daily')
 
     # Get analytics data dict
-    analytics_data = get_venue_visits_analytics_data(venue, grouping)
+    analytics_data = get_venue_visits_analytics_json(request, venue_id=venue_id, grouping=grouping)
 
     # if request.GET.get('format') == 'json' or request.headers.get("X-Requested-With") == "XMLHttpRequest":
     #     return JsonResponse({
@@ -268,22 +294,18 @@ def venue_visits_analytics_api(request, venue_id):
     #         "grouping": grouping,
     #         "total_reservations": analytics_data['total_reservations'],
     #     })
+    
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.GET.get('format') == 'json':
+        # html = render_to_string("venues/_analytics_tab_content.html", context, request=request)
+        # return HttpResponse(html)
+        return JsonResponse(analytics_data)
 
     # If not AJAX, render the full analytics page (or redirect to dashboard)
     context = {
         "venue": venue,
-        "chart_div": analytics_data['chart_div'],
-        "total_visits": analytics_data['total_visits'],
-        "avg_daily_visits": analytics_data['avg_daily_visits'],
-        "peak_visits": analytics_data['peak_visits'],
-        "grouping": grouping,
-        "total_reservations": analytics_data['total_reservations'],
+        **analytics_data
     }
         
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        html = render_to_string("venues/_analytics_tab_content.html", context, request=request)
-        return HttpResponse(html)
-    
     return render(request, "venues/_analytics_tab_content.html", context)
 
 ###########################################################################################
@@ -399,7 +421,14 @@ def edit_reservation_status(request, reservation_id):
     if request.method == 'POST':
         form = ArrivalStatusForm(request.POST, instance=reservation)
         if form.is_valid():
-            form.save()
+            form.save(commit=False)
+
+            # ✅ Additional logic to move back to requests
+            if form.cleaned_data.get('move_to_requests'):
+                reservation.status = 'pending'
+                reservation.arrival_status = 'pending'
+
+            reservation.save()
             messages.success(request, "Reservation status updated successfully.")
             return redirect('venue_dashboard', venue_id=reservation.venue.id)
     else:
@@ -410,6 +439,7 @@ def edit_reservation_status(request, reservation_id):
         'reservation':  reservation
     }
     return render(request, 'venues/edit_reservation_status.html', context)
+
 
 
 # @login_required

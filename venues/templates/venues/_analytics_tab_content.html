@@ -1,63 +1,58 @@
-{% block content %}
-<div class="analytics-container" data-venue-id="{{ venue.id }}"> 
-    {% comment %} 
-        data-venue-id="{{ venue.id }}" → HTML data attributes 
-        let you store custom data inside HTML elements. 
-        Here, it stores the venue’s ID so JavaScript can later use it 
-        to request data for this specific venue. 
-    {% endcomment %}
-    
-    <h1 class="mt-4 text-center" style="color: #cacaca; margin-bottom: 2rem;">
+<div class="analytics-container" data-venue-id="{{ venue.id }}">
+    <h1 class="mt-4 text-center text-muted mb-4">
         📊 {{ venue.name }}
     </h1>
 
     <!-- Quick Stats -->
-    <div id="analytics-stats">
-        {% if chart_div %}
-            <div class="analytics-stats">
-                <div class="stat-card">
-                    <div class="stat-value">{{ total_visits|default:"0" }}</div>
-                    <div class="stat-label">Total Visits</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">{{ avg_daily_visits|default:"0" }}</div>
-                    <div class="stat-label">Avg Daily Visits</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">{{ peak_visits|default:"0" }}</div>
-                    <div class="stat-label">Peak {{ grouping|capfirst }} Visits</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">{{ total_reservations|default:"0" }}</div>
-                    <div class="stat-label">Total Reservations</div>
-                </div>
-            </div>
-        {% endif %}
+    <div id="analytics-stats" class="d-flex justify-content-around flex-wrap mb-4">
+        <div class="stat-card text-center p-3 shadow-sm rounded" style="min-width: 120px;">
+            <div class="stat-value fs-3 fw-bold" id="total-visits">{{ total_visits|default:"0" }}</div>
+            <div class="stat-label text-muted">Total Visits</div>
+        </div>
+        <div class="stat-card text-center p-3 shadow-sm rounded" style="min-width: 120px;">
+            <div class="stat-value fs-3 fw-bold" id="avg-daily-visits">{{ avg_daily_visits|default:"0" }}</div>
+            <div class="stat-label text-muted">Avg Daily Visits</div>
+        </div>
+        <div class="stat-card text-center p-3 shadow-sm rounded" style="min-width: 120px;">
+            <div class="stat-value fs-3 fw-bold" id="peak-visits">{{ peak_visits|default:"0" }}</div>
+            <div class="stat-label text-muted">Peak {{ grouping|capfirst }} Visits</div>
+        </div>
+        <div class="stat-card text-center p-3 shadow-sm rounded" style="min-width: 120px;">
+            <div class="stat-value fs-3 fw-bold" id="total-reservations">{{ total_reservations|default:"0" }}</div>
+            <div class="stat-label text-muted">Total Reservations</div>
+        </div>
     </div>
 
     <!-- Grouping Selection -->
-    <form id="analyticsForm" method="get" class="analytics-form">
-        <label for="group">📈 Group by:</label>
-        <select name="group" id="group">
-            <option value="daily"   {% if grouping == 'daily' %}    selected    {% endif %}> 📅 Daily (Last 30 days)    </option>
-            <option value="weekly"  {% if grouping == 'weekly' %}   selected    {% endif %}> 📆 Weekly (Last 12 weeks)  </option>
-            <option value="monthly" {% if grouping == 'monthly' %}  selected    {% endif %}> 🗓️ Monthly (Last 12 months)</option>
-            <option value="yearly"  {% if grouping == 'yearly' %}   selected    {% endif %}> 📊 Yearly (Last 3 years)   </option>
+    <form id="analyticsForm" method="get" class="d-flex justify-content-center mb-4" role="search" aria-label="Group analytics data">
+        <label for="group" class="me-2 fs-5">📈 Group by:</label>
+        <select name="group" id="group" class="form-select w-auto" aria-describedby="group-help">
+            <option value="daily"   {% if grouping == 'daily' %}selected{% endif %}>📅 Daily (Last 30 days)</option>
+            <option value="weekly"  {% if grouping == 'weekly' %}selected{% endif %}>📆 Weekly (Last 12 weeks)</option>
+            <option value="monthly" {% if grouping == 'monthly' %}selected{% endif %}>🗓️ Monthly (Last 12 months)</option>
+            <option value="yearly"  {% if grouping == 'yearly' %}selected{% endif %}>📊 Yearly (Last 3 years)</option>
         </select>
     </form>
 
     <!-- Chart -->
-    <div id="analytics-chart">
-        {% if chart_div %}
+    <div id="analytics-chart" style="height: 400px; width: 100%;">
+        {% if chart_data and chart_layout %}
             <div class="plotly-chart-container">
-                {{ chart_div|safe }}
+                <div id="analytics-plot" style="height:400px; width:100%;"></div>
             </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    var data = {{ chart_data|safe }};
+                    var layout = {{ chart_layout|safe }};
+                    Plotly.newPlot('analytics-plot', data, layout);
+                });
+            </script>
         {% else %}
-            <div class="alert alert-info">
+            <div class="alert alert-info text-center">
                 <h4>📊 No analytics data available</h4>
                 <p>Once your venue gets visits and reservations, analytics will appear here.</p>
             </div>
         {% endif %}
     </div>
 </div>
-{% endblock %}

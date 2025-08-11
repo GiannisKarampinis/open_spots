@@ -69,10 +69,17 @@ class VenueSignupForm(forms.ModelForm):
 #             'arrival_status': forms.Select(attrs={'class': 'form-select'})
 #         }
 
+
 class ArrivalStatusForm(forms.ModelForm):
+    move_to_requests = forms.BooleanField(
+        required=False,
+        label="Move back to Reservation Requests",
+        help_text="Check this if you want to move this booking back to the Reservation Requests table."
+    )
+
     class Meta:
         model = Reservation
-        fields = ['arrival_status']
+        fields = ['arrival_status']  # Only model fields go here
         widgets = {
             'arrival_status': forms.Select(attrs={'class': 'form-control'}),
         }

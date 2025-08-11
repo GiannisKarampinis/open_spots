@@ -179,6 +179,7 @@ def generate_analytics_chart(labels, values, venue_name, grouping):
     )
     
     if values:
+        print(values)
         avg = sum(values) / len(values)
         fig.add_hline(
             y=avg,
@@ -208,7 +209,7 @@ def generate_analytics_chart(labels, values, venue_name, grouping):
     chart_div = plot(
         fig,
         output_type='div',
-        include_plotlyjs=True,
+        include_plotlyjs=False,
         config=config
     )
     

@@ -2,112 +2,109 @@
 {% load static %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'venues/edit_reservation_status.css' %}">
+<link rel="stylesheet" href="{% static 'venues/edit_reservation_status.css' %}">
 {% endblock %}
 
 {% block content %}
-    <div id="editStatusModal" class="modal-overlay">
-    <!-- Modal content box -->
+<!-- Edit Status Modal -->
+<div id="editStatusModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="editTitle">
     <div class="modal-content">
-        <button class="modal-close" aria-label="Close modal">&times;</button>
+        <button type="button" class="modal-close" aria-label="Close modal">&times;</button>
 
-        <h2>Edit Reservation Status</h2>
+        <h2 id="editTitle">Edit Reservation Status</h2>
 
         <div class="reservation-info">
-        <p><strong>Customer:</strong> {{ reservation.user.username }}</p>
-        <p><strong>Date:</strong> {{ reservation.date }}</p>
-        <p><strong>Time:</strong> {{ reservation.time }}</p>
-        <p><strong>Party Size:</strong> {{ reservation.party_size }}</p>
+            <p><strong>Customer:</strong> {{ reservation.user.username }}</p>
+            <p><strong>Date:</strong> {{ reservation.date }}</p>
+            <p><strong>Time:</strong> {{ reservation.time }}</p>
+            <p><strong>Party Size:</strong> {{ reservation.party_size }}</p>
         </div>
 
         <form id="updateStatusForm" method="post" novalidate>
-        {% csrf_token %}
-        {{ form.non_field_errors }}
+            {% csrf_token %}
+            {{ form.non_field_errors }}
 
-        <div class="mb-3">
-            {{ form.arrival_status.label_tag }}
-            {{ form.arrival_status }}
-            {% for error in form.arrival_status.errors %}
-                <div class="text-danger small">{{ error }}</div>
-            {% endfor %}
-        </div>
-
-        <div class="d-flex justify-content-between">
-            <button type="submit" class="btn btn-primary">Update Status</button>
-            <a href="{% url 'venue_dashboard' reservation.venue.id %}" class="btn btn-secondary modal-close">Cancel</a>
-        </div>
-        </form>
-
-        <!-- Confirmation Modal -->
-        <div id="confirmModal" class="modal-overlay">
-            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmDesc">
-                <h2 id="confirmTitle">Confirm Update</h2>
-                <p id="confirmDesc">Are you sure you want to update the reservation status?</p>
-                <div class="d-flex">
-                    <button id="confirmCancel" class="btn btn-secondary">Cancel</button>
-                    <button id="confirmOk" class="btn btn-primary">Yes, Update</button>
-                </div>
+            <div class="mb-3">
+                {{ form.arrival_status.label_tag }}
+                {{ form.arrival_status }}
+                {% for error in form.arrival_status.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
             </div>
+
+            <div class="form-check mb-3">
+                <label class="form-check-label">
+                    {{ form.move_to_requests }} {{ form.move_to_requests.label }}
+                </label>
+                {% for error in form.move_to_requests.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Update Status</button>
+                <a href="{% url 'venue_dashboard' reservation.venue.id %}" class="btn btn-secondary modal-close">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmDesc">
+    <div class="modal-content">
+        <h2 id="confirmTitle">Confirm Update</h2>
+        <p id="confirmDesc">Are you sure you want to update the reservation status?</p>
+        <div class="d-flex">
+            <button id="confirmCancel" type="button" class="btn btn-secondary">Cancel</button>
+            <button id="confirmOk" type="button" class="btn btn-primary">Yes, Update</button>
         </div>
     </div>
-    
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const editModal = document.getElementById('editStatusModal');
-            const confirmModal = document.getElementById('confirmModal');
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const editModal = document.getElementById('editStatusModal');
+    const confirmModal = document.getElementById('confirmModal');
+    const closeButtons = editModal.querySelectorAll('.modal-close');
 
-            // Close buttons on edit modal (close button and Cancel link)
-            const closeButtons = editModal.querySelectorAll('.modal-close');
+    editModal.classList.add('show');
 
-            closeButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();  // prevent default link or button action
-                // Redirect to dashboard
-                window.location.href = "{% url 'venue_dashboard' reservation.venue.id %}";
-            });
-            });
-
-            // Close edit modal if clicked outside modal-content
-            editModal.addEventListener('click', (e) => {
-            if (e.target === editModal) {
-                window.location.href = "{% url 'venue_dashboard' reservation.venue.id %}";
-            }
-            });
-
-            // Show the edit modal
-            editModal.classList.add('show');
-
-            // Confirmation modal buttons
-            const confirmCancel = document.getElementById('confirmCancel');
-            const confirmOk = document.getElementById('confirmOk');
-            
-            const updateForm = document.getElementById('updateStatusForm');
-            
-            // Show confirmation modal on form submit
-            updateForm.addEventListener('submit', (e) => {
+    closeButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
             e.preventDefault();
-            confirmModal.classList.add('show');
-            });
-
-            // Cancel confirmation modal (just hide modal, no redirect)
-            confirmCancel.addEventListener('click', () => {
-            confirmModal.classList.remove('show');
-            });
-
-            // Confirm and submit form
-            confirmOk.addEventListener('click', () => {
-            confirmModal.classList.remove('show');
-            updateForm.submit();
-            });
-
-            // Close confirmation modal if click outside modal-content
-            confirmModal.addEventListener('click', (e) => {
-            if (e.target === confirmModal) {
-                confirmModal.classList.remove('show');
-            }
-            });
+            window.location.href = "{% url 'venue_dashboard' reservation.venue.id %}";
         });
-    </script>
+    });
 
+    editModal.addEventListener('click', (e) => {
+        if (e.target === editModal) {
+            window.location.href = "{% url 'venue_dashboard' reservation.venue.id %}";
+        }
+    });
+
+    const confirmCancel = document.getElementById('confirmCancel');
+    const confirmOk = document.getElementById('confirmOk');
+    const updateForm = document.getElementById('updateStatusForm');
+
+    updateForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        confirmModal.classList.add('show');
+    });
+
+    confirmCancel.addEventListener('click', () => {
+        confirmModal.classList.remove('show');
+    });
+
+    confirmOk.addEventListener('click', () => {
+        confirmModal.classList.remove('show');
+        updateForm.submit();
+    });
+
+    confirmModal.addEventListener('click', (e) => {
+        if (e.target === confirmModal) {
+            confirmModal.classList.remove('show');
+        }
+    });
+});
+</script>
 {% endblock %}
