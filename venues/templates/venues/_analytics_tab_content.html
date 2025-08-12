@@ -36,16 +36,11 @@
 
     <!-- Chart -->
     <div id="analytics-chart" style="height: 400px; width: 100%;">
-        {% if chart_data and chart_layout %}
-            <div class="plotly-chart-container">
-                <div id="analytics-plot" style="height:400px; width:100%;"></div>
-            </div>
-
-            <script>
+        {% if figure %}
+             <script>
                 document.addEventListener("DOMContentLoaded", function() {
-                    var data = {{ chart_data|safe }};
-                    var layout = {{ chart_layout|safe }};
-                    Plotly.newPlot('analytics-plot', data, layout);
+                    var fig = JSON.parse('{{ figure|escapejs }}');
+                    Plotly.newPlot('analytics-plot', fig.data, fig.layout);
                 });
             </script>
         {% else %}
