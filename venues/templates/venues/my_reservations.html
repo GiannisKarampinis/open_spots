@@ -1,36 +1,50 @@
 {% extends "includes/base.html" %}
 {% load static %}
-
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'venues/my_reservations.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% endblock %}
 
 {% block title %}My Reservations{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto mt-8">
-    <h2 class="text-2xl font-semibold mb-4">My Reservations</h2>
 
-    {% if reservations %}
-        <ul class="space-y-4">
-            {% for r in reservations %}
-                <li class="p-4 bg-gray-100 rounded shadow">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <strong>{{ r.venue.name }}</strong><br>
-                            Date: {{ r.date }} at {{ r.time }}<br>
-                            Guests: {{ r.guests }}<br>
-                            Status: <span class="capitalize">{{ r.status }}</span>
-                        </div>
-                        {% if r.status != "cancelled" %}
-                        <form action="{% url 'cancel_reservation' r.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="text-red-600 hover:underline">Cancel</button>
-                        </form>
-                        {% endif %}
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p class="text-gray-600">You have no reservations yet.</p>
-    {% endif %}
+<div class="reservations-container">
+    <h2>My Reservations</h2>
+
+    <div class="tabs">
+        <button class="tab-button active" data-tab="upcoming">
+            <i class="fa-solid fa-calendar-day"></i> Upcoming
+        </button>
+        <button class="tab-button" data-tab="past">
+            <i class="fa-solid fa-clock-rotate-left"></i> Previous
+        </button>
+        <button class="tab-button" data-tab="cancelled">
+            <i class="fa-solid fa-ban"></i> Cancelled
+        </button>
+    </div>
+
+    <div class="tab-content active" id="upcoming">
+        {% include "venues/_reservation_list.html" with reservations=upcoming_reservations %}
+    </div>
+
+    <div class="tab-content" id="past">
+        {% include "venues/_reservation_list.html" with reservations=past_reservations %}
+    </div>
+
+    <div class="tab-content" id="cancelled">
+        {% include "venues/_reservation_list.html" with reservations=cancelled_reservations %}
+    </div>
 </div>
+
+<script>
+document.querySelectorAll(".tab-button").forEach(button => {
+    button.addEventListener("click", () => {
+        document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+        button.classList.add("active");
+        document.getElementById(button.dataset.tab).classList.add("active");
+    });
+});
+</script>
 {% endblock %}

@@ -41,6 +41,7 @@
                             {% csrf_token %}
                             <button type="submit" class="logout-link" role="menuitem">Logout</button>
                         </form>
+                        <a href="{% url 'my_reservations' %}" role="menuitem">My Reservations</a>
                     </div>
                 </div>
             {% else %}

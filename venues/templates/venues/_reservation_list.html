@@ -1,0 +1,24 @@
+{% if reservations %}
+<ul class="reservation-list">
+    {% for r in reservations %}
+    <li class="reservation-card">
+        <div class="reservation-info">
+            <strong>{{ r.venue.name }}</strong><br>
+            <i class="fa-solid fa-calendar"></i> {{ r.date }} at {{ r.time }}<br>
+            <i class="fa-solid fa-users"></i> {{ r.guests }} guests<br>
+            <span class="status-badge {{ r.status }}">{{ r.status|capfirst }}</span>
+        </div>
+        {% if r.status != "cancelled" %}
+        <form action="{% url 'cancel_reservation' r.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="cancel-btn">
+                <i class="fa-solid fa-times"></i> Cancel
+            </button>
+        </form>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="empty-msg">No reservations found.</p>
+{% endif %}

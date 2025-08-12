@@ -344,8 +344,24 @@ def update_reservation_status(request, reservation_id, status):
 ###########################################################################################
 @login_required
 def my_reservations(request):
-    reservations = Reservation.objects.filter(user=request.user).order_by('-date', 'time')
-    return render(request, 'venues/my_reservations.html', {'reservations': reservations})
+    now_dt = timezone.now()
+
+    all_reservations = Reservation.objects.filter(user=request.user)
+
+    upcoming_reservations = [
+        r for r in all_reservations if r.is_upcoming() and r.status != "cancelled"
+    ]
+    past_reservations = [
+        r for r in all_reservations if not r.is_upcoming() and r.status != "cancelled"
+    ]
+    cancelled_reservations = all_reservations.filter(status="cancelled")
+
+    context = {
+        "upcoming_reservations": upcoming_reservations,
+        "past_reservations": past_reservations,
+        "cancelled_reservations": cancelled_reservations,
+    }
+    return render(request, "venues/my_reservations.html", context)
 
 ###########################################################################################
 
