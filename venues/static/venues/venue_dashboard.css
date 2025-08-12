@@ -396,125 +396,70 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     transform: translateY(-10px);
 }
 
-.analytics-container {
-    margin: 2rem auto;
-    max-width: 1200px;
-}
+/* ==========================================================================
+   Analytics: Quick Stats + Grouping (dark, horizontal boxes & polished select)
+   ========================================================================== */
 
-.analytics-form {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background-color: #1f1f1f;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-    text-align: center;
-}
-
-.analytics-form label {
-    color: #a0c8ff;
-    font-weight: 600;
-    margin-right: 1rem;
-    font-size: 1.1rem;
-}
-
-.analytics-form select {
-    padding: 10px 16px;
-    font-size: 1rem;
-    border-radius: 6px;
-    border: 1px solid #444;
-    background-color: #2c2c2c;
-    color: #e0e0e0;
-    transition: all 0.3s ease;
-    min-width: 140px;
-    font-weight: 500;
-}
-
-.analytics-form select:hover {
-    background-color: #3a3a3a;
-    border-color: #555;
-    transform: translateY(-1px);
-}
-
-.analytics-form select:focus {
-    border-color: #4a90e2;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
-    background-color: #3a3a3a;
-}
-
-.plotly-chart-container {
-    background-color: #2a2a2a;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-    min-height: 500px;
-}
-
-.analytics-stats {
+/* Quick Stats Layout */
+#analytics-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    max-width: 800px;
+    margin: 0 auto;
     gap: 1rem;
-    margin-bottom: 2rem;
 }
 
-.stat-card {
-    background-color: #1f1f1f;
-    border-radius: 8px;
-    padding: 1.5rem;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+/* Stat Card Style */
+#analytics-stats .stat-card {
+    background: #222;
     border: 1px solid #444;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
-.stat-value {
-    font-size: 2rem;
+#analytics-stats .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+#analytics-stats .stat-value {
+    font-size: 1.8rem;
     font-weight: bold;
-    color: #4a90e2;
-    margin-bottom: 0.5rem;
+    color: #4cafef;
+}
+#analytics-stats .stat-label {
+    font-size: 0.95rem;
+    color: #bbb;
+    margin-top: 0.4rem;
 }
 
-.stat-label {
-    color: #a0c8ff;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+/* Grouping Form */
+#analyticsForm {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    margin: 1.5rem 0;
+    padding: 0.8rem 1rem;
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+#analyticsForm label {
+    font-weight: 500;
+    color: #ccc;
+}
+#analyticsForm select {
+    padding: 0.4rem 0.7rem;
+    border-radius: 5px;
+    border: 1px solid #555;
+    background: #2a2a2a;
+    color: #fff;
+}
+#analyticsForm select:focus {
+    outline: none;
+    border-color: #4cafef;
 }
 
-/* Plotly specific overrides for dark theme */
-/* .plotly .modebar {
-    background-color: rgba(42, 42, 42, 0.9) !important;
-    border-radius: 4px;
-}
-
-.plotly .modebar-btn {
-    color: #a0c8ff !important;
-}
-
-.plotly .modebar-btn:hover {
-    background-color: rgba(74, 144, 226, 0.3) !important;
-}
-
-.plotly .modebar-btn.active {
-    background-color: rgba(74, 144, 226, 0.5) !important;
-}
-*/
-/* .plotly-chart-container > div {
-  height: 400px;
-  width: 100%;
-} */
-
-@media (max-width: 768px) {
-    .analytics-form {
-        padding: 1rem;
-    }
-    .analytics-form label {
-        display: block;
-        margin-bottom: 0.5rem;
-        margin-right: 0;
-    }
-
-    .plotly-chart-container {
-        padding: 1rem;
-        min-height: 400px;
-    }
-}
