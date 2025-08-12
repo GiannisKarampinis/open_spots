@@ -1,22 +1,21 @@
-from datetime import timedelta
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, get_backends
-from django.contrib import messages
+from datetime                       import timedelta
+
+from django.urls                    import reverse
+from django.contrib                 import messages
+from django.shortcuts               import render, redirect, get_object_or_404
+from django.utils.timezone          import now
+from django.views.decorators.http   import require_POST
+
+from django.contrib.auth            import login, get_backends, get_user_model
+from django.contrib.auth.views      import LoginView
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.views.decorators.http import require_POST
-from django.utils.timezone import now
-from .forms import CustomUserCreationForm, ProfileEditForm
-from .models import CustomUser, EmailVerificationCode
-from .tools import send_verification_code
-from django.utils.http import url_has_allowed_host_and_scheme
-from venues.models import Venue
-from django.contrib.auth.views import LoginView
-from django.urls import reverse
-from django.contrib.auth import logout
-from .forms import ProfileEditForm, PasswordChangeRequestForm
-from .forms import PasswordResetRequestForm, PasswordResetForm
 
-
+from .forms                         import CustomUserCreationForm, ProfileEditForm
+from .forms                         import ProfileEditForm, PasswordChangeRequestForm
+from .forms                         import PasswordResetRequestForm, PasswordResetForm
+from .tools                         import send_verification_code
+from .models                        import CustomUser, EmailVerificationCode
+from venues.models                  import Venue
 
 ### This function is only used for developing/testing purposes 
 def password_recover_request(request):
@@ -132,6 +131,7 @@ def password_reset(request):
 
 class CustomLoginView(LoginView):
     template_name = 'accounts/login.html'
+
     def form_valid(self, form):
         user = form.get_user()
         print('Login:', user.email_verified)
@@ -148,9 +148,27 @@ class CustomLoginView(LoginView):
         login(self.request, user)
         return redirect(self.get_success_url())
     
+
     def form_invalid(self, form):
-        print("❌ form_invalid called")
+        User = get_user_model()
+        username = form.data.get('username') 
+        password = form.data.get('password')
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            messages.error(self.request, "This username does not exist. Please sign up first.")
+            return redirect('signup')  # or re-render with a signup link
+
+        # If user exists but password is wrong
+        if not user.check_password(password):
+            messages.error(self.request, "Incorrect password. Please try again.")
+            return super().form_invalid(form)
+
+        # Default case (shouldn’t normally reach here)
+        messages.error(self.request, "Login failed. Please check your credentials.")
         return super().form_invalid(form)
+
 
     def get_success_url(self):
         user = self.request.user
