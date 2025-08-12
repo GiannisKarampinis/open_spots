@@ -281,20 +281,15 @@ def profile_view(request):
 def confirm_code_view(request):
     user_id = request.session.get('pending_user_id')
     verification_reason = request.session.get('verification_reason')
-    print('Confirm code:', verification_reason)
-    print('Confirm code:', request.method)  
+
     if not user_id or not verification_reason:
         messages.error(request, "Session expired or invalid access to verification page.")
         return redirect('login')
 
     user = get_object_or_404(CustomUser, id=user_id)
-    print('Confirm code:', user.unverified_email)
-    print('Confirm code:', user.email_verified)
-    print('Confirm code:', user.username)
 
     # If user already verified, block further code confirmation
     if verification_reason == 'signup' and user.email_verified:
-        print('lalalalal')
         messages.info(request, "Email already verified.")
         return redirect('login')
 
