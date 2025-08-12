@@ -6,4 +6,4 @@ class VenuesConfig(AppConfig):
 
     def ready(self):
         import venues.models  # Ensures signals are registered
-
+        import venues.signals  # Ensures signals are registered
