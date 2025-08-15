@@ -1,29 +1,41 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts               import render, get_object_or_404, redirect
+
+from django.contrib                 import messages
+from django.contrib.auth            import get_user_model
+from django.contrib.auth.models     import User 
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.views.decorators.http import require_POST
-from django.db.models import Count
-from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
-from django.utils.timezone import now
-from datetime import datetime, timedelta
-from django.utils import timezone
-from .models import Venue, VenueVisit, Reservation
-from .forms import ReservationForm, VenueApplicationForm, ArrivalStatusForm
-from .utils import *
-from django.core.mail import send_mail
-from django.conf import settings
-from django.contrib.auth.models import User  # For admin email in venue signup
-from django.core.serializers.json import DjangoJSONEncoder
-from django.utils.safestring import mark_safe
-from django.contrib.auth import get_user_model
-from django.core.exceptions import PermissionDenied
-from .decorators import venue_admin_required
+
+from django.views.decorators.http   import require_POST
+
+from django.db.models               import Count
+from django.db.models.functions     import TruncDay, TruncWeek, TruncMonth
+
+from django.utils                   import timezone
+from django.utils.timezone          import now
+
+from django.core.mail               import send_mail
+from django.core.exceptions         import PermissionDenied
+from django.core.serializers.json   import DjangoJSONEncoder
+
+from django.conf                    import settings
+from django.utils.safestring        import mark_safe
+
+from datetime                       import datetime, timedelta
+
+from django.http                    import HttpResponse
+from django.http                    import JsonResponse
+from plotly.offline                 import plot
+import plotly.graph_objs            as go
+from django.template.loader         import render_to_string
+
+
+from .forms                         import ReservationForm, VenueApplicationForm, ArrivalStatusForm
+from .utils                         import *
+from .models                        import Venue, VenueVisit, Reservation
+from .decorators                    import venue_admin_required
 import json
-import plotly.graph_objs as go
-from plotly.offline import plot
-from django.http import HttpResponse
-from django.template.loader import render_to_string
-from django.http import JsonResponse
+
+
 
 User = get_user_model()
 
@@ -88,7 +100,7 @@ def venue_detail(request, venue_id):
                 messages.error(request, 'Sorry, that time slot is already reserved.')
             else:
                 reservation.save()
-                send_reservation_emails(reservation)
+                #send_reservation_emails(reservation)
                 return render(request, 'venues/reservation_pending.html', {
                     'venue': venue,
                     'reservation': reservation
@@ -415,7 +427,7 @@ def make_reservation(request, venue_id):
                 return render(request, 'venues/make_reservation.html', {'form': form, 'venue': venue})
 
             reservation.save()
-            send_reservation_emails(reservation)
+            #send_reservation_emails(reservation)
             messages.success(request, 'Reservation submitted. Await confirmation.')
             return redirect('my_reservations')
     else:
