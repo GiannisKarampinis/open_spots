@@ -1,33 +1,30 @@
-{% if reservations %}
-<ul class="reservation-list">
-    {% for r in reservations %}
-    <li class="reservation-card">
-        <div class="reservation-info">
-            <strong> Reservation at: {{ r.venue.name }}</strong><br>
-            <i class="fa-solid fa-calendar"></i> Date: {{ r.date }} at {{ r.time }}<br>
-            <i class="fa-solid fa-users"></i> Guests: {{ r.guests }}<br>
-            <span class="status-badge {{ r.status }}"> Status: {{ r.status|capfirst }}</span>
-        </div>
+{% extends "includes/base.html" %}
+{% load static %}
 
-        {% if r.status != "cancelled" %}
-        <div class="reservation-actions">
-            <!-- Edit Button -->
-            <a href="{% url 'edit_reservation' r.id %}" class="edit-btn">
-                <i class="fa-solid fa-pen"></i> Edit
-            </a>
+{% block title %}Edit Reservation - {{ reservation.venue.name }}{% endblock %}
 
-            <!-- Cancel Button -->
-            <form action="{% url 'cancel_reservation' r.id %}" method="post" class="cancel-form">
-                {% csrf_token %}
-                <button type="submit" class="cancel-btn">
-                    <i class="fa-solid fa-times"></i> Cancel
-                </button>
-            </form>
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'venues/venue_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Title -->
+            <h2 class="mb-4 text-center">Edit Reservation for {{ reservation.venue.name }}</h2>
+
+            <!-- Edit Form styled like reservation form -->
+            <div class="card card-body shadow" id="reservationForm">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-success w-100 mt-3">
+                        <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+                </form>
+            </div>
         </div>
-        {% endif %}
-    </li>
-    {% endfor %}
-</ul>
-{% else %}
-<p class="empty-msg">No reservations found.</p>
-{% endif %}
+    </div>
+</div>
+{% endblock %}
