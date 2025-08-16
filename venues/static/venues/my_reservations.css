@@ -99,22 +99,6 @@
     color: #374151;
 }
 
-.cancel-btn {
-    background: none;
-    border: none;
-    color: #e11d48;
-    font-weight: bold;
-    cursor: pointer;
-    transition: color 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.cancel-btn:hover {
-    color: #9f1239;
-}
-
 .empty-msg {
     color: #6b7280;
     text-align: center;
@@ -131,3 +115,108 @@
         margin-top: 0.5rem;
     }
 }
+
+/* Reservation List Layout */
+.reservation-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Reservation Card Layout */
+.reservation-card {
+    background: #2a2a2a;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* align top */
+    color: #eee;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reservation-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+}
+
+.reservation-info {
+    flex: 1;
+}
+
+/* Actions stacked vertically on the right */
+.reservation-actions {
+    display: flex;
+    flex-direction: column;   /* stack vertically */
+    align-items: flex-end;    /* align to right */
+    gap: 10px;                /* spacing between buttons */
+    margin-left: 20px;
+    margin-top: 20px; /* align with the top of the card */
+}
+
+/* Edit Button */
+.edit-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    box-shadow: 0 3px 8px rgba(0,123,255,0.4);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 110px; /* same width as cancel for neatness */
+    justify-content: center;
+    text-align: center;
+}
+
+.edit-btn:hover {
+    background-color: #0056b3;
+    box-shadow: 0 4px 12px rgba(0,86,179,0.6);
+}
+
+/* Cancel Button */
+.cancel-btn {
+    background-color: #dc3545;
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(220,53,69,0.4);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 110px; /* match edit button */
+    justify-content: center;
+    text-align: center;
+}
+
+.cancel-btn:hover {
+    background-color: #a71d2a;
+    box-shadow: 0 4px 12px rgba(167,29,42,0.6);
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: capitalize;
+}
+
+/* Different colors for statuses */
+.status-badge.confirmed { background: #28a745; color: white; }
+.status-badge.pending   { background: #ffc107; color: #222; }
+.status-badge.cancelled { background: #dc3545; color: white; }

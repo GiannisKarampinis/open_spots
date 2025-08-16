@@ -24,6 +24,6 @@ urlpatterns = [
 
     # Venue analytics / visits
     path('<int:venue_id>/analytics/partial/', views.venue_visits_analytics_api, name='venue_analytics_partial'),
-
+    path("reservations/<int:pk>/edit/", views.edit_reservation, name="edit_reservation"),
 ]
 

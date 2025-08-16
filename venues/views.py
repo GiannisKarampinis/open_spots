@@ -468,6 +468,22 @@ def edit_reservation_status(request, reservation_id):
     }
     return render(request, 'venues/edit_reservation_status.html', context)
 
+@login_required
+def edit_reservation(request, pk):
+    reservation = get_object_or_404(Reservation, pk=pk, user=request.user)
+
+    if reservation.status == "cancelled":
+        return redirect('my_reservations')  # Can't edit cancelled reservations
+
+    if request.method == "POST":
+        form = ReservationForm(request.POST, instance=reservation)
+        if form.is_valid():
+            form.save()
+            return redirect('my_reservations')
+    else:
+        form = ReservationForm(instance=reservation)
+
+    return render(request, "venues/edit_reservation.html", {"form": form, "reservation": reservation})
 
 
 # @login_required
