@@ -93,6 +93,9 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 
 SITE_ID = 1
 
+SITE_URL = "http://localhost:8000"   # for local dev
+# SITE_URL = "https://your-production-domain.com"   # for production
+
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
