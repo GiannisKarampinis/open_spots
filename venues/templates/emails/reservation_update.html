@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; color: #333; }
+    .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+    h2 { color: #2c3e50; }
+    ul { padding-left: 20px; }
+    li { margin: 8px 0; }
+    .footer { margin-top: 20px; font-size: 12px; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>{{ title }}</h2>
+    <p>{{ intro }}</p>
+    <p><strong>Changes at {{ venue }}:</strong></p>
+    <ul>
+      {% for c in changes %}
+      <li><strong>{{ c.field }}</strong>: {{ c.old }} → {{ c.new }}</li>
+      {% endfor %}
+    </ul>
+    <div class="footer">
+      <p>This is an automated email. Please do not reply directly.</p>
+    </div>
+  </div>
+</body>
+</html>

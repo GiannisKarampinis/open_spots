@@ -4,7 +4,8 @@ from accounts.middleware        import get_current_user
 
 from django.conf                import settings
 from django.dispatch            import receiver
-from django.core.mail           import send_mail
+from django.core.mail           import send_mail, EmailMultiAlternatives
+from django.template.loader     import render_to_string
 from django.db.models.signals   import pre_save, post_save
 
 
@@ -49,19 +50,46 @@ def send_reservation_update_email(sender, instance, created, **kwargs):
     if not changes:
         return
 
+    # Build change list for template
+    change_list = [
+        {"field": field.replace("_", " ").title(), "old": old, "new": new}
+        for field, (old, new) in changes.items()
+    ]
+
     # Decide recipient based on who made the change
     if current_user == user:
         # Customer made the change → notify venue admin
         subject = f"Reservation Update for {instance.venue.name}"
-        message_lines = [f"The reservation from {user.email} has been updated:", ""]
-        for field, (old, new) in changes.items():
-            message_lines.append(f" - {field.replace('_', ' ').title()}: {old} → {new}")
-        send_mail(subject, "\n".join(message_lines), settings.DEFAULT_FROM_EMAIL, [venue_admin.email])
-
+        recipient = venue_admin.email
+        context = {
+            "title": "Reservation Update",
+            "intro": f"The reservation from {user.username} has been updated.",
+            "venue": instance.venue.name,
+            "changes": change_list,
+        }
     elif current_user == venue_admin:
         # Venue admin made the change → notify customer
         subject = f"Your Reservation at {instance.venue.name} Has Been Updated"
-        message_lines = [f"Your reservation at {instance.venue.name} has been updated:", ""]
-        for field, (old, new) in changes.items():
-            message_lines.append(f" - {field.replace('_', ' ').title()}: {old} → {new}")
-        send_mail(subject, "\n".join(message_lines), settings.DEFAULT_FROM_EMAIL, [user.email])
+        recipient = user.email
+        context = {
+            "title": "Reservation Update",
+            "intro": f"Your reservation at {instance.venue.name} has been updated.",
+            "venue": instance.venue.name,
+            "changes": change_list,
+        }
+    else:
+        # Unknown user made the change, do not send email
+        return
+    
+    # Render both text + HTML
+    text_content = render_to_string("emails/reservation_update.txt", context)
+    html_content = render_to_string("emails/reservation_update.html", context)
+
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,  # fallback plain text
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[recipient],
+    )
+    email.attach_alternative(html_content, "text/html")
+    email.send()

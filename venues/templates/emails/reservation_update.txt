@@ -1,0 +1,7 @@
+{{ intro }}
+
+Changes made to your reservation at {{ venue }}:
+
+{% for c in changes %}
+- {{ c.field }}: {{ c.old }} → {{ c.new }}
+{% endfor %}
