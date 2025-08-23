@@ -479,6 +479,10 @@ def edit_reservation(request, pk):
         form = ReservationForm(request.POST, instance=reservation)
         if form.is_valid():
             form.save()
+            reservation.status = 'pending'  # Reset status to pending on edit
+            reservation.arrival_status = 'pending'  # Reset arrival status as well
+            reservation.save()
+            messages.success(request, "Reservation updated successfully and is now pending approval.")
             return redirect('my_reservations')
     else:
         form = ReservationForm(instance=reservation)

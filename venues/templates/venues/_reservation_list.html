@@ -9,7 +9,7 @@
             <span class="status-badge {{ r.status }}"> Status: {{ r.status|capfirst }}</span>
         </div>
 
-        {% if r.status != "cancelled" %}
+        {% if r.status != "cancelled" and r.is_upcoming %}
         <div class="reservation-actions">
             <!-- Edit Button -->
             <a href="{% url 'edit_reservation' r.id %}" class="edit-btn">

@@ -92,6 +92,7 @@ class Reservation(models.Model):
         ('pending', 'Pending'),
         ('accepted', 'Accepted'),
         ('rejected', 'Rejected'),
+        ('cancelled', 'Cancelled'),
     ]
     
     ARRIVAL_STATUS_CHOICES = [
