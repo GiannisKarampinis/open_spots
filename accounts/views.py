@@ -16,6 +16,8 @@ from .forms                         import PasswordResetRequestForm, PasswordRes
 from .tools                         import send_verification_code
 from .models                        import CustomUser, EmailVerificationCode
 from venues.models                  import Venue
+from rest_framework_simplejwt.tokens import RefreshToken
+
 
 ### This function is only used for developing/testing purposes 
 def password_recover_request(request):
@@ -135,40 +137,43 @@ class CustomLoginView(LoginView):
     def form_valid(self, form):
         user = form.get_user()
         print('Login:', user.email_verified)
+
+        # ✅ Block if email not verified
         if not user.email_verified:
             self.request.session['pending_user_id'] = user.id
             self.request.session['code_already_sent'] = False
-
-            # ✅ Set verification reason
             self.request.session['verification_reason'] = 'signup'
 
             messages.warning(self.request, "Please verify your email before continuing.")
             return redirect('confirm_code')
 
+        # ✅ Standard Django login
         login(self.request, user)
+
+        # ✅ Generate JWT tokens and store in session
+        refresh = RefreshToken.for_user(user)
+        self.request.session['jwt_access'] = str(refresh.access_token)
+        self.request.session['jwt_refresh'] = str(refresh)
+
         return redirect(self.get_success_url())
-    
 
     def form_invalid(self, form):
         User = get_user_model()
-        username = form.data.get('username') 
+        username = form.data.get('username')
         password = form.data.get('password')
 
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             messages.error(self.request, "This username does not exist. Please sign up first.")
-            return redirect('signup')  # or re-render with a signup link
+            return redirect('signup')
 
-        # If user exists but password is wrong
         if not user.check_password(password):
             messages.error(self.request, "Incorrect password. Please try again.")
             return super().form_invalid(form)
 
-        # Default case (shouldn’t normally reach here)
         messages.error(self.request, "Login failed. Please check your credentials.")
         return super().form_invalid(form)
-
 
     def get_success_url(self):
         user = self.request.user
@@ -179,7 +184,6 @@ class CustomLoginView(LoginView):
             else:
                 return reverse('apply_venue')
         return reverse('venue_list')
-
     
 def signup_view(request):
     if request.method == 'POST':

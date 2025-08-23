@@ -48,8 +48,16 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',  # web
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # api
+    ]
+}
 
 # ------------------------------------------------------------------------------
 # Django-Allauth: Google OAuth2 Provider Configuration

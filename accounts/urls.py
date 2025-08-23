@@ -2,6 +2,7 @@ from django.urls            import path
 from django.contrib.auth    import views as auth_views
 from accounts               import views
 from .views                 import CustomLoginView
+from .                      import api_views
 
 urlpatterns = [
     path('login/',      CustomLoginView.as_view(), name='login'),
@@ -15,4 +16,6 @@ urlpatterns = [
     path('resend-code/', views.resend_code_view, name='resend_code'),
     path('password-revover/', views.password_recover_request, name='password_recover'),
     path('reset-password/', views.password_reset, name='password_reset'),
+    # API endpoint
+    path("api/profile/", api_views.profile_api, name="profile_api"),
 ]
