@@ -65,7 +65,7 @@ def send_reservation_update_email(sender, instance, created, **kwargs):
         recipient = venue_admin.email
         context = {
             "title": "A reservation has been updated",
-            "intro": f"The reservation from {user.email} has been updated:",
+            "intro": f"The reservation from {"{}({})".format(instance.name, user.email)} has been updated:",
             "venue": instance.venue.name,
             "changes": changes_list,
             "reservation_url": reservation_url,

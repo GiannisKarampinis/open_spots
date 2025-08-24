@@ -4,15 +4,17 @@
   <meta charset="UTF-8">
   <title>{{ title }}</title>
 </head>
-<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
-
-  <div style="max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
-    <h2 style="color: #333;">{{ title }}</h2>
-    <p>{{ intro }}</p>
+<body style="font-family: Arial, sans-serif; background-color: #2a2a2a; padding: 20px;">
+  <header>
+      <h1 style="color: white; text-align: center; margin-bottom: 10px; margin-top: 10px; font-size: 2rem">OpenSpots</h2>
+  </header>
+  <div style="max-width: 600px; margin: auto; background: #3d3d3dff; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+    <h2 style="color: white;">{{ title }}</h2>
+    <p style="color: white;">{{ intro }}</p>
 
     <ul>
       {% for change in changes %}
-        <li><strong>{{ change.field }}:</strong> {{ change.old }} → {{ change.new }}</li>
+        <li style="color: white;"><strong>{{ change.field }}:</strong> {{ change.old }} → {{ change.new }}</li>
       {% endfor %}
     </ul>
 
