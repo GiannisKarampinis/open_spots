@@ -35,26 +35,33 @@ from .models                        import Venue, VenueVisit, Reservation
 from .decorators                    import venue_admin_required
 import json
 
-
-
 User = get_user_model()
 
 ###########################################################################################
 
 ###########################################################################################
 def venue_list(request):
-    venues = Venue.objects.all()
+    kind = request.GET.get("kind")  # read ?kind=restaurant from URL
+    if kind:
+        venues = Venue.objects.filter(kind=kind)
+    else:
+        venues = Venue.objects.all()
+
+    # Keep only venues with coordinates for map
     venue_data = [
         {
-            'name':     v.name,
-            'lat':      v.latitude,
-            'lng':      v.longitude,
-            'id':       v.id
-        } for v in venues if v.latitude and v.longitude
+            'name': v.name,
+            'lat': v.latitude,
+            'lng': v.longitude,
+            'id': v.id
+        }
+        for v in venues if v.latitude and v.longitude
     ]
+
     return render(request, 'venues/venue_list.html', {
         'venues': venues,
-        'venue_data_json': mark_safe(json.dumps(venue_data, cls=DjangoJSONEncoder))
+        'venue_data_json': mark_safe(json.dumps(venue_data, cls=DjangoJSONEncoder)),
+        'selected_kind': kind,  # pass selection to template
     })
     
 ###########################################################################################

@@ -9,68 +9,104 @@
 {% block title %}Browse Venues{% endblock %}
 
 {% block content %}
-{% comment %} <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script id="venue-data" type="application/json">{{ venue_data_json }}</script> {% endcomment %}
-
 <h2 style="text-align:center;">Explore &amp; Reserve Your Perfect Spot</h2>
 
-{% comment %} <h3 class="section-title">Map View</h3>
-<div id="venue-map" style="height: 400px; margin-bottom: 2em;"></div> {% endcomment %}
+<!-- 🔹 Filter form -->
+<form method="get" class="filter-form" style="text-align:center; margin: 1em 0;">
+    <label for="venue_type">Filter by type:</label>
+    <select name="kind" id="venue_type" onchange="this.form.submit()">
+        <option value="">All Venues</option>
+        <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>Restaurants</option>
+        <option value="cafe" {% if selected_kind == "cafe" %}selected{% endif %}>Cafes</option>
+        <option value="bar" {% if selected_kind == "bar" %}selected{% endif %}>Bars</option>
+        <option value="beach_bar" {% if selected_kind == "beach_bar" %}selected{% endif %}>Beach Bars</option>
+        <option value="other" {% if selected_kind == "other" %}selected{% endif %}>Other</option>
+    </select>
 
-{% comment %} <script>
-    const venues = JSON.parse(document.getElementById('venue-data').textContent);
+    {% if selected_kind %}
+        <!-- 🔹 Clear filter button -->
+        <a href="{% url 'venue_list' %}" class="clear-filter-btn">Clear Filter</a>
+    {% endif %}
+</form>
 
-    const defaultCoords = [37.9838, 23.7275]; // Example: Athens
+{% if selected_kind %}
+    <!-- 🔹 Filtered view -->
+    <h3 class="section-title">
+        Showing {{ selected_kind|title }} Venues
+    </h3>
+    <div class="venue-scroll-container">
+        {% for venue in venues %}
+            <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+                {% include "venues/venue_cards.html" with venue=venue %}
+            </a>
+        {% empty %}
+            <p>No venues available.</p>
+        {% endfor %}
+    </div>
 
-    const map = L.map('venue-map').setView(
-        venues.length ? [venues[0].lat, venues[0].lng] : defaultCoords,
-        13
-    );
+{% else %}
+    <!-- 🔹 Default grouped view (same as before) -->
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    <h3 class="section-title">Cafes & Bars</h3>
+    <div class="venue-scroll-container">
+        {% with cafes_bars=venues|dictsort:"name" %}
+        {% for venue in cafes_bars %}
+            {% if venue.kind == 'cafe' or venue.kind == 'bar' %}
+            <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+                {% include "venues/venue_cards.html" with venue=venue %}
+            </a>
+            {% endif %}
+        {% empty %}
+            <p>No cafes or bars available.</p>
+        {% endfor %}
+        {% endwith %}
+    </div>
 
-    venues.forEach(v => {
-        const marker = L.marker([v.lat, v.lng]).addTo(map);
-        marker.bindPopup(`<a href="/venues/${v.id}/">${v.name}</a>`);
-    });
-</script> {% endcomment %}
+    <h3 class="section-title">Restaurants</h3>
+    <div class="venue-scroll-container">
+        {% with restaurants=venues|dictsort:"name" %}
+        {% for venue in restaurants %}
+            {% if venue.kind == 'restaurant' %}
+            <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+                {% include "venues/venue_cards.html" with venue=venue %}
+            </a>
+            {% endif %}
+        {% empty %}
+            <p>No restaurants available.</p>
+        {% endfor %}
+        {% endwith %}
+    </div>
 
-<h3 class="section-title">Cafes & Bars</h3>
-<div class="venue-scroll-container">
-    {% with cafes_bars=venues|dictsort:"name" %}
-    {% for venue in cafes_bars %}
-        {% if venue.kind == 'cafe' or venue.kind == 'bar' %}
-        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-            {% include "venues/venue_cards.html" with venue=venue %}
-        </a>
-        {% endif %}
-    {% empty %}
-        <p>No cafes or bars available.</p>
-    {% endfor %}
-    {% endwith %}
-</div>
+    <h3 class="section-title">Beach Bars</h3>
+    <div class="venue-scroll-container">
+        {% for venue in venues %}
+            {% if venue.kind == 'beach_bar' %}
+            <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+                {% include "venues/venue_cards.html" with venue=venue %}
+            </a>
+            {% endif %}
+        {% empty %}
+            <p>No beach bars available.</p>
+        {% endfor %}
+    </div>
 
-<h3 class="section-title">Restaurants</h3>
-<div class="venue-scroll-container">
-    {% with restaurants=venues|dictsort:"name" %}
-    {% for venue in restaurants %}
-        {% if venue.kind == 'restaurant' %}
-        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-            {% include "venues/venue_cards.html" with venue=venue %}
-        </a>
-        {% endif %}
-    {% empty %}
-        <p>No restaurants available.</p>
-    {% endfor %}
-    {% endwith %}
-</div>
+    <h3 class="section-title">Other Venues</h3>
+    <div class="venue-scroll-container">
+        {% for venue in venues %}
+            {% if venue.kind == 'other' %}
+            <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+                {% include "venues/venue_cards.html" with venue=venue %}
+            </a>
+            {% endif %}
+        {% empty %}
+            <p>No other venues available.</p>
+        {% endfor %}
+    </div>
+{% endif %}
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const scrollContainers = document.querySelectorAll('.venue-scroll-container');
-
         scrollContainers.forEach(function(scrollContainer) {
             scrollContainer.addEventListener('wheel', function (e) {
                 if (e.deltaY !== 0 && scrollContainer.scrollWidth > scrollContainer.clientWidth) {

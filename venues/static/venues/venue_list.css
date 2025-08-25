@@ -209,3 +209,18 @@ h2 {
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
+
+.clear-filter-btn {
+    margin-left: 1em;
+    padding: 0.4em 0.8em;
+    background-color: #f44336;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+.clear-filter-btn:hover {
+    background-color: #d32f2f;
+}
