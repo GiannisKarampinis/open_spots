@@ -2,120 +2,133 @@
 {% load static %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link rel="stylesheet" href="{% static 'venues/venue_list.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="{% static 'venues/venue_list.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 {% endblock %}
 
 {% block title %}Browse Venues{% endblock %}
 
 {% block content %}
-<h2 style="text-align:center;">Explore &amp; Reserve Your Perfect Spot</h2>
+<h2>Explore &amp; Reserve Your Perfect Spot</h2>
 
 <!-- 🔹 Filter form -->
-<form method="get" class="filter-form" style="text-align:center; margin: 1em 0;">
-    <label for="venue_type">Filter by type:</label>
-    <select name="kind" id="venue_type" onchange="this.form.submit()">
-        <option value="">All Venues</option>
-        <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>Restaurants</option>
-        <option value="cafe" {% if selected_kind == "cafe" %}selected{% endif %}>Cafes</option>
-        <option value="bar" {% if selected_kind == "bar" %}selected{% endif %}>Bars</option>
-        <option value="beach_bar" {% if selected_kind == "beach_bar" %}selected{% endif %}>Beach Bars</option>
-        <option value="other" {% if selected_kind == "other" %}selected{% endif %}>Other</option>
-    </select>
-
-    {% if selected_kind %}
-        <!-- 🔹 Clear filter button -->
-        <a href="{% url 'venue_list' %}" class="clear-filter-btn">Clear Filter</a>
-    {% endif %}
+<form method="get" class="filter-form">
+    <div class="filter-wrapper sticky-filter">
+        <i class="fa-solid fa-filter filter-icon"></i>
+        <select name="kind" id="venue_type" onchange="this.form.submit()">
+            <option value="">All Venues</option>
+            <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>Restaurants</option>
+            <option value="cafe" {% if selected_kind == "cafe" %}selected{% endif %}>Cafes</option>
+            <option value="bar" {% if selected_kind == "bar" %}selected{% endif %}>Bars</option>
+            <option value="beach_bar" {% if selected_kind == "beach_bar" %}selected{% endif %}>Beach Bars</option>
+            <option value="other" {% if selected_kind == "other" %}selected{% endif %}>Other</option>
+        </select>
+        {% if selected_kind %}
+        <a href="{% url 'venue_list' %}" class="clear-filter-btn">Clear</a>
+        {% endif %}
+    </div>
 </form>
 
+<!-- Venue sections -->
 {% if selected_kind %}
-    <!-- 🔹 Filtered view -->
-    <h3 class="section-title">
-        Showing {{ selected_kind|title }} Venues
-    </h3>
-    <div class="venue-scroll-container">
-        {% for venue in venues %}
-            <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-                {% include "venues/venue_cards.html" with venue=venue %}
-            </a>
-        {% empty %}
-            <p>No venues available.</p>
-        {% endfor %}
-    </div>
-
+<h3 class="section-title">Showing {{ selected_kind|title }} Venues</h3>
+<div class="venue-scroll-container">
+    {% for venue in venues %}
+    <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+        {% include "venues/venue_cards.html" with venue=venue %}
+    </a>
+    {% empty %}
+    <p>No venues available.</p>
+    {% endfor %}
+</div>
 {% else %}
-    <!-- 🔹 Default grouped view (same as before) -->
+<!-- Multiple sections like before -->
+<!-- Cafes & Bars -->
+<h3 class="section-title">Cafes & Bars</h3>
+<div class="venue-scroll-container">
+    {% with cafes_bars=venues|dictsort:"name" %}
+    {% for venue in cafes_bars %}
+        {% if venue.kind == 'cafe' or venue.kind == 'bar' %}
+        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+            {% include "venues/venue_cards.html" with venue=venue %}
+        </a>
+        {% endif %}
+    {% empty %}
+    <p>No cafes or bars available.</p>
+    {% endfor %}
+    {% endwith %}
+</div>
 
-    <h3 class="section-title">Cafes & Bars</h3>
-    <div class="venue-scroll-container">
-        {% with cafes_bars=venues|dictsort:"name" %}
-        {% for venue in cafes_bars %}
-            {% if venue.kind == 'cafe' or venue.kind == 'bar' %}
-            <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-                {% include "venues/venue_cards.html" with venue=venue %}
-            </a>
-            {% endif %}
-        {% empty %}
-            <p>No cafes or bars available.</p>
-        {% endfor %}
-        {% endwith %}
-    </div>
+<!-- Restaurants -->
+<h3 class="section-title">Restaurants</h3>
+<div class="venue-scroll-container">
+    {% with restaurants=venues|dictsort:"name" %}
+    {% for venue in restaurants %}
+        {% if venue.kind == 'restaurant' %}
+        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+            {% include "venues/venue_cards.html" with venue=venue %}
+        </a>
+        {% endif %}
+    {% empty %}
+    <p>No restaurants available.</p>
+    {% endfor %}
+    {% endwith %}
+</div>
 
-    <h3 class="section-title">Restaurants</h3>
-    <div class="venue-scroll-container">
-        {% with restaurants=venues|dictsort:"name" %}
-        {% for venue in restaurants %}
-            {% if venue.kind == 'restaurant' %}
-            <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-                {% include "venues/venue_cards.html" with venue=venue %}
-            </a>
-            {% endif %}
-        {% empty %}
-            <p>No restaurants available.</p>
-        {% endfor %}
-        {% endwith %}
-    </div>
+<!-- Beach Bars -->
+<h3 class="section-title">Beach Bars</h3>
+<div class="venue-scroll-container">
+    {% for venue in venues %}
+        {% if venue.kind == 'beach_bar' %}
+        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+            {% include "venues/venue_cards.html" with venue=venue %}
+        </a>
+        {% endif %}
+    {% empty %}
+    <p>No beach bars available.</p>
+    {% endfor %}
+</div>
 
-    <h3 class="section-title">Beach Bars</h3>
-    <div class="venue-scroll-container">
-        {% for venue in venues %}
-            {% if venue.kind == 'beach_bar' %}
-            <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-                {% include "venues/venue_cards.html" with venue=venue %}
-            </a>
-            {% endif %}
-        {% empty %}
-            <p>No beach bars available.</p>
-        {% endfor %}
-    </div>
-
-    <h3 class="section-title">Other Venues</h3>
-    <div class="venue-scroll-container">
-        {% for venue in venues %}
-            {% if venue.kind == 'other' %}
-            <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-                {% include "venues/venue_cards.html" with venue=venue %}
-            </a>
-            {% endif %}
-        {% empty %}
-            <p>No other venues available.</p>
-        {% endfor %}
-    </div>
+<!-- Other Venues -->
+<h3 class="section-title">Other Venues</h3>
+<div class="venue-scroll-container">
+    {% for venue in venues %}
+        {% if venue.kind == 'other' %}
+        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+            {% include "venues/venue_cards.html" with venue=venue %}
+        </a>
+        {% endif %}
+    {% empty %}
+    <p>No other venues available.</p>
+    {% endfor %}
+</div>
 {% endif %}
 
+<!-- Horizontal scroll support -->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const scrollContainers = document.querySelectorAll('.venue-scroll-container');
-        scrollContainers.forEach(function(scrollContainer) {
-            scrollContainer.addEventListener('wheel', function (e) {
-                if (e.deltaY !== 0 && scrollContainer.scrollWidth > scrollContainer.clientWidth) {
-                    e.preventDefault();
-                    scrollContainer.scrollLeft += e.deltaY;
-                }
-            }, { passive: false });
-        });
+document.addEventListener('DOMContentLoaded', function () {
+    const scrollContainers = document.querySelectorAll('.venue-scroll-container');
+    scrollContainers.forEach(function(scrollContainer) {
+        scrollContainer.addEventListener('wheel', function (e) {
+            if (e.deltaY !== 0 && scrollContainer.scrollWidth > scrollContainer.clientWidth) {
+                e.preventDefault();
+                scrollContainer.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
     });
+
+    // Sticky shadow effect
+    const filter = document.querySelector('.sticky-filter');
+    const offset = filter.offsetTop;
+    window.addEventListener('scroll', function() {
+        if (window.scrollY >= offset) {
+            filter.classList.add('stuck');
+        } else {
+            filter.classList.remove('stuck');
+        }
+    });
+});
 </script>
 
 {% endblock %}
