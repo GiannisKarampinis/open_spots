@@ -1,0 +1,106 @@
+.verification-container {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 25px 30px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.verification-container h2 {
+  margin-bottom: 15px;
+  color: #333;
+  font-weight: 600;
+  font-size: 1.8rem;
+}
+
+.verification-container p {
+  margin-bottom: 25px;
+  color: #555;
+  font-size: 1rem;
+}
+
+.verification-form input[type="text"] {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 1.2rem;
+  border: 1.8px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.verification-form input[type="text"]:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.verification-form button {
+  margin-top: 20px;
+  padding: 12px 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
+
+.verification-form button:hover {
+  background-color: #0056b3;
+}
+
+/* Resend code button - consistent style with verify button */
+.resend-button {
+  padding: 10px 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #007bff;
+  background-color: transparent;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  width: auto;
+  min-width: 150px;
+}
+
+.resend-button:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Countdown container */
+#countdown {
+  margin-top: 20px;
+  font-size: 1rem;
+  color: #444;
+  position: relative;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Countdown bar background */
+#countdown-bar-bg {
+  width: 100%;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+/* Countdown bar fill */
+#countdown-bar-fill {
+  height: 100%;
+  background-color: #007bff;
+  width: 100%; /* Will be dynamically updated by JS */
+  transition: width 1s linear;
+  border-radius: 4px;
+}

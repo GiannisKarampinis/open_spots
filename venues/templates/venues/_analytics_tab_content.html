@@ -1,8 +1,4 @@
 <div class="analytics-container" data-venue-id="{{ venue.id }}">
-    <h1 class="mt-4 text-center text-muted mb-4">
-        📊 {{ venue.name }}
-    </h1>
-
     <!-- Quick Stats -->
     <div id="analytics-stats" class="d-flex justify-content-around flex-wrap mb-4">
         <div class="stat-card text-center p-3 shadow-sm rounded" style="min-width: 120px;">
@@ -35,19 +31,14 @@
     </form>
 
     <!-- Chart -->
-    <div id="analytics-chart" style="height: 400px; width: 100%;">
-        {% if figure %}
-             <script>
-                document.addEventListener("DOMContentLoaded", function() {
-                    var fig = JSON.parse('{{ figure|escapejs }}');
-                    Plotly.newPlot('analytics-plot', fig.data, fig.layout);
-                });
-            </script>
+    <div id="analytics-chart" style="height: 600px; width: 100%;"></div>
+        {% comment %} {% if figure %}
+
         {% else %}
             <div class="alert alert-info text-center">
                 <h4>📊 No analytics data available</h4>
                 <p>Once your venue gets visits and reservations, analytics will appear here.</p>
             </div>
         {% endif %}
-    </div>
+    </div> {% endcomment %}
 </div>

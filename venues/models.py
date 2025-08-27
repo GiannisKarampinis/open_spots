@@ -112,6 +112,7 @@ class Reservation(models.Model):
     status  = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     arrival_status = models.CharField(max_length=20, choices=ARRIVAL_STATUS_CHOICES, default='pending')
     table   = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.name} - {self.date} at {self.time} ({self.venue.name})"
@@ -129,6 +130,13 @@ class Reservation(models.Model):
         if self.status == 'accepted' and self.arrival_status not in ['pending', 'checked_in', 'no_show']:
             self.arrival_status = 'pending'
         super().save(*args, **kwargs)
+
+    @property
+    def time_display(self):
+        try: 
+            return self.time.strftime("%I:%M %p")
+        except Exception:
+            return str(self.time) 
 
     class Meta:
         ordering = ['-date', 'time']

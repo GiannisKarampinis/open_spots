@@ -35,6 +35,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'accounts',
     'venues',
     'django.contrib.admin',
@@ -57,6 +58,19 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',  # web
         'rest_framework_simplejwt.authentication.JWTAuthentication',  # api
     ]
+}
+# ✅ Good for local dev.
+# ⚠️ In production:
+# Redis must be running and exposed properly.
+# Use environment variables instead of hardcoding.
+# If deploying to Docker, container name instead of 127.0.0.1.
+
+ASGI_APPLICATION = "openspots.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+    }
 }
 
 # ------------------------------------------------------------------------------
@@ -187,6 +201,9 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",  # Your project-level static files folder (optional if used)
 ]
 
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -206,7 +223,17 @@ EMAIL_HOST_USER     = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL  = os.getenv('DEFAULT_FROM_EMAIL')
 
-
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "DEBUG",
+    },
+}
 
 if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
     raise Exception("EMAIL credentials are missing. Check your environment variables.")

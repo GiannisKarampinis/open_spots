@@ -1,0 +1,140 @@
+.apply-container {
+    background-color:      #2a2a2a;                /* Dark gray background */
+    padding:               40px;                     /* Padding inside container */
+    border-radius:         10px;                     /* Rounded corners */
+    box-shadow:            0 0 25px rgba(255,255,255,0.1); /* Soft white glow */
+    max-width:             500px;                    /* Max container width */
+    margin:                60px auto;                /* Center horizontally, top/bottom margin */
+    color:                 white;                  /* Text color */
+    font-family:           'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean readable font */
+    width:                 100%;                     /* Make width flexible */
+    box-sizing:            border-box;               /* Include padding in width */
+}
+
+/* Headings consistency */
+.apply-container h2 {
+    text-align:            center;                    /* Centered heading */
+    margin-bottom:         30px;                      /* Space below heading */
+    font-weight:           700;                       /* Bold font */
+    font-size:             2rem;                      /* Large font size */
+    color:                 #eee;                    /* Light gray text */
+}
+
+/* Labels */
+.apply-container .form-group label {
+    display:               block;                     /* Full width */
+    color:                 white;                   /* Keep white */
+}
+
+/* Form group spacing */
+.apply-container .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;  /* consistent */
+    width: 100%;
+    gap: 6px;
+}
+
+/* Inputs consistent */
+.apply-container .form-group input,
+.apply-container .form-group select,
+.apply-container .form-group textarea {
+    width:                 100%;
+    padding:               12px 15px;
+    background-color:      #3a3a3a;
+    border:                1px solid #555;
+    color:                 white;
+    border-radius:         6px;
+    margin-bottom:         15px;                     /* consistent spacing */
+    font-size:             1rem;
+    outline:               none;
+    transition:            border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing:            border-box;
+}
+
+/* Focus style for inputs */
+.apply-container .form-group input:focus,
+.apply-container .form-group select:focus,
+.apply-container .form-group textarea:focus {
+    border-color:          #007bff;                   /* Blue border on focus */
+    box-shadow:            0 0 6px #007bff;           /* Blue glow */
+}
+
+/* Email verify wrapper label */
+.apply-container .form-group.email-verify-wrapper > label {
+    width: 100%;
+    display: block;
+}
+
+/* Email verify wrapper flex stays same */
+.apply-container .form-group.email-verify-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* The input inside wrapper grows */
+.apply-container .form-group.email-verify-wrapper input {
+    flex-grow: 1;
+    margin-bottom: 0; /* override input margin-bottom to avoid double spacing */
+}
+
+/* Verify Email button */
+.apply-container .form-group a.btn.btn-secondary {
+    background-color:      #007bff;                   /* Bootstrap blue */
+    color:                 white;
+    border:                none;
+    border-radius:         6px;
+    padding:               10px 18px;
+    font-weight:           700;
+    font-size:             1rem;
+    cursor:                pointer;
+    height:                38px;
+    text-decoration:       none;
+    transition:            background-color 0.3s ease;
+    display:               inline-flex;
+    align-items:           center;
+    justify-content:       center;
+}
+
+.apply-container .form-group a.btn.btn-secondary:hover {
+    background-color:      #0056b3;                   /* Darker blue on hover */
+}
+
+/* Error list */
+.apply-container .form-group ul.errorlist {
+    list-style:            none;
+    padding:               0;
+    margin:                -10px 0 10px;               /* consistent spacing */
+    color:                 #ff4d4f;
+    font-size:             0.95rem;
+    font-weight:           500;
+    animation:             fadeIn 0.3s ease forwards;
+}
+
+/* Inputs with errors */
+.apply-container input[aria-invalid="true"],
+.apply-container select[aria-invalid="true"],
+.apply-container textarea[aria-invalid="true"] {
+    border-color:          #ff4d4f !important;
+    box-shadow:            0 0 6px #ff4d4f;
+}
+
+/* Submit button */
+.apply-container .btn.primary-btn {
+    width:                 100%;
+    padding:               14px;
+    margin-top:            20px;
+    background-color:      #007bff;
+    color:                 white;
+    border-radius:         6px;
+    border:                none;
+    cursor:                pointer;
+    font-size:             1.1rem;
+    font-weight:           700;
+    transition:            background-color 0.3s ease;
+}
+
+.apply-container .btn.primary-btn:hover {
+    background-color:      #0056b3;
+}

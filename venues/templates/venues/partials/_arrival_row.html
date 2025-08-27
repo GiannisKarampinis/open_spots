@@ -1,0 +1,45 @@
+<tr id="reservation-row-{{ r.id }}" data-reservation-id="{{ r.id }}">
+  <td>{{ r.user.username }}</td>
+  
+  <!-- Date: data-order = YYYY-MM-DD -->
+  <td data-order="{{ r.date|date:'Y-m-d' }}">{{ r.date|date:'M d, Y' }}</td>
+  
+  <!-- Time: data-order = HH:MM -->
+  <td data-order="{{ r.time|time:'H:i' }}">{{ r.time|time:'g:i A' }}</td>
+
+
+  <td>{{ r.party_size }}</td>
+  
+  <td>
+    <span class="badge 
+      {% if     r.arrival_status == 'pending' %}    bg-warning text-dark
+      {% elif   r.arrival_status == 'checked_in' %} bg-success
+      {% else %}bg-danger{% endif %}">
+      {{ r.arrival_status|capfirst }}
+    </span>
+  </td>
+
+  <!-- Update arrival status buttons -->
+  <td>
+   {% if r.arrival_status == 'pending' or r.arrival_status == 'checked_in' or r.arrival_status == 'no_show' %}
+      {% if r.status == 'accepted' and r.arrival_status == 'pending' %}
+        <a href="{% url 'update_arrival_status' r.id 'checked_in' %}" 
+          class="btn btn-success btn-sm me-1 btn-update-arrival" 
+          data-status="checked_in">✅ Checked-in
+        </a>
+        <a href="{% url 'update_arrival_status' r.id 'no_show' %}"    
+          class="btn btn-danger btn-sm btn-update-arrival"  
+          data-status="no_show">❌ No-show
+        </a>
+      {% endif %}
+        <a href="{% url 'edit_reservation_status' r.id %}"
+          data-move-url="{% url 'move_reservation_to_requests_ajax' r.id %}"
+          class="btn btn-sm btn-edit-status">
+          Move to Requests
+        </a>
+    {% else %}
+      <span class="text-muted">—</span>
+    {% endif %}
+  </td>
+</tr>
+

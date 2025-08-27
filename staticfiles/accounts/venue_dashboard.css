@@ -1,0 +1,163 @@
+.dashboard-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 1rem 2rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
+}
+
+.dashboard-container h2 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.dashboard-section {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 0 4px rgba(0,0,0,0.05);
+}
+
+.venue-box {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    background-color: #fafafa;
+}
+
+.venue-box p {
+    margin: 0.25rem 0;
+}
+
+ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+}
+
+ul li {
+    margin-bottom: 0.5rem;
+    color: #444;
+}
+
+h3 {
+    color: #555;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.5rem;
+}
+
+
+.pagination {
+    margin: 10px 0;
+    font-size: 0.9em;
+}
+
+.pagination a {
+    margin: 0 5px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.pagination a:hover {
+    text-decoration: underline;
+}
+
+.filter-form {
+    margin-bottom: 15px;
+}
+
+.filter-form label {
+    margin-right: 10px;
+}
+
+.filter-form input[type="date"] {
+    margin-right: 10px;
+}
+
+.filter-form button {
+    margin-right: 10px;
+}
+
+/* General container */
+.venue-dashboard-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 1rem 2rem;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Headings */
+.venue-dashboard-container h2 {
+    margin-bottom: 1rem;
+    font-weight: 600;
+    border-bottom: 2px solid #007BFF;
+    padding-bottom: 0.3rem;
+}
+
+/* Lists */
+.venue-dashboard-container ul {
+    list-style: none;
+    padding: 0;
+}
+
+.venue-dashboard-container li {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.venue-dashboard-container li:last-child {
+    border-bottom: none;
+}
+
+/* Buttons & links */
+.btn, a {
+    background-color: #007BFF;
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover, a:hover {
+    background-color: #0056b3;
+}
+
+/* Messages */
+.messages {
+    list-style: none;
+    padding: 0.5rem 1rem;
+    margin: 0 0 1rem 0;
+}
+
+.message {
+    padding: 0.6rem 1rem;
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.message.warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}

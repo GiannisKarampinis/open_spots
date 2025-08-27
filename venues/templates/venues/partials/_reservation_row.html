@@ -1,0 +1,31 @@
+<tr id="reservation-row-{{ r.id }}" data-reservation-id="{{ r.id }}">
+  <td>{{ r.user.username }}</td>
+  
+  <!-- Date: data-order = YYYY-MM-DD -->
+  <td data-order="{{ r.date|date:'Y-m-d' }}">{{ r.date|date:'M d, Y' }}</td>
+  
+  <!-- Time: data-order = HH:MM -->
+  <td data-order="{{ r.time|time:'H:i' }}">{{ r.time|time:'g:i A' }}</td>
+
+  
+  <td>{{ r.party_size }}</td>
+  
+  <td>
+    <span class="badge 
+      {% if   r.status == 'pending' %}bg-warning text-dark
+      {% elif r.status == 'accepted' %}bg-success
+      {% else %}bg-danger{% endif %}">
+      {{ r.status|capfirst }}
+    </span>
+  </td>
+  
+  <!-- Update arrival status buttons -->
+  <td>
+    {% if r.status == 'pending' %}
+      <a href="{% url 'update_reservation_status' r.id 'accepted' %}" class="btn btn-success btn-sm me-1 btn-accept-reservation" data-status="accepted" >✅ Accept</a>
+      <a href="{% url 'update_reservation_status' r.id 'rejected' %}" class="btn btn-danger btn-sm btn-accept-reservation" data-status="rejected">❌ Reject</a>
+    {% else %}
+      <span class="text-muted">—</span>
+    {% endif %}
+  </td>
+</tr>

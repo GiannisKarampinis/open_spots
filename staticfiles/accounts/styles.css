@@ -1,0 +1,264 @@
+body {
+    background-color: #1c1c1c;
+    font-family: Arial, sans-serif;
+    color: #f1f1f1;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #2a2a2a;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #f9f9f9;
+}
+
+nav a {
+    color: #aaa;
+    text-decoration: none;
+    margin-left: 20px;
+    font-size: 0.95rem;
+}
+
+nav a:hover {
+    color: #fff;
+}
+
+main {
+    padding: 40px;
+    max-width: 900px;
+    margin: auto;
+}
+
+footer {
+    background-color: #2a2a2a;
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.btn {
+    display: inline-block;
+    background-color: #555;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #777;
+}
+
+
+
+
+
+
+.login-container {
+    background-color: #2a2a2a;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(255,255,255,0.1);
+    max-width: 500px;
+    margin: 40px auto;
+}
+
+.login-container h2 {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    background-color: #3a3a3a;
+    border: 1px solid #555;
+    color: white;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+}
+
+a {
+    color: #aaa;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+}
+
+a:hover {
+    color: #fff;
+}
+
+
+
+.signup-container {
+    background-color: #2a2a2a;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(255,255,255,0.1);
+    max-width: 500px;
+    margin: 40px auto;
+}
+
+.signup-container h2 {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+    width: 100%;
+    padding: 10px;
+    background-color: #3a3a3a;
+    border: 1px solid #555;
+    color: white;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+}
+
+a {
+    color: #aaa;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+}
+
+a:hover {
+    color: #fff;
+}
+
+.venue-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    padding: 20px;
+    gap: 20px;
+    scroll-snap-type: x mandatory;
+}
+
+.venue-card {
+    background-color: #2a2a2a;
+    border-radius: 10px;
+    padding: 20px;
+    width: 300px;
+    flex: 0 0 auto;
+    color: white;
+    scroll-snap-align: start;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.venue-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.venue-card h3 {
+    margin: 10px 0 5px;
+}
+
+.venue-card a {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #555;
+    border-radius: 5px;
+    color: white;
+    text-decoration: none;
+}
+
+.venue-card a:hover {
+    background-color: #777;
+}
+
+.booking-container {
+    background-color: #2a2a2a;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(255,255,255,0.1);
+    max-width: 500px;
+    margin: 40px auto;
+    color: white;
+}
+
+.booking-container h2 {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.booking-container form {
+    display: flex;
+    flex-direction: column;
+}
+
+.booking-container label {
+    margin: 10px 0 5px;
+}
+
+.booking-container input[type="date"],
+.booking-container input[type="time"],
+.booking-container input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    background-color: #3a3a3a;
+    border: 1px solid #555;
+    color: white;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.booking-container button.btn {
+    background-color: #444;
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.booking-container button.btn:hover {
+    background-color: #666;
+}

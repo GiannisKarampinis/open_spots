@@ -1,5 +1,5 @@
-from django.urls import path
-from . import views
+from django.urls    import path
+from .              import views
 
 urlpatterns = [
     # Venue listings and details
@@ -17,10 +17,15 @@ urlpatterns = [
     path('book/<int:venue_id>/', views.make_reservation, name='book_venue'), # OK
     path('my-reservations/', views.my_reservations, name='my_reservations'), # OK
     
-    path('reservation/<int:reservation_id>/cancel/',                views.cancel_reservation,           name='cancel_reservation'),
-    path('reservation/<int:reservation_id>/status/<str:status>/',   views.update_reservation_status,    name='update_reservation_status'),
-    path('reservation/<int:reservation_id>/edit-status/',           views.edit_reservation_status,      name='edit_reservation_status'),
-    path('venues/reservation/<int:reservation_id>/update-arrival/<str:arrival_status>/', views.update_arrival_status, name='update_arrival_status'),
+    path('reservation/<int:reservation_id>/cancel/',                                views.cancel_reservation,                   name='cancel_reservation'),
+    path('reservation/<int:reservation_id>/status/<str:status>/',                   views.update_reservation_status,            name='update_reservation_status'),
+    path('reservation/<int:reservation_id>/edit-status/',                           views.edit_reservation_status,              name='edit_reservation_status'),
+    path('reservation/<int:reservation_id>/update-arrival/<str:arrival_status>/',   views.update_arrival_status,                name='update_arrival_status'),
+    path('reservation/<int:reservation_id>/move-to-requests/',                      views.move_reservation_to_requests_ajax,    name='move_reservation_to_requests_ajax'),
+
+    # Partials for AJAX/HTMX row replacement
+    path('reservation-row/<int:pk>/', views.partial_reservation_row, name='partial_reservation_row'),
+    path('arrival-row/<int:pk>/', views.partial_arrival_row, name='partial_arrival_row'),
 
     # Venue analytics / visits
     path('<int:venue_id>/analytics/partial/', views.venue_visits_analytics_api, name='venue_analytics_partial'),

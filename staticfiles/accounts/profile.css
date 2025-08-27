@@ -1,0 +1,217 @@
+/* profile.css */
+.profile-container {
+    max-width: 800px;
+    margin: 60px auto;                          /* Match login spacing */
+    padding: 40px;                              /* Match login padding */
+    background-color: #2a2a2a;                  /* Dark gray background */
+    border-radius: 10px;                        /* Match login rounded corners */
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.12); /* Soft white glow */
+    color: white;                               /* White text like login */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.profile-container h1 {
+    text-align: center;                  /* Center the heading text */
+    margin-bottom: 30px;                 /* Space below heading */
+    color: #eee;                      /* Dark gray text color */
+    font-weight: 700;
+}
+
+.profile-section {
+    margin-bottom: 40px;                 /* Space below each profile section */
+}
+
+.profile-section h2 {
+    font-size: 1.3rem;                   /* Slightly larger font size */
+    margin-bottom: 20px;                 /* Space below subtitle */
+    border-bottom: 1px solid #555;       /* Thin bottom border */
+    padding-bottom: 5px;                 /* Space between text and border */
+    color: #ccc;                         /* Medium dark gray color */
+}
+
+.profile-info-row {
+    display: flex;                       /* Use flexbox for layout */
+    align-items: center;                 /* Vertically center children */
+    justify-content: space-between;     /* Space between label and value/buttons */
+    margin-bottom: 20px;                 /* Space below each info row */
+    flex-wrap: wrap;                     /* Allow wrapping on small screens */
+}
+
+/* Label on the left */
+.profile-info-label {
+    font-weight: 500;                    /* Medium font weight */
+    color: #ddd;                         /* Dark gray text */
+    width: 150px;                        /* Fixed width for alignment */
+}
+
+/* The value text */
+.profile-info-value {
+    color: #ddd;                         /* Medium gray text */
+    flex-grow: 1;                        /* Allow it to grow inside flex container */
+}
+
+/* Edit button */
+.profile-edit-button {
+    padding: 6px 12px;                   /* Button padding */
+    font-size: 0.9rem;                   /* Slightly smaller font size */
+    background-color: #4285f4;          /* Bright blue background */
+    border: none;                        /* Remove default border */
+    color: white;                        /* White text */
+    border-radius: 6px;                  /* Rounded corners */
+    cursor: pointer;                     /* Pointer cursor on hover */
+    transition: background-color 0.2s ease; /* Smooth background color change */
+    text-decoration: none;              /* Remove underline if anchor */
+}
+
+.profile-edit-button:hover {
+    background-color: #357ae8;          /* Darker blue on hover */
+}
+
+/* Container for view mode */
+#email-view,
+#phone-view {
+    display: flex;                       /* Align value and button */
+    align-items: center;                 /* Vertically center */
+    justify-content: space-between;      /* Push button to the right */
+    flex-grow: 1;                        /* Fill remaining space */
+}
+
+/* Inline edit form: prevent line jump */
+#email-form,
+#phone-form {
+    display: flex;                       /* Prevent line break on show */
+    align-items: center;                 /* Align input and buttons vertically */
+    gap: 12px;                           /* Consistent spacing */
+    flex-grow: 1;                        /* Take up space like view mode */
+    margin-top: 0;                       /* Remove margin to avoid pushing down */
+    width: auto;                         /* Let it size naturally */
+}
+
+
+/* Inline form for editing */
+.profile-info-row form.profile-form {
+    display: flex;                       /* Flex layout for inputs and buttons */
+    align-items: center;                 /* Vertically center children */
+    justify-content: space-between;     /* Space between input and button group */
+    flex-wrap: wrap;                     /* Allow wrapping on smaller screens */
+    width: 100%;
+}
+
+/* Form input */
+.profile-info-row form.profile-form input {
+    flex-grow: 1;                        /* Expand input to fill space */
+    padding: 8px 12px;                   /* Inner spacing */
+    font-size: 0.95rem;                  /* Comfortable font size */
+    border: 1px solid #555;            /* Light gray border */
+    border-radius: 6px;                  /* Rounded corners */
+    background-color: #3a3a3a;
+    color: #eee;
+}
+
+/* Save and Cancel buttons */
+.profile-info-row form.profile-form button {
+    padding: 6px 12px;                   /* Button padding */
+    font-size: 0.9rem;                   /* Font size matching edit button */
+    border: none;                        /* Remove default border */
+    border-radius: 6px;                  /* Rounded corners */
+    cursor: pointer;                     /* Pointer cursor on hover */
+    transition: background-color 0.2s ease; /* Smooth color transition */
+}
+
+/* Save button style */
+.profile-info-row form.profile-form button[type="submit"] {
+    background-color: #28a745;           /* Green background for save */
+    color: white;                        /* White text */
+}
+
+.profile-info-row form.profile-form button[type="submit"]:hover {
+    background-color: #218838;           /* Darker green on hover */
+}
+
+/* Cancel button */
+.btn-cancel {
+    background-color: #ccc;            /* Light gray background */
+    color: #333;                       /* Darker text for contrast */
+    padding: 6px 12px;                   /* Button padding */
+    border: none;                        /* Remove border */
+    border-radius: 6px;                  /* Rounded corners matching save */
+    cursor: pointer;                     /* Pointer cursor */
+    transition: background-color 0.2s ease; /* Smooth hover effect */
+    font-size: 0.9rem;                   /* Same font size as other buttons */
+}
+
+.btn-cancel:hover {
+    background-color: #bbb;            /* Slightly darker gray on hover */
+}
+
+/* Reservations section */
+.reservations-section {
+    margin-top: 50px;                    /* Space above reservations */
+}
+
+.reservations-table {
+    width: 100%;                         /* Full width table */
+    border-collapse: collapse;           /* Remove gaps between cells */
+    margin-top: 15px;                    /* Space above table */
+    font-size: 0.95rem;                  /* Comfortable font size */
+}
+
+.reservations-table th,
+.reservations-table td {
+    border: 1px solid #ddd;            /* Light border around cells */
+    padding: 10px;                       /* Cell padding */
+    text-align: left;                    /* Left-align text */
+}
+
+.reservations-table th {
+    background-color: #eeeeee;         /* Light gray header background */
+    color: #333;                       /* Dark text */
+}
+
+.reservations-table tbody tr:hover {
+    background-color: #f2f2f2;         /* Highlight row on hover */
+}
+
+.reservations-table caption {
+    caption-side: top;                   /* Caption above the table */
+    font-weight: bold;                   /* Bold caption text */
+    text-align: left;                    /* Align caption left */
+    margin-bottom: 10px;                 /* Space below caption */
+    font-size: 1.1rem;                   /* Larger font size for caption */
+    color: #444;                       /* Medium dark gray */
+}
+
+.profile-view-mode,
+.profile-form {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+
+.profile-form input {
+    flex-grow: 1;                       /* Input takes available space */
+}
+
+.form-button-group {
+    display: flex;
+    gap: 10px;
+}
+
+.verify-now-btn {
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  margin-left: 10px;
+}
+
+.verify-now-btn:hover {
+  background-color: #0056b3;
+}

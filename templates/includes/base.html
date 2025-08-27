@@ -6,20 +6,20 @@
 <head>
     <meta charset="UTF-8">
     
-    <title>{% block title %}OpenSpots{% endblock %}</title>
+    <title>{% block title %}{% endblock %}</title>
     
     <link rel="stylesheet" href="{% static 'base.css' %}">
     <link rel="stylesheet" href="{% static 'messages.css' %}">
 
     {% block extra_css %}{% endblock %}
+
+   
 </head>
 
 <body>
     <header>
         <a href="{% url 'venue_list' %}" class="site-title">
-            <svg class="logo-svg" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <text x="0" y="40" font-size="36" fill="currentColor" font-family="Arial">OpenSpots</text>
-            </svg>
+             {% include "includes/logo.svg.html" %}
         </a>
         <nav class="main-nav">
             {% if user.is_authenticated %}

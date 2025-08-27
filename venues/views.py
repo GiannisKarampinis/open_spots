@@ -4,36 +4,34 @@ from django.contrib                 import messages
 from django.contrib.auth            import get_user_model
 from django.contrib.auth.models     import User 
 from django.contrib.auth.decorators import login_required
-
-from django.views.decorators.http   import require_POST
-
-from django.db.models               import Count
-from django.db.models.functions     import TruncDay, TruncWeek, TruncMonth
-
-from django.utils                   import timezone
-from django.utils.timezone          import now
-
-from django.core.mail               import send_mail
-from django.core.exceptions         import PermissionDenied
-from django.core.serializers.json   import DjangoJSONEncoder
-
-from django.conf                    import settings
-from django.utils.safestring        import mark_safe
-
-from datetime                       import datetime, timedelta
-
-from django.http                    import HttpResponse
-from django.http                    import JsonResponse
-from plotly.offline                 import plot
-import plotly.graph_objs            as go
-from django.template.loader         import render_to_string
-
-
-from .forms                         import ReservationForm, VenueApplicationForm, ArrivalStatusForm
-from .utils                         import *
-from .models                        import Venue, VenueVisit, Reservation
-from .decorators                    import venue_admin_required
+from django.contrib                  import messages
+from django.views.decorators.http    import require_POST
+from django.db.models                import Count
+from django.db.models.functions      import TruncDay, TruncWeek, TruncMonth
+from django.utils.timezone           import now, localtime
+from datetime                        import datetime, timedelta
+from django.utils                    import timezone
+from django.core.mail                import send_mail
+from django.conf                     import settings
+from django.contrib.auth.models      import User  # For admin email in venue signup
+from django.core.serializers.json    import DjangoJSONEncoder
+from django.utils.safestring         import mark_safe
+from django.contrib.auth             import get_user_model
+from django.core.exceptions          import PermissionDenied
+from django.http                     import HttpResponse, Http404, JsonResponse
+from django.template.loader          import render_to_string
+from plotly.offline                  import plot
+import plotly.graph_objs             as go
+from django.db                       import transaction
+from django.urls                     import reverse
+from .models                         import Venue, VenueVisit, Reservation
+from .forms                          import ReservationForm, VenueApplicationForm, ArrivalStatusForm
+from .utils                          import *
+from .decorators                     import venue_admin_required
+from .notifications                  import notify_venue_admin
 import json
+
+
 
 User = get_user_model()
 
@@ -209,7 +207,7 @@ def get_venue_visits_analytics_json(request, venue_id, grouping = 'daily'):
         xaxis_title='Date',
         yaxis_title='Count',
         template='plotly_dark',
-        height=400
+        height=550
     )
 
     # Keep config so frontend can use it in Plotly.newPlot
@@ -347,16 +345,42 @@ def toggle_venue_full(request, venue_id):
 
 ###########################################################################################
 @login_required
+@require_POST
 def update_reservation_status(request, reservation_id, status):
     reservation = get_object_or_404(Reservation, id=reservation_id)
     if reservation.venue.owner != request.user:
-        raise PermissionDenied
+        return JsonResponse({'error': 'permission denied'}, status=403)
+    if status not in ['accepted', 'rejected']:
+        return JsonResponse({'error': 'invalid status'}, status=400)
 
-    if status in ['accepted', 'rejected'] and reservation.status == 'pending':
-        reservation.status = status
-        reservation.save(update_fields=['status'])
+    with transaction.atomic():
+        if reservation.status != status:
+            reservation.status = status
+            reservation.save(update_fields=['status'])
 
-    return redirect('venue_dashboard', venue_id=reservation.venue.id)
+    reservation_data = {
+        "id": reservation.id,
+        "customer_name": reservation.user.username if reservation.user else None,
+        "date": reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
+        "time": reservation.time.strftime("%H:%M") if reservation.time else None,
+        "party_size": getattr(reservation, 'party_size', None),
+        "status": reservation.status,
+        "arrival_status": reservation.arrival_status,
+        "urls": {
+            "move": reverse('move_reservation_to_requests_ajax', args=[reservation.id]),
+            "checkin": reverse('update_arrival_status', args=[reservation.id, 'checked_in']),
+            "no_show": reverse('update_arrival_status', args=[reservation.id, 'no_show']),
+            "accept": reverse('update_reservation_status', args=[reservation.id, 'accepted']),
+            "reject": reverse('update_reservation_status', args=[reservation.id, 'rejected']),
+        },
+        "updated_at": timezone.now().isoformat(),
+    }
+
+    # Optionally broadcast this same reservation_data using Channels:
+    # notify_venue_admin(venue=reservation.venue, event='reservation.status_updated', reservation=reservation_data)
+
+    return JsonResponse({"reservation": reservation_data}, status=200)
+
 
 ###########################################################################################
 
@@ -423,6 +447,14 @@ def make_reservation(request, venue_id):
             start_time = datetime.combine(reservation.date, reservation.time)
             end_time = start_time + timedelta(hours=1)
 
+# time is a TimeField,
+# reservations last exactly 1 hour,
+# only compares by .time() not datetime.
+# This works but can break if:
+# a reservation spans midnight,
+# different durations allowed,
+# timezone mismatch.
+
             overlapping = Reservation.objects.filter(
                 venue=venue,
                 date=reservation.date,
@@ -434,15 +466,19 @@ def make_reservation(request, venue_id):
                 return render(request, 'venues/make_reservation.html', {'form': form, 'venue': venue})
 
             reservation.save()
-            #send_reservation_emails(reservation)
+            
+            send_reservation_emails(reservation)
             messages.success(request, 'Reservation submitted. Await confirmation.')
+
             return redirect('my_reservations')
     else:
         form = ReservationForm()
 
     return render(request, 'venues/make_reservation.html', {'form': form, 'venue': venue})
 
+###########################################################################################
 
+###########################################################################################
 @login_required
 # @venue_admin_required
 def edit_reservation_status(request, reservation_id):
@@ -496,7 +532,6 @@ def edit_reservation(request, pk):
 
     return render(request, "venues/edit_reservation.html", {"form": form, "reservation": reservation})
 
-
 # @login_required
 # def update_arrival_status(request, reservation_id, arrival_status):
 #     reservation = get_object_or_404(Reservation, id=reservation_id)
@@ -542,17 +577,136 @@ def edit_reservation(request, pk):
 #     }
 #     return render(request, 'venues/update_arrival_status.html', context)
 
+###########################################################################################
 
+###########################################################################################
 @login_required
+@require_POST
+def move_reservation_to_requests_ajax(request, reservation_id):
+    """
+    AJAX endpoint: move a reservation back to 'pending' (requests).
+    Returns JSON with 'reservation' dict (no HTML).
+    """
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+
+    if reservation.venue.owner != request.user:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    moved = False
+    with transaction.atomic():
+        if reservation.status != 'pending' or reservation.arrival_status != 'pending':
+            reservation.status = 'pending'
+            reservation.arrival_status = 'pending'
+            reservation.save(update_fields=['status', 'arrival_status'])
+            moved = True
+
+    # Build a compact reservation dict for the frontend
+    reservation_data = {
+        "id": reservation.id,
+        "customer_name": reservation.user.username if reservation.user else None,
+        "date": reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
+        "time": reservation.time.strftime("%H:%M") if reservation.time else None,
+        "party_size": getattr(reservation, 'party_size', None),
+        "status": reservation.status,
+        "arrival_status": reservation.arrival_status,
+        # Optional: include action URLs (recommended)
+        "urls": {
+            "accept": reverse('update_reservation_status', args=[reservation.id, 'accepted']),
+            "reject": reverse('update_reservation_status', args=[reservation.id, 'rejected']),
+            "move": reverse('move_reservation_to_requests_ajax', args=[reservation.id]),
+            "checkin": reverse('update_arrival_status', args=[reservation.id, 'checked_in']),
+            "no_show": reverse('update_arrival_status', args=[reservation.id, 'no_show']),
+        },
+        "updated_at": timezone.now().isoformat(),
+    }
+
+    # Optional: broadcast over channels here (use the same shape)
+    # notify_venue_admin(venue=reservation.venue, event='reservation.moved_to_requests', reservation=reservation_data)
+
+    return JsonResponse({
+        'moved': moved,
+        'reservation': reservation_data
+    })
+
+###########################################################################################
+
+###########################################################################################
+@login_required
+@require_POST
 def update_arrival_status(request, reservation_id, arrival_status):
     reservation = get_object_or_404(Reservation, id=reservation_id)
-    if reservation.venue.owner != request.user:
-        raise PermissionDenied
 
-    print(reservation.arrival_status)
-    if arrival_status in ['checked_in', 'no_show'] and reservation.arrival_status == 'pending':
+    if reservation.venue.owner != request.user:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if arrival_status not in ('checked_in', 'no_show'):
+        return JsonResponse({'error': 'Invalid arrival status'}, status=400)
+
+    with transaction.atomic():
         reservation.arrival_status = arrival_status
         reservation.save(update_fields=['arrival_status'])
-        print(reservation.arrival_status)
 
-    return redirect('venue_dashboard', venue_id=reservation.venue.id)
+    reservation_data = {
+        "id": reservation.id,
+        "customer_name": reservation.user.username if reservation.user else None,
+        "date": reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
+        "time": reservation.time.strftime("%H:%M") if reservation.time else None,
+        "party_size": getattr(reservation, 'party_size', None),
+        "status": reservation.status,
+        "arrival_status": reservation.arrival_status,
+        "urls": {
+            "move": reverse('move_reservation_to_requests_ajax', args=[reservation.id]),
+            "checkin": reverse('update_arrival_status', args=[reservation.id, 'checked_in']),
+            "no_show": reverse('update_arrival_status', args=[reservation.id, 'no_show']),
+            "accept": reverse('update_reservation_status', args=[reservation.id, 'accepted']),
+            "reject": reverse('update_reservation_status', args=[reservation.id, 'rejected']),
+        },
+        "updated_at": timezone.now().isoformat(),
+    }
+
+    # Optionally broadcast reservation_data via channels
+    # notify_venue_admin(venue=reservation.venue, event='reservation.arrival_updated', reservation=reservation_data)
+
+    return JsonResponse({
+        "updated": True,
+        "reservation": reservation_data,
+    })
+
+
+###########################################################################################
+
+###########################################################################################
+@login_required
+def partial_reservation_row(request, pk: int):
+    """Return one reservation row (for upcoming requests table)."""
+    try:
+        r = Reservation.objects.select_related('user', 'venue').get(pk=pk)
+    except Reservation.DoesNotExist:
+        raise Http404
+    html = render_to_string(
+        'venues/partials/_reservation_row.html',
+        {'r': r},
+        request=request
+    )
+    return HttpResponse(html)
+
+###########################################################################################
+
+###########################################################################################
+@login_required
+def partial_arrival_row(request, pk: int):
+    """Return one arrival row (special table), but still Reservation object."""
+    try:
+        r = Reservation.objects.select_related('user', 'venue').get(pk=pk)
+    except Reservation.DoesNotExist:
+        raise Http404
+    html = render_to_string(
+        'venues/partials/_arrival_row.html',
+        {'r': r},
+        request=request
+    )
+    return HttpResponse(html)
+
+###########################################################################################
+
+###########################################################################################
