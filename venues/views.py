@@ -1,9 +1,8 @@
-from django.shortcuts               import render, get_object_or_404, redirect
-
-from django.contrib                 import messages
-from django.contrib.auth            import get_user_model
-from django.contrib.auth.models     import User 
-from django.contrib.auth.decorators import login_required
+from django.shortcuts                import render, get_object_or_404, redirect
+from django.contrib                  import messages
+from django.contrib.auth             import get_user_model
+from django.contrib.auth.models      import User 
+from django.contrib.auth.decorators  import login_required
 from django.contrib                  import messages
 from django.views.decorators.http    import require_POST
 from django.db.models                import Count
@@ -329,6 +328,7 @@ def venue_visits_analytics_api(request, venue_id):
 
 ###########################################################################################
 @login_required
+@venue_admin_required
 @require_POST
 def toggle_venue_full(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
@@ -345,6 +345,7 @@ def toggle_venue_full(request, venue_id):
 
 ###########################################################################################
 @login_required
+@venue_admin_required
 @require_POST
 def update_reservation_status(request, reservation_id, status):
     reservation = get_object_or_404(Reservation, id=reservation_id)
@@ -363,7 +364,7 @@ def update_reservation_status(request, reservation_id, status):
         "customer_name": reservation.user.username if reservation.user else None,
         "date": reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
         "time": reservation.time.strftime("%H:%M") if reservation.time else None,
-        "party_size": getattr(reservation, 'party_size', None),
+        "guests": getattr(reservation, 'guests', None),
         "status": reservation.status,
         "arrival_status": reservation.arrival_status,
         "urls": {
@@ -581,6 +582,7 @@ def edit_reservation(request, pk):
 
 ###########################################################################################
 @login_required
+@venue_admin_required
 @require_POST
 def move_reservation_to_requests_ajax(request, reservation_id):
     """
@@ -606,7 +608,7 @@ def move_reservation_to_requests_ajax(request, reservation_id):
         "customer_name": reservation.user.username if reservation.user else None,
         "date": reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
         "time": reservation.time.strftime("%H:%M") if reservation.time else None,
-        "party_size": getattr(reservation, 'party_size', None),
+        "guests": getattr(reservation, 'guests', None),
         "status": reservation.status,
         "arrival_status": reservation.arrival_status,
         # Optional: include action URLs (recommended)
@@ -632,6 +634,7 @@ def move_reservation_to_requests_ajax(request, reservation_id):
 
 ###########################################################################################
 @login_required
+@venue_admin_required
 @require_POST
 def update_arrival_status(request, reservation_id, arrival_status):
     reservation = get_object_or_404(Reservation, id=reservation_id)
@@ -651,7 +654,7 @@ def update_arrival_status(request, reservation_id, arrival_status):
         "customer_name": reservation.user.username if reservation.user else None,
         "date": reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
         "time": reservation.time.strftime("%H:%M") if reservation.time else None,
-        "party_size": getattr(reservation, 'party_size', None),
+        "guests": getattr(reservation, 'guests', None),
         "status": reservation.status,
         "arrival_status": reservation.arrival_status,
         "urls": {
@@ -694,6 +697,7 @@ def partial_reservation_row(request, pk: int):
 
 ###########################################################################################
 @login_required
+@venue_admin_required
 def partial_arrival_row(request, pk: int):
     """Return one arrival row (special table), but still Reservation object."""
     try:

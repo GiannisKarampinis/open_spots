@@ -4,17 +4,27 @@
         <circle cx="400" cy="400" r="300" fill="#D9B36C"/>
 
         <!-- Cafe icon -->
-        <g stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none">
-            <line x1="300" y1="260" x2="300" y2="440"/>
-            <line x1="500" y1="260" x2="500" y2="440"/>
-            <line x1="320" y1="380" x2="360" y2="380"/>
-            <line x1="440" y1="380" x2="480" y2="380"/>
-            <line x1="320" y1="330" x2="372" y2="330"/>
-            <line x1="428" y1="330" x2="480" y2="330"/>
+        <g class="chairs" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            
+            <!-- Left chair -->
+            <g class="chair-left">
+                <line x1="300" y1="260" x2="300" y2="440"/>
+                <line x1="320" y1="380" x2="360" y2="380"/>
+                <line x1="320" y1="330" x2="372" y2="330"/>
+                <line x1="340" y1="380" x2="340" y2="440"/>
+            </g>
+
+            <!-- Right chair -->
+            <g class="chair-right">
+                <line x1="500" y1="260" x2="500" y2="440"/>
+                <line x1="440" y1="380" x2="480" y2="380"/>
+                <line x1="428" y1="330" x2="480" y2="330"/>
+                <line x1="460" y1="380" x2="460" y2="440"/>
+            </g>
+
+            <!-- Center tables/lines (unchanged) -->
             <line x1="390" y1="330" x2="390" y2="430"/>
             <line x1="410" y1="330" x2="410" y2="430"/>
-            <line x1="340" y1="380" x2="340" y2="440"/>
-            <line x1="460" y1="380" x2="460" y2="440"/>
         </g>
 
         <!-- Logo text -->
@@ -23,10 +33,25 @@
                 font-family="Cooper Black, Georgia, serif" letter-spacing="1">
             open spots
             </text>
-            <text x="400" y="585" font-size="22" font-weight="400"
-                font-family="Inter, Arial, Helvetica, sans-serif" opacity="0.95">
-            Your ideal venue, one click away
-            </text>
         </g>
     </svg>
 </div>
+
+<style>
+/* Smooth transform for chairs */
+.svg-wrapper svg .chair-left,
+.svg-wrapper svg .chair-right {
+    transform-origin: center;
+    transition: transform 0.3s ease;
+}
+
+/* Move left chair to the left */
+.svg-wrapper:hover svg .chair-left {
+    transform: translateX(-15px);
+}
+
+/* Move right chair to the right */
+.svg-wrapper:hover svg .chair-right {
+    transform: translateX(15px);
+}
+</style>
