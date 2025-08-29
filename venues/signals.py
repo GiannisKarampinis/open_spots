@@ -11,6 +11,21 @@ from .utils                         import send_reservation_emails
 from .notifications                 import notify_venue_admin
 from accounts.middleware            import get_current_user
 
+import threading # For production consider using Celery or Django Queued Tasks
+
+def send_async_email(email):
+    """
+    Run email.send() in a background thread so it doesn't block the request.
+    """
+    def _send():
+        try:
+            email.send()
+        except Exception as e:
+             # TODO: log error properly (e.g. Sentry, logging)
+            print(f"Email sending failed: {e}")
+
+    threading.Thread(target=_send, daemon=True).start()
+
 
 # --- Track old values before saving ---
 @receiver(pre_save, sender=Reservation)
@@ -40,9 +55,9 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
     when a Reservation is created or updated.
     """
 
-    current_user = get_current_user()
-    user = instance.user
-    venue_admin = instance.venue.owner
+    current_user    = get_current_user()
+    user            = instance.user
+    venue_admin     = instance.venue.owner
 
     # ✅ Always send WebSocket notification
     venue_id = instance.venue_id
@@ -67,8 +82,9 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
     }
     event_name = "reservation.created" if created else "reservation.updated"
     payload = {"event": event_name, "reservation": reservation_data}
-    notify_venue_admin(venue_id, payload)
-
+    notify_venue_admin(venue_id, payload) # channels / WebSocket
+    # Optional: for high-volume updates, consider a message queue for WebSocket pushes (like Redis pub/sub)
+    
     # ✅ Send emails (only if email context applies)
     if created:
         send_reservation_emails(instance)
@@ -123,7 +139,6 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
     html_content = render_to_string("emails/reservation_update.html", context)
     text_content = render_to_string("emails/reservation_update.txt", context)
 
-    # Send email
     email = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [recipient])
     email.attach_alternative(html_content, "text/html")
-    email.send()
+    send_async_email(email)   # 🚀 now runs in background

@@ -1,0 +1,222 @@
+.reservations-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 1rem;
+}
+
+.reservations-container h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.tab-button {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    background: #f5f5f5;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.3s, transform 0.2s;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tab-button:hover {
+    background: #eaeaea;
+    transform: translateY(-2px);
+}
+
+.tab-button.active {
+    background: #2a2a2a;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.reservation-list {
+    list-style: none;
+    padding: 0;
+}
+
+.reservation-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #2a2a2a;
+    color: white;
+    border: 1px solid #2a2a2a;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    transition: box-shadow 0.3s, transform 0.2s;
+}
+
+.reservation-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-badge.accepted {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-badge.pending {
+    background: #fef9c3;
+    color: #a16207;
+}
+
+.status-badge.rejected {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status-badge.cancelled {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.empty-msg {
+    color: #6b7280;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+@media (max-width: 640px) {
+    .reservation-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cancel-btn {
+        margin-top: 0.5rem;
+    }
+}
+
+/* Reservation List Layout */
+.reservation-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Reservation Card Layout */
+.reservation-card {
+    background: #2a2a2a;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* align top */
+    color: #eee;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reservation-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+}
+
+.reservation-info {
+    flex: 1;
+}
+
+/* Actions stacked vertically on the right */
+.reservation-actions {
+    display: flex;
+    flex-direction: column;   /* stack vertically */
+    align-items: flex-end;    /* align to right */
+    gap: 10px;                /* spacing between buttons */
+    margin-left: 20px;
+    margin-top: 20px; /* align with the top of the card */
+}
+
+/* Edit Button */
+.edit-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    box-shadow: 0 3px 8px rgba(0,123,255,0.4);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 110px; /* same width as cancel for neatness */
+    justify-content: center;
+    text-align: center;
+}
+
+.edit-btn:hover {
+    background-color: #0056b3;
+    box-shadow: 0 4px 12px rgba(0,86,179,0.6);
+}
+
+/* Cancel Button */
+.cancel-btn {
+    background-color: #dc3545;
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(220,53,69,0.4);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 110px; /* match edit button */
+    justify-content: center;
+    text-align: center;
+}
+
+.cancel-btn:hover {
+    background-color: #a71d2a;
+    box-shadow: 0 4px 12px rgba(167,29,42,0.6);
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: capitalize;
+}
+
+/* Different colors for statuses */
+.status-badge.confirmed { background: #28a745; color: white; }
+.status-badge.pending   { background: #ffc107; color: #222; }
+.status-badge.cancelled { background: #dc3545; color: white; }

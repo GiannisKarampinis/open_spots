@@ -1,0 +1,103 @@
+/* venues/static/venues/my_reservations.css */
+.edit-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-left: 8px;
+}
+.edit-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Reservation Button */
+.col-md-4.text-end > button.btn.btn-primary {
+    background-color: #007bff;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 25px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+    color: white;
+}
+
+.col-md-4.text-end > button.btn.btn-primary:hover {
+    background-color: #0056b3;
+    box-shadow: 0 6px 15px rgba(0, 86, 179, 0.5);
+}
+
+/* Reservation Form Container */
+#reservationForm.collapse {
+    margin-top: 1rem;
+}
+
+/* Reservation Form Card */
+#reservationForm .card.card-body.shadow {
+    background-color: #3a3a3a;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    padding: 25px 20px;
+}
+
+/* Reservation Form fields (matches your signup/login inputs) */
+#reservationForm form p {
+    margin-bottom: 15px;
+}
+
+#reservationForm form input,
+#reservationForm form select,
+#reservationForm form textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background-color: #2a2a2a;
+    color: white;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    outline: none;
+}
+
+#reservationForm form input:focus,
+#reservationForm form select:focus,
+#reservationForm form textarea:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 6px #007bff;
+}
+
+/* Submit button inside reservation form */
+#reservationForm form button.btn.btn-success {
+    background-color: #28a745;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 14px;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    color: white;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+#reservationForm form button.btn.btn-success:hover {
+    background-color: #1e7e34;
+    box-shadow: 0 6px 18px rgba(30, 126, 52, 0.7);
+}
+
+/* Responsive tweaks */
+@media (max-width: 767.98px) {
+    .col-md-8,
+    .col-md-4 {
+        text-align: left !important;
+        margin-bottom: 1.5rem;
+    }
+
+    .col-md-4.text-end {
+        text-align: left !important;
+    }
+}
