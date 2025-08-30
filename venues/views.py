@@ -38,27 +38,35 @@ User = get_user_model()
 
 ###########################################################################################
 def venue_list(request):
-    kind = request.GET.get("kind")  # read ?kind=restaurant from URL
+    kind = request.GET.get("kind")  # e.g. ?kind=restaurant
+    availability = request.GET.get("availability")  # e.g. ?availability=available
+
+    venues = Venue.objects.all()
+
     if kind:
-        venues = Venue.objects.filter(kind=kind)
-    else:
-        venues = Venue.objects.all()
+        venues = venues.filter(kind=kind)
+
+    if availability == "available":
+        venues = venues.filter(is_full=False)
+    elif availability == "full":
+        venues = venues.filter(is_full=True)
 
     # Keep only venues with coordinates for map
     venue_data = [
         {
-            'name': v.name,
-            'lat': v.latitude,
-            'lng': v.longitude,
-            'id': v.id
+            "name": v.name,
+            "lat": v.latitude,
+            "lng": v.longitude,
+            "id": v.id,
         }
         for v in venues if v.latitude and v.longitude
     ]
 
-    return render(request, 'venues/venue_list.html', {
-        'venues': venues,
-        'venue_data_json': mark_safe(json.dumps(venue_data, cls=DjangoJSONEncoder)),
-        'selected_kind': kind,  # pass selection to template
+    return render(request, "venues/venue_list.html", {
+        "venues": venues,
+        "venue_data_json": mark_safe(json.dumps(venue_data, cls=DjangoJSONEncoder)),
+        "selected_kind": kind,
+        "selected_availability": availability,
     })
     
 ###########################################################################################

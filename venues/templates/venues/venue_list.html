@@ -12,100 +12,122 @@
 {% block content %}
 <h2>Explore &amp; Reserve Your Perfect Spot</h2>
 
-<!-- 🔹 Filter form -->
 <form method="get" class="filter-form">
-    <div class="filter-wrapper sticky-filter">
-        <i class="fa-solid fa-filter filter-icon"></i>
-        <select name="kind" id="venue_type" onchange="this.form.submit()">
-            <option value="">All Venues</option>
-            <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>Restaurants</option>
-            <option value="cafe" {% if selected_kind == "cafe" %}selected{% endif %}>Cafes</option>
-            <option value="bar" {% if selected_kind == "bar" %}selected{% endif %}>Bars</option>
-            <option value="beach_bar" {% if selected_kind == "beach_bar" %}selected{% endif %}>Beach Bars</option>
-            <option value="other" {% if selected_kind == "other" %}selected{% endif %}>Other</option>
-        </select>
-        {% if selected_kind %}
-        <a href="{% url 'venue_list' %}" class="clear-filter-btn">Clear</a>
-        {% endif %}
+    <div class="sticky-wrapper">
+        <div class="filter-wrapper sticky-filter">
+            <i class="fa-solid fa-filter filter-icon"></i>
+
+            <!-- Kind filter -->
+            <select name="kind" id="venue_type" onchange="this.form.submit()">
+                <option value="">All Venues</option>
+                <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>Restaurants</option>
+                <option value="cafe" {% if selected_kind == "cafe" %}selected{% endif %}>Cafes</option>
+                <option value="bar" {% if selected_kind == "bar" %}selected{% endif %}>Bars</option>
+                <option value="beach_bar" {% if selected_kind == "beach_bar" %}selected{% endif %}>Beach Bars</option>
+                <option value="other" {% if selected_kind == "other" %}selected{% endif %}>Other</option>
+            </select>
+
+            <!-- Availability filter -->
+            <select name="availability" id="venue_availability" onchange="this.form.submit()">
+                <option value="">All</option>
+                <option value="available" {% if selected_availability == "available" %}selected{% endif %}>Available</option>
+                <option value="full" {% if selected_availability == "full" %}selected{% endif %}>Full</option>
+            </select>
+
+            {% if selected_kind or selected_availability %}
+            <a href="{% url 'venue_list' %}" class="clear-filter-btn">Clear</a>
+            {% endif %}
+        </div>
     </div>
 </form>
 
 <!-- Venue sections -->
 {% if selected_kind %}
-<h3 class="section-title">Showing {{ selected_kind|title }} Venues</h3>
-<div class="venue-scroll-container">
-    {% for venue in venues %}
-    <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-        {% include "venues/venue_cards.html" with venue=venue %}
-    </a>
-    {% empty %}
-    <p>No venues available.</p>
-    {% endfor %}
-</div>
+    <!-- Show one filtered section by kind -->
+    <h3 class="section-title">
+        {{ selected_kind|title }} Venues
+        {% if selected_availability %} - {{ selected_availability|title }}{% endif %}
+    </h3>
+    <div class="venue-scroll-container">
+        {% for venue in venues %}
+        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+            {% include "venues/venue_cards.html" with venue=venue %}
+        </a>
+        {% empty %}
+        <p>No venues available.</p>
+        {% endfor %}
+    </div>
+
+{% elif selected_availability == "full" %}
+    <!-- Special case: Full venues only -->
+    <h3 class="section-title">Full Venues</h3>
+    <div class="venue-scroll-container">
+        {% for venue in venues %}
+        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+            {% include "venues/venue_cards.html" with venue=venue %}
+        </a>
+        {% empty %}
+        <p>No full venues available.</p>
+        {% endfor %}
+    </div>
+
 {% else %}
-<!-- Multiple sections like before -->
-<!-- Cafes & Bars -->
-<h3 class="section-title">Cafes & Bars</h3>
-<div class="venue-scroll-container">
-    {% with cafes_bars=venues|dictsort:"name" %}
-    {% for venue in cafes_bars %}
-        {% if venue.kind == 'cafe' or venue.kind == 'bar' %}
-        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-            {% include "venues/venue_cards.html" with venue=venue %}
-        </a>
-        {% endif %}
-    {% empty %}
-    <p>No cafes or bars available.</p>
-    {% endfor %}
-    {% endwith %}
-</div>
+    <!-- Default grouped layout (All OR Available filter) -->
 
-<!-- Restaurants -->
-<h3 class="section-title">Restaurants</h3>
-<div class="venue-scroll-container">
-    {% with restaurants=venues|dictsort:"name" %}
-    {% for venue in restaurants %}
-        {% if venue.kind == 'restaurant' %}
-        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-            {% include "venues/venue_cards.html" with venue=venue %}
-        </a>
-        {% endif %}
-    {% empty %}
-    <p>No restaurants available.</p>
-    {% endfor %}
-    {% endwith %}
-</div>
+    <h3 class="section-title">Cafes & Bars</h3>
+    <div class="venue-scroll-container">
+        {% for venue in venues %}
+            {% if venue.kind == "cafe" or venue.kind == "bar" %}
+                <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+                    {% include "venues/venue_cards.html" with venue=venue %}
+                </a>
+            {% endif %}
+        {% empty %}
+        <p>No cafes or bars available.</p>
+        {% endfor %}
+    </div>
 
-<!-- Beach Bars -->
-<h3 class="section-title">Beach Bars</h3>
-<div class="venue-scroll-container">
-    {% for venue in venues %}
-        {% if venue.kind == 'beach_bar' %}
-        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-            {% include "venues/venue_cards.html" with venue=venue %}
-        </a>
-        {% endif %}
-    {% empty %}
-    <p>No beach bars available.</p>
-    {% endfor %}
-</div>
+    <h3 class="section-title">Restaurants</h3>
+    <div class="venue-scroll-container">
+        {% for venue in venues %}
+            {% if venue.kind == "restaurant" %}
+                <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+                    {% include "venues/venue_cards.html" with venue=venue %}
+                </a>
+            {% endif %}
+        {% empty %}
+        <p>No restaurants available.</p>
+        {% endfor %}
+    </div>
 
-<!-- Other Venues -->
-<h3 class="section-title">Other Venues</h3>
-<div class="venue-scroll-container">
-    {% for venue in venues %}
-        {% if venue.kind == 'other' %}
-        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-            {% include "venues/venue_cards.html" with venue=venue %}
-        </a>
-        {% endif %}
-    {% empty %}
-    <p>No other venues available.</p>
-    {% endfor %}
-</div>
+    <h3 class="section-title">Beach Bars</h3>
+    <div class="venue-scroll-container">
+        {% for venue in venues %}
+            {% if venue.kind == "beach_bar" %}
+                <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+                    {% include "venues/venue_cards.html" with venue=venue %}
+                </a>
+            {% endif %}
+        {% empty %}
+        <p>No beach bars available.</p>
+        {% endfor %}
+    </div>
+
+    <h3 class="section-title">Other Venues</h3>
+    <div class="venue-scroll-container">
+        {% for venue in venues %}
+            {% if venue.kind == "other" %}
+                <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+                    {% include "venues/venue_cards.html" with venue=venue %}
+                </a>
+            {% endif %}
+        {% empty %}
+        <p>No other venues available.</p>
+        {% endfor %}
+    </div>
 {% endif %}
 
-<!-- Horizontal scroll support -->
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const scrollContainers = document.querySelectorAll('.venue-scroll-container');
@@ -118,17 +140,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }, { passive: false });
     });
 
-    // Sticky shadow effect
-    const filter = document.querySelector('.sticky-filter');
-    const offset = filter.offsetTop;
-    window.addEventListener('scroll', function() {
-        if (window.scrollY >= offset) {
-            filter.classList.add('stuck');
-        } else {
-            filter.classList.remove('stuck');
-        }
-    });
+    const stickyWrapper = document.querySelector('.sticky-wrapper');
+    const observer = new IntersectionObserver(
+        ([e]) => stickyWrapper.classList.toggle('is-stuck', e.intersectionRatio < 1),
+        { threshold: [1] }
+    );
+    observer.observe(stickyWrapper);
 });
 </script>
-
 {% endblock %}
