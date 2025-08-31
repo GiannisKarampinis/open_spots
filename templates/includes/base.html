@@ -24,8 +24,8 @@
         <nav class="main-nav">
             {% if user.is_authenticated %}
                 <div class="user-menu">
-                    {% if user.user_type == 'venue_admin' %}
-                        <a href="{% url 'administration_panel' %}" class="dashboard-link">Dashboard</a>
+                    {% if user.is_authenticated and user.user_type == 'venue_admin' and venue_id %}
+                        <a href="{% url 'venue_dashboard' venue_id %}" class="dashboard-link">Dashboard</a>
                     {% endif %}
 
 

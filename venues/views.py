@@ -7,7 +7,7 @@ from django.contrib                  import messages
 from django.views.decorators.http    import require_POST
 from django.db.models                import Count
 from django.db.models.functions      import TruncDay, TruncWeek, TruncMonth
-from django.utils.timezone           import now, localtime
+from django.utils.timezone           import now
 from datetime                        import datetime, timedelta
 from django.utils                    import timezone
 from django.core.mail                import send_mail
@@ -19,7 +19,6 @@ from django.contrib.auth             import get_user_model
 from django.core.exceptions          import PermissionDenied
 from django.http                     import HttpResponse, Http404, JsonResponse
 from django.template.loader          import render_to_string
-from plotly.offline                  import plot
 import plotly.graph_objs             as go
 from django.db                       import transaction
 from django.urls                     import reverse
@@ -27,7 +26,6 @@ from .models                         import Venue, VenueVisit, Reservation
 from .forms                          import ReservationForm, VenueApplicationForm, ArrivalStatusForm
 from .utils                          import *
 from .decorators                     import venue_admin_required
-from .notifications                  import notify_venue_admin
 import json
 
 
@@ -38,8 +36,8 @@ User = get_user_model()
 
 ###########################################################################################
 def venue_list(request):
-    kind = request.GET.get("kind")  # e.g. ?kind=restaurant
-    availability = request.GET.get("availability")  # e.g. ?availability=available
+    kind = request.GET.get("kind")
+    availability = request.GET.get("availability")
 
     venues = Venue.objects.all()
 
@@ -51,7 +49,7 @@ def venue_list(request):
     elif availability == "full":
         venues = venues.filter(is_full=True)
 
-    # Keep only venues with coordinates for map
+    # Prepare data for map
     venue_data = [
         {
             "name": v.name,
@@ -62,12 +60,22 @@ def venue_list(request):
         for v in venues if v.latitude and v.longitude
     ]
 
+    # Default: no venue_id
+    venue_id = None
+    if request.user.is_authenticated and request.user.user_type == "venue_admin":
+        # If each admin has only one venue:
+        venue = Venue.objects.filter(owner=request.user).first()
+        if venue:
+            venue_id = venue.id
+
     return render(request, "venues/venue_list.html", {
         "venues": venues,
         "venue_data_json": mark_safe(json.dumps(venue_data, cls=DjangoJSONEncoder)),
         "selected_kind": kind,
         "selected_availability": availability,
+        "venue_id": venue_id,
     })
+
     
 ###########################################################################################
 
