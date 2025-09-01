@@ -10,19 +10,19 @@
             <g class="chair-left">
                 <line x1="300" y1="260" x2="300" y2="440"/>
                 <line x1="320" y1="380" x2="360" y2="380"/>
-                <line x1="320" y1="330" x2="372" y2="330"/>
                 <line x1="340" y1="380" x2="340" y2="440"/>
             </g>
-
+            
             <!-- Right chair -->
             <g class="chair-right">
                 <line x1="500" y1="260" x2="500" y2="440"/>
                 <line x1="440" y1="380" x2="480" y2="380"/>
-                <line x1="428" y1="330" x2="480" y2="330"/>
                 <line x1="460" y1="380" x2="460" y2="440"/>
             </g>
-
+            
             <!-- Center tables/lines (unchanged) -->
+            <line x1="428" y1="330" x2="480" y2="330"/>
+            <line x1="320" y1="330" x2="372" y2="330"/>
             <line x1="390" y1="330" x2="390" y2="430"/>
             <line x1="410" y1="330" x2="410" y2="430"/>
         </g>
@@ -47,11 +47,11 @@
 
 /* Move left chair to the left */
 .svg-wrapper:hover svg .chair-left {
-    transform: translateX(-15px);
+    transform: translateX(-30px);
 }
 
 /* Move right chair to the right */
 .svg-wrapper:hover svg .chair-right {
-    transform: translateX(15px);
+    transform: translateX(30px);
 }
 </style>
