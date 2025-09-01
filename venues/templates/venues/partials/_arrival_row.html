@@ -21,25 +21,24 @@
 
   <!-- Update arrival status buttons -->
   <td>
-   {% if r.arrival_status == 'pending' or r.arrival_status == 'checked_in' or r.arrival_status == 'no_show' %}
-      {% if r.status == 'accepted' and r.arrival_status == 'pending' %}
-        <a href="{% url 'update_arrival_status' r.id 'checked_in' %}" 
-          class="btn btn-success btn-sm me-1 btn-update-arrival" 
-          data-status="checked_in">✅ Checked-in
-        </a>
-        <a href="{% url 'update_arrival_status' r.id 'no_show' %}"    
-          class="btn btn-danger btn-sm btn-update-arrival"  
-          data-status="no_show">❌ No-show
-        </a>
+      {% if r.arrival_status == 'pending' or r.arrival_status == 'checked_in' or r.arrival_status == 'no_show' %}
+          {% if r.status == 'accepted' and r.arrival_status == 'pending' and r.date == today %}
+            <a href="{% url 'update_arrival_status' r.id 'checked_in' %}" 
+              class="btn btn-success btn-sm me-1 btn-update-arrival" 
+              data-status="checked_in">✅ Checked-in
+            </a>
+            <a href="{% url 'update_arrival_status' r.id 'no_show' %}"    
+              class="btn btn-danger btn-sm btn-update-arrival"  
+              data-status="no_show">❌ No-show
+            </a>
+          {% endif %}
+            <a href="{% url 'edit_reservation_status' r.id %}"
+              data-move-url="{% url 'move_reservation_to_requests_ajax' r.id %}"
+              class="btn btn-sm btn-edit-status">
+                Move to Requests
+            </a>
+      {% else %}
+          <span class="text-muted">—</span>
       {% endif %}
-        <a href="{% url 'edit_reservation_status' r.id %}"
-          data-move-url="{% url 'move_reservation_to_requests_ajax' r.id %}"
-          class="btn btn-sm btn-edit-status">
-          Move to Requests
-        </a>
-    {% else %}
-      <span class="text-muted">—</span>
-    {% endif %}
   </td>
 </tr>
-

@@ -1,6 +1,3 @@
-// tables.js
-// import { formatDateDisplay, formatTimeDisplay, escapeHtml, capitalize } from './utils.js';
-
 function initializeDataTable(tableSelector) {
     if ($.fn.DataTable.isDataTable(tableSelector)) {
         return $(tableSelector).DataTable();
@@ -96,7 +93,7 @@ function renderRowFromData(data){
     const customer=data.customer_name||(data.customer&&data.customer.name)||data.customer||'—';
     const dateISO=data.date||data.reservation_date||'';
     const timeRaw=data.time||data.reservation_time||'';
-    const party=(data.party_size!==undefined&&data.party_size!==null)?data.party_size:(data.party||'');
+    const party=(data.guests!==undefined&&data.guests!==null)?data.guests: '';
     const status=(data.status||data.reservation_status||'').toLowerCase();
     const arrivalStatusRaw=(data.arrival_status||'').toLowerCase();
     const isArrival=!!data.is_arrival||['checked_in','no_show'].includes(status)||status==='accepted';

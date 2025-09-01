@@ -722,7 +722,9 @@ def partial_arrival_row(request, pk: int):
         raise Http404
     html = render_to_string(
         'venues/partials/_arrival_row.html',
-        {'r': r},
+        {'r': r,
+         'today': timezone.now().date() 
+        },
         request=request
     )
     return HttpResponse(html)

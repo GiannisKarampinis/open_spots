@@ -15,12 +15,12 @@ def send_reservation_emails(reservation):
     message = f"""
     A new reservation has been made:
 
-    Name: {reservation.name}
-    Email: {reservation.email}
-    Date: {reservation.date}
-    Time: {reservation.time}
+    Name:   {reservation.name}
+    Email:  {reservation.email}
+    Date:   {reservation.date}
+    Time:   {reservation.time}
     Guests: {reservation.guests}
-    Venue: {reservation.venue.name}
+    Venue:  {reservation.venue.name}
     """
 
     # Send email to venue owner
@@ -33,9 +33,9 @@ def send_reservation_emails(reservation):
     Hello {reservation.name},
 
     Your reservation request has been received:
-    - Date: {reservation.date}
-    - Time: {reservation.time}
-    - Guests: {reservation.guests}
+    - Date:     {reservation.date}
+    - Time:     {reservation.time}
+    - Guests:   {reservation.guests}
 
     The venue will confirm your reservation soon.
     """
@@ -43,9 +43,9 @@ def send_reservation_emails(reservation):
 
 
 def generate_time_choices():
-    start = time(hour=12, minute=0)      # use time directly
-    end = time(hour=23, minute=0)
-    delta = timedelta(minutes=30)
+    start   = time(hour=12, minute=0)      # use time directly
+    end     = time(hour=23, minute=0)
+    delta   = timedelta(minutes=30)
     current_datetime = datetime.combine(date.today(), start)
     end_datetime = datetime.combine(date.today(), end)
     
@@ -71,29 +71,29 @@ def generate_analytics_data(venue, grouping):
     """Generate analytics data based on grouping type"""
     
     if grouping == 'daily':
-        trunc_fn = TruncDay
-        days_back = 30
+        trunc_fn    = TruncDay
+        days_back   = 30
         date_format = '%Y-%m-%d'
         period_name = 'Day'
     elif grouping == 'weekly':
-        trunc_fn = TruncWeek
-        days_back = 84  # 12 weeks
+        trunc_fn    = TruncWeek
+        days_back   = 84  # 12 weeks
         date_format = 'Week of %Y-%m-%d'
         period_name = 'Week'
     elif grouping == 'monthly':
-        trunc_fn = TruncMonth
-        days_back = 365  # 12 months
+        trunc_fn    = TruncMonth
+        days_back   = 365  # 12 months
         date_format = '%Y-%m'
         period_name = 'Month'
     elif grouping == 'yearly':
-        trunc_fn = TruncYear
-        days_back = 1095  # 3 years
+        trunc_fn    = TruncYear
+        days_back   = 1095  # 3 years
         date_format = '%Y'
         period_name = 'Year'
     else:
         # Default to daily
-        trunc_fn = TruncDay
-        days_back = 30
+        trunc_fn    = TruncDay
+        days_back   = 30
         date_format = '%Y-%m-%d'
         period_name = 'Day'
 

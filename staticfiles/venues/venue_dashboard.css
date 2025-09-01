@@ -1,7 +1,7 @@
 /* === Container & Layout === */
 .container {
     max-width: 960px;
-    padding: 40px 0;
+    /* padding: 40px 0; */
     margin: 0 auto;
     color: #e0e0e0;
 }
@@ -359,7 +359,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 .tabs {
     display: flex;
     gap: 1rem;
-    margin-top: 2rem;
+    margin-top: 1rem;
     border-bottom: 2px solid #cacaca;
 }
 .tabs button {
@@ -390,7 +390,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 }
 
 .tab-content h2 {
-    margin-top: 3rem;
+    margin-top: 1rem;
     color: #cacaca;
 }
 
@@ -410,7 +410,8 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     max-width: 800px;
-    margin: 0 auto;
+    /* margin: 0 auto; */
+    margin-top: 20px;
     gap: 1rem;
 }
 

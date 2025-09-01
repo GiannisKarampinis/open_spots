@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <th>Customer</th>
                             <th>Date</th>
                             <th>Time</th>
-                            <th>Party Size</th>
+                            <th>Guests</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const customer  = data.customer_name || (data.customer && data.customer.name) || data.customer || '—';
         const dateISO   = data.date || data.reservation_date || '';      // expected YYYY-MM-DD
         const timeRaw   = data.time || data.reservation_time || '';      // expected HH:MM or HH:MM:SS
-        const party     = (data.party_size !== undefined && data.party_size !== null) ? data.party_size : (data.party || '');
+        const guests    = (data.guests !== undefined && data.guests !== null) ? data.guests : (data.guests || '');
         const status    = (data.status || data.reservation_status || '').toLowerCase();
         const arrivalStatusRaw = (data.arrival_status || '').toLowerCase();
         const isArrival = !!data.is_arrival || ['checked_in','no_show'].includes(status) || status === 'accepted';
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${escapeHtml(customer)}</td>
                 <td data-order="${escapeHtml(dateDataOrder)}">${escapeHtml(dateDisplay)}</td>
                 <td data-order="${escapeHtml(timeDataOrder)}">${escapeHtml(timeDisplay)}</td>
-                <td>${escapeHtml(String(party))}</td>
+                <td>${escapeHtml((guests))}</td>
                 <td><span class="${badgeClasses}">${escapeHtml(capitalize(statusLabel))}</span></td>
                 <td>${actionsHtml}</td>
             </tr>
