@@ -1,0 +1,11 @@
+{{ intro }}
+
+Reservation at {{ venue }} has been CANCELLED.
+
+{% for c in changes %}
+- {{ c.field }}: {{ c.old }} → {{ c.new }}
+{% endfor %}
+
+{% if reservation_url %}
+View your reservations: {{ reservation_url }}
+{% endif %}

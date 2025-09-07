@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title }}</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #2a2a2a; padding: 20px;">
+  <header>
+      <h1 style="color: white; text-align: center; margin-bottom: 10px; margin-top: 10px; font-size: 2rem">OpenSpots</h1>
+  </header>
+  <div style="max-width: 600px; margin: auto; background: #3d3d3dff; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+    <h2 style="color: white;">{{ title }}</h2>
+    <p style="color: white;">{{ intro }}</p>
+
+    <p style="color: #ff6b6b; font-weight: bold;">This reservation has been cancelled.</p>
+
+    <ul>
+      {% for change in changes %}
+        <li style="color: white;"><strong>{{ change.field }}:</strong> {{ change.old }} → {{ change.new }}</li>
+      {% endfor %}
+    </ul>
+
+    {% if reservation_url %}
+    <p style="margin-top: 20px;">
+      <a href="{{ reservation_url }}" 
+         style="display:inline-block; padding: 10px 20px; background: #ff4d4d; 
+                color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+        View Reservations
+      </a>
+    </p>
+    {% endif %}
+  </div>
+</body>
+</html>

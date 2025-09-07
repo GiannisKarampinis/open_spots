@@ -101,13 +101,21 @@
     margin: 6px 0;
     font-size: 0.95rem;
     color: #bbb;
-    font-weight: 500;
+    /* font-weight: 500; */
+    width:100%;
+    box-sizing: border-box;
+    /* overflow: hidden; */
 }
 
 .venue-info-item {
     display: flex;
     align-items: center;
     gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .venue-info-item svg {
@@ -130,10 +138,10 @@
 }
 
 .venue-info-item span {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
-    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* max-width: 100%; */
 }
 
 .venue-info-item.location span {

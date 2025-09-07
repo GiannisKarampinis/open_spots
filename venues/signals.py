@@ -60,7 +60,8 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
     venue_admin     = instance.venue.owner
 
     # ✅ Always send WebSocket notification
-    venue_id = instance.venue_id
+    venue_id        = instance.venue_id
+    
     reservation_data = {
         "id":             instance.id,
         "customer_name":  instance.user.username,
@@ -80,12 +81,22 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
                        if hasattr(instance, 'updated_at') and instance.updated_at
                        else timezone.now().isoformat()),
     }
-    event_name = "reservation.created" if created else "reservation.updated"
-    payload = {"event": event_name, "reservation": reservation_data}
-    notify_venue_admin(venue_id, payload) # channels / WebSocket
-    # Optional: for high-volume updates, consider a message queue for WebSocket pushes (like Redis pub/sub)
     
-    # ✅ Send emails (only if email context applies)
+    if created:
+        event_name = "reservation.created"
+    elif instance.status == "cancelled":
+        event_name = "reservation.cancelled"
+    elif instance.status == "pending":
+        event_name = "reservation.edited"
+    else:
+        event_name = "reservation.updated"
+    
+    payload = { "event":        event_name, 
+                "reservation":  reservation_data }
+    
+    notify_venue_admin(venue_id, payload) # WebSocket push
+    # FIXME: Optional: for high-volume updates, consider a message queue for WebSocket pushes (like Redis pub/sub)
+    
     if created:
         send_reservation_emails(instance)
         return
@@ -103,11 +114,28 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
         return
 
     changes_list = [
-        {"field": field.replace("_", " ").title(), "old": old, "new": new}
+        { 
+          "field":  field.replace("_", " ").title(), 
+          "old":    old, 
+          "new":    new 
+        }
         for field, (old, new) in changes.items()
     ]
-
-    if current_user == user:
+    
+    if instance.status == "cancelled":
+        subject = f"Reservation Cancelled at {instance.venue.name}"
+        recipient = venue_admin.email
+        context = {
+            "title": "Reservation Cancelled",
+            "intro": f"The reservation from {instance.name} ({user.email}) has been cancelled.",
+            "venue": instance.venue.name,
+            "changes": changes_list,
+        }
+        
+        html_content = render_to_string("emails/reservation_cancelled.html", context)
+        text_content = render_to_string("emails/reservation_cancelled.txt", context)
+        
+    elif current_user == user:
         # Customer updated reservation → notify venue admin
         reservation_url = settings.SITE_URL + '/dashboard/' + str(instance.venue.id) + '/'
         subject = f"Reservation Update for {instance.venue.name}"
@@ -119,6 +147,9 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
             "changes": changes_list,
             "reservation_url": reservation_url,
         }
+        
+        html_content = render_to_string("emails/reservation_update.html", context)
+        text_content = render_to_string("emails/reservation_update.txt", context)
 
     elif current_user == venue_admin:
         # Venue admin updated reservation → notify customer
@@ -132,12 +163,11 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
             "changes": changes_list,
             "reservation_url": reservation_url,
         }
+        
+        html_content = render_to_string("emails/reservation_update.html", context)
+        text_content = render_to_string("emails/reservation_update.txt", context)
     else:
-        return  # Neither user nor venue admin changed → skip
-
-    # Render templates
-    html_content = render_to_string("emails/reservation_update.html", context)
-    text_content = render_to_string("emails/reservation_update.txt", context)
+        return  # Neither user nor venue admin changed → skip (Unknown editor)
 
     email = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [recipient])
     email.attach_alternative(html_content, "text/html")
