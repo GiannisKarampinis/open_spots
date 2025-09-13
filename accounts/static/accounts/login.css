@@ -25,7 +25,7 @@
     display: inline-flex;               /* Inline flexbox for icon + text */
     align-items: center;                /* Vertically center contents */
     padding: 8px 15px;                  /* Inner padding */
-    background-color: #4285f4;        /* Google blue */
+    background-color: #007bff;        /* Google blue */
     color: white;                     /* Text color */
     font-weight: 600;                   /* Semi-bold */
     border-radius: 5px;                 /* Rounded corners */
@@ -35,7 +35,7 @@
 
 /* Hover state for Google Login Button */
 .google-login-link:hover {
-    background-color: #357ae8;                      /* Darker blue */
+    background-color: #0056b3;                      /* Darker blue */
     box-shadow: 0 0 8px rgba(53, 122, 232, 0.6);    /* Blue glow */
     text-decoration: none;                            /* Keep no underline */
 }
