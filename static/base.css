@@ -1,26 +1,4 @@
-/* ==========================
-   Base Styles & Theme Colors
-   ========================== */
-
-/* Define global CSS variables for theme colors */
-:root {
-    --background-color: #1c1c1c;      /* Main page background (dark gray) */
-    --surface-color: #2a2a2a;         /* Cards, navbar, footer (lighter gray) */
-    --text-color: #f1f1f1;            /* Main text color */
-    --link-color: #aaa;               /* Default link gray */
-    --link-hover: #fff;               /* Hover state for links */
-
-    --primary-color: #007bff;         /* Unified blue (buttons, accents) */
-    --primary-hover: #0056b3;         /* Hover state for primary color */
-    --error-color: #ff4d4f;           /* Red for errors */
-    --success-color: #28a745;         /* Green for success */
-    --warning-color: #ffc107;         /* Yellow for warnings */
-    --info-color: #17a2b8;            /* Teal for info */
-}
-
-/* ==========================
-   Reset & Global Elements
-   ========================== */
+/* Reset & base */
 * {
     margin: 0;
     padding: 0;
@@ -29,21 +7,19 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: var(--background-color);
-    color: var(--text-color);
+    background-color: #1c1c1c;
+    color: #f1f1f1;
     line-height: 1.6;
 }
 
-/* ==========================
-   Links
-   ========================== */
+/* Links */
 a {
-    color: var(--link-color);
+    color: #aaa;
     text-decoration: none;
 }
 
 a:hover {
-    color: var(--link-hover);
+    color: #fff;
     text-decoration: underline;
 }
 
@@ -54,31 +30,26 @@ a:hover {
     margin-top: 15px;
 }
 
-/* ==========================
-   Header / Navbar
-   ========================== */
+/* Header */
 header {
-    background-color: #2a2a2a;
-    padding: 8px 20px;   /* reduced padding */
+    background-color: #1c1c1c;
+    padding: 15px 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 100px;        /* optional: enforce consistent height */
 }
 
-/* Navigation links */
+/* Navigation */
 .main-nav a {
     color: #ddd;
     font-weight: 600;
 }
 
 .main-nav a:hover {
-    color: var(--link-hover);
+    color: #fff;
 }
 
-/* ==========================
-   User Dropdown Menu
-   ========================== */
+/* Dropdown Menu */
 .user-menu {
     position: relative;
     display: inline-block;
@@ -93,7 +64,33 @@ header {
     font-size: 1rem;
 }
 
-/* Dropdown container (hidden by default) */
+/* Main & Footer */
+main {
+    /* padding: 40px 30px; */
+    max-width: 90%;
+    margin: auto;
+}
+
+footer {
+    background-color: #2a2a2a;
+    text-align: center;
+    padding: 20px 0;
+    color: #888;
+    font-size: 0.9rem;
+    margin-top: 40px;
+}
+
+/* Triangle arrow animation */
+.triangle {
+    display: inline-block;
+    margin-left: 5px;
+    transition: transform 0.3s ease;
+}
+
+.triangle.rotate {
+    transform: rotate(180deg);
+}
+
 .user-dropdown {
     opacity: 0;
     visibility: hidden;
@@ -102,7 +99,7 @@ header {
     position: absolute;
     right: 0;
     top: 100%;
-    background-color: var(--surface-color);
+    background-color: #2a2a2a;
     min-width: 180px;
     box-shadow: 0 8px 16px rgba(0,0,0,0.3);
     border-radius: 5px;
@@ -116,7 +113,7 @@ header {
     transform: translateY(0);
 }
 
-/* Style both links and logout button */
+/* Style both links and logout button the same way */
 .user-dropdown a,
 .logout-form .logout-link {
     display: block;
@@ -143,63 +140,22 @@ header {
     text-decoration: none;
 }
 
-/* ==========================
-   Layout: Main & Footer
-   ========================== */
-main {
-    max-width: 90%;
-    margin: auto;
-}
-
-footer {
-    background-color: var(--surface-color);
-    text-align: center;
-    padding: 20px 0;
-    color: #888;
-    font-size: 0.9rem;
-    margin-top: 40px;
-}
-
-/* ==========================
-   Buttons & Links
-   ========================== */
 .dashboard-link {
     margin-right: 15px;
     font-weight: bold;
-    color: var(--primary-color);
+    color: #007bff;
     text-decoration: none;
 }
-
 .dashboard-link:hover {
     text-decoration: underline;
-    color: var(--primary-hover);
 }
-
-.apply-venue-btn {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: bold;
-    margin-right: 10px;
-    transition: background-color 0.3s ease;
-}
-
-.apply-venue-btn:hover {
-    background-color: var(--primary-hover);
-}
-
-/* ==========================
-   Forms & Messages
-   ========================== */
 
 /* Error messages under fields */
 ul.errorlist {
     list-style: none;
     padding: 0;
     margin: -10px 0 10px;
-    color: var(--error-color);
+    color: #ff4d4f;
     font-size: 0.95rem;
     font-weight: 500;
 }
@@ -220,34 +176,45 @@ ul.errorlist {
 
 /* Different colors based on message type */
 .flash-message.error {
-    background-color: var(--error-color);
+    background-color: #ff4d4f;
     color: white;
 }
 
 .flash-message.success {
-    background-color: var(--success-color);
+    background-color: #28a745;
     color: white;
 }
 
 .flash-message.warning {
-    background-color: var(--warning-color);
+    background-color: #ffc107;
     color: #333;
 }
 
 .flash-message.info {
-    background-color: var(--info-color);
+    background-color: #17a2b8;
     color: white;
 }
 
-/* ==========================
-   Logo & SVG
-   ========================== */
+.apply-venue-btn {
+    background-color: #4a90e2;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.apply-venue-btn:hover {
+    background-color: #357ABD;
+}
+
 .logo-svg {
-    height: 90px;   /* force 90px height */
-    width: auto;               /* maintain aspect ratio */
+    height: 50px;
+    width: auto;
     display: inline-block;
     vertical-align: middle;
-    color: #eee;
+    color: #eee; /* or inherit */
     transition: transform 0.2s ease;
 }
 
@@ -256,37 +223,15 @@ ul.errorlist {
     color: #fff;
 }
 
-/* Wrapper to center logo vertically in header */
+/* Make SVG responsive and centered */
 .svg-wrapper {
-    display: flex;
-    align-items: center;
-    height: 100%;   /* fill header height */
+    width: 100%;
+    max-width: 800px; /* optional */
+    margin: 0 auto;
 }
 
-/* Chair hover animation */
-.logo-svg .chair-left,
-.logo-svg .chair-right {
-    transform-origin: center;
-    transition: transform 0.3s ease;
-}
-
-.logo-svg:hover .chair-left {
-    transform: translateX(-20px);
-}
-
-.logo-svg:hover .chair-right {
-    transform: translateX(20px);
-}
-/* ==========================
-   Misc
-   ========================== */
-/* Triangle arrow animation */
-.triangle {
-    display: inline-block;
-    margin-left: 5px;
-    transition: transform 0.3s ease;
-}
-
-.triangle.rotate {
-    transform: rotate(180deg);
+.svg-wrapper .svg-content {
+    width: 70%;
+    height: auto;
+    display: block;
 }
