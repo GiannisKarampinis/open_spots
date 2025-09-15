@@ -22,63 +22,52 @@
   <g id="circle-O" transform="translate(120,150)">
 
     <!-- blue circle -->
-    <circle cx="0" cy="0" r="80" fill="#007bff" />
+    <circle cx="0" cy="0" r="100" fill="#007bff" />
 
     <!-- simplified chairs + table (white strokes) -->
     <g class="chairs" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
       <!-- left chair (relative coords) -->
       <g class="chair-left">
-        <line x1="-40" y1="-30" x2="-40" y2="30" />
-        <line x1="-30" y1="10"  x2="-8"  y2="10" />
-        <line x1="-18" y1="10"  x2="-18" y2="30" />
+        <line x1="-68" y1="-50" x2="-60" y2="10" />
+        <line x1="-60" y1="10"  x2="-65" y2="50" />
+        <line x1="-60" y1="10"  x2="-18"  y2="10" />
+        <line x1="-28" y1="10"  x2="-18"  y2="50" />
       </g>
 
       <!-- right chair -->
       <g class="chair-right">
-        <line x1="40"  y1="-30" x2="40"  y2="30" />
-        <line x1="8"   y1="10"  x2="30"  y2="10" />
-        <line x1="18"  y1="10"  x2="18"  y2="30" />
+        <line x1="68"  y1="-50" x2="60"  y2="10" />
+        <line x1="60"  y1="10"  x2="65"  y2="50" />
+        <line x1="60"  y1="10"  x2="18"   y2="10" />
+        <line x1="28"  y1="10"  x2="18"   y2="50" />
       </g>
 
       <!-- table / center elements -->
-      <line x1="2" y1="0"  x2="28"  y2="0"   />
-      <line x1="-28" y1="0" x2="-2" y2="0"  />
-      <line x1="-2" y1="0"  x2="-2"  y2="40" />
-      <line x1="2"  y1="0"  x2="2"   y2="40" />
+      <line x1="-35" y1="-15"  x2="35" y2="-15"   />
+      <line x1="0"   y1="-15"  x2="0"  y2="50" />
+      <line x1="-5"  y1="50"  x2="5"  y2="50" />
     </g>
-
-    <!-- inner top arc path (inside circle) -->
-    <!--
-      Path starts left-above center and arcs to right-above center.
-      Coordinates chosen so arc lies inside the circle (r ~76).
-    -->
-    <path id="innerArc" d="M -70 10 A 60 60 0 0 1 70 10" fill="none" />
-
-    <!-- curved text along inner top arc (inside the circle) -->
-    <text font-size="25" font-weight="700" font-family="Inter, Arial, sans-serif" fill="#ffffff" letter-spacing="1">
-      <textPath href="#innerArc" startOffset="50%" text-anchor="middle">open spots</textPath>
-    </text>
   </g>
 
   <!-- ===========================
-       Middle: "PEN" (completes OPEN)
+       Middle: "OPEN" (completes OPEN)
        =========================== -->
-  <text x="210" y="180" font-size="64" font-weight="800" font-family="Cooper Black, Georgia, serif" fill="#ffffff">PEN</text>
+  <text x="230" y="135" font-size="72" font-weight="800" font-family="Cooper Black, Georgia, serif" fill="#ffffff">OPEN</text>
 
   <!-- ===========================
        Right: "SP" + map-pin (O) + "TS"
        =========================== -->
   <!-- "SP" before pin -->
-  <text x="380" y="180" font-size="64" font-weight="800" font-family="Cooper Black, Georgia, serif" fill="#ffffff">SP</text>
+  <text x="230" y="225" font-size="72" font-weight="800" font-family="Cooper Black, Georgia, serif" fill="#ffffff">SP</text>
 
   <!-- map-pin used as 'O' in spots -->
-  <g transform="translate(473,110)">
+  <g transform="translate(333,170)">
     <!-- pin body -->
     <path d="M30 0 C13.4 0 0 13.4 0 30 C0 55 30 95 30 95 C30 95 60 55 60 30 C60 13.4 46.6 0 30 0 Z" fill="#007bff"/>
     <!-- pin center hole -->
-    <circle cx="30" cy="30" r="12" fill="#ffffff"/>
+    <circle cx="30" cy="30" r="20" fill="#ffffff"/>
   </g>
 
   <!-- "TS" after pin -->
-  <text x="540" y="180" font-size="64" font-weight="800" font-family="Cooper Black, Georgia, serif" fill="#ffffff">TS</text>
+  <text x="398" y="225" font-size="72" font-weight="800" font-family="Cooper Black, Georgia, serif" fill="#ffffff">TS</text>
 </svg>
