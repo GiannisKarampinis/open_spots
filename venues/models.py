@@ -113,6 +113,7 @@ class Reservation(models.Model):
     arrival_status = models.CharField(max_length=20, choices=ARRIVAL_STATUS_CHOICES, default='pending')
     table   = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} - {self.date} at {self.time} ({self.venue.name})"

@@ -22,4 +22,3 @@ EXPOSE 8000
 
 # Run the app with Daphne (ASGI server)
 CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "openspots.asgi:application"]
-

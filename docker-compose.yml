@@ -1,4 +1,14 @@
 services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: openspots_db
+      POSTGRES_USER: openspots_user
+      POSTGRES_PASSWORD: supersecret123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
   web:
     build: .
     container_name: openspots
@@ -12,8 +22,9 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=openspots.settings
       - REDIS_URL=redis://redis:6379/0
-
   redis:
     image: redis:7
     container_name: redis_server
 
+volumes:
+    postgres_data:

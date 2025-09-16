@@ -1,4 +1,15 @@
 <div class="analytics-container" data-venue-id="{{ venue.id }}">
+    <!-- Grouping Selection -->
+    <form id="analyticsForm" method="get" class="d-flex justify-content-center mb-4" role="search" aria-label="Group analytics data">
+        <label for="group" class="me-2 fs-5">📈 Group by:</label>
+        <select name="group" id="group" class="form-select w-auto" aria-describedby="group-help">
+            <option value="daily"   {% if grouping == 'daily' %}selected{% endif %}>📅 Daily (Last 30 days)</option>
+            <option value="weekly"  {% if grouping == 'weekly' %}selected{% endif %}>📆 Weekly (Last 12 weeks)</option>
+            <option value="monthly" {% if grouping == 'monthly' %}selected{% endif %}>🗓️ Monthly (Last 12 months)</option>
+            <option value="yearly"  {% if grouping == 'yearly' %}selected{% endif %}>📊 Yearly (Last 3 years)</option>
+        </select>
+    </form>
+
     <!-- Quick Stats -->
     <div id="analytics-stats" class="d-flex justify-content-around flex-wrap mb-4">
         <div class="stat-card text-center p-3 shadow-sm rounded" style="min-width: 120px;">
@@ -19,26 +30,6 @@
         </div>
     </div>
 
-    <!-- Grouping Selection -->
-    <form id="analyticsForm" method="get" class="d-flex justify-content-center mb-4" role="search" aria-label="Group analytics data">
-        <label for="group" class="me-2 fs-5">📈 Group by:</label>
-        <select name="group" id="group" class="form-select w-auto" aria-describedby="group-help">
-            <option value="daily"   {% if grouping == 'daily' %}selected{% endif %}>📅 Daily (Last 30 days)</option>
-            <option value="weekly"  {% if grouping == 'weekly' %}selected{% endif %}>📆 Weekly (Last 12 weeks)</option>
-            <option value="monthly" {% if grouping == 'monthly' %}selected{% endif %}>🗓️ Monthly (Last 12 months)</option>
-            <option value="yearly"  {% if grouping == 'yearly' %}selected{% endif %}>📊 Yearly (Last 3 years)</option>
-        </select>
-    </form>
-
     <!-- Chart -->
     <div id="analytics-chart" style="height: 600px; width: 100%;"></div>
-        {% comment %} {% if figure %}
-
-        {% else %}
-            <div class="alert alert-info text-center">
-                <h4>📊 No analytics data available</h4>
-                <p>Once your venue gets visits and reservations, analytics will appear here.</p>
-            </div>
-        {% endif %}
-    </div> {% endcomment %}
 </div>

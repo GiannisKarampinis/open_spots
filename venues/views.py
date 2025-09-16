@@ -6,7 +6,7 @@ from django.contrib.auth.decorators  import login_required
 from django.contrib                  import messages
 from django.views.decorators.http    import require_POST
 from django.db.models                import Count
-from django.db.models.functions      import TruncDay, TruncWeek, TruncMonth
+from django.db.models.functions      import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.utils.timezone           import now
 from datetime                        import datetime, timedelta
 from django.utils                    import timezone
@@ -172,12 +172,19 @@ def get_venue_visits_analytics_json(request, venue_id, grouping = 'daily'):
     if grouping == 'weekly':
         trunc_fn = TruncWeek
         days_back = 60
+        date_fmt = "%Y-%m-%d"  # week start date
     elif grouping == 'monthly':
         trunc_fn = TruncMonth
         days_back = 180
+        date_fmt = "%Y-%m"     # e.g. 2023-07
+    elif grouping == 'yearly':
+        trunc_fn = TruncYear
+        days_back = 365 * 3 # Last 3 years
+        date_fmt = "%Y"        # just the year
     else:
         trunc_fn = TruncDay
         days_back = 30
+        date_fmt = "%Y-%m-%d"  # full date
 
     start_date = now().date() - timedelta(days=days_back)
 
@@ -190,19 +197,19 @@ def get_venue_visits_analytics_json(request, venue_id, grouping = 'daily'):
         .annotate(count=Count('id'))
         .order_by('period')
     )
-    visit_labels = [v['period'].strftime('%Y-%m-%d') for v in visits]
+    visit_labels = [v['period'].strftime(date_fmt) for v in visits]
     visit_values = [v['count'] for v in visits]
 
     # Reservations query
     reservations = (
         Reservation.objects
-        .filter(venue=venue, date__gte=start_date)
-        .annotate(period=trunc_fn('date'))
+        .filter(venue=venue, created_at__date__gte=start_date)
+        .annotate(period=trunc_fn('created_at'))
         .values('period')
         .annotate(count=Count('id'))
         .order_by('period')
     )
-    reservation_labels = [r['period'].strftime('%Y-%m-%d') for r in reservations]
+    reservation_labels = [r['period'].strftime(date_fmt) for r in reservations]
     reservation_values = [r['count'] for r in reservations]
 
     # Build Plotly figure

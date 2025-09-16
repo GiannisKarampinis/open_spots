@@ -157,8 +157,12 @@ WSGI_APPLICATION = 'openspots.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'openspots_db',
+        'USER': 'openspots_user',
+        'PASSWORD': 'supersecret123',
+        'HOST': 'db',  # service name in docker-compose
+        'PORT': '5432',
     }
 }
 

@@ -409,9 +409,8 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 #analytics-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    max-width: 800px;
-    /* margin: 0 auto; */
     margin-top: 20px;
+    margin-bottom: 20px;
     gap: 1rem;
 }
 

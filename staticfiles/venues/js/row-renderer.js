@@ -60,10 +60,11 @@ function renderRowFromData(data) {
     const displayStatus = isArrival ? (arrivalStatusRaw || 'pending') : (status || 'unknown');
 
     let badgeClasses = 'badge ';
-    if (displayStatus === 'pending') badgeClasses += 'bg-warning text-dark';
-    else if (displayStatus === 'accepted') badgeClasses += 'bg-success';
-    else if (displayStatus === 'checked_in') badgeClasses += 'bg-success';
-    else if (displayStatus === 'no_show') badgeClasses += 'bg-danger';
+    if          (displayStatus === 'pending')       badgeClasses += 'bg-warning text-dark';
+    else if     (displayStatus === 'accepted')      badgeClasses += 'bg-success';
+    else if     (displayStatus === 'checked_in')    badgeClasses += 'bg-success';
+    else if     (displayStatus === 'no_show')       badgeClasses += 'bg-danger';
+    else if     (displayStatus === 'cancelled')     badgeClasses += 'bg-secondary';
     else badgeClasses += 'bg-danger';
 
     const statusLabel = (displayStatus || 'unknown').replace('_',' ');
