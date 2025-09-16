@@ -41,7 +41,9 @@
                             {% csrf_token %}
                             <button type="submit" class="logout-link" role="menuitem">Logout</button>
                         </form>
-                        <a href="{% url 'my_reservations' %}" role="menuitem">My Reservations</a>
+                         {% if user.is_authenticated and user.user_type != 'venue_admin' %}
+                            <a href="{% url 'my_reservations' %}" role="menuitem">My Reservations</a>
+                        {% endif %}
                     </div>
                 </div>
             {% else %}
