@@ -57,6 +57,7 @@
         </button>
         <button type="button" data-tab="history">Reservation History</button>
         <button type="button" data-tab="analytics">📊 Analytics</button>
+        <button type="button" data-tab="manage-venue">⚙️ Manage Venue</button>
     </div>
 
     <!-- Tab Contents -->
@@ -172,6 +173,10 @@
         <!-- Analytics Tab -->
         <div id="analytics-tab" class="tab-pane">
             {% include 'venues/_analytics_tab_content.html' %}
+        </div>
+
+        <div id="manage-venue" class="tab-pane">
+            {% include 'venues/_manage_venue.html' %}
         </div>
     </div>
 </div>
