@@ -7,7 +7,18 @@ from django.utils.timezone import now
 import plotly.graph_objects as go
 from plotly.offline import plot
 from .models import VenueVisit
+import requests
 
+
+def get_coords_nominatim(address):
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {"q": address, "format": "json", "limit": 1}
+    headers = {'User-Agent': 'Openspots/1.0 (openspots.application@gmail.com)'}
+    response = requests.get(url, params=params, headers=headers)
+    if response.status_code == 200 and response.json():
+        result = response.json()[0]
+        return float(result['lat']), float(result['lon'])
+    return None, None
 
 
 def send_reservation_emails(reservation):

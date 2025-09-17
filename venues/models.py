@@ -1,29 +1,21 @@
-from django.db import models
-from django.conf import settings
-from django.utils import timezone
-from datetime import datetime
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.core.mail import send_mail
-from django.contrib.auth import get_user_model
-from django.utils.crypto import get_random_string
 import logging
+from django.db                  import models
+from django.conf                import settings
+from django.utils               import timezone
+from datetime                   import datetime
+from django.db.models.signals   import post_save
+from django.dispatch            import receiver
+from django.core.mail           import send_mail
+from django.contrib.auth        import get_user_model
+from django.utils.crypto        import get_random_string
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-import requests
-from accounts.tools import send_verification_code
+from accounts.tools             import send_verification_code
+from .utils                     import get_coords_nominatim
 
+###########################################################################################
 
-def get_coords_nominatim(address):
-    url = "https://nominatim.openstreetmap.org/search"
-    params = {"q": address, "format": "json", "limit": 1}
-    headers = {'User-Agent': 'Openspots/1.0 (openspots.application@gmail.com)'}
-    response = requests.get(url, params=params, headers=headers)
-    if response.status_code == 200 and response.json():
-        result = response.json()[0]
-        return float(result['lat']), float(result['lon'])
-    return None, None
-
+###########################################################################################
 class Venue(models.Model):
     VENUE_TYPES = [
         ('restaurant', 'Restaurant'),
@@ -60,7 +52,10 @@ class Venue(models.Model):
 
     class Meta:
         ordering = ['name']
+        
+###########################################################################################
 
+###########################################################################################
 @receiver(post_save, sender=Venue)
 def update_venue_coordinates(sender, instance, created, **kwargs):
     # Only fetch if latitude or longitude are missing and location is set
@@ -73,6 +68,9 @@ def update_venue_coordinates(sender, instance, created, **kwargs):
             # Avoid recursion by updating without sending signal again
             Venue.objects.filter(pk=instance.pk).update(latitude=lat, longitude=lon)
 
+###########################################################################################
+
+###########################################################################################
 class Table(models.Model):
     venue = models.ForeignKey('Venue', on_delete=models.CASCADE, related_name='tables')
     number = models.PositiveIntegerField()
@@ -85,7 +83,9 @@ class Table(models.Model):
     def __str__(self):
         return f"Table {self.number} ({self.seats} seats) at {self.venue.name}"
 
+###########################################################################################
 
+###########################################################################################
 class Reservation(models.Model):
     # existing fields
     STATUS_CHOICES = [
@@ -142,6 +142,9 @@ class Reservation(models.Model):
     class Meta:
         ordering = ['-date', 'time']
 
+###########################################################################################
+
+###########################################################################################
 class VenueApplication(models.Model):
     VENUE_TYPES = [
         ('restaurant', 'Restaurant'),
@@ -168,7 +171,10 @@ class VenueApplication(models.Model):
 
     class Meta:
         ordering = ['-submitted_at']
-        
+
+###########################################################################################
+
+###########################################################################################        
 class VenueVisit(models.Model):
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
@@ -243,3 +249,35 @@ def create_admin_user_for_venue(sender, instance, created, **kwargs):
 
     except Exception as e:
         logger.error(f"Failed to create admin user or send email for venue '{instance.name}': {e}")
+
+###########################################################################################
+
+###########################################################################################
+class VenueUpdateRequest(models.Model):
+    venue           = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='update_requests')
+    submitted_by    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    name            = models.CharField(max_length=255)
+    kind            = models.CharField(max_length=50, choices=Venue.VENUE_TYPES)
+    location        = models.CharField(max_length=255)
+    email           = models.EmailField(null=True, blank=True)
+    phone           = models.CharField(max_length=20, blank=True, null=True)
+    description     = models.TextField(blank=True, null=True)
+    available_tables = models.PositiveIntegerField(default=0)
+    image           = models.ImageField(upload_to='venue_updates/', blank=True, null=True)
+    
+    APPROVAL_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    approval_status = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default='pending')
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_update_requests')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    
+###########################################################################################
+
+###########################################################################################    
