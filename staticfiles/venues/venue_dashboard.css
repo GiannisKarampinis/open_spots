@@ -1,6 +1,6 @@
 /* === Container & Layout === */
 .container {
-    max-width: 960px;
+    max-width: 1080px;
     /* padding: 40px 0; */
     margin: 0 auto;
     color: #e0e0e0;
@@ -528,7 +528,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     border-radius: 8px;
     padding: 2rem;
     box-shadow: 0 0 20px rgba(0,0,0,0.6);
-    max-width: 700px;
+    max-width: 960px;
     margin: 0 auto 2rem auto;
     color: #e0e0e0;
 }
@@ -674,4 +674,46 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
         width: 100%;
         margin-left: 0;
     }
+}
+
+
+/* Ensure lucide icons align with text baseline */
+.tabs button svg {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 6px; /* space before text */
+    flex-shrink: 0;
+}
+
+/* Notification bell container */
+#notification-container {
+    position: relative;          /* anchor for badge */
+    display: inline-flex;
+    align-items: flex-start;
+    margin-left: 8px;            /* space from tab text */
+    line-height: 1;
+}
+
+/* Standardize bell size */
+#notification-container svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Badge anchored at top-right corner of bell */
+#notification-badge {
+    position: absolute;
+    top: -6px;                   /* move up */
+    right: -6px;                 /* move right */
+    background: #dc3545;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: bold;
+    border-radius: 999px;
+    padding: 2px 5px;
+    line-height: 1;
+    min-width: 16px;
+    text-align: center;
 }
