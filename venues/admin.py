@@ -1,7 +1,9 @@
+from django.utils import timezone
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
-from .models import Venue, Table, Reservation, VenueApplication, VenueVisit
+from .models import Venue, Table, Reservation, VenueApplication, VenueUpdateRequest, VenueVisit
+from django.utils.html import format_html
 
 
 class TableInline(admin.TabularInline):
@@ -153,3 +155,53 @@ class VenueVisitAdmin(admin.ModelAdmin):
         if request.user.is_superuser or request.user.user_type == 'venue_admin':
             return super().get_model_perms(request)
         return {}
+
+
+@admin.register(VenueUpdateRequest)
+class VenueUpdateRequestAdmin(admin.ModelAdmin):
+    list_display = ("venue", "submitted_by", "approval_status", "submitted_at", "preview_changes")
+    list_filter = ("approval_status",)
+    actions = ["approve_requests", "reject_requests"]
+
+    def preview_changes(self, obj):
+            changes = obj.get_changes()
+            if not changes:
+                return "No changes"
+            html = "<ul>"
+            for field, (old, new) in changes.items():
+                html += f"<li><b>{field}</b>: <span style='color:red;'>{old}</span> ➝ <span style='color:green;'>{new}</span></li>"
+            html += "</ul>"
+            return format_html(html)
+
+    preview_changes.short_description = "Proposed Changes"
+    preview_changes.allow_tags = True
+
+    def approve_requests(self, request, queryset):
+        for update in queryset.filter(approval_status="pending"):
+            venue = update.venue
+            # Copy over requested fields
+            venue.name = update.name
+            venue.kind = update.kind
+            venue.location = update.location
+            venue.email = update.email
+            venue.phone = update.phone
+            venue.description = update.description
+            venue.available_tables = update.available_tables
+            if update.image:
+                venue.image = update.image
+            venue.save()
+
+            update.approval_status = "approved"
+            update.reviewed_by = request.user
+            update.reviewed_at = timezone.now()
+            update.save()
+
+    approve_requests.short_description = "Approve selected requests"
+
+    def reject_requests(self, request, queryset):
+        queryset.filter(approval_status="pending").update(
+            approval_status="rejected",
+            reviewed_by=request.user,
+            reviewed_at=timezone.now()
+        )
+    reject_requests.short_description = "Reject selected requests"

@@ -265,6 +265,9 @@ class VenueUpdateRequest(models.Model):
     description     = models.TextField(blank=True, null=True)
     available_tables = models.PositiveIntegerField(default=0)
     image           = models.ImageField(upload_to='venue_updates/', blank=True, null=True)
+        
+    latitude = models.CharField(max_length=50, blank=True, null=True)   # <-- ADD
+    longitude = models.CharField(max_length=50, blank=True, null=True)  # <-- ADD
     
     APPROVAL_STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -277,6 +280,33 @@ class VenueUpdateRequest(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
     
     submitted_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"UpdateRequest for {self.venue.name} (status: {self.approval_status})"
+
+    def get_changes(self):
+        """Return a dict of changed fields {field: (old, new)}"""
+        venue = self.venue
+        changes = {}
+
+        # List fields you want to track
+        fields_to_check = [
+            "name", "kind", "location", "email",
+            "phone", "description", "available_tables"
+        ]
+
+        for field in fields_to_check:
+            old_value = getattr(venue, field)
+            new_value = getattr(self, field)
+            if old_value != new_value:
+                changes[field] = (old_value, new_value)
+
+        # Handle image separately
+        if self.image and (not venue.image or venue.image.url != self.image.url):
+            changes["image"] = (venue.image.url if venue.image else None, self.image.url)
+
+        return changes
+
     
 ###########################################################################################
 

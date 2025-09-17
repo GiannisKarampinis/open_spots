@@ -6,7 +6,6 @@ from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYea
 from django.utils.timezone import now
 import plotly.graph_objects as go
 from plotly.offline import plot
-from .models import VenueVisit
 import requests
 
 

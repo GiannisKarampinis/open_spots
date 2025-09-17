@@ -22,7 +22,7 @@ from django.template.loader          import render_to_string
 import plotly.graph_objs             as go
 from django.db                       import transaction
 from django.urls                     import reverse
-from .models                         import Venue, VenueVisit, Reservation
+from .models                         import Venue, VenueUpdateRequest, VenueVisit, Reservation
 from .forms                          import ReservationForm, VenueApplicationForm, ArrivalStatusForm
 from .utils                          import *
 from .decorators                     import venue_admin_required
@@ -735,6 +735,34 @@ def partial_arrival_row(request, pk: int):
         request=request
     )
     return HttpResponse(html)
+
+###########################################################################################
+
+###########################################################################################
+@login_required
+def submit_venue_update(request, venue_id):
+    venue = get_object_or_404(Venue, id=venue_id)
+
+    if request.method == "POST":
+        # Create a new update request instead of saving directly to Venue
+        VenueUpdateRequest.objects.create(
+            venue=venue,
+            submitted_by=request.user,
+            name=request.POST.get("name"),
+            kind=request.POST.get("kind"),
+            location=request.POST.get("location"),
+            email=request.POST.get("email"),
+            phone=request.POST.get("phone"),
+            description=request.POST.get("description"),
+            available_tables=request.POST.get("available_tables") or 0,
+            latitude=request.POST.get("latitude"),
+            longitude=request.POST.get("longitude"),
+            image=request.FILES.get("image"),
+        )
+        return render(request, "venues/_update_venue_success.html")
+
+
+    return render(request, "venues/_manage_venue.html", {"venue": venue})
 
 ###########################################################################################
 

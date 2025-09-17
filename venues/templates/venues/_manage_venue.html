@@ -1,5 +1,5 @@
 <div class="container mt-5" id="manage-venue-form">
-    <form method="POST" enctype="multipart/form-data" class="venue-form-card">
+    <form method="POST" enctype="multipart/form-data" class="venue-form-card" action = "{% url 'submit_venue_update' venue.id %}">
         {% csrf_token %}
 
         <!-- Venue Basic Info -->
@@ -70,8 +70,8 @@
         </div>
 
         <!-- Submit Button -->
-        <div class="text-right">
-            <button type="submit" class="btn-edit-status">Save Changes</button>
+        <div class="text-center">
+            <button type="submit" class="btn-edit-status">Submit for Approval</button>
         </div>
     </form>
 </div>
