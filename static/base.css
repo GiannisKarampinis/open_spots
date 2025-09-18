@@ -1,4 +1,35 @@
-/* Reset & base */
+/* ==========================
+   Base Styles & Theme Colors
+   ========================== */
+
+/* Default (Light Theme) */
+:root {
+    --background-color: #ffffff;      /* Page background */
+    --surface-color: #003366;         /* Navbar, footer, cards */
+    --text-color: #222222;            /* Main text */
+    --link-color: #0056b3;            /* Links */
+    --link-hover: #003366;            /* Link hover */
+
+    --primary-color: #007bff;         /* Unified blue */
+    --primary-hover: #0056b3;         /* Darker blue hover */
+    --error-color: #ff4d4f;           /* Error red */
+    --success-color: #28a745;         /* Success green */
+    --warning-color: #ffc107;         /* Warning yellow */
+    --info-color: #17a2b8;            /* Info teal */
+}
+
+/* Dark Theme Overrides */
+body.dark-theme {
+    --background-color: #121212;
+    --surface-color: #1e1e1e;
+    --text-color: #f1f1f1;
+    --link-color: #aaa;
+    --link-hover: #fff;
+}
+
+/* ==========================
+   Reset & Base
+   ========================== */
 * {
     margin: 0;
     padding: 0;
@@ -7,49 +38,58 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #1c1c1c;
-    color: #f1f1f1;
+    background-color: var(--background-color);
+    color: var(--text-color);
     line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Links */
+/* ==========================
+   Links
+   ========================== */
 a {
-    color: #aaa;
+    color: var(--link-color);
     text-decoration: none;
 }
 
 a:hover {
-    color: #fff;
+    color: var(--link-hover);
     text-decoration: underline;
 }
 
-/* Scoped block display + margin only for links inside main content */
 .main-content a {
     display: block;
     text-align: center;
     margin-top: 15px;
 }
 
-/* Header */
+/* ==========================
+   Header / Navbar
+   ========================== */
 header {
-    background-color: #1c1c1c;
+    background-color: var(--surface-color);
     padding: 15px 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    color: var(--text-color);
 }
 
-/* Navigation */
 .main-nav a {
     color: #ddd;
     font-weight: 600;
 }
 
-.main-nav a:hover {
-    color: #fff;
+body.dark-theme .main-nav a {
+    color: #ccc;
 }
 
-/* Dropdown Menu */
+.main-nav a:hover {
+    color: var(--link-hover);
+}
+/* ==========================
+   User Dropdown Menu
+   ========================== */
 .user-menu {
     position: relative;
     display: inline-block;
@@ -64,33 +104,6 @@ header {
     font-size: 1rem;
 }
 
-/* Main & Footer */
-main {
-    /* padding: 40px 30px; */
-    max-width: 90%;
-    margin: auto;
-}
-
-footer {
-    background-color: #2a2a2a;
-    text-align: center;
-    padding: 20px 0;
-    color: #888;
-    font-size: 0.9rem;
-    margin-top: 40px;
-}
-
-/* Triangle arrow animation */
-.triangle {
-    display: inline-block;
-    margin-left: 5px;
-    transition: transform 0.3s ease;
-}
-
-.triangle.rotate {
-    transform: rotate(180deg);
-}
-
 .user-dropdown {
     opacity: 0;
     visibility: hidden;
@@ -99,7 +112,7 @@ footer {
     position: absolute;
     right: 0;
     top: 100%;
-    background-color: #2a2a2a;
+    background-color: var(--surface-color);
     min-width: 180px;
     box-shadow: 0 8px 16px rgba(0,0,0,0.3);
     border-radius: 5px;
@@ -113,7 +126,6 @@ footer {
     transform: translateY(0);
 }
 
-/* Style both links and logout button the same way */
 .user-dropdown a,
 .logout-form .logout-link {
     display: block;
@@ -125,37 +137,70 @@ footer {
     text-align: left;
     font: inherit;
     cursor: pointer;
-    text-decoration: none;
     transition: background-color 0.2s ease, color 0.2s ease;
-    line-height: 1.5;
-    vertical-align: middle;
     font-size: 1rem;
-    box-sizing: border-box;
 }
 
 .user-dropdown a:hover,
 .logout-form .logout-link:hover {
     background-color: #444;
     color: #fff;
-    text-decoration: none;
+}
+/* ==========================
+   Layout: Main & Footer
+   ========================== */
+main {
+    max-width: 90%;
+    margin: auto;
 }
 
+footer {
+    background-color: var(--surface-color);
+    text-align: center;
+    padding: 20px 0;
+    color: #eee;
+    font-size: 0.9rem;
+    margin-top: 40px;
+}
+
+/* ==========================
+   Buttons & Links
+   ========================== */
 .dashboard-link {
     margin-right: 15px;
     font-weight: bold;
-    color: #007bff;
-    text-decoration: none;
+    color: var(--primary-color);
 }
+
 .dashboard-link:hover {
     text-decoration: underline;
+    color: var(--primary-hover);
 }
+
+.apply-venue-btn {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.apply-venue-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+
+/* ==========================
+   Forms & Messages
+   ========================== */
 
 /* Error messages under fields */
 ul.errorlist {
     list-style: none;
     padding: 0;
     margin: -10px 0 10px;
-    color: #ff4d4f;
+    color: var(--error-color);
     font-size: 0.95rem;
     font-weight: 500;
 }
@@ -176,52 +221,37 @@ ul.errorlist {
 
 /* Different colors based on message type */
 .flash-message.error {
-    background-color: #ff4d4f;
+    background-color: var(--error-color);
     color: white;
 }
 
 .flash-message.success {
-    background-color: #28a745;
+    background-color: var(--success-color);
     color: white;
 }
 
 .flash-message.warning {
-    background-color: #ffc107;
+    background-color: var(--warning-color);
     color: #333;
 }
 
 .flash-message.info {
-    background-color: #17a2b8;
+    background-color: var(--info-color);
     color: white;
 }
 
-.apply-venue-btn {
-    background-color: #4a90e2;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: bold;
-    margin-right: 10px;
-}
-
-.apply-venue-btn:hover {
-    background-color: #357ABD;
-}
-
+/* ==========================
+   Logo & SVG
+   ========================== */
 .logo-svg {
     height: 50px;
     width: auto;
     display: inline-block;
     vertical-align: middle;
-    color: #eee; /* or inherit */
     transition: transform 0.2s ease;
 }
 
-.logo-svg:hover {
-    transform: scale(1.05);
-    color: #fff;
-}
+.logo-svg:hover { transform: scale(1.05); }
 
 /* Make SVG responsive and centered */
 .svg-wrapper {
@@ -234,4 +264,88 @@ ul.errorlist {
     width: 70%;
     height: auto;
     display: block;
+}
+
+/* ==========================
+   Triangle Arrows
+   ========================== */
+.triangle {
+    display: inline-block;
+    margin-left: 5px;
+    transition: transform 0.3s ease;
+}
+
+.triangle.rotate { transform: rotate(180deg); }
+
+
+/* Submenu wrapper */
+.submenu {
+    position: relative;
+}
+
+/* Submenu wrapper */
+.submenu {
+    display: block;
+    width: 100%;
+}
+
+/* ==========================
+   Submenu
+   ========================== */
+.submenu-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    padding: 12px 16px;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.submenu-btn:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+/* Submenu content (hidden by default) */
+.submenu-content {
+    display: none;
+    flex-direction: column;
+    background-color: var(--surface-color);
+    border-top: 1px solid #444;
+}
+
+/* Submenu items */
+.submenu-item {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    color: #ccc;
+    padding: 10px 16px;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+}
+
+.submenu-item:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+/* Show submenu when parent is active */
+.submenu.open .submenu-content {
+    display: flex;
+}
+
+/* Rotate triangle when submenu is open */
+.submenu-btn .triangle {
+    transition: transform 0.3s ease;
+}
+
+.submenu.open .submenu-btn .triangle {
+    transform: rotate(90deg);
 }
