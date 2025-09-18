@@ -1,233 +1,719 @@
-/* ==========================
-   Dashboard Container
-   ========================== */
-.dashboard-container,
-.venue-dashboard-container {
-    max-width: 900px;
-    margin: 2rem auto;
-    padding: 1rem 2rem;
-    background-color: var(--surface-color);
-    border-radius: 8px;
-    box-shadow: 0 0 8px rgba(0,0,0,0.15);
-    color: var(--text-color);
+/* === Container & Layout === */
+.container {
+    max-width: 1080px;
+    /* padding: 40px 0; */
+    margin: 0 auto;
+    color: #e0e0e0;
 }
 
-.dashboard-container h2,
-.venue-dashboard-container h2 {
-    margin-bottom: 1rem;
-    font-weight: 600;
-    border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 0.3rem;
-    color: var(--text-color);
+/* === Page Title === */
+h1.fw-bold {
+    font-size: 2.2rem;
+    margin-bottom: 0;
+    color: #f1f1f1;
 }
 
-/* ==========================
-   Sections & Venue Boxes
-   ========================== */
-.dashboard-section,
-.venue-box {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    background-color: var(--background-color);
-    border-radius: 6px;
-    box-shadow: 0 0 4px rgba(0,0,0,0.1);
-    border: 1px solid rgba(0,0,0,0.1);
-    color: var(--text-color);
+.venue-status-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    padding: 6px 0;
 }
 
-.venue-box p {
-    margin: 0.25rem 0;
-}
-
-/* ==========================
-   Tables
-   ========================== */
-.theme-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: var(--background-color);
-    color: var(--text-color);
-}
-
-.theme-table thead {
-    background-color: var(--primary-color);
-    color: #fff;
-}
-
-.theme-table th,
-.theme-table td {
-    padding: 0.75rem;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.theme-table tr:hover {
-    background-color: rgba(255,255,255,0.05);
-}
-
-/* ==========================
-   Pagination
-   ========================== */
-.pagination {
-    margin: 10px 0;
-    font-size: 0.9em;
-    color: var(--text-color);
-}
-
-.pagination a {
-    margin: 0 5px;
-    text-decoration: none;
-    color: var(--primary-color);
-}
-
-.pagination a:hover {
-    text-decoration: underline;
-    color: var(--primary-hover);
-}
-
-/* ==========================
-   Buttons & Links
-   ========================== */
-.btn, 
-a.btn {
-    background-color: var(--primary-color);
-    color: #fff !important;
-    padding: 0.4rem 0.8rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    border: none;
-    transition: background-color 0.3s ease;
-}
-
-.btn:hover,
-a.btn:hover {
-    background-color: var(--primary-hover);
-}
-
-/* Outline buttons (status toggle) */
-.btn-outline-success {
-    background: none;
-    border: 1px solid var(--success-color);
-    color: var(--success-color);
-}
-.btn-outline-success:hover {
-    background: var(--success-color);
-    color: #fff;
-}
-
-.btn-outline-danger {
-    background: none;
-    border: 1px solid var(--error-color);
-    color: var(--error-color);
-}
-.btn-outline-danger:hover {
-    background: var(--error-color);
-    color: #fff;
-}
-
-/* ==========================
-   Badges
-   ========================== */
-.badge {
-    padding: 0.4rem 0.6rem;
-    border-radius: 4px;
+/* Unified style for availability toggle buttons */
+.mark-availability {
     font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 12px;
     font-weight: 600;
+    min-width: 160px;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.badge-success {
-    background-color: var(--success-color);
-    color: #fff;
+/* Green version - Available */
+.btn-outline-success.mark-availability {
+    background-color: #28a745 !important;
+    color: #e0ffe0 !important;
+    border: none !important;
+    box-shadow: 0 0 8px #28a745cc;
+}
+.btn-outline-success.mark-availability:hover {
+    background-color: #3bda65 !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px #3bda65dd;
 }
 
-.badge-danger {
-    background-color: var(--error-color);
-    color: #fff;
+/* Red version - Full */
+.btn-outline-danger.mark-availability {
+    background-color: #dc3545 !important;
+    color: #ffe0e0 !important;
+    border: none !important;
+    box-shadow: 0 0 8px #dc3545cc;
+}
+.btn-outline-danger.mark-availability:hover {
+    background-color: #e96275 !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px #e96275dd;
 }
 
-.badge-warning {
-    background-color: var(--warning-color);
-    color: #333;
+/* === Status Badges === */
+.badge {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
+    white-space: nowrap;
+}
+.bg-success {
+    background-color: #28a745 !important;
+    color: #e0ffe0 !important;
+    box-shadow: 0 0 8px #28a745cc;
+}
+.bg-danger {
+    background-color: #dc3545 !important;
+    color: #ffe0e0 !important;
+    box-shadow: 0 0 8px #dc3545cc;
+}
+.bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+    box-shadow: 0 0 8px #ffc107cc;
 }
 
-/* ==========================
-   Alerts
-   ========================== */
-.alert {
-    padding: 1rem;
+/* === Tables === */
+.table-responsive {
+    margin-top: 1.5rem;
     border-radius: 6px;
-    margin: 1rem 0;
-    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+    background-color: #2a2a2a;
+    overflow-x: auto;
 }
 
-.alert-info {
-    background-color: var(--info-color);
-    color: #fff;
+.table {
+    font-size: 0.95rem;
+    width: 100%;
+    color: #e0e0e0;
+    border-collapse: collapse;
 }
 
-.alert-warning {
-    background-color: var(--warning-color);
-    color: #333;
+.table th,
+.table td {
+    vertical-align: middle;
+    text-align: center;
+    border-bottom: 1px solid #444;
+    padding: 14px 12px;
+    line-height: 1.4;
 }
 
-.alert-success {
-    background-color: var(--success-color);
-    color: #fff;
+.table thead th {
+    background-color: #1f1f1f;
+    color: #a0c8ff;
+    font-weight: 600;
+    letter-spacing: 0.03em;
 }
 
-.alert-danger {
-    background-color: var(--error-color);
-    color: #fff;
-}
+/* === DataTables Striping & Hover === */
+table.dataTable.stripe tbody tr.odd { background-color: #2e2e2e; }
+table.dataTable.stripe tbody tr.even { background-color: #3a3a3a; }
+table.dataTable tbody tr:hover { background-color: #444 !important; }
 
-/* ==========================
-   Messages
-   ========================== */
-.messages {
-    list-style: none;
-    padding: 0.5rem 1rem;
-    margin: 0 0 1rem 0;
+/* === Pagination Buttons === */
+.dataTables_wrapper .dataTables_paginate {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 1rem;
 }
-
-.message {
-    padding: 0.6rem 1rem;
-    border-radius: 5px;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-.message.success {
-    background-color: var(--success-color);
-    color: #fff;
-}
-
-.message.error {
-    background-color: var(--error-color);
-    color: #fff;
-}
-
-.message.warning {
-    background-color: var(--warning-color);
-    color: #333;
-}
-
-/* ==========================
-   Notification Bell
-   ========================== */
-.notification-bell {
-    position: relative;
+.dataTables_wrapper .paginate_button {
     display: inline-block;
+    padding: 6px 12px;
+    margin: 0 2px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: #3a3a3a;
+    color: #f1f1f1 !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.dataTables_wrapper .paginate_button:hover {
+    background-color: #555;
+    color: #fff !important;
+}
+.dataTables_wrapper .paginate_button.current {
+    background-color: #4a90e2;
+    color: #fff !important;
+    border-color: #4a90e2;
+}
+.dataTables_wrapper .paginate_button.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* === Top Controls Wrapper (Search + Entries) === */
+.datatable-controls {
+    display: flex;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: #1f1f1f;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+    gap: 1rem;
+    height: auto;
+}
+
+.datatable-controls #upcoming-show-entries-wrapper,
+.datatable-controls #special-show-entries-wrapper,
+.datatable-controls #history-show-entries-wrapper {
+    flex: 2;
+}
+
+.datatable-controls #upcoming-search-wrapper,
+.datatable-controls #special-search-wrapper,
+.datatable-controls #history-search-wrapper {
+    flex: 8;
+}
+
+.datatable-controls #upcoming-search-wrapper input,
+.datatable-controls #special-search-wrapper input,
+.datatable-controls #history-search-wrapper input {
+    margin-right: 1rem;
+    width: 85%;
+}
+
+/* Search input fields inside datatable controls */
+.datatable-controls input[type="search"],
+.datatable-controls input[type="text"] {
+    background-color: #2c2c2c;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.7);
+    width: 100%;
+    /* max-width: 300px; prevent overly large search bars */
+}
+
+/* On focus: highlight border and background */
+.datatable-controls input[type="search"]:focus,
+.datatable-controls input[type="text"]:focus {
+    background-color: #3a3a3a;
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
+}
+
+/* Dropdown (select) inside show-entries wrappers */
+.datatable-controls select {
+    background-color: #2c2c2c;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.7);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    /* min-width: 90px; */
+}
+
+/* On hover and focus for dropdown */
+.datatable-controls select:hover {
+    background-color: #3a3a3a;
+    border-color: #777;
     cursor: pointer;
 }
 
-#notification-badge {
+.datatable-controls select:focus {
+    background-color: #3a3a3a;
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
+}
+
+/* === Buttons === */
+.table .btn-sm {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    margin: 4px 4px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    display: inline-block;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    box-shadow: 0 0 5px #28a745cc;
+}
+.btn-success:hover {
+    background-color: #3bda65;
+    box-shadow: 0 0 10px #3bda65dd;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    box-shadow: 0 0 5px #dc3545cc;
+}
+.btn-danger:hover {
+    background-color: #e96275;
+    box-shadow: 0 0 10px #e96275dd;
+}
+
+.btn-edit-status {
+    background-color: #f0ad4e;
+    color: #2a2a2a;
+    border: none;
+    box-shadow: 0 0 6px #f0ad4ecc;
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 4px 10px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.btn-edit-status:hover {
+    background-color: #ec9e2f;
+    box-shadow: 0 0 12px #ec9e2fdd;
+    color: #1b1b1b;
+    text-decoration: none;
+}
+
+/* === Alerts === */
+.alert-info {
+    font-size: 0.95rem;
+    background-color: #334455;
+    border-color: #557799;
+    color: #cfdffd;
+    padding: 12px 20px;
+    border-radius: 6px;
+    text-align: center;
+    box-shadow: inset 0 0 10px #2a3b4d;
+}
+
+/* === Modal Card === */
+.modal-card {
+    background-color: #1c1c1c;
+    color: #e0e0e0;
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 500px;
+    margin: 2rem auto;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+}
+.modal-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #cacaca;
+}
+.modal-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.modal-card select,
+.modal-card button {
+    font-size: 1rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+    width: 100%;
+}
+.modal-card .btn-group {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+.modal-card .btn-cancel {
+    background-color: #555;
+    color: #e0e0e0;
+    border: none;
+}
+.modal-card .btn-cancel:hover {
+    background-color: #777;
+    color: #fff;
+}
+.centered-modal-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+
+/* Manual tabs styles */
+.tabs {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    border-bottom: 2px solid #cacaca;
+}
+.tabs button {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-bottom: 5px solid transparent;
+    transition: border-color 0.3s;
+    color: #cacaca;
+}
+.tabs button.active {
+    border-color: #0d6efd;
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.tabs button[data-tab="requests"] {
+    position: relative;
+}
+
+.tab-content > div {
     display: none;
+}
+.tab-content > div.active {
+    display: block;
+}
+
+.tab-content h2 {
+    margin-top: 1rem;
+    color: #cacaca;
+}
+
+/* For fading/removal animation */
+.fade-out-slide {
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+/* ==========================================================================
+   Analytics: Quick Stats + Grouping (dark, horizontal boxes & polished select)
+   ========================================================================== */
+
+/* Quick Stats Layout */
+#analytics-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin-top: 20px;
+    margin-bottom: 20px;
+    gap: 1rem;
+}
+
+/* Stat Card Style */
+#analytics-stats .stat-card {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+#analytics-stats .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+#analytics-stats .stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #4cafef;
+}
+#analytics-stats .stat-label {
+    font-size: 0.95rem;
+    color: #bbb;
+    margin-top: 0.4rem;
+}
+
+/* Grouping Form */
+#analyticsForm {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    margin: 1.5rem 0;
+    padding: 0.8rem 1rem;
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+#analyticsForm label {
+    font-weight: 500;
+    color: #ccc;
+}
+#analyticsForm select {
+    padding: 0.4rem 0.7rem;
+    border-radius: 5px;
+    border: 1px solid #555;
+    background: #2a2a2a;
+    color: #fff;
+}
+#analyticsForm select:focus {
+    outline: none;
+    border-color: #4cafef;
+}
+
+/* Notifications Section */
+/* ---------------- Subtle row highlight ---------------- */
+
+/* 
+@keyframes updateFade {
+  0%   { background-color: #fdd552; }
+  100% { background-color: transparent; }
+} */
+
+/* Initial flash (separate from the persistent highlight) */
+@keyframes rowFlash {
+  0%   { background-color: #5a5e37; }
+  100% { background-color: #616445; }
+}
+.flash-once { animation: rowFlash 2s ease-out; }
+
+/* PERSISTENT highlight — works with Bootstrap 5 & DataTables striping */
+.table tbody tr.new-reservation { 
+  /* Bootstrap 5 uses this var for striped backgrounds: override it */
+  --bs-table-accent-bg: #616445;
+}
+
+/* Fallback for older themes / ensure cells themselves stay yellow */
+.table tbody tr.new-reservation > * {
+  background-color: #616445 !important;
+}
+
+/* Optional: user acknowledgment (hover clears) */
+.table tbody tr.new-reservation:hover > * {
+  background-color: transparent !important;
+  transition: background-color .6s ease;
+}
+
+/* ---------------- Notification badge pop ---------------- */
+@keyframes badge-pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+#notification-badge.pop {
+  animation: badge-pop 0.3s ease;
+}
+
+
+
+
+
+
+/* ===================== Manage Venue Tab ===================== */
+#manage-venue {
+    padding: 1.5rem 0;
+}
+
+/* Form card */
+#manage-venue .venue-form-card {
+    background-color: #1c1c1c;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    max-width: 960px;
+    margin: 0 auto 2rem auto;
+    color: #e0e0e0;
+}
+
+/* Form headings */
+#manage-venue .venue-form-card h3 {
+    font-size: 1.6rem;
+    color: #cacaca;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+/* Input fields, textarea, select */
+#manage-venue .venue-form-card input,
+#manage-venue .venue-form-card textarea,
+#manage-venue .venue-form-card select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.7);
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+#manage-venue .venue-form-card input:focus,
+#manage-venue .venue-form-card textarea:focus,
+#manage-venue .venue-form-card select:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
+    background-color: #3a3a3a;
+}
+
+/* Textarea */
+#manage-venue .venue-form-card textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Image preview */
+#manage-venue .venue-form-card .venue-image-preview {
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #555;
+    margin-bottom: 8px;
+}
+
+/* Checkbox wrapper */
+#manage-venue .venue-form-card .form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+#manage-venue .venue-form-card .form-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+/* Submit button */
+#manage-venue .venue-form-card .btn-save {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background-color: #28a745;
+    color: #fff;
+    box-shadow: 0 0 8px #28a745cc;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+#manage-venue .venue-form-card .btn-save:hover {
+    background-color: #3bda65;
+    box-shadow: 0 0 12px #3bda65dd;
+}
+
+/* Cancel button */
+#manage-venue .venue-form-card .btn-cancel {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background-color: #dc3545;
+    color: #ffe0e0;
+    box-shadow: 0 0 8px #dc3545cc;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    margin-left: 10px;
+}
+#manage-venue .venue-form-card .btn-cancel:hover {
+    background-color: #e96275;
+    box-shadow: 0 0 12px #e96275dd;
+}
+
+/* File upload input */
+#manage-venue .venue-form-card input[type="file"] {
+    padding: 6px 10px;
+    background-color: #2c2c2c;
+    border: 1px solid #555;
+    color: #e0e0e0;
+}
+
+/* Small notes / hints */
+#manage-venue .venue-form-card small {
+    display: block;
+    color: #999;
+    margin-top: -8px;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+}
+
+/* Flex wrapper for buttons */
+#manage-venue .venue-form-card .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #manage-venue .venue-form-card {
+        padding: 1.5rem;
+    }
+
+    #manage-venue .venue-form-card .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #manage-venue .venue-form-card .btn-save,
+    #manage-venue .venue-form-card .btn-cancel {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+
+/* Ensure lucide icons align with text baseline */
+.tabs button svg {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 6px; /* space before text */
+    flex-shrink: 0;
+}
+
+/* Notification bell container */
+#notification-container {
+    position: relative;          /* anchor for badge */
+    display: inline-flex;
+    align-items: flex-start;
+    margin-left: 8px;            /* space from tab text */
+    line-height: 1;
+}
+
+/* Standardize bell size */
+#notification-container svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Badge anchored at top-right corner of bell */
+#notification-badge {
     position: absolute;
-    top: -8px;
-    right: -8px;
-    background: var(--error-color);
-    color: white;
-    border-radius: 50%;
-    padding: 2px 6px;
-    font-size: 12px;
+    top: -6px;                   /* move up */
+    right: -6px;                 /* move right */
+    background: #dc3545;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: bold;
+    border-radius: 999px;
+    padding: 2px 5px;
+    line-height: 1;
+    min-width: 16px;
+    text-align: center;
 }
