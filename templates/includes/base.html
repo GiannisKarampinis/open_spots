@@ -2,61 +2,19 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    
     <title>{% block title %}{% endblock %}</title>
-    
+
     <link rel="stylesheet" href="{% static 'base.css' %}">
     <link rel="stylesheet" href="{% static 'messages.css' %}">
-
     {% block extra_css %}{% endblock %}
-
-   
 </head>
-
-<script
-    document.addEventListener("DOMContentLoaded", function() {
-        const body = document.body;
-        const themeToggle = document.getElementById("theme-toggle");
-        const submenuBtn = document.querySelector(".submenu-btn");
-        const submenu = document.querySelector(".submenu");
-
-        // Handle submenu toggle (vertical + triangle rotate)
-        if (submenuBtn) {
-            submenuBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                submenu.classList.toggle("open");
-            });
-        }
-
-        // Close submenu when clicking outside
-        document.addEventListener("click", () => {
-            submenu.classList.remove("open");
-        });
-
-        // Load saved theme
-        if (localStorage.getItem("theme") === "dark") {
-            body.classList.add("dark-theme");
-            themeToggle.textContent = "Switch to Light Theme";
-        }
-
-        // Theme toggle
-        themeToggle.addEventListener("click", () => {
-            body.classList.toggle("dark-theme");
-            const isDark = body.classList.contains("dark-theme");
-
-            themeToggle.textContent = isDark ? "Switch to Light Theme" : "Switch to Dark Theme";
-            localStorage.setItem("theme", isDark ? "dark" : "light");
-        });
-    });
-</script>
 
 <body>
     <header>
         <a href="{% url 'venue_list' %}" class="site-title">
-             {% include "includes/logo.svg.html" %}
+            {% include "includes/logo.svg.html" %}
         </a>
         <nav class="main-nav">
             {% if user.is_authenticated %}
@@ -65,9 +23,8 @@
                         <a href="{% url 'venue_dashboard' venue_id %}" class="dashboard-link">Dashboard</a>
                     {% endif %}
 
-
                     <button class="user-menu-btn" id="userMenuBtn">
-                        {{ user.username }} 
+                        {{ user.username }}
                         <span class="triangle">&#x25BC;</span>
                     </button>
 
@@ -76,11 +33,11 @@
 
                         <!-- Settings with vertical submenu -->
                         <div class="submenu">
-                            <button class="submenu-btn" role="menuitem">
+                            <button class="submenu-btn" type="button">
                                 Settings <span class="triangle">&#x25BC;</span>
                             </button>
                             <div class="submenu-content">
-                                <button id="theme-toggle" class="submenu-item">Switch to Dark Theme</button>
+                                <button id="theme-toggle" class="submenu-item" type="button">Dark Theme</button>
                             </div>
                         </div>
 
@@ -91,9 +48,6 @@
 
                         <a href="{% url 'my_reservations' %}" role="menuitem">My Reservations</a>
                     </div>
-
-
-
                 </div>
             {% else %}
                 <a href="{% url 'apply_venue' %}" class="apply-venue-btn">Apply to Register a Venue</a>
@@ -107,7 +61,6 @@
 
     <main>
         {% include 'includes/messages.html' %}
-
         {% block content %}{% endblock %}
     </main>
 
@@ -115,41 +68,64 @@
         &copy; 2025 OpenSpots. All rights reserved.
     </footer>
 
+    <!-- ✅ All JS at bottom -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const btn = document.getElementById('userMenuBtn');
-            const dropdown = document.getElementById('userDropdown');
-            const triangle = btn.querySelector('.triangle');
-
-            if (btn && dropdown) {
-                btn.addEventListener('click', e => {
-                    e.stopPropagation();
-                    dropdown.classList.toggle('show');
-                    triangle.classList.toggle('rotate');
-                });
-
-                document.addEventListener('click', () => {
-                    dropdown.classList.remove('show');
-                    triangle.classList.remove('rotate');
-                });
-
-                dropdown.addEventListener('click', e => e.stopPropagation());
-            }
-        });
-
         document.addEventListener("DOMContentLoaded", () => {
-            const alerts = document.querySelectorAll('.fade-message');
-            alerts.forEach(alert => {
+            const body = document.body;
+            const themeToggle = document.getElementById("theme-toggle");
+            const userMenuBtn = document.getElementById("userMenuBtn");
+            const userDropdown = document.getElementById("userDropdown");
+            const userTriangle = userMenuBtn?.querySelector(".triangle");
+
+            const submenuBtn = document.querySelector(".submenu-btn");
+            const submenu = document.querySelector(".submenu");
+
+            // User dropdown toggle
+            if (userMenuBtn && userDropdown) {
+                userMenuBtn.addEventListener("click", e => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle("show");
+                    userTriangle?.classList.toggle("rotate");
+                });
+
+                document.addEventListener("click", () => {
+                    userDropdown.classList.remove("show");
+                    userTriangle?.classList.remove("rotate");
+                });
+
+                userDropdown.addEventListener("click", e => e.stopPropagation());
+            }
+
+            // Submenu toggle
+            if (submenuBtn && submenu) {
+                submenuBtn.addEventListener("click", e => {
+                    e.stopPropagation();
+                    submenu.classList.toggle("open");
+                });
+            }
+
+            // Theme toggle
+            if (localStorage.getItem("theme") === "dark") {
+                body.classList.add("dark-theme");
+                if (themeToggle) themeToggle.textContent = "Light Theme";
+            }
+            themeToggle?.addEventListener("click", () => {
+                body.classList.toggle("dark-theme");
+                const isDark = body.classList.contains("dark-theme");
+                themeToggle.textContent = isDark ? "Light Theme" : "Dark Theme";
+                localStorage.setItem("theme", isDark ? "dark" : "light");
+            });
+
+            // Fade out alerts
+            document.querySelectorAll('.fade-message').forEach(alert => {
                 setTimeout(() => {
                     alert.style.opacity = '0';
                     setTimeout(() => alert.style.display = 'none', 600);
                 }, 2000);
             });
         });
-
     </script>
 
     {% block extra_js %}{% endblock %}
-
 </body>
 </html>
