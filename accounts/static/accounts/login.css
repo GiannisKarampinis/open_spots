@@ -1,6 +1,6 @@
 /* Container for the entire login form area */
 .login-container {
-    background-color: #2a2a2a;        /* Dark gray background */
+    background-color: var(--surface-color);        /* Dark gray background */
     padding: 40px;        /* Padding inside the box, more at bottom */
     border-radius: 10px;                /* Rounded corners */
     box-shadow: 0 0 25px rgba(255, 255, 255, 0.12); /* Soft white glow */
@@ -17,7 +17,7 @@
     margin-bottom: 30px;                /* Space below heading */
     font-weight: 700;                   /* Bold font weight */
     font-size: 2rem;                    /* Large font size */
-    color: #eee;                      /* Light gray color */
+    color: var(--button-text);                      /* Light gray color */
 }
 
 /* Google Login Button Styling */
@@ -25,7 +25,7 @@
     display: inline-flex;               /* Inline flexbox for icon + text */
     align-items: center;                /* Vertically center contents */
     padding: 8px 15px;                  /* Inner padding */
-    background-color: #4285f4;        /* Google blue */
+    background-color: var(--primary-color);        /* Google blue */
     color: white;                     /* Text color */
     font-weight: 600;                   /* Semi-bold */
     border-radius: 5px;                 /* Rounded corners */
@@ -35,7 +35,7 @@
 
 /* Hover state for Google Login Button */
 .google-login-link:hover {
-    background-color: #357ae8;                      /* Darker blue */
+    background-color: var(--primary-hover);                      /* Darker blue */
     box-shadow: 0 0 8px rgba(53, 122, 232, 0.6);    /* Blue glow */
     text-decoration: none;                            /* Keep no underline */
 }
@@ -74,9 +74,9 @@
 
 /* Styling the "or" text inside divider */
 .divider span {
-    background: #2a2a2a;                              /* Matches container background to cover line */
+    background: var(--surface-color);                              /* Matches container background to cover line */
     padding: 0 15px;                                    /* Horizontal padding */
-    color: #888;                                      /* Gray color */
+    color: var(--background-color);                                      /* Gray color */
     font-weight: 600;                                   /* Semi-bold */
     font-size: 0.9rem;                                  /* Slightly smaller text */
     position: relative;
@@ -91,7 +91,7 @@
     left: 0;
     width: 100%;                                        /* Full width */
     height: 1px;                                        /* Thin line */
-    background: #555;                                 /* Medium gray */
+    background: var(--background-color);                                 /* Medium gray */
     z-index: 0;                                         /* Behind the text */
 }
 
@@ -100,7 +100,7 @@
     display: block;                                     /* Labels take full width */
     margin: 10px 0 6px;                                 /* Space around label */
     font-weight: 600;                                   /* Semi-bold */
-    color: #ddd;                                      /* Light gray */
+    color: var(--background-color);                                      /* Light gray */
 }
 
 /* Text and password input fields */
@@ -110,8 +110,8 @@
     padding: 12px 15px;                                 /* Padding inside inputs */
     border-radius: 6px;                                 /* Rounded corners */
     border: 1px solid #555;                           /* Dark border */
-    background-color: #3a3a3a;                        /* Dark input background */
-    color: #eee;                                      /* Light text */
+    background-color: var(--background-color);                        /* Dark input background */
+    color: var(--text-color);                                      /* Light text */
     font-size: 1rem;                                    /* Readable font size */
     transition: border-color 0.3s ease;                 /* Smooth focus effect */
 }
@@ -125,7 +125,7 @@
 
 /* Primary button styling */
 .btn.primary-btn {
-    background-color: #007bff;                          /* Bootstrap blue */
+    background-color: var(--primary-color);                          /* Bootstrap blue */
     color: white;                                       /* Button text color */
     font-weight: 700;                                     /* Bold */
     border: none;                                         /* No border */
@@ -140,7 +140,7 @@
 
 /* Hover effect for primary button */
 .btn.primary-btn:hover {
-    background-color: #0056b3;                          /* Darker blue on hover */
+    background-color: var(--primary-hover);                          /* Darker blue on hover */
 }
 
 /* Signup prompt below the form */
@@ -148,12 +148,12 @@
     margin-top: 22px;                                       /* Space above prompt */
     text-align: center;                                     /* Center text */
     font-size: 0.95rem;                                     /* Slightly smaller font */
-    color: #bbb;                                          /* Light gray */
+    color: var(--background-color);                                          /* Light gray */
 }
 
 /* Links inside signup prompt */
 .signup-prompt a {
-    color: #007bff;                                       /* Blue color for links */
+    color: var(--link-color);                                       /* Blue color for links */
     font-weight: 600;                                       /* Semi-bold */
     text-decoration: none;                                  /* No underline */
     transition: color 0.3s ease;                            /* Smooth hover color */
@@ -161,6 +161,6 @@
 
 /* Hover state for signup prompt links */
 .signup-prompt a:hover {
-    color: #0056b3;                                        /* Darker blue */
+    color: var(--link-hover);                                        /* Darker blue */
     text-decoration: underline;                              /* Underline on hover */
 }

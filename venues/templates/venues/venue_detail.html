@@ -29,7 +29,7 @@
             <p class="text-muted fs-5">{{ venue.description }}</p>
             <!-- Google Maps Link -->
             {% if venue.location %}
-                <a href="https://www.google.com/maps/search/?api=1&query={{ venue.location|urlencode }}" target="_blank" style="color: red" class="btn btn-outline-danger">
+                <a href="https://www.google.com/maps/search/?api=1&query={{ venue.location|urlencode }}" target="_blank" style="color: white" class="btn btn-outline-danger">
                     View on Google Maps
                 </a>
             {% endif %}
@@ -101,9 +101,33 @@
                 <div class="card card-body shadow">
                     <form method="post">
                         {% csrf_token %}
-                        {{ form.as_p }}
+                        <div class="mb-3">
+                            {{ form.name.label_tag }}
+                            {{ form.name }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.email.label_tag }}
+                            {{ form.email }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.phone.label_tag }}
+                            {{ form.phone }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.date.label_tag }}
+                            {{ form.date }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.time.label_tag }}
+                            {{ form.time }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.guests.label_tag }}
+                            {{ form.guests }}
+                        </div>
                         <button type="submit" class="btn btn-success w-100 mt-3">Submit Reservation</button>
                     </form>
+
                 </div>
             </div>
         </div>

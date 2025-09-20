@@ -4,7 +4,7 @@
     max-width: 600px;
     margin: 80px auto;
     padding: 40px;
-    background-color: #2a2a2a;
+    background-color: var(--surface-color);
     border-radius: 12px;
     color: #ffffff;
     text-align: center;
@@ -26,7 +26,7 @@
 .success-message a {
     display: inline-block;
     padding: 10px 20px;
-    background-color: #555;
+    background-color: var(--primary-color);
     color: #fff;
     text-decoration: none;
     border-radius: 6px;
@@ -35,7 +35,7 @@
 }
 
 .success-message a:hover {
-    background-color: #777;
+    background-color: var(--primary-hover);
 }
 
 /* Optional: smooth fade-in effect */
