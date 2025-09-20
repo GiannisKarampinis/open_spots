@@ -91,14 +91,14 @@ h1.fw-bold {
     margin-top: 1.5rem;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-    background-color: var(--card-bg-color);
+    background-color: var(--surface-color);
     overflow-x: auto;
 }
 
 .table {
     font-size: 0.95rem;
     width: 100%;
-    color: #e0e0e0;
+    color: var(--button-text);
     border-collapse: collapse;
 }
 
@@ -112,16 +112,16 @@ h1.fw-bold {
 }
 
 .table thead th {
-    background-color: var(--card-bg-color);
-    color: var(--text-color); 
+    background-color: var(--surface-color);
+    color: var(--button-text); 
     font-weight: 600;
     letter-spacing: 0.03em;
 }
 
 /* === DataTables Striping & Hover === */
-table.dataTable.stripe tbody tr.odd { background-color: #2e2e2e; }
-table.dataTable.stripe tbody tr.even { background-color: #3a3a3a; }
-table.dataTable tbody tr:hover { background-color: #444 !important; }
+table.dataTable.stripe tbody tr.odd { background-color: var(--surface-color); }
+table.dataTable.stripe tbody tr.even { background-color: var(--primary-color); }
+table.dataTable tbody tr:hover { background-color: var(--primary-hover) !important; }
 
 /* === Pagination Buttons === */
 .dataTables_wrapper .dataTables_paginate {
@@ -139,16 +139,16 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     cursor: pointer;
     border: 1px solid #555;
     border-radius: 4px;
-    background-color: #3a3a3a;
+    background-color: var(--primary-color);
     color: #f1f1f1 !important;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 .dataTables_wrapper .paginate_button:hover {
-    background-color: #555;
+    background-color: var(--primary-hover);
     color: #fff !important;
 }
 .dataTables_wrapper .paginate_button.current {
-    background-color: #4a90e2;
+    background-color: var(--primary-color);
     color: #fff !important;
     border-color: #4a90e2;
 }
@@ -162,7 +162,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     display: flex;
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;
-    background-color: #1f1f1f;
+    background-color: var(--surface-color);
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.7);
     gap: 1rem;
@@ -191,9 +191,9 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 /* Search input fields inside datatable controls */
 .datatable-controls input[type="search"],
 .datatable-controls input[type="text"] {
-    background-color: #2c2c2c;
+    background-color: var(--background-color);
     border: 1px solid #555;
-    color: #e0e0e0;
+    color: var(--text-color);
     padding: 8px 12px;
     border-radius: 6px;
     font-size: 0.95rem;
@@ -206,7 +206,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 /* On focus: highlight border and background */
 .datatable-controls input[type="search"]:focus,
 .datatable-controls input[type="text"]:focus {
-    background-color: #3a3a3a;
+    background-color: var(--button-text-hover);
     border-color: #4a90e2;
     outline: none;
     box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
@@ -216,7 +216,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 .datatable-controls select {
     background-color: var(--surface-color);
     border: 1px solid #555;
-    color: #e0e0e0;
+    color: var(--button-text);
     padding: 8px 12px;
     border-radius: 6px;
     font-size: 0.95rem;
@@ -228,13 +228,13 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 
 /* On hover and focus for dropdown */
 .datatable-controls select:hover {
-    background-color: #3a3a3a;
+    background-color: var(--surface-color);
     border-color: #777;
     cursor: pointer;
 }
 
 .datatable-controls select:focus {
-    background-color: #3a3a3a;
+    background-color: var(--primary-hover);
     border-color: #4a90e2;
     outline: none;
     box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
@@ -293,9 +293,9 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 /* === Alerts === */
 .alert-info {
     font-size: 0.95rem;
-    background-color: #334455;
+    background-color: var(--surface-color);
     border-color: #557799;
-    color: #cfdffd;
+    color: var(--button-text);
     padding: 12px 20px;
     border-radius: 6px;
     text-align: center;
@@ -305,7 +305,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 /* === Modal Card === */
 .modal-card {
     background-color: var(--surface-color);
-    color: #e0e0e0;
+    color: var(--button-text);
     border-radius: 8px;
     padding: 2rem;
     max-width: 500px;
@@ -329,7 +329,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     border-radius: 6px;
     border: 1px solid #555;
     background-color: var(--surface-color);
-    color: #e0e0e0;
+    color: var(--button-text);
     width: 100%;
 }
 .modal-card .btn-group {
@@ -341,12 +341,12 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 }
 .modal-card .btn-cancel {
     background-color: var(--surface-color);
-    color: #e0e0e0;
+    color: var(--button-text);
     border: none;
 }
 .modal-card .btn-cancel:hover {
     background-color: var(--surface-color);
-    color: #fff;
+    color: var(--button-text);
 }
 .centered-modal-wrapper {
     display: flex;
@@ -370,11 +370,11 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
     cursor: pointer;
     border-bottom: 5px solid transparent;
     transition: border-color 0.3s;
-    color: #cacaca;
+    color: var(--primary-color);
 }
 .tabs button.active {
-    border-color: #0d6efd;
-    color: #0d6efd;
+    border-color: var(--primary-hover);
+    color: var(--primary-hover);
     font-weight: 600;
 }
 
@@ -391,7 +391,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 
 .tab-content h2 {
     margin-top: 1rem;
-    color: #cacaca;
+    color: var(--button-text);
 }
 
 /* For fading/removal animation */
@@ -435,7 +435,7 @@ table.dataTable tbody tr:hover { background-color: #444 !important; }
 }
 #analytics-stats .stat-label {
     font-size: 0.95rem;
-    color: #bbb;
+    color: var(--button-text);
     margin-top: 0.4rem;
 }
 
