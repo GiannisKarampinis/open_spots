@@ -22,7 +22,7 @@
   <!-- Update arrival status buttons -->
   <td>
       {% if r.arrival_status == 'pending' or r.arrival_status == 'checked_in' or r.arrival_status == 'no_show' %}
-          {% if r.status == 'accepted' and r.arrival_status == 'pending' and r.date == today %}
+          {% if r.status == 'accepted' and r.arrival_status == 'pending' %}
             <a href="{% url 'update_arrival_status' r.id 'checked_in' %}" 
               class="btn btn-success btn-sm me-1 btn-update-arrival" 
               data-status="checked_in">✅ Checked-in

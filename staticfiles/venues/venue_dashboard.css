@@ -391,7 +391,7 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 
 .tab-content h2 {
     margin-top: 1rem;
-    color: var(--button-text);
+    color: var(--primary-hover);
 }
 
 /* For fading/removal animation */
