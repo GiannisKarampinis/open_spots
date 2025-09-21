@@ -3,10 +3,10 @@
     max-width: 800px;
     margin: 60px auto;                          /* Match login spacing */
     padding: 40px;                              /* Match login padding */
-    background-color: #2a2a2a;                  /* Dark gray background */
+    background-color: var(--surface-color);                  /* Dark gray background */
     border-radius: 10px;                        /* Match login rounded corners */
     box-shadow: 0 0 25px rgba(255, 255, 255, 0.12); /* Soft white glow */
-    color: white;                               /* White text like login */
+    color: var(--button-text);                               /* White text like login */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -26,7 +26,7 @@
     margin-bottom: 20px;                 /* Space below subtitle */
     border-bottom: 1px solid #555;       /* Thin bottom border */
     padding-bottom: 5px;                 /* Space between text and border */
-    color: #ccc;                         /* Medium dark gray color */
+    color: var(--button-text);                         /* Medium dark gray color */
 }
 
 .profile-info-row {
@@ -40,13 +40,13 @@
 /* Label on the left */
 .profile-info-label {
     font-weight: 500;                    /* Medium font weight */
-    color: #ddd;                         /* Dark gray text */
+    color: var(--button-text);                         /* Dark gray text */
     width: 150px;                        /* Fixed width for alignment */
 }
 
 /* The value text */
 .profile-info-value {
-    color: #ddd;                         /* Medium gray text */
+    color: var(--button-text);                         /* Medium gray text */
     flex-grow: 1;                        /* Allow it to grow inside flex container */
 }
 
@@ -54,7 +54,7 @@
 .profile-edit-button {
     padding: 6px 12px;                   /* Button padding */
     font-size: 0.9rem;                   /* Slightly smaller font size */
-    background-color: #4285f4;          /* Bright blue background */
+    background-color: var(--primary-color);          /* Bright blue background */
     border: none;                        /* Remove default border */
     color: white;                        /* White text */
     border-radius: 6px;                  /* Rounded corners */
@@ -64,7 +64,7 @@
 }
 
 .profile-edit-button:hover {
-    background-color: #357ae8;          /* Darker blue on hover */
+    background-color: var(--primary-hover);          /* Darker blue on hover */
 }
 
 /* Container for view mode */
@@ -104,8 +104,8 @@
     font-size: 0.95rem;                  /* Comfortable font size */
     border: 1px solid #555;            /* Light gray border */
     border-radius: 6px;                  /* Rounded corners */
-    background-color: #3a3a3a;
-    color: #eee;
+    background-color: var(--surface-color);
+    color: var(--button-text);
 }
 
 /* Save and Cancel buttons */
@@ -121,7 +121,7 @@
 /* Save button style */
 .profile-info-row form.profile-form button[type="submit"] {
     background-color: #28a745;           /* Green background for save */
-    color: white;                        /* White text */
+    color: var(--button-text);                        /* White text */
 }
 
 .profile-info-row form.profile-form button[type="submit"]:hover {
@@ -130,8 +130,8 @@
 
 /* Cancel button */
 .btn-cancel {
-    background-color: #ccc;            /* Light gray background */
-    color: #333;                       /* Darker text for contrast */
+    background-color: var(--primary-color);            /* Light gray background */
+    color: var(--button-text);                       /* Darker text for contrast */
     padding: 6px 12px;                   /* Button padding */
     border: none;                        /* Remove border */
     border-radius: 6px;                  /* Rounded corners matching save */
@@ -141,7 +141,7 @@
 }
 
 .btn-cancel:hover {
-    background-color: #bbb;            /* Slightly darker gray on hover */
+    background-color: var(--primary-hover);            /* Slightly darker gray on hover */
 }
 
 /* Reservations section */
