@@ -391,7 +391,7 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 
 .tab-content h2 {
     margin-top: 1rem;
-    color: var(--button-text);
+    color: var(--primary-hover);
 }
 
 /* For fading/removal animation */
@@ -580,6 +580,7 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
     border-radius: 8px;
     border: 1px solid #555;
     margin-bottom: 8px;
+    margin-left: auto;
 }
 
 /* Checkbox wrapper */
@@ -595,7 +596,7 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 }
 
 /* Submit button */
-#manage-venue .venue-form-card .btn-save {
+#manage-venue .venue-form-card .btn-edit-status {
     display: inline-block;
     padding: 10px 20px;
     font-size: 1rem;
@@ -608,7 +609,7 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
     box-shadow: 0 0 8px #28a745cc;
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
-#manage-venue .venue-form-card .btn-save:hover {
+#manage-venue .venue-form-card .btn-edit-status:hover {
     background-color: #3bda65;
     box-shadow: 0 0 12px #3bda65dd;
 }
