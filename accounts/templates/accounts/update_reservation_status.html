@@ -5,7 +5,7 @@
 {% block content %}
 <h2>Update Status for Reservation</h2>
 
-<p><strong>Reservation:</strong> {{ reservation.name }} at {{ reservation.venue.name }} on {{ reservation.date }} at {{ reservation.time }}</p>
+<p><strong>Reservation:</strong> {{ reservation.full_name }} at {{ reservation.venue.name }} on {{ reservation.date }} at {{ reservation.time }}</p>
 
 <form method="post">
     {% csrf_token %}

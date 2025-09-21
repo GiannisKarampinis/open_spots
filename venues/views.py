@@ -80,13 +80,12 @@ def venue_list(request):
 ###########################################################################################
 
 ###########################################################################################
-def venue_detail(request, venue_id):
-    venue = get_object_or_404(Venue, id=venue_id)
+def venue_detail(request, pk):
+    venue = get_object_or_404(Venue, pk=pk)
 
     # Log visit
     if not request.session.session_key:
         request.session.save()
-    
     VenueVisit.objects.create(
         venue=venue,
         user=request.user if request.user.is_authenticated else None,
@@ -95,18 +94,23 @@ def venue_detail(request, venue_id):
         timestamp=now()
     )
 
-    # Reservation handling
-    if request.method == 'POST':
+    # --- Description split ---
+    words = venue.description.split()
+    preview_text = " ".join(words[:20])
+    remaining_text = " ".join(words[20:]) if len(words) > 20 else ""
+
+    # --- Reservation logic ---
+    if request.method == "POST":
         if not request.user.is_authenticated:
-            messages.error(request, "Please Log in to make a reservation.")
-            return redirect('login')  # or use 'login' if that's your login URL name
+            messages.error(request, "Please log in to make a reservation.")
+            return redirect("login")
 
         form = ReservationForm(request.POST)
         if form.is_valid():
             reservation = form.save(commit=False)
             reservation.venue = venue
-            reservation.status = 'pending'
-            reservation.user = request.user if request.user.is_authenticated else None
+            reservation.status = "pending"
+            reservation.user = request.user
 
             start_time = datetime.combine(reservation.date, reservation.time)
             end_time = start_time + timedelta(hours=1)
@@ -114,24 +118,30 @@ def venue_detail(request, venue_id):
             overlapping = venue.reservations.filter(
                 date=reservation.date,
                 time__gte=(start_time - timedelta(hours=1)).time(),
-                time__lt=end_time.time()
+                time__lt=end_time.time(),
             )
             if overlapping.exists():
-                messages.error(request, 'Sorry, that time slot is already reserved.')
+                messages.error(request, "Sorry, that time slot is already reserved.")
             else:
                 reservation.save()
-                #send_reservation_emails(reservation)
-                return render(request, 'venues/reservation_pending.html', {
-                    'venue': venue,
-                    'reservation': reservation
-                })
+                return render(
+                    request,
+                    "venues/reservation_pending.html",
+                    {"venue": venue, "reservation": reservation},
+                )
     else:
         form = ReservationForm()
 
-    return render(request, 'venues/venue_detail.html', {
-        'venue': venue,
-        'form': form
-    })
+    return render(
+        request,
+        "venues/venue_detail.html",
+        {
+            "venue": venue,
+            "form": form,
+            "preview_text": preview_text,
+            "remaining_text": remaining_text,
+        },
+    )
     
 ###########################################################################################
 

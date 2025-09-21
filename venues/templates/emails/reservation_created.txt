@@ -1,0 +1,13 @@
+{{ intro }}
+
+A new reservation has been created at {{ venue }}:
+
+- Customer:     {{ reservation.full_name }}
+- Date:         {{ reservation.date }}
+- Time:         {{ reservation.time }}
+- Party Size:   {{ reservation.guests }}
+- Status:       {{ reservation.status|title }}
+
+{% if reservation_url %}
+    View the reservation here: {{ reservation_url }}
+{% endif %}

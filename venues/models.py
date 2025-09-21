@@ -87,7 +87,6 @@ class Table(models.Model):
 
 ###########################################################################################
 class Reservation(models.Model):
-    # existing fields
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('accepted', 'Accepted'),
@@ -101,22 +100,23 @@ class Reservation(models.Model):
         ('no_show', 'No-show'),
     ]
     
-    user    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
-    venue   = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='reservations')
-    name    = models.CharField(max_length=100)
-    email   = models.EmailField()
-    phone   = models.CharField(max_length=20, blank=True)  # Optional phone number
-    date    = models.DateField()
-    time    = models.TimeField()
-    guests  = models.PositiveIntegerField()
-    status  = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    arrival_status = models.CharField(max_length=20, choices=ARRIVAL_STATUS_CHOICES, default='pending')
-    table   = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    user            = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
+    venue           = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='reservations')
+    first_name      = models.CharField(max_length=100)
+    last_name       = models.CharField(max_length=100)
+    email           = models.EmailField()
+    phone           = models.CharField(max_length=20)
+    date            = models.DateField()
+    time            = models.TimeField()
+    guests          = models.PositiveIntegerField()
+    status          = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    arrival_status  = models.CharField(max_length=20, choices=ARRIVAL_STATUS_CHOICES, default='pending')
+    table           = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True)
+    updated_at      = models.DateTimeField(auto_now=True)
+    created_at      = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} - {self.date} at {self.time} ({self.venue.name})"
+        return f"{self.full_name} - {self.date} at {self.time} ({self.venue.name})"
 
 
     def is_upcoming(self):
@@ -124,20 +124,35 @@ class Reservation(models.Model):
             datetime.combine(self.date, self.time),
             timezone.get_current_timezone()
         )
+        
         return reservation_datetime >= timezone.now()
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, editor=None, **kwargs):
+        self._editor = editor  # Store editor for potential use in signals
+        
         # If status is accepted and arrival_status is not pending, reset arrival_status to pending
         if self.status == 'accepted' and self.arrival_status not in ['pending', 'checked_in', 'no_show']:
             self.arrival_status = 'pending'
+        
         super().save(*args, **kwargs)
+
+    @property
+    def editor(self):
+        """
+        Returns the user who last edited the reservation if set.
+        """
+        return getattr(self, "_editor", None)
 
     @property
     def time_display(self):
         try: 
             return self.time.strftime("%I:%M %p")
         except Exception:
-            return str(self.time) 
+            return str(self.time)
+        
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}" 
 
     class Meta:
         ordering = ['-date', 'time']
@@ -154,17 +169,17 @@ class VenueApplication(models.Model):
         ('other', 'Other'),
     ]
 
-    venue_name = models.CharField(max_length=100)
-    venue_type = models.CharField(max_length=20, choices=VENUE_TYPES, default='other')
-    location = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    capacity = models.PositiveIntegerField()
-    admin_name = models.CharField(max_length=100)
-    admin_email = models.EmailField()
-    phone = models.CharField(max_length=20, blank=True)
-    submitted_at = models.DateTimeField(auto_now_add=True)
-    reviewed = models.BooleanField(default=False)
-    accepted = models.BooleanField(null=True, blank=True)  # None = pending
+    venue_name      = models.CharField(max_length=100)
+    venue_type      = models.CharField(max_length=20, choices=VENUE_TYPES, default='other')
+    location        = models.CharField(max_length=255)
+    description     = models.TextField(blank=True)
+    capacity        = models.PositiveIntegerField()
+    admin_name      = models.CharField(max_length=100)
+    admin_email     = models.EmailField()
+    phone           = models.CharField(max_length=20, blank=True)
+    submitted_at    = models.DateTimeField(auto_now_add=True)
+    reviewed        = models.BooleanField(default=False)
+    accepted        = models.BooleanField(null=True, blank=True)  # None = pending
 
     def __str__(self):
         return f"{self.venue_name} ({self.admin_email})"
@@ -254,17 +269,17 @@ def create_admin_user_for_venue(sender, instance, created, **kwargs):
 
 ###########################################################################################
 class VenueUpdateRequest(models.Model):
-    venue           = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='update_requests')
-    submitted_by    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    venue               = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='update_requests')
+    submitted_by        = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     
-    name            = models.CharField(max_length=255)
-    kind            = models.CharField(max_length=50, choices=Venue.VENUE_TYPES)
-    location        = models.CharField(max_length=255)
-    email           = models.EmailField(null=True, blank=True)
-    phone           = models.CharField(max_length=20, blank=True, null=True)
-    description     = models.TextField(blank=True, null=True)
-    available_tables = models.PositiveIntegerField(default=0)
-    image           = models.ImageField(upload_to='venue_updates/', blank=True, null=True)
+    name                = models.CharField(max_length=255)
+    kind                = models.CharField(max_length=50, choices=Venue.VENUE_TYPES)
+    location            = models.CharField(max_length=255)
+    email               = models.EmailField(null=True, blank=True)
+    phone               = models.CharField(max_length=20, blank=True, null=True)
+    description         = models.TextField(blank=True, null=True)
+    available_tables    = models.PositiveIntegerField(default=0)
+    image               = models.ImageField(upload_to='venue_updates/', blank=True, null=True)
         
     latitude = models.CharField(max_length=50, blank=True, null=True)   # <-- ADD
     longitude = models.CharField(max_length=50, blank=True, null=True)  # <-- ADD

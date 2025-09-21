@@ -4,7 +4,7 @@ from .              import views
 urlpatterns = [
     # Venue listings and details
     path('', views.venue_list, name='venue_list'),                           # home / venue list - OK
-    path('venue/<int:venue_id>/', views.venue_detail, name='venue_detail'),  # venue detail page - OK
+    path('venue/<int:pk>/', views.venue_detail, name='venue_detail'),  # venue detail page - OK
 
     # Venue application and dashboard
     path('apply-venue/', views.apply_venue, name='apply_venue'),             # add a new venue to our app

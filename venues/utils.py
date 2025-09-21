@@ -19,39 +19,6 @@ def get_coords_nominatim(address):
         return float(result['lat']), float(result['lon'])
     return None, None
 
-
-def send_reservation_emails(reservation):
-    subject = f"Reservation Request at {reservation.venue.name}"
-    message = f"""
-    A new reservation has been made:
-
-    Name:   {reservation.name}
-    Email:  {reservation.email}
-    Date:   {reservation.date}
-    Time:   {reservation.time}
-    Guests: {reservation.guests}
-    Venue:  {reservation.venue.name}
-    """
-
-    # Send email to venue owner
-    venue_owner_email = reservation.venue.owner.email if reservation.venue.owner else settings.DEFAULT_FROM_EMAIL
-    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [venue_owner_email])
-
-    # Confirmation email to user
-    user_subject = f"Your Reservation at {reservation.venue.name}"
-    user_message = f"""
-    Hello {reservation.name},
-
-    Your reservation request has been received:
-    - Date:     {reservation.date}
-    - Time:     {reservation.time}
-    - Guests:   {reservation.guests}
-
-    The venue will confirm your reservation soon.
-    """
-    send_mail(user_subject, user_message, settings.DEFAULT_FROM_EMAIL, [reservation.email])
-
-
 def generate_time_choices():
     start   = time(hour=12, minute=0)      # use time directly
     end     = time(hour=23, minute=0)

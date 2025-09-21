@@ -1,133 +1,234 @@
-/* ---------------------------
-   Venue Detail Page Styling
-   --------------------------- */
-
-/* Hero Image */
-.container-fluid.p-0 img.img-fluid {
-    max-height: 30rem;
-    object-fit: cover;
-    width: 100%;
-    border-radius: 0;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-    transition: transform 0.3s ease;
-}
-
-.container-fluid.p-0 img.img-fluid:hover {
-    transform: scale(1.03);
-}
+/* ================== Container ================== */
 
 /* Main Content */
 .container.py-5 {
-    background-color: var(--surface-color);
-    border-radius: 10px;
-    box-shadow: 0 0 25px rgba(0, 0, 0, 0.12);
-    padding: 40px 30px;
-    color: var(--text-color);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-/* Venue Name */
-.container.py-5 h2.mb-4 {
-    font-weight: 700;
-    font-size: 2.25rem;
-    margin-bottom: 1.5rem;
-    color: var(--button-text);
+    margin:             50px auto;
+    max-width:          960px;
+    background-color:   var(--surface-color);
+    border-radius:      10px;
+    box-shadow:         0 0 25px rgba(0, 0, 0, 0.12);
+    padding:            40px 30px;
+    color:              var(--text-color);
+    font-family:        'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Venue Description */
-.container.py-5 p.text-muted.fs-5 {
-    color: var(--button-text);
-    font-size: 1.1rem;
-    line-height: 1.6;
+.venue-title {
+    color:              var(--button-text);
+    font-size:          2rem;
+    font-family:        'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Reservation Button */
+/* ================== Venue Description ================== */
+.venue-description {
+    color:              var(--button-text);
+    font-size:          1.1rem;
+    line-height:        1.6;
+    margin-bottom:      0.25rem;
+}
+
+.full-description {
+    display:    block;
+    max-height: 0;
+    opacity:    0;
+    overflow:   hidden;
+    transition: max-height 0.5s ease, opacity 0.5s ease;
+}
+.full-description.show {
+    opacity: 1;
+}
+
+
+/* ================== Venue Header ================== */
+/* Badge */
+.venue-badge img {
+    width:              400px;
+    height:             300px;
+    border-radius:      0.5rem;
+}
+
+/* Title + badge + map layout */
+.d-flex.flex-wrap.align-items-center {
+    display:            flex;
+    flex-wrap:          wrap;
+    align-items:        center;
+    justify-content:    center; /* center horizontally */
+    gap:                1rem;
+}
+
+/* Remove auto margin on title */
+.venue-title {
+    margin:             0; /* remove me-auto or any auto margins */
+    text-align:         center;
+}
+
+/* Map and Badge spacing */
+.venue-badge, .venue-map {
+    flex-shrink:        0;
+}
+
+.venue-badge .google-maps-btn {
+    position:           absolute;
+    bottom:             8px;
+    right:              8px;
+    background-color:   rgba(255, 255, 255, 0.9);
+    color:              #d33;
+    padding:            6px 8px;
+    border-radius:      50%;
+    display:            flex;
+    align-items:        center;
+    justify-content:    center;
+    font-size:          0.85rem;
+    font-weight:        600;
+    text-decoration:    none;
+    box-shadow:         0 2px 6px rgba(0,0,0,0.3);
+    transition:         transform 0.2s ease, background-color 0.2s ease;
+}
+
+.venue-badge .google-maps-btn:hover {
+    transform:          scale(1.1);
+    background-color:   rgba(255, 255, 255, 1);
+}
+
+/* Map */
+.venue-map {
+    width:              400px;
+    height:             300px;
+    border-radius:      0.5rem;
+}
+
+/* Show More link */
+#readMore {
+    color:              #f5f9ff;
+    cursor:             pointer;
+    text-decoration:    underline;
+    font-size:          0.95rem;
+}
+
+#readMore:hover {
+    color:              #084298;
+}
+
+/* ================== Reservation Form ================== */
+.card-body .mb-3 {
+    font-weight:        500;
+}
+
+.btn-success {
+    font-weight:        500;
+    font-size:          1rem;
+}
+
+/* Login link button style */
+.btn-outline-primary {
+    font-weight:        500;
+    text-align:         center;
+}
+
+/* ================== Optional Enhancements ================== */
+.venue-badge,
+.venue-title,
+.venue-map {
+    display:            flex;
+    align-items:        center;
+}
+
+/* Submit Reservation Button */
 .col-md-4.text-end > button.btn.btn-primary {
-    background-color: var(--primary-color);
-    border: none;
-    border-radius: 6px;
-    padding: 12px 25px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
-    color: var(--button-text);
+    background-color:   var(--primary-color);
+    border:             none;
+    border-radius:      6px;
+    padding:            12px 25px;
+    font-size:          1.1rem;
+    font-weight:        700;
+    cursor:             pointer;
+    transition:         background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow:         0 4px 10px rgba(0, 123, 255, 0.3);
+    color:              var(--button-text);
 }
 
 .col-md-4.text-end > button.btn.btn-primary:hover {
-    background-color: var(--primary-hover);
-    box-shadow: 0 6px 15px rgba(0, 86, 179, 0.5);
+    background-color:   var(--primary-hover);
+    box-shadow:         0 6px 15px rgba(0, 86, 179, 0.5);
 }
 
+
+
 /* Reservation Form */
+#reservationForm {
+    width:              57%;
+    margin:             auto;
+}
+
 #reservationForm.collapse {
-    margin-top: 1rem;
+    margin-top:         1rem;
 }
 
 #reservationForm .card.card-body.shadow {
-    background-color: var(--primary-color);
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    padding: 25px 20px;
-    color: var(--button-text);
+    /* background-color:   var(--primary-color); */
+    background-color: color-mix(in srgb, var(--primary-color) 60%, black);
+
+    /* filter: brightness(90%); */
+
+    /* background-color:   rgb(139, 137, 114); */
+    border-radius:      10px;
+    box-shadow:         0 0 20px rgba(0, 0, 0, 0.1);
+    padding:            25px 20px;
+    color:              var(--button-text);
 }
 
 /* Inputs */
 #reservationForm form p {
-    margin-bottom: 15px;
+    margin-bottom:      15px;
 }
 
 #reservationForm form input,
 #reservationForm form select,
 #reservationForm form textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border-radius: 6px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--input-border);
-    background-color: var(--background-color);
-    color: var(--text-color);
-    font-size: 1rem;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    outline: none;
+    width:              100%;
+    padding:            12px 15px;
+    border-radius:      6px;
+    box-shadow:         0 0 20px rgba(0, 0, 0, 0.1);
+    border:             1px solid var(--input-border);
+    background-color:   var(--background-color);
+    color:              var(--text-color);
+    font-size:          1rem;
+    transition:         border-color 0.3s ease, box-shadow 0.3s ease;
+    outline:            none;
 }
 
 #reservationForm form input:focus,
 #reservationForm form select:focus,
 #reservationForm form textarea:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 6px var(--primary-color);
+    border-color:       var(--primary-color);
+    box-shadow:         0 0 6px var(--primary-color);
 }
 
 /* Submit Button */
 #reservationForm form button.btn.btn-success {
-    background-color: var(--surface-color);
-    border: none;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 1.1rem;
-    padding: 14px;
-    width: 100%;
-    cursor: pointer;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    color: white;
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+    background-color:   var(--surface-color);
+    border:             none;
+    border-radius:      6px;
+    font-weight:        700;
+    font-size:          1.1rem;
+    padding:            14px;
+    margin-top:         15px;
+    width:              100%;
+    cursor:             pointer;
+    transition:         background-color 0.3s ease, box-shadow 0.3s ease;
+    color:              white;
 }
 
 #reservationForm form button.btn.btn-success:hover {
-    background-color: #000091;
-    box-shadow: 0 6px 18px rgba(30, 126, 52, 0.7);
+    background-color:   #000091;
 }
 
-/* Responsive */
-@media (max-width: 767.98px) {
-    .col-md-8,
-    .col-md-4 {
-        text-align: left !important;
-        margin-bottom: 1.5rem;
-    }
-
-    .col-md-4.text-end {
-        text-align: left !important;
-    }
+.full-description {
+    display: inline;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease, opacity 0.5s ease;
+}
+.full-description.show {
+    opacity: 1;
 }

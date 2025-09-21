@@ -5,133 +5,122 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'venues/venue_detail.css' %}">
-    <!-- Include Leaflet.js and CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 {% endblock %}
 
 {% block content %}
-<!-- Venue Image -->
-<div class="container-fluid p-0">
-    <img
-        src="{% if venue.image %}{{ venue.image.url }}{% else %}{% static 'images/default_venue.jpg' %}{% endif %}"
-        alt="{{ venue.name }}"
-        class="img-fluid w-100"
-        style="max-height: 30rem; object-fit: cover;"
-    >
-</div>
-
-<!-- Description and Reservation Section -->
 <div class="container py-5">
-    <div class="row">
-        <!-- Description -->
-        <div class="col-md-8">
-            <h2 class="mb-4">{{ venue.name }}</h2>
-            <p class="text-muted fs-5">{{ venue.description }}</p>
-            <!-- Google Maps Link -->
-            {% if venue.location %}
-                <a href="https://www.google.com/maps/search/?api=1&query={{ venue.location|urlencode }}" target="_blank" style="color: white" class="btn btn-outline-danger">
-                    View on Google Maps
-                </a>
-            {% endif %}
-            <!-- Initialize the map -->
-            <script>
-                document.addEventListener("DOMContentLoaded", function () {
-                    const defaultLat = 40.6401;
-                    const defaultLng = 22.9444;
-                    const hasCoords = {{ venue.latitude|yesno:"true,false" }} && {{ venue.longitude|yesno:"true,false" }};
+    <!-- Title -->
+    <div class="venue-title me-auto">
+        <h2>{{ venue.name }}</h2>
+    </div>
 
-                    const map = L.map('venue-map').setView(
-                        hasCoords ? [{{ venue.latitude }}, {{ venue.longitude }}] : [defaultLat, defaultLng],
-                        15
-                    );
-
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OpenStreetMap contributors'
-                    }).addTo(map);
-
-                    if (hasCoords) {
-                        L.marker([{{ venue.latitude }}, {{ venue.longitude }}]).addTo(map)
-                        .bindPopup("<b>{{ venue.name }}</b><br>{{ venue.location }}")
-                        .openPopup();
-                    } else {
-                        // Add an invisible marker with tooltip for "no location available"
-                        const invisibleMarker = L.circleMarker([defaultLat, defaultLng], {
-                            radius: 10,
-                            opacity: 0,
-                            fillOpacity: 0,
-                        }).addTo(map);
-
-                        invisibleMarker.bindTooltip("No Location available", {
-                            permanent: false,
-                            direction: 'top',
-                            opacity: 0.8,
-                            className: 'leaflet-tooltip-no-location'
-                        });
-
-                        // Show tooltip on mouseover, hide on mouseout
-                        invisibleMarker.on('mouseover', function(e) {
-                            this.openTooltip();
-                        });
-                        invisibleMarker.on('mouseout', function(e) {
-                            this.closeTooltip();
-                        });
-                    }
-                });
-            </script>
+    <!-- Title + Badge + Map Horizontal Layout -->
+    <div class="d-flex flex-wrap align-items-center mb-4">
+        
+        <!-- Badge -->
+        <div class="venue-badge me-3 position-relative">
+            <img src="{% if venue.image %}{{ venue.image.url }}{% else %}{% static 'images/default_venue.jpg' %}{% endif %}" 
+                 alt="{{ venue.name }}" class="img-fluid rounded-circle">
         </div>
 
-        <!-- Add map container -->
-        <div id="venue-map" style="height: 300px;" class="my-4 rounded shadow"></div>
-
-        <!-- Reservation Dropdown -->
-        <div class="col-md-4 text-end">
-            {% if user.is_authenticated %}
-                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#reservationForm" aria-expanded="false" aria-controls="reservationForm">
-                    Make Reservation
-                </button>
-            {% else %}
-                <!-- Show login prompt with ?next -->
-                <a class="btn btn-outline-primary" href="{% url 'account_login' %}?next={{ request.path }}" style="color: red">
-                    Log in to make a reservation
+        <!-- Map -->
+        {% if venue.location %}
+            <div id="venue-map" class="venue-map rounded shadow"></div>
+                <a href="https://www.google.com/maps/search/?api=1&query={{ venue.location|urlencode }}" target="_blank" style="color: white" class="google-maps-btn">
+                    View on Google Maps 
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-icon lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
                 </a>
-            {% endif %}
+        {% endif %}
+    </div>
 
+    <!-- Truncated Description -->
+    <p class="venue-description text-muted">
+        {{ preview_text }}
+        {% if remaining_text %}
+            <span id="remainingText" class="full-description">
+                {{ remaining_text }}
+            </span>
+            <a href="#" id="readMore">Show More</a>
+        {% endif %}
+    </p>
 
-            <div class="collapse mt-3" id="reservationForm">
-                <div class="card card-body shadow">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            {{ form.name.label_tag }}
-                            {{ form.name }}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.email.label_tag }}
-                            {{ form.email }}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.phone.label_tag }}
-                            {{ form.phone }}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.date.label_tag }}
-                            {{ form.date }}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.time.label_tag }}
-                            {{ form.time }}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.guests.label_tag }}
-                            {{ form.guests }}
-                        </div>
-                        <button type="submit" class="btn btn-success w-100 mt-3">Submit Reservation</button>
-                    </form>
+    <!-- Reservation Form -->
+    <div class="mt-4" id="reservationForm">
+        <div class="card card-body shadow">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">{{ form.first_name.label_tag }} {{ form.first_name }}</div>
+                <div class="mb-3">{{ form.last_name.label_tag }} {{ form.last_name }}</div>
+                <div class="mb-3">{{ form.email.label_tag }} {{ form.email }}</div>
+                <div class="mb-3">{{ form.phone.label_tag }} {{ form.phone }}</div>
+                <div class="mb-3">{{ form.date.label_tag }} {{ form.date }}</div>
+                <div class="mb-3">{{ form.time.label_tag }} {{ form.time }}</div>
+                <div class="mb-3">{{ form.guests.label_tag }} {{ form.guests }}</div>
 
-                </div>
-            </div>
+                {% if user.is_authenticated %}
+                    <button type="submit" class="btn btn-success w-100 mt-3">Submit Reservation</button>
+                {% else %}
+                    <a class="btn btn-outline-primary w-100 mt-3" href="{% url 'account_login' %}?next={{ request.path }}" style="color: red">
+                        Log in to make a reservation
+                    </a>
+                {% endif %}
+            </form>
         </div>
     </div>
+
 </div>
+
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // --- Map initialization ---
+    const defaultLat = 40.6401;
+    const defaultLng = 22.9444;
+    const venueLat = {{ venue.latitude|default:"null" }};
+    const venueLng = {{ venue.longitude|default:"null" }};
+    const hasCoords = venueLat !== null && venueLng !== null;
+
+    const map = L.map('venue-map', { scrollWheelZoom: false }).setView(
+        hasCoords ? [venueLat, venueLng] : [defaultLat, defaultLng],
+        15
+    );
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    if (hasCoords) {
+        L.marker([venueLat, venueLng]).addTo(map)
+            .bindPopup("<b>{{ venue.name|escapejs }}</b><br>{{ venue.location|escapejs }}")
+            .openPopup();
+    }
+});
+document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("readMore");
+    if (btn) {
+        const remaining = document.getElementById("remainingText");
+
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+
+            if (remaining.classList.contains("show")) {
+                // --- Collapse ---
+                remaining.style.maxHeight = "0px";
+                remaining.style.opacity = "0";
+                remaining.classList.remove("show");
+                btn.textContent = "Show More";
+            } else {
+                // --- Expand ---
+                remaining.style.maxHeight = remaining.scrollHeight + "px";
+                remaining.style.opacity = "1";
+                remaining.classList.add("show");
+                btn.textContent = "Show Less";
+            }
+        });
+    }
+});
+
+</script>
+
 {% endblock %}

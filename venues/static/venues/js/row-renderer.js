@@ -1,4 +1,6 @@
 function escapeHtml(s) {
+// escapes special HTML characters in a string so that it can be safely 
+// inserted into HTML without being interpreted as code.
     if (s === null || s === undefined) return '';
     return String(s)
         .replace(/&/g, '&amp;')
@@ -9,15 +11,21 @@ function escapeHtml(s) {
 }
 
 function capitalize(s) {
+// returns the input string with its first letter in uppercase (or an empty string if the input is invalid).
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 }
 
 function formatDateDisplay(isoDateStr) {
     if (!isoDateStr) return '';
+
     const parts = isoDateStr.split('T')[0];
+
     const [y, m, d] = parts.split('-').map(Number);
+    
     if (!y || !m || !d) return isoDateStr;
+    
     const dt = new Date(Date.UTC(y, m - 1, d));
+    
     try {
         return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(dt);
     } catch {
@@ -27,10 +35,15 @@ function formatDateDisplay(isoDateStr) {
 
 function formatTimeDisplay(timeStr) {
     if (!timeStr) return '';
+    
     const hhmm = timeStr.split(':').slice(0,2).join(':');
+    
     const [hh, mm] = hhmm.split(':').map(Number);
+    
     if (Number.isNaN(hh) || Number.isNaN(mm)) return timeStr;
+    
     const dt = new Date(Date.UTC(1970,0,1, hh, mm));
+    
     try {
         return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: 'numeric', hour12: true }).format(dt);
     } catch {
@@ -43,14 +56,14 @@ function formatTimeDisplay(timeStr) {
 function renderRowFromData(data) {
     if (!data || !data.id) return '';
 
-    const id        = data.id;
-    const customer  = data.customer_name || (data.customer && data.customer.name) || data.customer || '—';
-    const dateISO   = data.date || data.reservation_date || '';
-    const timeRaw   = data.time || data.reservation_time || '';
-    const party     = (data.guests !== undefined && data.guests !== null) ? data.guests : '';
-    const status    = (data.status || data.reservation_status || '').toLowerCase();
-    const arrivalStatusRaw = (data.arrival_status || '').toLowerCase();
-    const isArrival = !!data.is_arrival || ['checked_in','no_show'].includes(status) || status === 'accepted';
+    const id                = data.id;
+    const customer          = data.customer_name || (data.customer && data.customer.name) || data.customer || '—';
+    const dateISO           = data.date || '';
+    const timeRaw           = data.time || '';
+    const party             = (data.guests !== undefined && data.guests !== null) ? data.guests : '';
+    const status            = (data.status || data.reservation_status || '').toLowerCase();
+    const arrivalStatusRaw  = (data.arrival_status || '').toLowerCase();
+    const isArrival         = !!data.is_arrival || ['checked_in','no_show'].includes(status) || status === 'accepted';
 
     const dateDisplay = formatDateDisplay(dateISO);
     const timeDisplay = formatTimeDisplay(timeRaw);

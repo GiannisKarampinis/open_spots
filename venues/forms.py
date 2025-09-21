@@ -9,7 +9,7 @@ class ReservationForm(forms.ModelForm):
     # Meta class defines metadata for the form
     class Meta:
         model = Reservation  # The form is based on the Reservation model
-        fields = ['name', 'email', 'phone', 'date', 'time', 'guests']  # Fields to include in the form
+        fields = ['first_name', 'last_name', 'email', 'phone', 'date', 'time', 'guests']  # Fields to include in the form
 
         # Customize the input widgets for specific fields
         widgets = {
@@ -28,6 +28,18 @@ class ReservationForm(forms.ModelForm):
                 }
             ),
         }
+        class Meta:
+            model = Reservation
+            fields = ['first_name', 'last_name', 'email', 'phone', 'date', 'time', 'guests']
+            widgets = {
+                'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+                'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+                'email': forms.EmailInput(attrs={'class': 'form-control'}),
+                'phone': forms.TextInput(attrs={'class': 'form-control'}),
+                'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+                'time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+                'guests': forms.NumberInput(attrs={'class': 'form-control'}),
+            }
 
     # Override the 'time' field to use a dropdown select input with predefined time choices
     time = forms.ChoiceField(

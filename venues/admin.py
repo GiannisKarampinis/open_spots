@@ -87,10 +87,10 @@ class TableAdmin(admin.ModelAdmin):
 
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
-    list_display = ('venue', 'name', 'email', 'date', 'time', 'guests', 'status', 'table')
-    list_filter = ('venue', 'status', 'date')
-    search_fields = ('name', 'email', 'venue__name')
-    ordering = ('-date', 'time')
+    list_display    = ('venue', 'first_name', 'last_name', 'email', 'date', 'time', 'guests', 'status', 'table')
+    list_filter     = ('venue', 'status', 'date')
+    search_fields   = ('first_name', 'last_name', 'email', 'venue__name')
+    ordering        = ('-date', 'time')
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -116,6 +116,12 @@ class ReservationAdmin(admin.ModelAdmin):
         if request.user.is_superuser or request.user.user_type == 'venue_admin':
             return perms
         return {}
+    
+    def save_model(self, request, obj, form, change):
+        """
+        Override to pass the editor (request.user) to Reservation.save()
+        """
+        obj.save(editor=request.user)
 
 
 @admin.register(VenueApplication)

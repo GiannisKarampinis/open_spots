@@ -5,14 +5,14 @@ from django.urls                    import reverse
 from django.conf                    import settings
 from django.core.mail               import EmailMultiAlternatives
 from django.template.loader         import render_to_string
-
 from .models                        import Reservation
-from .utils                         import send_reservation_emails
 from .notifications                 import notify_venue_admin
-from accounts.middleware            import get_current_user
 
 import threading # For production consider using Celery or Django Queued Tasks
 
+###########################################################################################
+
+###########################################################################################
 def send_async_email(email):
     """
     Run email.send() in a background thread so it doesn't block the request.
@@ -26,10 +26,99 @@ def send_async_email(email):
 
     threading.Thread(target=_send, daemon=True).start()
 
+###########################################################################################
 
-# --- Track old values before saving ---
+###########################################################################################
+def send_reservation_email(instance, changes_list=None, editor=None, created=False):
+    """
+    Send emails for reservations:
+      - created == True → new reservation notification to venue admin
+      - changes_list + editor → update or cancellation notifications
+    """
+
+    user            = instance.user
+    venue_admin     = instance.venue.owner
+
+    if created:
+        # NOTE: New Reservation --> send to venue admin
+        reservation_url     = settings.SITE_URL + '/dashboard/' + str(instance.venue.id) + '/'
+        subject             = f"Reservation Request at {instance.venue.name}"
+        recipient           = venue_admin.email
+        context             = {
+            "title":            "New Reservation Request",
+            "intro":            f"A new reservation has been made by {user.username} profile for {instance.full_name} ({instance.email}).",
+            "venue":            instance.venue.name,
+            "reservation":      instance,
+            "reservation_url":  reservation_url,
+        }
+        html_content        = render_to_string("emails/reservation_created.html",  context)
+        text_content        = render_to_string("emails/reservation_created.txt",   context)
+
+
+    elif instance.status == "cancelled":
+        # NOTE: Customer cancelled reservation --> notify venue admin
+        subject             = f"Reservation Cancelled at {instance.venue.name}"
+        recipient           = venue_admin.email
+        context             = {
+            "title":        "Reservation Cancelled",
+            "intro":        f"The reservation from {instance.full_name} ({instance.email}) made by {user.username} has been cancelled.",
+            "venue":        instance.venue.name,
+            "changes":      changes_list,
+            "reservation":  instance,
+        }
+        html_content        = render_to_string("emails/reservation_cancelled.html",    context)
+        text_content        = render_to_string("emails/reservation_cancelled.txt",     context)
+
+
+    elif editor == user:
+        # NOTE: Customer updated reservation --> notify venue admin
+        reservation_url     = settings.SITE_URL + '/dashboard/' + str(instance.venue.id) + '/'
+        subject             = f"Reservation Update for {instance.venue.name}"
+        recipient           = venue_admin.email
+        context             = {
+            "title":            "A reservation has been updated",
+            "intro":            f"The reservation from {instance.full_name} ({instance.email}) made by {user.username} has been updated:",
+            "venue":            instance.venue.name,
+            "changes":          changes_list,
+            "reservation_url":  reservation_url,
+            "reservation":      instance,
+        }
+        html_content        = render_to_string("emails/reservation_update.html",    context)
+        text_content        = render_to_string("emails/reservation_update.txt",     context)
+
+
+    elif editor == venue_admin:
+        # Venue admin updated reservation → notify customer
+        reservation_url     = settings.SITE_URL + reverse("my_reservations")
+        subject             = f"Your Reservation at {instance.venue.name} Has Been Updated"
+        recipient           = user.email
+        context             = {
+            "title":            "Your reservation has been updated",
+            "intro":            f"Your reservation at {instance.venue.name} has been updated:",
+            "venue":            instance.venue.name,
+            "changes":          changes_list,
+            "reservation_url":  reservation_url,
+            "reservation":      instance,
+        }
+        html_content        = render_to_string("emails/reservation_update.html",   context)
+        text_content        = render_to_string("emails/reservation_update.txt",    context)
+        
+        
+    else:
+        # Unknown editor --> skip sending
+        return
+
+    email = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [recipient])
+    email.attach_alternative(html_content, "text/html")
+    send_async_email(email)  # Assumes you have an async email sender
+
+###########################################################################################
+
+###########################################################################################
 @receiver(pre_save, sender=Reservation)
 def detect_reservation_changes(sender, instance, **kwargs):
+    # --- Track old values before saving ---
+
     if not instance.pk:
         instance._old_values = None
         return
@@ -37,32 +126,21 @@ def detect_reservation_changes(sender, instance, **kwargs):
     try:
         old_instance = Reservation.objects.get(pk=instance.pk)
         instance._old_values = {
-            'date': old_instance.date,
-            'time': old_instance.time,
-            'guests': old_instance.guests,
-            'status': old_instance.status,
-            'arrival_status': old_instance.arrival_status,
+            'date':             old_instance.date,
+            'time':             old_instance.time,
+            'guests':           old_instance.guests,
+            'status':           old_instance.status,
+            'arrival_status':   old_instance.arrival_status,
         }
     except Reservation.DoesNotExist:
         instance._old_values = None
 
+###########################################################################################
 
-# --- Handle post-save: send emails + live notifications ---
-@receiver(post_save, sender=Reservation)
-def reservation_created_or_updated(sender, instance: Reservation, created, **kwargs):
-    """
-    Trigger both email notifications and WebSocket notifications
-    when a Reservation is created or updated.
-    """
-
-    current_user    = get_current_user()
-    user            = instance.user
-    venue_admin     = instance.venue.owner
-
-    # ✅ Always send WebSocket notification
-    venue_id        = instance.venue_id
-    
-    reservation_data = {
+###########################################################################################
+def build_reservation_payload(instance):
+    # --- Build payload for WebSocket notification ---
+    return {
         "id":             instance.id,
         "customer_name":  instance.user.username,
         "date":           instance.date.strftime("%Y-%m-%d") if instance.date else None,
@@ -81,6 +159,33 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
                        if hasattr(instance, 'updated_at') and instance.updated_at
                        else timezone.now().isoformat()),
     }
+
+###########################################################################################
+
+###########################################################################################
+def get_instance_changes(instance):
+    old_values = getattr(instance, "_old_values", None)
+    if not old_values:
+        return []
+
+    return [
+        {"field": field.replace("_", " ").title(), "old": old, "new": getattr(instance, field)}
+        for field, old in old_values.items()
+        if old != getattr(instance, field)
+    ]
+
+###########################################################################################
+
+###########################################################################################
+@receiver(post_save, sender=Reservation)
+def reservation_created_or_updated(sender, instance: Reservation, created, **kwargs):
+    # --- Handle post-save: send emails + live notifications ---
+    """
+    Trigger both email notifications and WebSocket notifications
+    when a Reservation is created or updated.
+    """
+
+    venue_id        = instance.venue_id
     
     if created:
         event_name = "reservation.created"
@@ -91,6 +196,7 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
     else:
         event_name = "reservation.updated"
     
+    reservation_data = build_reservation_payload(instance)
     payload = { "event":        event_name, 
                 "reservation":  reservation_data }
     
@@ -98,77 +204,16 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
     # FIXME: Optional: for high-volume updates, consider a message queue for WebSocket pushes (like Redis pub/sub)
     
     if created:
-        send_reservation_emails(instance)
+        send_reservation_email(instance, created=True)
         return
 
-    old_values = getattr(instance, "_old_values", None)
-    if not old_values:
-        return
-
-    changes = {
-        field: (old_val, getattr(instance, field))
-        for field, old_val in old_values.items()
-        if old_val != getattr(instance, field)
-    }
-    if not changes:
-        return
-
-    changes_list = [
-        { 
-          "field":  field.replace("_", " ").title(), 
-          "old":    old, 
-          "new":    new 
-        }
-        for field, (old, new) in changes.items()
-    ]
+    changes_list = get_instance_changes(instance)
+    if not changes_list:
+        return  # No changes detected, skip email
     
-    if instance.status == "cancelled":
-        subject = f"Reservation Cancelled at {instance.venue.name}"
-        recipient = venue_admin.email
-        context = {
-            "title": "Reservation Cancelled",
-            "intro": f"The reservation from {instance.name} ({user.email}) has been cancelled.",
-            "venue": instance.venue.name,
-            "changes": changes_list,
-        }
-        
-        html_content = render_to_string("emails/reservation_cancelled.html", context)
-        text_content = render_to_string("emails/reservation_cancelled.txt", context)
-        
-    elif current_user == user:
-        # Customer updated reservation → notify venue admin
-        reservation_url = settings.SITE_URL + '/dashboard/' + str(instance.venue.id) + '/'
-        subject = f"Reservation Update for {instance.venue.name}"
-        recipient = venue_admin.email
-        context = {
-            "title": "A reservation has been updated",
-            "intro": f"The reservation from {instance.name} ({user.email}) has been updated:",
-            "venue": instance.venue.name,
-            "changes": changes_list,
-            "reservation_url": reservation_url,
-        }
-        
-        html_content = render_to_string("emails/reservation_update.html", context)
-        text_content = render_to_string("emails/reservation_update.txt", context)
+    editor = getattr(instance, "_editor", None)
+    send_reservation_email(instance, changes_list=changes_list, editor=editor)
+    
+###########################################################################################
 
-    elif current_user == venue_admin:
-        # Venue admin updated reservation → notify customer
-        reservation_url = settings.SITE_URL + reverse("my_reservations")
-        subject = f"Your Reservation at {instance.venue.name} Has Been Updated"
-        recipient = user.email
-        context = {
-            "title": "Your reservation has been updated",
-            "intro": f"Your reservation at {instance.venue.name} has been updated:",
-            "venue": instance.venue.name,
-            "changes": changes_list,
-            "reservation_url": reservation_url,
-        }
-        
-        html_content = render_to_string("emails/reservation_update.html", context)
-        text_content = render_to_string("emails/reservation_update.txt", context)
-    else:
-        return  # Neither user nor venue admin changed → skip (Unknown editor)
-
-    email = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [recipient])
-    email.attach_alternative(html_content, "text/html")
-    send_async_email(email)   # 🚀 now runs in background
+###########################################################################################
