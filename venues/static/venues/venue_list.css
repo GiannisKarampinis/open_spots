@@ -14,7 +14,7 @@
     border-top: 1px solid #333;
     border-bottom: 1px solid #333;
     border-radius: 10px;
-    background-color: var(--card-bg-color);
+    background-color: #004b96;
     width: 100%;
     margin: 0 auto;
 }
@@ -168,7 +168,7 @@
     color: var(--text-color);
     margin: 1.5rem 0 0.75rem 0;
     padding-left: 0.5rem;
-    border-left: 4px solid var(--primary-color);
+    border-left: 4px solid var(--card-bg-color);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     user-select: none;
