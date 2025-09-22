@@ -184,8 +184,8 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 .datatable-controls #upcoming-search-wrapper input,
 .datatable-controls #special-search-wrapper input,
 .datatable-controls #history-search-wrapper input {
-    margin-right: 1rem;
-    width: 85%;
+    margin-left: 1rem;
+    width: 90%;
 }
 
 /* Search input fields inside datatable controls */
