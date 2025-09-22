@@ -78,6 +78,7 @@ function renderRowFromData(data) {
     else if     (displayStatus === 'checked_in')    badgeClasses += 'bg-success';
     else if     (displayStatus === 'no_show')       badgeClasses += 'bg-danger';
     else if     (displayStatus === 'cancelled')     badgeClasses += 'bg-secondary';
+    else if     (displayStatus === 'rejected')      badgeClasses += 'bg-danger';
     else badgeClasses += 'bg-danger';
 
     const statusLabel = (displayStatus || 'unknown').replace('_',' ');

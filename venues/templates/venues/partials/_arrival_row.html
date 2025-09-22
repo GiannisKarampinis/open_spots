@@ -11,11 +11,21 @@
   <td>{{ r.guests }}</td>
   
   <td>
-    <span class="badge 
-      {% if     r.arrival_status == 'pending' %}    bg-warning text-dark
-      {% elif   r.arrival_status == 'checked_in' %} bg-success
-      {% else %}bg-danger{% endif %}">
-      {{ r.arrival_status|capfirst }}
+    <span class="badge
+      {% if r.status == 'rejected' %}
+          bg-danger
+      {% elif r.arrival_status == 'pending' %}
+          bg-warning text-dark
+      {% elif r.arrival_status == 'checked_in' %}
+          bg-success
+      {% else %}
+          bg-danger
+      {% endif %}">
+      {% if r.status == 'rejected' %}
+          Rejected
+      {% else %}
+          {{ r.arrival_status|capfirst }}
+      {% endif %}
     </span>
   </td>
 

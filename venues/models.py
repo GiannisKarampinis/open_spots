@@ -88,16 +88,16 @@ class Table(models.Model):
 ###########################################################################################
 class Reservation(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('accepted', 'Accepted'),
-        ('rejected', 'Rejected'),
-        ('cancelled', 'Cancelled'),
+        ('pending',     'Pending'),
+        ('accepted',    'Accepted'),
+        ('rejected',    'Rejected'),
+        ('cancelled',   'Cancelled'),
     ]
     
     ARRIVAL_STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('checked_in', 'Checked-in'),
-        ('no_show', 'No-show'),
+        ('pending',     'Pending'),
+        ('checked_in',  'Checked-in'),
+        ('no_show',     'No-show'),
     ]
     
     user            = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
@@ -155,7 +155,7 @@ class Reservation(models.Model):
         return f"{self.first_name} {self.last_name}" 
 
     class Meta:
-        ordering = ['-date', 'time']
+        ordering = ['-updated_at', '-created_at', 'time']
 
 ###########################################################################################
 
