@@ -310,4 +310,95 @@ ul.errorlist {
     transition: transform 0.3s ease;
 }
 
-.submenu.open .submenu-btn .triangle { transform: rotate(90deg); }
+.submenu.open .submenu-btn .triangle { transform: rotate(180deg); }
+
+/* ==========================
+   Switch Toggle
+   ========================== */
+
+/* The switch container */
+/* Theme toggle row */
+.theme-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  white-space: nowrap;       /* keep label + switch on one line */
+  font-size: 14px;
+}
+
+/* Label on the left */
+.theme-label {
+  color: var(--button-text);
+  line-height: 1;
+}
+
+/* Switch container: push to right with margin-left:auto */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  margin: 0;
+  /* This pushes the switch to the far right inside the flex container */
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+/* Hide the native checkbox but keep it accessible */
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Slider (the visible track) */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #cfcfcf;
+  transition: background-color .25s ease, box-shadow .15s ease;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* The knob */
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #fff;
+  transition: transform .25s ease, box-shadow .15s ease;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+/* Checked state: use your primary color */
+.switch input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+/* Focus ring for accessibility */
+.switch input:focus + .slider {
+  box-shadow: 0 0 0 3px rgba(74,144,226,0.18);
+}
+
+/* Make the slider rounded variant (keeps compatibility) */
+.slider.round { border-radius: 999px; }
+
+/* Small adjustments for small screens / dropdowns */
+@media (max-width: 420px) {
+  .theme-toggle-container { gap: 8px; padding: 6px; }
+  .switch { width: 40px; height: 22px; }
+  .slider::before { height: 16px; width: 16px; left: 3px; bottom: 3px; }
+  .switch input:checked + .slider::before { transform: translateX(18px); }
+}

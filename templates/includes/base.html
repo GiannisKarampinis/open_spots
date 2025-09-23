@@ -37,7 +37,15 @@
                                 Settings <span class="triangle">&#x25BC;</span>
                             </button>
                             <div class="submenu-content">
-                                <button id="theme-toggle" class="submenu-item" type="button">Dark Theme</button>
+                                <div class="theme-toggle-container">
+                                    <span class="theme-label">Dark Mode</span>
+
+                                    <!-- styled switch; checkbox has id so JS can find it -->
+                                    <label class="switch" aria-label="Toggle dark mode">
+                                    <input type="checkbox" id="theme-toggle" aria-checked="false" />
+                                    <span class="slider round" role="switch" aria-hidden="true"></span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
@@ -76,7 +84,6 @@
             const userMenuBtn = document.getElementById("userMenuBtn");
             const userDropdown = document.getElementById("userDropdown");
             const userTriangle = userMenuBtn?.querySelector(".triangle");
-
             const submenuBtn = document.querySelector(".submenu-btn");
             const submenu = document.querySelector(".submenu");
 
@@ -107,13 +114,12 @@
             // Theme toggle
             if (localStorage.getItem("theme") === "dark") {
                 body.classList.add("dark-theme");
-                if (themeToggle) themeToggle.textContent = "Light Theme";
+                if (themeToggle) themeToggle.checked = true;
             }
-            themeToggle?.addEventListener("click", () => {
-                body.classList.toggle("dark-theme");
-                const isDark = body.classList.contains("dark-theme");
-                themeToggle.textContent = isDark ? "Light Theme" : "Dark Theme";
-                localStorage.setItem("theme", isDark ? "dark" : "light");
+
+            themeToggle?.addEventListener("change", () => {
+                body.classList.toggle("dark-theme", themeToggle.checked);
+                localStorage.setItem("theme", themeToggle.checked ? "dark" : "light");
             });
 
             // Fade out alerts
