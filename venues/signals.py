@@ -39,6 +39,8 @@ def send_reservation_email(instance, changes_list=None, editor=None, created=Fal
     user            = instance.user
     venue_admin     = instance.venue.owner
 
+    print(editor, user, venue_admin )
+
     if created:
         # NOTE: New Reservation --> send to venue admin
         reservation_url     = settings.SITE_URL + '/dashboard/' + str(instance.venue.id) + '/'
@@ -88,6 +90,7 @@ def send_reservation_email(instance, changes_list=None, editor=None, created=Fal
 
 
     elif editor == venue_admin:
+        print("BHKE")
         # Venue admin updated reservation → notify customer
         reservation_url     = settings.SITE_URL + reverse("my_reservations")
         subject             = f"Your Reservation at {instance.venue.name} Has Been Updated"
@@ -204,7 +207,8 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
     # FIXME: Optional: for high-volume updates, consider a message queue for WebSocket pushes (like Redis pub/sub)
     
     if created:
-        send_reservation_email(instance, created=True)
+        editor = getattr(instance, "_editor", None)
+        send_reservation_email(instance, created=True, editor=editor)
         return
 
     changes_list = get_instance_changes(instance)

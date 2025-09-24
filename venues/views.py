@@ -370,7 +370,7 @@ def toggle_venue_full(request, venue_id):
         raise PermissionDenied
 
     venue.is_full = not venue.is_full
-    venue.save(update_fields=['is_full'])
+    venue.save(editor=request.user, update_fields=['is_full'])
 
     return redirect('venue_dashboard', venue_id=venue.id)
 
@@ -390,7 +390,7 @@ def update_reservation_status(request, reservation_id, status):
     with transaction.atomic():
         if reservation.status != status:
             reservation.status = status
-            reservation.save(update_fields=['status'])
+            reservation.save(editor=request.user, update_fields=['status'])
 
     reservation_data = {
         "id": reservation.id,
@@ -448,7 +448,7 @@ def cancel_reservation(request, reservation_id):
     reservation = get_object_or_404(Reservation, id=reservation_id, user=request.user)
     if request.method == 'POST':
         reservation.status = 'cancelled'
-        reservation.save()
+        reservation.save(editor=request.user)
         messages.success(request, 'Reservation cancelled.')
         return redirect('my_reservations')
     return render(request, 'venues/confirm_cancel.html', {'reservation': reservation})
@@ -533,7 +533,7 @@ def edit_reservation_status(request, reservation_id):
                 reservation.status = 'pending'
                 reservation.arrival_status = 'pending'
 
-            reservation.save()
+            reservation.save(editor=request.user)
             messages.success(request, "Reservation status updated successfully.")
             return redirect('venue_dashboard', venue_id=reservation.venue.id)
     else:
@@ -558,7 +558,7 @@ def edit_reservation(request, pk):
             form.save()
             reservation.status = 'pending'  # Reset status to pending on edit
             reservation.arrival_status = 'pending'  # Reset arrival status as well
-            reservation.save()
+            reservation.save(editor=request.user)
             messages.success(request, "Reservation updated successfully and is now pending approval.")
             return redirect('my_reservations')
     else:
@@ -632,7 +632,7 @@ def move_reservation_to_requests_ajax(request, reservation_id):
         if reservation.status != 'pending' or reservation.arrival_status != 'pending':
             reservation.status = 'pending'
             reservation.arrival_status = 'pending'
-            reservation.save(update_fields=['status', 'arrival_status'])
+            reservation.save(editor=request.user, update_fields=['status', 'arrival_status'])
             moved = True
 
     # Build a compact reservation dict for the frontend
@@ -680,7 +680,7 @@ def update_arrival_status(request, reservation_id, arrival_status):
 
     with transaction.atomic():
         reservation.arrival_status = arrival_status
-        reservation.save(update_fields=['arrival_status'])
+        reservation.save(editor=request.user, update_fields=['arrival_status'])
 
     reservation_data = {
         "id": reservation.id,

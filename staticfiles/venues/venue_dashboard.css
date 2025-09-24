@@ -88,7 +88,6 @@ h1.fw-bold {
 
 /* === Tables === */
 .table-responsive {
-    margin-top: 1.5rem;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.7);
     background-color: var(--surface-color);
@@ -717,4 +716,13 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
     line-height: 1;
     min-width: 16px;
     text-align: center;
+}
+
+input,
+select,
+textarea,
+button {
+    font-family: inherit;  /* ✅ matches body font */
+    font-size: inherit;
+    color: inherit;
 }
