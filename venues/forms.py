@@ -8,39 +8,33 @@ import datetime
 class ReservationForm(forms.ModelForm):
     # Meta class defines metadata for the form
     class Meta:
-        model = Reservation  # The form is based on the Reservation model
-        fields = ['first_name', 'last_name', 'email', 'phone', 'date', 'time', 'guests']  # Fields to include in the form
-
-        # Customize the input widgets for specific fields
+        model = Reservation
+        fields = [
+            'first_name', 'last_name', 'email', 'phone', 'date', 'time',
+            'guests', 'special_requests', 'allergies', 'comments'
+        ]
         widgets = {
-            'date': forms.DateInput(
-                attrs={
-                    'type': 'date',  # HTML5 input type for date picker
-                    'min': now().date().isoformat()  # Restrict date to today or later
-                }
-            ),
-            'time': forms.TimeInput(
-                attrs={
-                    'type': 'time',     # HTML5 input type for time picker
-                    'step': '900',      # 15-minute intervals (900 seconds)
-                    'min': '06:00',     # Earliest selectable time
-                    'max': '04:00'      # Latest selectable time (note: this may need clarification for post-midnight logic)
-                }
-            ),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'min': now().date().isoformat()
+            }),
+            'time': forms.TimeInput(attrs={
+                'class': 'form-control',
+                'type': 'time',
+                'step': '900',
+                'min': '06:00',
+                'max': '04:00'
+            }),
+            'guests': forms.NumberInput(attrs={'class': 'form-control'}),
+            'special_requests': forms.Select(attrs={'class': 'form-control'}),
+            'allergies': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
-        class Meta:
-            model = Reservation
-            fields = ['first_name', 'last_name', 'email', 'phone', 'date', 'time', 'guests']
-            widgets = {
-                'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-                'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-                'email': forms.EmailInput(attrs={'class': 'form-control'}),
-                'phone': forms.TextInput(attrs={'class': 'form-control'}),
-                'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-                'time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
-                'guests': forms.NumberInput(attrs={'class': 'form-control'}),
-            }
-
     # Override the 'time' field to use a dropdown select input with predefined time choices
     time = forms.ChoiceField(
         choices=generate_time_choices(),     # Generates a list of time choices (e.g., every 15 minutes)

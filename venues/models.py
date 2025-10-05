@@ -99,6 +99,15 @@ class Reservation(models.Model):
         ('checked_in',  'Checked-in'),
         ('no_show',     'No-show'),
     ]
+
+    SPECIAL_REQUESTS_CHOICES = [
+        ('none',        'None'),
+        ('vegan',       'Vegan'),
+        ('vegetarian',  'Vegetarian'),
+        ('gluten_free', 'Gluten-free'),
+        ('wheelchair',  'Wheelchair accessible'),
+        ('other',       'Other'),
+    ]
     
     user            = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
     venue           = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='reservations')
@@ -114,6 +123,9 @@ class Reservation(models.Model):
     table           = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True)
     updated_at      = models.DateTimeField(auto_now=True)
     created_at      = models.DateTimeField(auto_now_add=True)
+    comments        = models.TextField(blank=True, null=True)
+    special_requests = models.CharField(max_length=20, choices=SPECIAL_REQUESTS_CHOICES, default='none')
+    allergies       = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.full_name} - {self.date} at {self.time} ({self.venue.name})"
