@@ -11,10 +11,8 @@
     scroll-behavior: smooth;
     max-height: 340px;
     height: 350px;
-    border-top: 1px solid #333;
-    border-bottom: 1px solid #333;
     border-radius: 10px;
-    background-color: #004b96;
+    background-color: #edeef4;
     width: 100%;
     margin: 0 auto;
 }
