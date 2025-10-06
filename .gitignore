@@ -4,3 +4,4 @@ __pycache__/
 *.pot
 *.env
 *.sqlite3
+media_backup/
