@@ -1,8 +1,9 @@
 from django.utils import timezone
 from django.contrib import admin
 from django.utils.html import format_html
+from django.core.files.base import ContentFile
 from django.urls import reverse
-from .models import Venue, Table, Reservation, VenueApplication, VenueUpdateRequest, VenueVisit
+from .models import Venue, Table, Reservation, VenueApplication, VenueUpdateRequest, VenueVisit, VenueUpdateImage, VenueUpdateMenuImage, VenueImage, VenueMenuImage
 from django.utils.html import format_html
 
 
@@ -10,11 +11,33 @@ class TableInline(admin.TabularInline):
     model = Table
     extra = 1
 
+class VenueImageInline(admin.TabularInline):
+    model = VenueImage
+    readonly_fields = ['image_tag']
+    extra = 0
+
+    def image_tag(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="height: 50px; margin:2px;" />', obj.image.url)
+        return "No Image"
+    image_tag.short_description = "Image Preview"
+
+# Inline for Venue Menu Images
+class VenueMenuImageInline(admin.TabularInline):
+    model = VenueMenuImage
+    readonly_fields = ['image_tag']
+    extra = 0
+
+    def image_tag(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="height: 50px; margin:2px;" />', obj.image.url)
+        return "No Image"
+    image_tag.short_description = "Menu Preview"
 
 @admin.register(Venue)
 class VenueAdmin(admin.ModelAdmin):
     readonly_fields     = ['image_tag']
-    inlines             = [TableInline]
+    inlines             = [TableInline, VenueImageInline, VenueMenuImageInline]
 
     list_display = ('name', 'kind', 'location', 'available_tables', 'average_rating', 'image_tag', 'owner')
     
@@ -162,25 +185,57 @@ class VenueVisitAdmin(admin.ModelAdmin):
             return super().get_model_perms(request)
         return {}
 
+class VenueUpdateImageInline(admin.TabularInline):
+    model = VenueUpdateImage
+    extra = 0
+    readonly_fields = ("image_tag",)
+    fields = ("image_tag",)
+    
+    def image_tag(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" width="100" />', obj.image.url)
+        return "-"
+    image_tag.short_description = "Image"
+
+class VenueUpdateMenuImageInline(admin.TabularInline):
+    model = VenueUpdateMenuImage
+    extra = 0
+    readonly_fields = ("image_tag",)
+    fields = ("image_tag",)
+    
+    def image_tag(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" width="100" />', obj.image.url)
+        return "-"
+    image_tag.short_description = "Menu Image"
 
 @admin.register(VenueUpdateRequest)
 class VenueUpdateRequestAdmin(admin.ModelAdmin):
-    list_display = ("venue", "submitted_by", "approval_status", "submitted_at", "preview_changes")
-    list_filter = ("approval_status",)
-    actions = ["approve_requests", "reject_requests"]
+    list_display    = ("venue", "submitted_by", "approval_status", "submitted_at", "preview_changes")
+    list_filter     = ("approval_status",)
+    actions         = ["approve_requests", "reject_requests"]
+    inlines         = [ VenueUpdateImageInline, VenueUpdateMenuImageInline ]
 
     def preview_changes(self, obj):
-            changes = obj.get_changes()
-            if not changes:
-                return "No changes"
-            html = "<ul>"
-            for field, (old, new) in changes.items():
+        changes = obj.get_changes()
+        if not changes:
+            return "No changes"
+
+        html = "<ul>"
+        for field, (old, new) in changes.items():
+            if field in ["images", "menu_images"]:
+                # Display images as thumbnails
+                html += f"<li><b>{field}</b>: "
+                for url in new:  # new is a list of image URLs
+                    html += f'<img src="{url}" width="50" style="margin:2px;" />'
+                html += "</li>"
+            else:
                 html += f"<li><b>{field}</b>: <span style='color:red;'>{old}</span> ➝ <span style='color:green;'>{new}</span></li>"
-            html += "</ul>"
-            return format_html(html)
+        html += "</ul>"
+
+        return format_html(html)
 
     preview_changes.short_description = "Proposed Changes"
-    preview_changes.allow_tags = True
 
     def approve_requests(self, request, queryset):
         for update in queryset.filter(approval_status="pending"):
@@ -193,14 +248,26 @@ class VenueUpdateRequestAdmin(admin.ModelAdmin):
             venue.phone = update.phone
             venue.description = update.description
             venue.available_tables = update.available_tables
-            if update.image:
-                venue.image = update.image
             venue.save()
+
+            for img in update.images.all():
+                VenueImage.objects.create(
+                    venue=venue,
+                    image=ContentFile(img.image.read(), name=img.image.name)
+                )
+
+            for menu_img in update.menu_images.all():
+                VenueMenuImage.objects.create(
+                    venue=venue,
+                    image=ContentFile(menu_img.image.read(), name=menu_img.image.name)
+                )
 
             update.approval_status = "approved"
             update.reviewed_by = request.user
             update.reviewed_at = timezone.now()
             update.save()
+
+        self.message_user(request, f"{queryset.filter(approval_status='pending').count()} requests approved.")
 
     approve_requests.short_description = "Approve selected requests"
 
@@ -210,4 +277,8 @@ class VenueUpdateRequestAdmin(admin.ModelAdmin):
             reviewed_by=request.user,
             reviewed_at=timezone.now()
         )
+        self.message_user(request, f"{queryset.filter(approval_status='pending').count()} requests rejected.")
+
     reject_requests.short_description = "Reject selected requests"
+
+

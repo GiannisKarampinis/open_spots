@@ -1,14 +1,20 @@
-from django.core.mail import send_mail
-from django.conf import settings
-from datetime import datetime, time, timedelta, date
-from django.db.models import Count
-from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
-from django.utils.timezone import now
-import plotly.graph_objects as go
-from plotly.offline import plot
+from django.core.mail               import send_mail
+from django.conf                    import settings
+from datetime                       import datetime, time, timedelta, date
+from django.db.models               import Count
+from django.db.models.functions     import TruncDay, TruncWeek, TruncMonth, TruncYear
+from django.utils.timezone          import now
+from plotly.offline                 import plot
+from PIL                            import Image
+from io                             import BytesIO
+from django.core.files.base         import ContentFile
+
 import requests
+import plotly.graph_objects as go
 
+###########################################################################################
 
+###########################################################################################
 def get_coords_nominatim(address):
     url = "https://nominatim.openstreetmap.org/search"
     params = {"q": address, "format": "json", "limit": 1}
@@ -19,6 +25,9 @@ def get_coords_nominatim(address):
         return float(result['lat']), float(result['lon'])
     return None, None
 
+###########################################################################################
+
+###########################################################################################
 def generate_time_choices():
     start   = time(hour=12, minute=0)      # use time directly
     end     = time(hour=23, minute=0)
@@ -35,6 +44,9 @@ def generate_time_choices():
     
     return times
 
+###########################################################################################
+
+###########################################################################################
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
@@ -43,7 +55,9 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
+###########################################################################################
 
+###########################################################################################
 def generate_analytics_data(venue, grouping):
     """Generate analytics data based on grouping type"""
     
@@ -99,6 +113,9 @@ def generate_analytics_data(venue, grouping):
 
     return labels, values
 
+###########################################################################################
+
+###########################################################################################
 def generate_analytics_chart(labels, values, venue_name, grouping):
     """Generate Plotly chart for analytics"""
     
@@ -191,3 +208,19 @@ def generate_analytics_chart(labels, values, venue_name, grouping):
     )
     
     return chart_div
+
+###########################################################################################
+
+###########################################################################################
+def convert_image_to_webp(image_field):
+    img     = Image.open(image_field)
+    img     = img.convert("RGB")  # Ensure compatibility
+    buffer  = BytesIO()
+    
+    img.save(buffer, format="WEBP", quality=80)  # Adjust quality if needed
+    
+    return ContentFile(buffer.getvalue())
+
+###########################################################################################
+
+###########################################################################################

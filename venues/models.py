@@ -1,51 +1,54 @@
 import logging
-from django.db                  import models
-from django.conf                import settings
-from django.utils               import timezone
-from datetime                   import datetime
-from django.db.models.signals   import post_save
-from django.dispatch            import receiver
-from django.core.mail           import send_mail
-from django.contrib.auth        import get_user_model
-from django.utils.crypto        import get_random_string
-from django.contrib.auth.models import Permission
+import os
+from django.db                          import models
+from django.conf                        import settings
+from django.utils                       import timezone
+from datetime                           import datetime
+from django.db.models.signals           import post_save
+from django.dispatch                    import receiver
+from django.core.mail                   import send_mail
+from django.contrib.auth                import get_user_model
+from django.utils.crypto                import get_random_string
+from django.contrib.auth.models         import Permission
 from django.contrib.contenttypes.models import ContentType
-from accounts.tools             import send_verification_code
-from .utils                     import get_coords_nominatim
+from accounts.tools                     import send_verification_code
+from .utils                             import get_coords_nominatim, convert_image_to_webp
+
 
 ###########################################################################################
 
 ###########################################################################################
 class Venue(models.Model):
     VENUE_TYPES = [
-        ('restaurant', 'Restaurant'),
-        ('cafe', 'Cafe'),
-        ('bar', 'Bar'),
-        ('beach_bar', 'Beach Bar'),
-        ('other', 'Other'),
-    ]
+                    ('restaurant',  'Restaurant'),
+                    ('cafe',        'Cafe'),
+                    ('bar',         'Bar'),
+                    ('beach_bar',   'Beach Bar'),
+                    ('other',       'Other'),
+                ]
 
-    name = models.CharField(max_length=100)
-    kind = models.CharField(max_length=20, choices=VENUE_TYPES, default='other')
-    location = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    available_tables = models.PositiveIntegerField()
-    image = models.ImageField(upload_to='venues/', blank=True, null=True)
-    average_rating = models.FloatField(default=0.0)
-    is_full = models.BooleanField(default=False)
-    latitude = models.DecimalField(max_digits=18, decimal_places=12, blank=True, null=True)
-    longitude = models.DecimalField(max_digits=18, decimal_places=12, blank=True, null=True)
-    email = models.EmailField(null=True, blank=True)   
-    phone = models.CharField(max_length=20, blank=True)
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='owned_venues'
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    name                = models.CharField(max_length=100)
+    kind                = models.CharField(max_length=20, choices=VENUE_TYPES, default='other')
+    location            = models.CharField(max_length=255)
+    description         = models.TextField(blank=True)
+    available_tables    = models.PositiveIntegerField()
+    image               = models.ImageField(upload_to='media/venues/', blank=True, null=True)
+    average_rating      = models.FloatField(default=0.0)
+    is_full             = models.BooleanField(default=False)
+    latitude            = models.DecimalField(max_digits=18, decimal_places=12, blank=True, null=True)
+    longitude           = models.DecimalField(max_digits=18, decimal_places=12, blank=True, null=True)
+    email               = models.EmailField(null=True, blank=True)   
+    phone               = models.CharField(max_length=20, blank=True)
+    owner               = models.ForeignKey(
+                                                settings.AUTH_USER_MODEL,
+                                                on_delete=models.SET_NULL,
+                                                null=True,
+                                                blank=True,
+                                                related_name='owned_venues'
+                                            )
+    
+    created_at          = models.DateTimeField(auto_now_add=True)
+    updated_at          = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -141,7 +144,7 @@ class Reservation(models.Model):
 
     def save(self, *args, editor=None, **kwargs):
         self._editor = editor  # Store editor for potential use in signals
-        
+        print("Editor in save:", editor)
         # If status is accepted and arrival_status is not pending, reset arrival_status to pending
         if self.status == 'accepted' and self.arrival_status not in ['pending', 'checked_in', 'no_show']:
             self.arrival_status = 'pending'
@@ -283,7 +286,6 @@ def create_admin_user_for_venue(sender, instance, created, **kwargs):
 class VenueUpdateRequest(models.Model):
     venue               = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='update_requests')
     submitted_by        = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    
     name                = models.CharField(max_length=255)
     kind                = models.CharField(max_length=50, choices=Venue.VENUE_TYPES)
     location            = models.CharField(max_length=255)
@@ -291,29 +293,24 @@ class VenueUpdateRequest(models.Model):
     phone               = models.CharField(max_length=20, blank=True, null=True)
     description         = models.TextField(blank=True, null=True)
     available_tables    = models.PositiveIntegerField(default=0)
-    image               = models.ImageField(upload_to='venue_updates/', blank=True, null=True)
-        
-    latitude = models.CharField(max_length=50, blank=True, null=True)   # <-- ADD
-    longitude = models.CharField(max_length=50, blank=True, null=True)  # <-- ADD
     
     APPROVAL_STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
+        ('pending',     'Pending'),
+        ('approved',    'Approved'),
+        ('rejected',    'Rejected'),
     ]
     
-    approval_status = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default='pending')
-    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_update_requests')
-    reviewed_at = models.DateTimeField(null=True, blank=True)
-    
-    submitted_at = models.DateTimeField(auto_now_add=True)
+    approval_status     = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default='pending')
+    reviewed_by         = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_update_requests')
+    reviewed_at         = models.DateTimeField(null=True, blank=True)
+    submitted_at        = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"UpdateRequest for {self.venue.name} (status: {self.approval_status})"
+        return f"Venue Update Request for {self.venue.name} (status: {self.approval_status})"
 
     def get_changes(self):
         """Return a dict of changed fields {field: (old, new)}"""
-        venue = self.venue
+        venue   = self.venue
         changes = {}
 
         # List fields you want to track
@@ -328,13 +325,100 @@ class VenueUpdateRequest(models.Model):
             if old_value != new_value:
                 changes[field] = (old_value, new_value)
 
-        # Handle image separately
-        if self.image and (not venue.image or venue.image.url != self.image.url):
-            changes["image"] = (venue.image.url if venue.image else None, self.image.url)
+        # Track images
+        old_images = [img.image.url for img in venue.images.all()]
+        new_images = [img.image.url for img in self.images.all()]
+        if old_images != new_images:
+            changes["images"] = (old_images, new_images)
+
+        # Track menu images
+        old_menu = [img.image.url for img in venue.menu_images.all()]
+        new_menu = [img.image.url for img in self.menu_images.all()]
+        if old_menu != new_menu:
+            changes["menu_images"] = (old_menu, new_menu)
 
         return changes
-
+    
+    class Meta:
+        unique_together = ("venue", "approval_status")
     
 ###########################################################################################
 
-###########################################################################################    
+###########################################################################################
+def venue_image_upload(instance, filename):
+    if hasattr(instance, 'update_request'):
+        # For VenueUpdateImage
+        venue_id = instance.update_request.venue.id
+    else:
+        # For VenueImage
+        venue_id = instance.venue.id
+    return f'media/venues/{venue_id}/images/{filename}'
+
+def menu_image_upload(instance, filename):
+    if hasattr(instance, 'update_request'):
+        venue_id = instance.update_request.venue.id
+    else:
+        venue_id = instance.venue.id
+    return f'media/venues/{venue_id}/menu/{filename}'
+
+class VenueImage(models.Model):
+    venue = models.ForeignKey(
+        Venue, on_delete=models.CASCADE, related_name='images'
+    )
+    image = models.ImageField(upload_to=venue_image_upload)
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            original_name = os.path.splitext(self.image.name)[0]
+            webp_file = convert_image_to_webp(self.image)
+            self.image.save(f"{original_name}.webp", webp_file, save=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.venue.name} - Image"
+
+
+class VenueMenuImage(models.Model):
+    venue = models.ForeignKey(
+        Venue, on_delete=models.CASCADE, related_name='menu_images'
+    )
+    image = models.ImageField(upload_to=menu_image_upload)
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            original_name = os.path.splitext(self.image.name)[0]
+            webp_file = convert_image_to_webp(self.image)
+            self.image.save(f"{original_name}.webp", webp_file, save=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.venue.name} - Menu Image"
+
+class VenueUpdateImage(models.Model):
+    update_request  = models.ForeignKey(VenueUpdateRequest, on_delete=models.CASCADE, related_name='images')
+    image           = models.ImageField(upload_to=venue_image_upload)
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            original_name   = os.path.splitext(self.image.name)[0]
+            webp_file       = convert_image_to_webp(self.image)
+            self.image.save(f"{original_name}.webp", webp_file, save=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.update_request.venue.name} - Image"
+
+
+class VenueUpdateMenuImage(models.Model):
+    update_request  = models.ForeignKey(VenueUpdateRequest, on_delete=models.CASCADE, related_name='menu_images')
+    image           = models.ImageField(upload_to=menu_image_upload)
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            original_name   = os.path.splitext(self.image.name)[0]
+            webp_file       = convert_image_to_webp(self.image)
+            self.image.save(f"{original_name}.webp", webp_file, save=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.update_request.venue.name} - Menu Image"    

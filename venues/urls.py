@@ -24,13 +24,13 @@ urlpatterns = [
     path('reservation/<int:reservation_id>/move-to-requests/',                      views.move_reservation_to_requests_ajax,    name='move_reservation_to_requests_ajax'),
 
     # Partials for AJAX/HTMX row replacement
-    path('reservation-row/<int:pk>/', views.partial_reservation_row, name='partial_reservation_row'),
-    path('arrival-row/<int:pk>/', views.partial_arrival_row, name='partial_arrival_row'),
+    path('reservation-row/<int:pk>/',                                               views.partial_reservation_row,              name='partial_reservation_row'),
+    path('arrival-row/<int:pk>/',                                                   views.partial_arrival_row,                  name='partial_arrival_row'),
 
     # Venue analytics / visits
-    path('<int:venue_id>/analytics/partial/', views.venue_visits_analytics_api, name='venue_analytics_partial'),
-    path("reservations/<int:pk>/edit/", views.edit_reservation, name="edit_reservation"),
+    path('<int:venue_id>/analytics/partial/',                                       views.venue_visits_analytics_api,           name='venue_analytics_partial'),
+    path("reservations/<int:pk>/edit/",                                             views.edit_reservation,                     name="edit_reservation"),
     
-    path('venue/<int:venue_id>/update/', views.submit_venue_update, name='submit_venue_update'),
+    path('venue/<int:venue_id>/update/',                                            views.submit_venue_update,                  name='submit_venue_update'),
 ]
 

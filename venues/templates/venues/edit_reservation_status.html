@@ -1,5 +1,7 @@
 {% extends "includes/base.html" %}
 {% load static %}
+{% load date_filters %}
+
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'venues/edit_reservation_status.css' %}">
@@ -15,8 +17,8 @@
 
         <div class="reservation-info">
             <p><strong>Customer:</strong> {{ reservation.user.username }}</p>
-            <p><strong>Date:</strong> {{ reservation.date }}</p>
-            <p><strong>Time:</strong> {{ reservation.time }}</p>
+            <p><strong>Date:</strong> {{ reservation.date|format_date_display }}</p>
+            <p><strong>Time:</strong> {{ reservation.time|format_time_display }}</p>
             <p><strong>Party Size:</strong> {{ reservation.guests }}</p>
         </div>
 

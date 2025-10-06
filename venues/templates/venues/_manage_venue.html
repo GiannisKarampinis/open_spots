@@ -48,18 +48,75 @@
             </div>
         </div>
 
-        <!-- Image Upload -->
-        <div>
-            <label>Venue Image</label>
-            {% if venue.image %}
-                <img src="{{ venue.image.url }}" alt="{{ venue.name }}" class="venue-image-preview">
-            {% endif %}
-            <input type="file" name="image" accept="image/*" class="form-input">
+        {% comment %} Image Modal {% endcomment %}
+        <div id="imageModal" class="image-modal">
+            <button type="button" class="close-btn">&times;</button>
+            <img src="" alt="Full Preview">
         </div>
 
+        <!-- Venue Images Upload -->
+        <div class="file-upload-group">
+            <label class="custom-file-btn">
+                Select Venue Images
+                <input type="file" name="venue_images" id="venue_images" multiple hidden>
+            </label>
+            <div id="venue-preview" class="file-preview">
+                {% for img in venue.images.all %}
+                    <div class="thumb-wrapper" data-existing="true" data-id="{{ img.id }}">
+                        <img src="{{ img.image.url }}" width="80" style="margin:2px; border-radius:4px;">
+                        <button type="button" class="remove-btn">&times;</button>
+                        <input type="hidden" name="remove_venue_images" value="" disabled>
+                    </div>
+                {% empty %}
+                    No files selected
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Menu Images Upload -->
+        <div class="file-upload-group">
+            <label class="custom-file-btn">
+                Select Menu Images
+                <input type="file" name="menu_images" id="menu_images" multiple hidden>
+            </label>
+            <div id="menu-preview" class="file-preview">
+                {% for img in venue.menu_images.all %}
+                    <div class="thumb-wrapper" data-existing="true" data-id="{{ img.id }}">
+                        <img src="{{ img.image.url }}" width="80" style="margin:2px; border-radius:4px;">
+                        <button type="button" class="remove-btn">&times;</button>
+                        <input type="hidden" name="remove_menu_images" value="" disabled>
+                    </div>
+                {% empty %}
+                    No files selected
+                {% endfor %}
+            </div>
+        </div>
+        
         <!-- Submit Button -->
         <div class="text-center">
             <button type="submit" class="btn-edit-status">Submit for Approval</button>
         </div>
     </form>
 </div>
+
+<style>
+.thumb-wrapper {
+    display: inline-block;
+    position: relative;
+}
+.remove-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: rgba(255,0,0,0.7);
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 50%;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    line-height: 14px;
+    padding: 0;
+}
+</style>

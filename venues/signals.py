@@ -5,14 +5,18 @@ from django.urls                    import reverse
 from django.conf                    import settings
 from django.core.mail               import EmailMultiAlternatives
 from django.template.loader         import render_to_string
+from django.template                import TemplateDoesNotExist
 from .models                        import Reservation
 from .notifications                 import notify_venue_admin
+from typing                         import Optional
 
+import logging
 import threading # For production consider using Celery or Django Queued Tasks
 
-###########################################################################################
+logger = logging.getLogger(__name__)
 
 ###########################################################################################
+
 def send_async_email(email):
     """
     Run email.send() in a background thread so it doesn't block the request.
@@ -20,104 +24,189 @@ def send_async_email(email):
     def _send():
         try:
             email.send()
+            logger.debug("Email sent to %s", email.to)
         except Exception as e:
-             # TODO: log error properly (e.g. Sentry, logging)
-            print(f"Email sending failed: {e}")
+            logger.exception("Failed to send email to %s", email.to)
 
     threading.Thread(target=_send, daemon=True).start()
 
 ###########################################################################################
 
+def _build_site_url(path: str) -> str:
+    base = getattr(settings, "SITE_URL", "").rstrip("/")
+    
+    if not base:
+        return path  # fallback; ideally SITE_URL is configured
+    
+    if not path.startswith("/"):
+        path = f"/{path}"
+    
+    return f"{base}{path}"
+
 ###########################################################################################
-def send_reservation_email(instance, changes_list=None, editor=None, created=False):
+
+def send_email_with_template(subject: str, recipient: str, template_base: str, context: dict, async_send: bool = True):
     """
-    Send emails for reservations:
-      - created == True → new reservation notification to venue admin
-      - changes_list + editor → update or cancellation notifications
+    Render text + HTML template and send email.
     """
+    text_content = ""
+    html_content = None
 
-    user            = instance.user
-    venue_admin     = instance.venue.owner
+    try:
+        text_content = render_to_string(f"emails/{template_base}.txt", context)
+    except TemplateDoesNotExist:
+        text_content = context.get("intro", "You have a notification.")
 
-    print(editor, user, venue_admin )
-
-    if created:
-        # NOTE: New Reservation --> send to venue admin
-        reservation_url     = settings.SITE_URL + '/dashboard/' + str(instance.venue.id) + '/'
-        subject             = f"Reservation Request at {instance.venue.name}"
-        recipient           = venue_admin.email
-        context             = {
-            "title":            "New Reservation Request",
-            "intro":            f"A new reservation has been made by {user.username} profile for {instance.full_name} ({instance.email}).",
-            "venue":            instance.venue.name,
-            "reservation":      instance,
-            "reservation_url":  reservation_url,
-        }
-        html_content        = render_to_string("emails/reservation_created.html",  context)
-        text_content        = render_to_string("emails/reservation_created.txt",   context)
-
-
-    elif instance.status == "cancelled":
-        # NOTE: Customer cancelled reservation --> notify venue admin
-        subject             = f"Reservation Cancelled at {instance.venue.name}"
-        recipient           = venue_admin.email
-        context             = {
-            "title":        "Reservation Cancelled",
-            "intro":        f"The reservation from {instance.full_name} ({instance.email}) made by {user.username} has been cancelled.",
-            "venue":        instance.venue.name,
-            "changes":      changes_list,
-            "reservation":  instance,
-        }
-        html_content        = render_to_string("emails/reservation_cancelled.html",    context)
-        text_content        = render_to_string("emails/reservation_cancelled.txt",     context)
-
-
-    elif editor == user:
-        # NOTE: Customer updated reservation --> notify venue admin
-        reservation_url     = settings.SITE_URL + '/dashboard/' + str(instance.venue.id) + '/'
-        subject             = f"Reservation Update for {instance.venue.name}"
-        recipient           = venue_admin.email
-        context             = {
-            "title":            "A reservation has been updated",
-            "intro":            f"The reservation from {instance.full_name} ({instance.email}) made by {user.username} has been updated:",
-            "venue":            instance.venue.name,
-            "changes":          changes_list,
-            "reservation_url":  reservation_url,
-            "reservation":      instance,
-        }
-        html_content        = render_to_string("emails/reservation_update.html",    context)
-        text_content        = render_to_string("emails/reservation_update.txt",     context)
-
-
-    elif editor == venue_admin:
-        print("BHKE")
-        # Venue admin updated reservation → notify customer
-        reservation_url     = settings.SITE_URL + reverse("my_reservations")
-        subject             = f"Your Reservation at {instance.venue.name} Has Been Updated"
-        recipient           = user.email
-        context             = {
-            "title":            "Your reservation has been updated",
-            "intro":            f"Your reservation at {instance.venue.name} has been updated:",
-            "venue":            instance.venue.name,
-            "changes":          changes_list,
-            "reservation_url":  reservation_url,
-            "reservation":      instance,
-        }
-        html_content        = render_to_string("emails/reservation_update.html",   context)
-        text_content        = render_to_string("emails/reservation_update.txt",    context)
-        
-        
-    else:
-        # Unknown editor --> skip sending
-        return
+    try:
+        html_content = render_to_string(f"emails/{template_base}.html", context)
+    except TemplateDoesNotExist:
+        logger.debug("HTML template %s not found. Sending text-only email.", template_base)
 
     email = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [recipient])
-    email.attach_alternative(html_content, "text/html")
-    send_async_email(email)  # Assumes you have an async email sender
+    if html_content:
+        email.attach_alternative(html_content, "text/html")
+
+    if async_send:
+        send_async_email(email)
+    else:
+        try:
+            email.send()
+            logger.debug("Email sent synchronously to %s", recipient)
+        except Exception:
+            logger.exception("Synchronous email sending failed for %s", recipient)
 
 ###########################################################################################
 
+def send_reservation_email(
+    instance,
+    changes_list: Optional[list] = None,
+    editor = None,
+    created: bool = False,
+    async_send: bool = True,
+) -> None:
+    """
+    Send emails for reservations:
+
+    - created == True → new reservation notification to both venue admin and user
+    - changes_list + editor → update or cancellation notifications
+    """
+    user = getattr(instance, "user", None)
+    venue = getattr(instance, "venue", None)
+    venue_admin = getattr(venue, "owner", None) if venue else None
+
+    username = getattr(user, "username", "Unknown")
+    full_name = getattr(instance, "full_name", None) or getattr(user, "get_full_name", None) or ""
+    user_email = getattr(user, "email", None) or getattr(instance, "email", None)
+
+    emails_to_send = []
+
+    print("Editor:", editor)
+    print("User:", user)
+
+    try:
+        # --- New reservation ---
+        if created:
+            # Admin notification
+            if getattr(venue_admin, "email", None):
+                emails_to_send.append({
+                    "recipient": venue_admin.email,
+                    "subject": f"Reservation Request at {venue.name}",
+                    "template_base": "reservation_created",
+                    "context": {
+                        "title": "New Reservation Request",
+                        "intro": f"A new reservation has been made by {username} for {full_name} ({instance.email}).",
+                        "venue": venue.name,
+                        "reservation": instance,
+                        "reservation_url": _build_site_url(f"/dashboard/{venue.id}/"),
+                    },
+                })
+            # User confirmation
+            if user_email:
+                emails_to_send.append({
+                    "recipient": user_email,
+                    "subject": f"Your Reservation Request at {venue.name}",
+                    "template_base": "reservation_user_confirmation",
+                    "context": {
+                        "title": "Reservation Request Received",
+                        "intro": f"Hi {full_name}, your reservation request at {venue.name} has been sent successfully!",
+                        "venue": venue.name,
+                        "reservation": instance,
+                        "reservation_url": _build_site_url("/my-reservations/"),
+                    },
+                })
+
+        # --- Cancelled reservation ---
+        elif instance.status == "cancelled":
+            if getattr(venue_admin, "email", None):
+                emails_to_send.append({
+                    "recipient": venue_admin.email,
+                    "subject": f"Reservation Cancelled at {venue.name}",
+                    "template_base": "reservation_cancelled",
+                    "context": {
+                        "title": "Reservation Cancelled",
+                        "intro": f"The reservation from {full_name} ({instance.email}) made by {username} has been cancelled.",
+                        "venue": venue.name,
+                        "changes": changes_list,
+                        "reservation": instance,
+                    },
+                })
+
+        # --- Customer updated reservation (notify admin) ---
+        elif editor == user:
+            print("BHKE12132123123123123")
+            print(getattr(venue_admin, "email", None))
+            if getattr(venue_admin, "email", None):
+                emails_to_send.append({
+                    "recipient": venue_admin.email,
+                    "subject": f"Reservation Update for {venue.name}",
+                    "template_base": "reservation_update",
+                    "context": {
+                        "title": "A reservation has been updated",
+                        "intro": f"The reservation from {full_name} ({instance.email}) made by {username} has been updated:",
+                        "venue": venue.name,
+                        "changes": changes_list,
+                        "reservation_url": _build_site_url(f"/dashboard/{venue.id}/"),
+                        "reservation": instance,
+                    },
+                })
+
+        # --- Venue admin updated reservation (notify user) ---
+        elif editor == venue_admin:
+            if user_email:
+                emails_to_send.append({
+                    "recipient": user_email,
+                    "subject": f"Your Reservation at {venue.name} Has Been Updated",
+                    "template_base": "reservation_update",
+                    "context": {
+                        "title": "Your reservation has been updated",
+                        "intro": f"Your reservation at {venue.name} has been updated:",
+                        "venue": venue.name,
+                        "changes": changes_list,
+                        "reservation_url": _build_site_url(reverse("my_reservations")),
+                        "reservation": instance,
+                    },
+                })
+
+        else:
+            logger.debug("send_reservation_email: unknown editor, skipping email (editor=%r)", editor)
+            return
+
+        # --- Send all queued emails ---
+        for email_info in emails_to_send:
+            if email_info["recipient"]:
+                send_email_with_template(
+                    subject=email_info["subject"],
+                    recipient=email_info["recipient"],
+                    template_base=email_info["template_base"],
+                    context=email_info["context"],
+                    async_send=async_send
+                )
+
+    except Exception:
+        logger.exception("Unexpected error while preparing reservation email for reservation=%s", getattr(instance, "pk", "<unknown>"))
+
 ###########################################################################################
+
 @receiver(pre_save, sender=Reservation)
 def detect_reservation_changes(sender, instance, **kwargs):
     # --- Track old values before saving ---
@@ -140,7 +229,6 @@ def detect_reservation_changes(sender, instance, **kwargs):
 
 ###########################################################################################
 
-###########################################################################################
 def build_reservation_payload(instance):
     # --- Build payload for WebSocket notification ---
     return {
@@ -165,28 +253,43 @@ def build_reservation_payload(instance):
 
 ###########################################################################################
 
-###########################################################################################
 def get_instance_changes(instance):
     old_values = getattr(instance, "_old_values", None)
+    print("DEBUG → _old_values:", old_values)
+
     if not old_values:
+        print("No old values found")
         return []
 
-    return [
-        {"field": field.replace("_", " ").title(), "old": old, "new": getattr(instance, field)}
-        for field, old in old_values.items()
-        if old != getattr(instance, field)
-    ]
+    changes = []
+    for field, old in old_values.items():
+        new = getattr(instance, field, None)
+        print(f"Checking {field}: old={old}, new={new}")
+        if old != new:
+            print(f"CHANGE DETECTED for {field}")
+            changes.append({
+                "field": field.replace("_", " ").title(),
+                "old": old,
+                "new": new,
+            })
+
+    print("Final changes list:", changes)
+    return changes
+
 
 ###########################################################################################
 
-###########################################################################################
 @receiver(post_save, sender=Reservation)
 def reservation_created_or_updated(sender, instance: Reservation, created, **kwargs):
-    # --- Handle post-save: send emails + live notifications ---
     """
     Trigger both email notifications and WebSocket notifications
     when a Reservation is created or updated.
     """
+    
+    # --- prevent double-triggering ---
+    if getattr(instance, "_signal_processed", False):
+        return
+    instance._signal_processed = True
 
     venue_id        = instance.venue_id
     
@@ -206,18 +309,19 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
     notify_venue_admin(venue_id, payload) # WebSocket push
     # FIXME: Optional: for high-volume updates, consider a message queue for WebSocket pushes (like Redis pub/sub)
     
+    editor = getattr(instance, "_editor", None)
+    
+    print("Editor in signal:", editor)
+    
     if created:
-        editor = getattr(instance, "_editor", None)
         send_reservation_email(instance, created=True, editor=editor)
         return
 
     changes_list = get_instance_changes(instance)
+    print(changes_list)
     if not changes_list:
         return  # No changes detected, skip email
     
-    editor = getattr(instance, "_editor", None)
     send_reservation_email(instance, changes_list=changes_list, editor=editor)
-    
-###########################################################################################
 
 ###########################################################################################

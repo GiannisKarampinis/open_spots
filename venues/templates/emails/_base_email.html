@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #2a2a2a;
+      padding: 20px;
+    }
+    header h1 {
+      color: white;
+      text-align: center;
+      margin: 10px 0;
+      font-size: 2rem;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #3d3d3dff;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    h2 { color: white; }
+    p, li { color: white; }
+    .button {
+      display:inline-block;
+      padding: 10px 20px;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    .button-primary { background-color: #4dd6ff; }
+    .button-cancel { background-color: #ff4d4d; }
+    .button-update { background-color: #007BFF; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>OpenSpots</h1>
+  </header>
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

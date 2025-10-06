@@ -1,8 +1,3 @@
-// // websocket.js
-// import { upsertReservationRow }                         from './tables.js';
-// import { markReservationUnseen, unseenReservations }    from './notifications.js';
-// import { isSuppressed, shouldApplyUpdate }              from './utils.js';
-
 function initWebSocket(venueId){
     if (!venueId) return console.error('No venueId for WS');
 

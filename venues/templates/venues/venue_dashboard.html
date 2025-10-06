@@ -1,5 +1,7 @@
 {% extends 'includes/base.html' %}
 {% load static %}
+{% load date_filters %}
+
 
 {% block extra_css %}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
@@ -27,7 +29,8 @@
     <script src="{% static 'venues/js/websocket.js' %}"></script>
     <script src="{% static 'venues/js/row-renderer.js' %}"></script>
     <script src="{% static 'venues/js/main.js' %}"></script>
-
+    <script src="{% static 'venues/js/textarea-autoresize.js' %}"></script>
+    <script src="{% static 'venues/js/image-preview.js' %}"></script>
 
 {% endblock %}
 
@@ -157,8 +160,8 @@
                         {% for r in past_reservations %}
                         <tr>
                             <td>{{ r.user.username }}</td>
-                            <td>{{ r.date }}</td>
-                            <td>{{ r.time }}</td>
+                            <td>{{ r.date|format_date_display }}</td>
+                            <td>{{ r.time|format_time_display }}</td>
                             <td>{{ r.guests }}</td>
                             <td>
                                 <span class="badge 

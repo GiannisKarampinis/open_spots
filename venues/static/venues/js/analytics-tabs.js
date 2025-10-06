@@ -59,12 +59,8 @@ function initTabsNavigation(venueId) {
  */
 function loadAnalyticsPartial(venueId, grouping = 'daily') {
     const chartEl = $('#analytics-chart');
-    if (!chartEl.length) {
-        console.warn('No #analytics-chart element present in DOM');
-        return;
-    }
+    if (!chartEl.length) return;
 
-    // Optional: show loading placeholder
     chartEl.html('<div class="text-center py-5">Loading analytics…</div>');
 
     fetch(`/venues/${venueId}/analytics/partial/?group=${grouping}`, {
@@ -93,32 +89,48 @@ function loadAnalyticsPartial(venueId, grouping = 'daily') {
             return;
         }
 
-        // Ensure Plotly is loaded, then render
         loadPlotly(() => {
-            try {
-                Plotly.newPlot('analytics-chart', figure.data, figure.layout || {}, data.config || {})
-                    .then(() => {
-                        // small resize after rendering to ensure correct sizing if container was hidden earlier
-                        setTimeout(() => {
-                            const el = document.getElementById('analytics-chart');
-                            if (el && window.Plotly && Plotly.Plots && typeof Plotly.Plots.resize === 'function') {
-                                Plotly.Plots.resize(el);
-                            }
-                        }, 50);
-                    })
-                    .catch(err => {
-                        console.error('Plotly.newPlot error:', err);
-                        chartEl.html('<div class="alert alert-warning">Failed to render analytics chart.</div>');
-                    });
-            } catch (err) {
-                console.error('Unexpected error while drawing plot:', err);
-                chartEl.html('<div class="alert alert-warning">Failed to render analytics chart.</div>');
-            }
+            // Enforce light theme
+            figure.layout = figure.layout || {};
+            figure.layout.paper_bgcolor = '#ffffff';
+            figure.layout.plot_bgcolor = '#ffffff';
+            figure.layout.font = figure.layout.font || {};
+            figure.layout.font.color = '#000000';
+
+            // Remove x-axis grid
+            figure.layout.xaxis = figure.layout.xaxis || {};
+            figure.layout.xaxis.showgrid = true;
+            figure.layout.xaxis.gridcolor = 'rgba(0,0,0,0.1)'; // same for y-axis
+
+            // Optional: keep y-axis grid if you want
+            figure.layout.yaxis = figure.layout.yaxis || {};
+            figure.layout.yaxis.showgrid = true;
+            figure.layout.yaxis.gridcolor = 'rgba(0,0,0,0.1)'; // same for y-axis
+
+            // Ensure trace colors are visible on light background
+            figure.data.forEach(trace => {
+                if (trace.marker) trace.marker.color = trace.marker.color || '#1f77b4';
+                if (trace.line) trace.line.color = trace.line.color || '#1f77b4';
+            });
+
+            Plotly.newPlot('analytics-chart', figure.data, figure.layout, data.config || {})
+                .then(() => {
+                    setTimeout(() => {
+                        const el = document.getElementById('analytics-chart');
+                        if (el && window.Plotly && Plotly.Plots && typeof Plotly.Plots.resize === 'function') {
+                            Plotly.Plots.resize(el);
+                        }
+                    }, 50);
+                })
+                .catch(err => {
+                    console.error('Plotly.newPlot error:', err);
+                    chartEl.html('<div class="alert alert-warning">Failed to render analytics chart.</div>');
+                });
         });
     })
     .catch(err => {
         console.error('Error loading analytics:', err);
-        $('#analytics-chart').html('<div class="alert alert-warning">Failed to load analytics data.</div>');
+        chartEl.html('<div class="alert alert-warning">Failed to load analytics data.</div>');
     });
 }
 

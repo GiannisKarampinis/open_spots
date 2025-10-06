@@ -22,7 +22,7 @@ from django.template.loader          import render_to_string
 import plotly.graph_objs             as go
 from django.db                       import transaction
 from django.urls                     import reverse
-from .models                         import Venue, VenueUpdateRequest, VenueVisit, Reservation
+from .models                         import Venue, VenueUpdateRequest, VenueVisit, Reservation, VenueUpdateImage, VenueUpdateMenuImage, VenueImage, VenueMenuImage
 from .forms                          import ReservationForm, VenueApplicationForm, ArrivalStatusForm
 from .utils                          import *
 from .decorators                     import venue_admin_required
@@ -123,7 +123,7 @@ def venue_detail(request, pk):
             if overlapping.exists():
                 messages.error(request, "Sorry, that time slot is already reserved.")
             else:
-                reservation.save()
+                reservation.save(editor=request.user)
                 return render(
                     request,
                     "venues/reservation_pending.html",
@@ -499,7 +499,7 @@ def make_reservation(request, venue_id):
                 messages.error(request, 'Sorry, that time slot is already reserved.')
                 return render(request, 'venues/make_reservation.html', {'form': form, 'venue': venue})
 
-            reservation.save()
+            reservation.save(editor=request.user)
             
             send_reservation_emails(reservation)
             messages.success(request, 'Reservation submitted. Await confirmation.')
@@ -526,14 +526,14 @@ def edit_reservation_status(request, reservation_id):
     if request.method == 'POST':
         form = ArrivalStatusForm(request.POST, instance=reservation)
         if form.is_valid():
-            form.save(commit=False)
+            updated_reservation = form.save(commit=False)
 
             # ✅ Additional logic to move back to requests
             if form.cleaned_data.get('move_to_requests'):
-                reservation.status = 'pending'
-                reservation.arrival_status = 'pending'
+                updated_reservation.status = 'pending'
+                updated_reservation.arrival_status = 'pending'
 
-            reservation.save(editor=request.user)
+            updated_reservation.save(editor=request.user)
             messages.success(request, "Reservation status updated successfully.")
             return redirect('venue_dashboard', venue_id=reservation.venue.id)
     else:
@@ -545,6 +545,9 @@ def edit_reservation_status(request, reservation_id):
     }
     return render(request, 'venues/edit_reservation_status.html', context)
 
+###########################################################################################
+
+###########################################################################################
 @login_required
 def edit_reservation(request, pk):
     reservation = get_object_or_404(Reservation, pk=pk, user=request.user)
@@ -555,10 +558,10 @@ def edit_reservation(request, pk):
     if request.method == "POST":
         form = ReservationForm(request.POST, instance=reservation)
         if form.is_valid():
-            form.save()
-            reservation.status = 'pending'  # Reset status to pending on edit
-            reservation.arrival_status = 'pending'  # Reset arrival status as well
-            reservation.save(editor=request.user)
+            updated_reservation = form.save(commit=False)
+            updated_reservation.status = 'pending'
+            updated_reservation.arrival_status = 'pending'
+            updated_reservation.save(editor=request.user)
             messages.success(request, "Reservation updated successfully and is now pending approval.")
             return redirect('my_reservations')
     else:
@@ -755,22 +758,39 @@ def submit_venue_update(request, venue_id):
 
     if request.method == "POST":
         # Create a new update request instead of saving directly to Venue
-        VenueUpdateRequest.objects.create(
-            venue=venue,
-            submitted_by=request.user,
-            name=request.POST.get("name"),
-            kind=request.POST.get("kind"),
-            location=request.POST.get("location"),
-            email=request.POST.get("email"),
-            phone=request.POST.get("phone"),
-            description=request.POST.get("description"),
-            available_tables=request.POST.get("available_tables") or 0,
-            latitude=request.POST.get("latitude"),
-            longitude=request.POST.get("longitude"),
-            image=request.FILES.get("image"),
+        update_request = VenueUpdateRequest.objects.create(
+            venue               =   venue,
+            submitted_by        =   request.user,
+            name                =   request.POST.get("name"),
+            kind                =   request.POST.get("kind"),
+            location            =   request.POST.get("location"),
+            email               =   request.POST.get("email"),
+            phone               =   request.POST.get("phone"),
+            description         =   request.POST.get("description"),
+            available_tables    =   int(request.POST.get("available_tables") or 0),
         )
-        return render(request, "venues/_update_venue_success.html")
+        
+        for img in request.FILES.getlist('venue_images'):
+            VenueUpdateImage.objects.create(update_request=update_request, image=img)
 
+        for img_id in request.POST.getlist('remove_venue_images'):
+            try:
+                img_obj = VenueImage.objects.get(id=img_id, venue=venue)
+                img_obj.delete()
+            except VenueImage.DoesNotExist:
+                pass
+
+        for img in request.FILES.getlist('menu_images'):
+            VenueUpdateMenuImage.objects.create(update_request=update_request, image=img)
+        
+        for img_id in request.POST.getlist('remove_menu_images'):
+            try:
+                img_obj = VenueMenuImage.objects.get(id=img_id, venue=venue)
+                img_obj.delete()
+            except VenueMenuImage.DoesNotExist:
+                pass
+        
+        return render(request, "venues/_update_venue_success.html")
 
     return render(request, "venues/_manage_venue.html", {"venue": venue})
 

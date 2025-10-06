@@ -1,0 +1,23 @@
+<div class="card card-body shadow" id="reservationForm" style="color: white;">
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="mb-3">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.errors %}
+                    <div class="text-danger small">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        {% if submit_text %}
+            <button type="submit" class="btn btn-success w-100 mt-3">
+                <i class="fa-solid fa-save"></i> {{ submit_text }}
+            </button>
+        {% endif %}
+    </form>
+</div>

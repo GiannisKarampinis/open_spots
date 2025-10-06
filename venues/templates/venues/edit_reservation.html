@@ -15,15 +15,7 @@
             <h2 class="mb-4 text-center">Edit Reservation for {{ reservation.venue.name }}</h2>
 
             <!-- Edit Form styled like reservation form -->
-            <div class="card card-body shadow" id="reservationForm">
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-success w-100 mt-3">
-                        <i class="fa-solid fa-save"></i> Save Changes
-                    </button>
-                </form>
-            </div>
+            {% include "venues/partials/_customer_reservation_form.html" with form=form submit_text="Save Changes" %}
         </div>
     </div>
 </div>

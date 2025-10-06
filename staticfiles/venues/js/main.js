@@ -42,3 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabsNavigation(venueId);
     styleDataTableControls();
 });
+
+
+window.addEventListener('resize', () => {
+    preview.querySelectorAll('img').forEach(img => {
+        const wrapperHeight = preview.clientHeight;
+        img.style.maxHeight = wrapperHeight + 'px';
+    });
+});
