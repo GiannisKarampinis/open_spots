@@ -54,7 +54,7 @@ function addRowToTable(tableSelector, rowHtml, isExistingRow=false) {
     table.order([[1,'desc'], [2,'desc']]).draw();
 
     // Highlight only for upcoming reservations
-    if (!isExistingRow && tableSelector === '#upcomingTable') {
+    if (tableSelector === '#upcomingTable') { //!isExistingRow
         const $new = $(newRowNode);
         $new.addClass('new-reservation flash-once');
         setTimeout(() => $new.removeClass('flash-once'), 2000);
