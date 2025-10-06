@@ -120,7 +120,7 @@
 .venue-info-item svg {
     width: 16px;
     height: 16px;
-    fill: #2980b9;
+    fill: var(--info-color);
     flex-shrink: 0;
     align-self: flex-start;
     margin-top: 2px;
@@ -137,10 +137,9 @@
 }
 
 .venue-info-item span {
-    white-space: nowrap;
     overflow: hidden;
+    white-space: nowrap;
     text-overflow: ellipsis;
-    /* max-width: 100%; */
 }
 
 .venue-info-item.location span {
@@ -167,7 +166,7 @@
     color: var(--text-color);
     margin: 1.5rem 0 0.75rem 0;
     padding-left: 0.5rem;
-    border-left: 4px solid var(--primary-color);
+    border-left: 4px solid var(--card-bg-color);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     user-select: none;
@@ -220,7 +219,7 @@ h2 {
 .filter-form select {
     background: transparent;
     border: none;
-    color: #fff;
+    color: var(--button-text);
     font-size: 0.95rem;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 0.3em 0.6em;
@@ -231,14 +230,14 @@ h2 {
 
 .filter-form select option {
     background-color: var(--surface-color);
-    color: #fff;
+    color: var(--button-text);
 }
 
 .clear-filter-btn {
     margin-left: 0.8em;
     padding: 0.4em 0.8em;
-    background-color: #f44336;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--button-text);
     text-decoration: none;
     border-radius: 6px;
     font-size: 0.85rem;
@@ -247,7 +246,7 @@ h2 {
 }
 
 .clear-filter-btn:hover {
-    background-color: #d32f2f;
+    background-color: var(--primary-hover);
 }
 
 /* --- Sticky filter --- */
@@ -271,7 +270,7 @@ h2 {
 }
 
 .filter-icon {
-    color: #2980b9;
+    color: var(--primary-color);
     font-size: 1.2em;
 }
 
