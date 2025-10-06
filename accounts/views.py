@@ -201,6 +201,7 @@ def signup_view(request):
                 user.refresh_from_db()
             if user.id:
                 request.session['verification_reason'] = 'signup'
+                request.session['pending_user_id'] = user.id
                 return redirect('confirm_code')
             else:
                 messages.error(request, "An unexpected error occurred during signup. Please try again.")
@@ -280,7 +281,12 @@ def profile_view(request):
 def confirm_code_view(request):
     user_id = request.session.get('pending_user_id')
     verification_reason = request.session.get('verification_reason')
-
+     # If session data missing, block access
+     # Also block if trying to verify email but no unverified_email present
+     # (except for signup flow where unverified_email is set on registration)
+     # or if trying to recover password without unverified_email (should not happen)
+     # or if trying to change password without unverified_email (should not happen)
+     # In these cases, user should start over from login/signup/password recovery
     if not user_id or not verification_reason:
         messages.error(request, "Session expired or invalid access to verification page.")
         return redirect('login')
@@ -331,7 +337,7 @@ def confirm_code_view(request):
             backend = get_backends()[0]
             login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)
             messages.success(request, "Your email has been verified. You may now use your account.")
-            return redirect('profile')  # or another landing page
+            return redirect('venue_list')  # or another landing page
 
         elif verification_reason == 'password_recovery':
             # Do not log in yet!
@@ -354,7 +360,7 @@ def confirm_code_view(request):
             backend = get_backends()[0]
             login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)
             messages.success(request, "Password changed and email verified.")
-            return redirect('profile')
+            return redirect('venue_list')
 
 
     # Handle GET: optionally resend a code
