@@ -76,7 +76,7 @@
 .divider span {
     background: var(--surface-color);                              /* Matches container background to cover line */
     padding: 0 15px;                                    /* Horizontal padding */
-    color: var(--background-color);                                      /* Gray color */
+    color: var(--button-text);                                      /* Gray color */
     font-weight: 600;                                   /* Semi-bold */
     font-size: 0.9rem;                                  /* Slightly smaller text */
     position: relative;
@@ -91,7 +91,7 @@
     left: 0;
     width: 100%;                                        /* Full width */
     height: 1px;                                        /* Thin line */
-    background: var(--background-color);                                 /* Medium gray */
+    background: var(--button-text);                                 /* Medium gray */
     z-index: 0;                                         /* Behind the text */
 }
 
@@ -100,7 +100,7 @@
     display: block;                                     /* Labels take full width */
     margin: 10px 0 6px;                                 /* Space around label */
     font-weight: 600;                                   /* Semi-bold */
-    color: var(--background-color);                                      /* Light gray */
+    color: var(--button-text);                                      /* Light gray */
 }
 
 /* Text and password input fields */
@@ -119,7 +119,7 @@
 /* Input fields focus state */
 .login-form input[type="text"]:focus,
 .login-form input[type="password"]:focus {
-    border-color: #4285F4;                             /* Blue border on focus */
+    border-color: var(--primary-color);                             /* Blue border on focus */
     outline: none;                                       /* Remove default outline */
 }
 
@@ -148,7 +148,7 @@
     margin-top: 22px;                                       /* Space above prompt */
     text-align: center;                                     /* Center text */
     font-size: 0.95rem;                                     /* Slightly smaller font */
-    color: var(--background-color);                                          /* Light gray */
+    color: var(--button-text);                                          /* Light gray */
 }
 
 /* Links inside signup prompt */

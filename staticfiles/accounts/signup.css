@@ -5,7 +5,7 @@
     box-shadow:            0 0 25px rgba(255,255,255,0.1); /* Soft white glow */
     max-width:             500px;                     /* Max container width */
     margin:                60px auto;                 /* Center horizontally, top/bottom margin */
-    color:                 white;                   /* Text color */
+    color:                 var(--button-text);                   /* Text color */
     /* font-family:           'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; Clean readable font */
     font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
@@ -16,7 +16,7 @@
     margin-bottom:         30px;                      /* Space below heading */
     font-weight:           700;                       /* Bold font */
     font-size:             2rem;                      /* Large font size */
-    color:                 #eee;                    /* Light gray text */
+    color:                 var(--button-text);                    /* Light gray text */
 }
 
 .signup-container label {
@@ -45,8 +45,8 @@
 .signup-container input[type="email"]:focus,
 .signup-container input[type="password"]:focus,
 .signup-container select:focus {
-    border-color:          #007bff;                 /* Blue border on focus */
-    box-shadow:            0 0 6px #007bff;         /* Blue glow */
+    border-color:          var(--primary-color);                 /* Blue border on focus */
+    box-shadow:            0 0 6px var(--primary-color);         /* Blue glow */
 }
 
 /* Button - consistent with login */
@@ -54,8 +54,8 @@
     width:                 100%;                        /* Full width button */
     padding:               14px;                        /* Button padding */
     margin-top:            20px;                        /* Space above button */
-    background-color:      #007bff;                   /* Bootstrap blue */
-    color:                 white;                     /* Text color */
+    background-color:      var(--primary-color);                   /* Bootstrap blue */
+    color:                 var(--button-text);                     /* Text color */
     border-radius:         6px;                         /* Rounded corners */
     border:                none;                        /* No border */
     cursor:                pointer;                     /* Pointer cursor on hover */
@@ -65,20 +65,7 @@
 }
 
 .signup-container .btn.primary-btn:hover {
-    background-color:      #0056b3;                   /* Darker blue on hover */
-}
-
-/* Links only inside signup container */
-.signup-container a {
-    color:                 #aaa;                      /* Light gray links */
-    text-decoration:       none;                        /* No underline */
-    display:               block;                       /* Block links */
-    text-align:            center;                      /* Center text */
-    margin-top:            15px;                        /* Space above links */
-}
-
-.signup-container a:hover {
-    color:                 #fff;                      /* White on hover */
+    background-color:      var(--primary-hover);                   /* Darker blue on hover */
 }
 
 /* Error messages under fields */
@@ -86,7 +73,7 @@
     list-style:            none;                        /* Remove bullets */
     padding:               0;                           /* Remove padding */
     margin:                -10px 0 10px;                /* Adjust vertical spacing */
-    color:                 #ff4d4f;                   /* Red color for errors */
+    color:                 var(--error-color);                   /* Red color for errors */
     font-size:             0.95rem;                     /* Slightly smaller font */
     font-weight:           500;                         /* Medium weight */
     animation:             fadeIn 0.3s ease forwards;   /* Fade in animation */
@@ -108,37 +95,59 @@
 
 /* Different colors based on message type */
 .signup-container .flash-message.error {
-    background-color:      #ff4d4f;                   /* Red background for errors */
-    color:                 white;                     /* White text */
+    background-color:      var(--error-color);                   /* Red background for errors */
+    color:                 var(--button-text);                     /* White text */
 }
 
 .signup-container .flash-message.success {
-    background-color:      #28a745;                   /* Green background for success */
-    color:                 white;                     /* White text */
+    background-color:      var(--success-color);                   /* Green background for success */
+    color:                 var(--button-text);                     /* White text */
 }
 
 .signup-container .flash-message.warning {
-    background-color:      #ffc107;                   /* Yellow background for warnings */
-    color:                 #333;                      /* Dark text */
+    background-color:      var(--warning-color);                   /* Yellow background for warnings */
+    color:                 var(--text-color);                      /* Dark text */
 }
 
 .signup-container .flash-message.info {
-    background-color:      #17a2b8;                   /* Blue background for info */
-    color:                 white;                     /* White text */
+    background-color:      var(--info-color);                   /* Blue background for info */
+    color:                 var(--button-text);                     /* White text */
 }
 
 /* Input fields error styling */
 .signup-container input[aria-invalid="true"],
 .signup-container select[aria-invalid="true"] {
-    border-color:          #ff4d4f !important;        /* Red border for errors */
-    box-shadow:            0 0 6px #ff4d4f;           /* Red glow */
+    border-color:          var(--error-color) !important;        /* Red border for errors */
+    box-shadow:            0 0 6px var(--error-color);           /* Red glow */
 }
 
 /* Optional success style */
 .signup-container input.valid,
 .signup-container select.valid {
-    border-color:          #28a745;                   /* Green border for valid */
-    box-shadow:            0 0 6px #28a745;           /* Green glow */
+    border-color:          var(--success-color);                   /* Green border for valid */
+    box-shadow:            0 0 6px var(--success-color);           /* Green glow */
+}
+
+/* Signup prompt below the form */
+.login-prompt {
+    margin-top: 22px;                                       /* Space above prompt */
+    text-align: center;                                     /* Center text */
+    font-size: 0.95rem;                                     /* Slightly smaller font */
+    color: var(--button-text);                                          /* Light gray */
+}
+
+/* Links inside signup prompt */
+.login-prompt a {
+    color: var(--link-color);                                       /* Blue color for links */
+    font-weight: 600;                                       /* Semi-bold */
+    text-decoration: none;                                  /* No underline */
+    transition: color 0.3s ease;                            /* Smooth hover color */
+}
+
+/* Hover state for signup prompt links */
+.login-prompt a:hover {
+    color: var(--link-hover);                                        /* Darker blue */
+    text-decoration: underline;                              /* Underline on hover */
 }
 
 /* Fade in animation for error messages */

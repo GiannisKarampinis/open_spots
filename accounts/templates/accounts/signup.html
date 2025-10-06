@@ -34,8 +34,10 @@
 
         <input type="submit" value="Create Account" class="btn primary-btn" id="submit-btn">
     </form>
-
-    <a href="{% url 'login' %}">Already have an account? Login</a>
+    <p class="login-prompt">
+        Already have an account? <a href="{% url 'login' %}"> Login</a>
+    </p>
+    
 </div>
 
 
