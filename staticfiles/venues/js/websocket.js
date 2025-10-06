@@ -37,7 +37,7 @@ function initWebSocket(venueId){
                 return;
             }
 
-            if(reservation.status==='pending' || reservation.status==='confirmed' || reservation.status==='cancelled' || reservation.status==='cancelled') {
+            if(reservation.status==='pending' || reservation.status==='confirmed' || reservation.status==='cancelled') {
                 upsertReservationRow(reservation);
                 markReservationUnseen(reservation.id);
             }

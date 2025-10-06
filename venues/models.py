@@ -339,8 +339,8 @@ class VenueUpdateRequest(models.Model):
 
         return changes
     
-    class Meta:
-        unique_together = ("venue", "approval_status")
+    #class Meta:
+        #unique_together = ("venue", "approval_status")
     
 ###########################################################################################
 

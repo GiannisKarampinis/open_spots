@@ -305,7 +305,7 @@ def venue_dashboard(request, venue_id):
 
     arrivals = reservations.filter( # Accepted reservations that are waiting for the guest to arrive
         date__gte=now,
-        status__in=['accepted', 'rejected'], #FIXME: include rejected for now to show history
+        status__in=['accepted', 'rejected', 'cancelled'], #FIXME: include rejected for now to show history
         # arrival_status='pending'
     ).order_by('date', 'time')
 

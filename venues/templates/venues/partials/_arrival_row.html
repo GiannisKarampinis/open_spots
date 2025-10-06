@@ -12,7 +12,7 @@
   
   <td>
     <span class="badge
-      {% if r.status == 'rejected' %}
+      {% if r.status == 'rejected' or r.status == 'cancelled' %}
           bg-danger
       {% elif r.arrival_status == 'pending' %}
           bg-warning text-dark
@@ -23,6 +23,8 @@
       {% endif %}">
       {% if r.status == 'rejected' %}
           Rejected
+      {% elif r.status == 'cancelled' %}
+          Cancelled
       {% else %}
           {{ r.arrival_status|capfirst }}
       {% endif %}
