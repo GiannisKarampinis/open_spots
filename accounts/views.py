@@ -257,16 +257,14 @@ def profile_view(request):
                 user.set_password(new_password)
                 user.email_verified = False
                 user.unverified_email = current_verified_email
-                print('Profile view:', user.unverified_email)
+                
                 user.save()
 
-                EmailVerificationCode.objects.filter(user=user).delete()
-                send_verification_code(user)
                 request.session['pending_user_id'] = user.id
                 request.session['code_already_sent'] = True
                 request.session['verification_reason'] = 'password_change'
-                messages.info(request, "Password updated. Please verify your email.")
-                return redirect('confirm_code')
+                messages.info(request, "Password updated. Please Log in to verify your email.")
+                return redirect('login')
             else:
                 messages.error(request, "Invalid form: something went wrong, please try again")
 
@@ -350,12 +348,11 @@ def confirm_code_view(request):
             user.unverified_email = ''
             user.email_verified = True
             user.save()
-
-            request.session.flush()  # Clear session to avoid conflicts
-
-            # request.session.pop('pending_user_id', None)
-            # request.session.pop('code_already_sent', None)
-            # request.session.pop('verification_reason', None)
+            messages.info(request, "step1: email verified, logging in...")
+            # Only clear what's necessary
+            request.session.pop('pending_user_id', None)
+            request.session.pop('code_already_sent', None)
+            request.session.pop('verification_reason', None)
 
             backend = get_backends()[0]
             login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)
