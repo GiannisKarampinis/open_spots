@@ -1,25 +1,24 @@
 /* === Container & Layout === */
 .container {
-    max-width: 1080px;
-    /* padding: 40px 0; */
-    margin: 0 auto;
-    color: #e0e0e0;
+    max-width:  1080px;
+    margin:     0 auto;
+    color:      #e0e0e0;
 }
 
 /* === Page Title === */
 h1.fw-bold {
-    font-size: 2.2rem;
-    margin-bottom: 0;
-    color: var(--text-color);
+    font-size:      2.2rem;
+    margin-bottom:  0;
+    color:          var(--text-color);
 }
 
 .venue-status-toggle {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 12px;
-    margin-bottom: 12px;
-    padding: 6px 0;
+    display:        flex;
+    align-items:    center;
+    gap:            12px;
+    margin-top:     12px;
+    margin-bottom:  12px;
+    padding:        6px 0;
 }
 
 /* Unified style for availability toggle buttons */
@@ -832,15 +831,6 @@ button {
     border: none;
 }
 
-
-
-
-
-
-
-
-
-
 /* ==========================
    DATE RANGE PICKER MODAL
    ========================== */
@@ -854,12 +844,17 @@ button {
 
 /* Outer container alignment */
 .date-range-container {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  position:         relative;
+  display:          flex;
+  justify-content:  center;
+  align-items:      center;
   background-color: var(--surface-color); /* optional light gray */
-  border-radius: 6px;
+  border-radius:    6px;
+  text-align:       right;
+  font-family:      inherit;
+  margin:           1.5rem 0;
+  padding:          0.8rem 1rem;
+
 }
 
 /* Date range input styling */
@@ -869,7 +864,7 @@ button {
   padding: 0.75rem 1rem;
   border-radius: 8px;
   border: 1px solid #ddd;
-  background-color: #fff;
+  background-color: var(--surface-color);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   font-size: 1rem;
   font-weight: 500;
@@ -881,7 +876,7 @@ button {
 
 /* Placeholder */
 .daterange-input::placeholder {
-  color: #999;
+  color: #ffffff;
   font-weight: 500;
   text-align: center;
 }
@@ -890,11 +885,6 @@ button {
 body.modal-open {
   padding-right: 0 !important;
   overflow-y: scroll;
-}
-
-.date-range-container {
-  text-align: right;
-  font-family: system-ui, sans-serif;
 }
 
 #daterange-input {
