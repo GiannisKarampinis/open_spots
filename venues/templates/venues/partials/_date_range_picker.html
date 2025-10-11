@@ -1,0 +1,23 @@
+<div id="date-range-component-{{ target_tab }}" class="date-range-container">
+  <!-- Always-visible input -->
+  <input
+    id="daterange-input-{{ target_tab }}"
+    class="form-control daterange-input"
+    data-target-tab="{{ target_tab }}"
+    placeholder="Select date range"
+    type="text"
+    readonly
+  >
+</div>
+
+<!-- Floating Date Range Modal (unique per tab) -->
+<div class="modal fade" id="dateRangeModal-{{ target_tab }}" tabindex="-1"
+     aria-labelledby="dateRangeModalLabel-{{ target_tab }}" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content shadow-sm border-0">
+      <div class="modal-body">
+        <!-- Flatpickr will attach here automatically -->
+      </div>
+    </div>
+  </div>
+</div>

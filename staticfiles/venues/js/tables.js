@@ -86,3 +86,77 @@ function upsertReservationRow(reservationData) {
     // Add the new/updated row
     addRowToTable(targetTableId, renderRowFromData(reservationData), !!existing);
 }
+
+
+
+
+
+
+
+function filterTableByDateRange(tableSelector, start, end) {
+  console.log(`[filterTableByDateRange] Filtering table: ${tableSelector}`);
+  console.log(`Start: ${start}, End: ${end}`);
+
+  const dt = initializeDataTable(tableSelector);    // Ensure DataTable instance
+  if (!start || !end) return;                       // Exit if no dates provided
+
+  // Normalize start/end to cover full day
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  startDate.setHours(0, 0, 0, 0);                   // Start of day
+  endDate.setHours(23, 59, 59, 999);                // End of day
+
+  dt.rows().every(function () {
+    const row = this.node();                        // Get <tr> element
+    const dateCell = $(row).find('td').eq(1);       // Assume column index 1 = Date
+    if (!dateCell.length) return;
+
+    const rawText = dateCell.text().trim();         // Get text content of the date cell
+    const rowDate = parseRowDate(rawText);          // Parse into local Date
+    if (!rowDate) return;                           // Skip unparseable rows
+
+    rowDate.setHours(12, 0, 0, 0);                  // Normalize to noon to avoid timezone shifts
+
+    // Check if the row date falls within the selected range
+    const isInRange = rowDate >= startDate && rowDate <= endDate;
+    
+    $(row).toggle(isInRange);                       // Show/hide row based on filter
+
+    console.log(`[filter] rowDate=${rowDate}, start=${startDate}, end=${endDate}, inRange=${isInRange}`);
+  });
+
+  dt.draw(false);                           // Redraw table without resetting paging
+  console.log(`[filterTableByDateRange] Filter applied for ${tableSelector}`);
+}
+
+function resetTableFilter(tableSelector) {
+  const dt = initializeDataTable(tableSelector);
+  
+  $(dt.rows().nodes()).show();
+  
+  dt.draw(false);
+
+}
+
+document.addEventListener('dateRangeSelected', function (e) {
+    const { start, end, targetTab } = e.detail;
+    let tableSelector;
+    
+    // Map each date picker tab to its table(s)
+    if (targetTab === 'requestsTab') {
+        // Apply same range filter to both current-request tables
+        filterTableByDateRange('#upcomingTable', start, end);
+        filterTableByDateRange('#specialTable', start, end);
+        return; // we already handled both
+    } else if (targetTab === 'historyTab') {
+        tableSelector = '#pastTable';
+    }
+
+    if (!tableSelector) return;
+
+    if (!start || !end) {
+        resetTableFilter(tableSelector);
+    } else {
+        filterTableByDateRange(tableSelector, start, end);
+    }
+});

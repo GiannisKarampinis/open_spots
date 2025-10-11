@@ -1,0 +1,155 @@
+/* ======= Flatpickr header: stable layout & clean arrows ======= */
+
+/* Keep header elements on one line and centered */
+.custom-flatpickr .flatpickr-current-month {
+  display:                  flex;
+  align-items:              center;
+  justify-content:          center;
+  gap:                      0.5rem;
+  flex-wrap:                nowrap;         /* prevent wrapping on resize */
+  white-space:              nowrap;       /* avoid breaking inside controls */
+  padding:                  0.25rem 0;        /* small vertical padding */
+  box-sizing:               border-box;
+}
+
+/* Month select: styled, with a CSS chevron as background (no ::after on select) */
+.flatpickr-current-month select.flatpickr-monthDropdown-months {
+  appearance:               none;
+  -webkit-appearance:       none;
+  -moz-appearance:          none;
+  background-color:         #fff;
+  border:                   1px solid #ddd;
+  border-radius:            6px;
+  padding:                  0.35rem 2.0rem 0.35rem 0.75rem; /* right padding for chevron */
+  font-size:                0.95rem;
+  font-weight:              500;
+  color:                    #333;
+  cursor:                   pointer;
+  /* transition:               all 0.12s ease; */
+  box-shadow:               0 1px 3px rgba(0,0,0,0.06);
+  position:                 relative;
+  min-width:                120px;       /* keeps control size stable */
+  max-width:                220px;
+  flex:                     0 0 auto;         /* do not grow/shrink */
+  box-sizing:               border-box;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #666 50%), 
+    linear-gradient(135deg, #666 50%, transparent 50%)      !important;
+  background-position: calc(100% - 12px) calc(50% - 3px),
+                       calc(100% - 6px) calc(50% - 3px)       !important;
+  background-size:          6px 6px, 6px 6px                  !important;
+  background-repeat:        no-repeat, no-repeat              !important;
+}
+
+/* Hover / focus for select */
+.flatpickr-current-month select.flatpickr-monthDropdown-months:hover {
+  border-color:             #aaa;
+  box-shadow:               0 2px 6px rgba(0,0,0,0.08);
+}
+.flatpickr-current-month select.flatpickr-monthDropdown-months:focus {
+  outline:                  none;
+  border-color:             #007bff;
+  box-shadow:               0 0 0 3px rgba(0,123,255,0.12);
+}
+
+/* Option appearance (look & feel inside dropdown; limited browser control) */
+.flatpickr-current-month select.flatpickr-monthDropdown-months option {
+  font-weight:              500;
+  background-color:         #fff;
+  color:                    #333;
+}
+
+/* Year wrapper: inline-flex to align arrows & input */
+.custom-flatpickr .flatpickr-current-month .numInputWrapper {
+  display:                  inline-flex;
+  gap:                      0.25rem;
+  align-items:              center;
+  flex:                     0 0 auto;         /* keep stable on resize */
+}
+
+/* Year input */
+.flatpickr-current-month .numInputWrapper input.numInput.cur-year {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  width: 4.25rem;
+  text-align: center;
+  /* transition: box-shadow 0.12s ease, border-color 0.12s ease; */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  appearance: textfield;
+  -moz-appearance: textfield;
+  box-sizing: border-box;
+}
+.flatpickr-current-month .numInputWrapper input.numInput.cur-year:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0,123,255,0.12);
+  outline: none;
+}
+
+/* Remove native number arrows in WebKit */
+.flatpickr-current-month .numInputWrapper input.numInput.cur-year::-webkit-outer-spin-button,
+.flatpickr-current-month .numInputWrapper input.numInput.cur-year::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Arrow spans: remove boxed visuals and render clean triangles */
+.flatpickr-current-month .numInputWrapper span.arrowUp,
+.flatpickr-current-month .numInputWrapper span.arrowDown {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+/* Triangles using :after (works reliably) */
+.flatpickr-current-month .numInputWrapper span.arrowUp::after,
+.flatpickr-current-month .numInputWrapper span.arrowDown::after {
+  content: "";
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+}
+
+/* Up / down specifics */
+.flatpickr-current-month .numInputWrapper span.arrowUp::after {
+  border-bottom: 7px solid #666;
+  transform: translateY(-1px);
+}
+.flatpickr-current-month .numInputWrapper span.arrowDown::after {
+  border-top: 7px solid #666;
+  transform: translateY(1px);
+}
+
+/* Hover state */
+.flatpickr-current-month .numInputWrapper span.arrowUp:hover::after,
+.flatpickr-current-month .numInputWrapper span.arrowDown:hover::after {
+  border-bottom-color: #007bff;
+  border-top-color: #007bff;
+}
+
+/* Very small screens: slightly reduce spacing so header stays compact */
+@media (max-width: 420px) {
+  .custom-flatpickr .flatpickr-current-month {
+    gap: 0.25rem;
+  }
+  .flatpickr-current-month select.flatpickr-monthDropdown-months {
+    min-width: 100px;
+    padding-right: 1.8rem;
+  }
+  .flatpickr-current-month .numInputWrapper input.numInput.cur-year {
+    width: 3.5rem;
+    padding: 0.3rem 0.45rem;
+  }
+}
+/* ======= End Flatpickr header: stable layout & clean arrows ======= */

@@ -224,3 +224,34 @@ def convert_image_to_webp(image_field):
 ###########################################################################################
 
 ###########################################################################################
+import logging
+import threading # For production consider using Celery or Django Queued Tasks
+
+logger = logging.getLogger(__name__)
+
+def send_async_email(email):
+    """
+    Run email.send() in a background thread so it doesn't block the request.
+    """
+    def _send():
+        try:
+            email.send()
+            logger.debug("Email sent to %s", email.to)
+        except Exception as e:
+            logger.exception("Failed to send email to %s", email.to)
+
+    threading.Thread(target=_send, daemon=True).start()
+
+###########################################################################################
+
+###########################################################################################
+def _build_site_url(path: str) -> str:
+    base = getattr(settings, "SITE_URL", "").rstrip("/")
+    
+    if not base:
+        return path  # fallback; ideally SITE_URL is configured
+    
+    if not path.startswith("/"):
+        path = f"/{path}"
+    
+    return f"{base}{path}"

@@ -837,24 +837,72 @@ button {
 
 
 
-.text-center {
-    display: flex;
-    justify-content: center;   /* center horizontally */
-    margin-top: 2rem;          /* space from elements above */
+
+
+
+
+/* ==========================
+   DATE RANGE PICKER MODAL
+   ========================== */
+
+/* Modal body centers input */
+.modal-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* Style for the button itself */
-.btn-edit-status {
-    padding: 0.75rem 1.5rem;
-    background-color: #4CAF50;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.2s;
+/* Outer container alignment */
+.date-range-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--surface-color); /* optional light gray */
+  border-radius: 6px;
 }
-.btn-edit-status:hover {
-    background-color: #45a049;
+
+/* Date range input styling */
+.daterange-input {
+  max-width: 320px;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Placeholder */
+.daterange-input::placeholder {
+  color: #999;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Prevent body shift when modal opens */
+body.modal-open {
+  padding-right: 0 !important;
+  overflow-y: scroll;
+}
+
+.date-range-container {
+  text-align: right;
+  font-family: system-ui, sans-serif;
+}
+
+#daterange-input {
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.modal-content {
+  border-radius: 10px;
 }

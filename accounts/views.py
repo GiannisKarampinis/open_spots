@@ -279,33 +279,31 @@ def profile_view(request):
 def confirm_code_view(request):
     user_id = request.session.get('pending_user_id')
     verification_reason = request.session.get('verification_reason')
-     # If session data missing, block access
-     # Also block if trying to verify email but no unverified_email present
-     # (except for signup flow where unverified_email is set on registration)
-     # or if trying to recover password without unverified_email (should not happen)
-     # or if trying to change password without unverified_email (should not happen)
-     # In these cases, user should start over from login/signup/password recovery
+
+    # --- 1. Safety checks ---
     if not user_id or not verification_reason:
         messages.error(request, "Session expired or invalid access to verification page.")
         return redirect('login')
 
     user = get_object_or_404(CustomUser, id=user_id)
 
-    # If user already verified, block further code confirmation
-    if verification_reason == 'signup': 
+    # --- 2. Handle already verified users ---
+    if verification_reason == 'signup':
         if user.email_verified:
             messages.info(request, "Email already verified.")
             return redirect('login')
         else:
             messages.info(request, "Log in to verify your email.")
 
-    # If unverified_email is missing, stop here
+    # --- 3. Validate unverified email existence ---
     if verification_reason not in ['password_recovery', 'password_change'] and not user.unverified_email:
         messages.error(request, "No unverified email found. Please sign up again.")
         return redirect('login')
 
+    # --- 4. Handle POST: verification code submitted ---
     if request.method == 'POST':
         code_entered = request.POST.get('code', '').strip()
+
         try:
             code_obj = EmailVerificationCode.objects.get(user=user, code=code_entered)
         except EmailVerificationCode.DoesNotExist:
@@ -317,6 +315,7 @@ def confirm_code_view(request):
             messages.error(request, "Verification code expired. Please request a new one.")
             return redirect('confirm_code')
 
+        # --- Code is valid ---
         code_obj.delete()
 
         if verification_reason in ['signup', 'email_update']:
@@ -325,58 +324,54 @@ def confirm_code_view(request):
             user.email_verified = True
             user.save()
 
-          # Only clear what's necessary
+            # Clear only relevant session keys
             request.session.pop('pending_user_id', None)
             request.session.pop('code_already_sent', None)
             request.session.pop('verification_reason', None)
 
-
-            # Log the user in manually
+            # Log the user in
             backend = get_backends()[0]
             login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)
             messages.success(request, "Your email has been verified. You may now use your account.")
-            return redirect('venue_list')  # or another landing page
+            return redirect('venue_list')
 
         elif verification_reason == 'password_recovery':
-            # Do not log in yet!
-            # Clean old sessions but keep ID to use on password reset
             request.session['password_recovery_verified'] = True
-            return redirect('password_reset')  # You need to create this view
-        
+            return redirect('password_reset')
+
         elif verification_reason == 'password_change':
             user.email = user.unverified_email
             user.unverified_email = ''
             user.email_verified = True
             user.save()
-            messages.info(request, "step1: email verified, logging in...")
-            # Only clear what's necessary
-            request.session.pop('pending_user_id', None)
-            request.session.pop('code_already_sent', None)
-            request.session.pop('verification_reason', None)
+
+            request.session.flush()  # Clear session to avoid conflicts
+
+            # request.session.pop('pending_user_id', None)
+            # request.session.pop('code_already_sent', None)
+            # request.session.pop('verification_reason', None)
 
             backend = get_backends()[0]
             login(request, user, backend=backend.__module__ + "." + backend.__class__.__name__)
             messages.success(request, "Password changed and email verified.")
             return redirect('venue_list')
 
-
-    # Handle GET: optionally resend a code
+    # --- 5. Handle GET or initial load ---
+    # Only send code once per session unless explicitly resent
     if not request.session.get('code_already_sent'):
-        # Clean up any previous codes
         EmailVerificationCode.objects.filter(user=user).delete()
         send_verification_code(user)
         request.session['code_already_sent'] = True
 
+    # --- 6. Compute countdown timer ---
     latest_code = EmailVerificationCode.objects.filter(user=user).order_by('-created_at').first()
+    remaining = 0
     if latest_code:
-        remaining = max(0, int((latest_code.created_at + timedelta(minutes=2) - now()).total_seconds()))
-    else:
-        remaining = 0
+        expiry_time = latest_code.created_at + timedelta(minutes=2)
+        remaining = max(0, int((expiry_time - now()).total_seconds()))
 
-    context = {
-        'remaining_seconds': remaining
-    }
-
+    # --- 7. Render verification page ---
+    context = {'remaining_seconds': remaining}
     return render(request, 'accounts/verify_code.html', context)
 
 def is_venue_admin(user):

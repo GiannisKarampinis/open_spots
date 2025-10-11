@@ -1,0 +1,9 @@
+{{ intro }}
+
+Your verification code is: {{ code }}
+
+This code will expire soon. Please enter it in the verification form to confirm your email.
+
+{% if verify_url %}
+You can also verify directly here: {{ verify_url }}
+{% endif %}
