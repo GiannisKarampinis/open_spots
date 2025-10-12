@@ -159,10 +159,9 @@
 
 /* Explicitly size the SVG */
 .date-range-container .calendar-icon {
-  position:   absolute;
-  left:       400px;
+  position:   relative;
+  left:       40px;
   top:        50%;
-  transform:  translateY(-50%);
   width:      20px;    /* fixed width */
   height:     20px;   /* fixed height */
   color:      #ffffff; /* icon color */
