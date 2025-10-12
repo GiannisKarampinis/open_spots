@@ -189,22 +189,20 @@ def signup_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.user_type = 'customer'
-            user.unverified_email = user.email
-            user.email_verified = False
+            user                    = form.save(commit=False)
+            user.user_type          = 'customer'
+            user.unverified_email   = user.email
+            user.email_verified     = False
             user.save()
-            print("Saved user ID:", user.id)
-
-            # Ensure user ID is set
-            if not user.id:
-                user.refresh_from_db()
+            
             if user.id:
                 request.session['verification_reason'] = 'signup'
                 request.session['pending_user_id'] = user.id
+                
                 return redirect('confirm_code')
             else:
                 messages.error(request, "An unexpected error occurred during signup. Please try again.")
+                
                 return redirect('signup')
     else:
         form = CustomUserCreationForm()
