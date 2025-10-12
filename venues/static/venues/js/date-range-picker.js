@@ -38,7 +38,12 @@ document.addEventListener('DOMContentLoaded', function () {
           console.log('[ACTION] Bootstrap modal hidden (state reset)');
         }
       },
-
+      onOpen: function(selectedDates, dateStr, instance) {
+        // Match calendar width to input width dynamically
+        const width = dateInput.offsetWidth;
+        instance.calendarContainer.style.width = `${width}px`;
+        instance.calendarContainer.style.minWidth = `${width}px`;
+      },
       onReady: function (_, __, instance) {
         console.log(`[FLATPICKR] onReady fired → adding .custom-flatpickr class for tab "${targetTab}"`);
         instance.calendarContainer.classList.add('custom-flatpickr');
@@ -86,4 +91,5 @@ document.addEventListener('DOMContentLoaded', function () {
       console.log('[ACTION] Flatpickr calendar closed');
     });
   });
+
 });
