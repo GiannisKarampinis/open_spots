@@ -1,7 +1,6 @@
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
-from django.urls import reverse
 from .models import EmailVerificationCode
 from venues.utils import send_async_email, _build_site_url  # reuse existing helpers
 
@@ -59,7 +58,7 @@ def send_verification_code(user):
         "title": "Verify your email",
         "intro": "Use the code below to verify your OpenSpots account email.",
         "code": code,
-        "verify_url": _build_site_url(reverse("confirm-code")),
+        "verify_url": _build_site_url("/accounts/confirm-code/"),
     }
 
     # 4. Determine email target

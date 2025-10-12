@@ -173,30 +173,3 @@
 .daterange-input:focus + .calendar-icon {
   color:      #0d6efd;
 }
-
-#dateRangeModal-requestsTab .modal-dialog {
-  width: 400px;
-  max-width: 90%;
-  transition: none;
-}
-
-#dateRangeModal-requestsTab.show .modal-dialog {
-  transform: none !important; /* Prevent re-centering jumps */
-}
-
-/* ===== Fix: Flatpickr dimension flicker inside modal ===== */
-#dateRangeModal-requestsTab.fade {
-  transition: none !important;
-}
-
-#dateRangeModal-requestsTab .flatpickr-calendar {
-  min-height: 280px;
-  opacity: 1;
-  overflow: visible !important;
-  transition: opacity 0.2s ease;
-}
-
-#dateRangeModal-requestsTab .flatpickr-calendar.animate {
-  height: auto !important;
-}
-

@@ -19,8 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
       clickOpens:         false, // we open manually
       appendTo:           modalEl.querySelector('.modal-body'),
       monthSelectorType:  'dropdown',
-      animate :           false, // disables height animation
-      
+
       onChange: function (selectedDates) {
         const start = selectedDates[0] || null;
         const end   = selectedDates[1] || null;
@@ -43,28 +42,8 @@ document.addEventListener('DOMContentLoaded', function () {
       onReady: function (_, __, instance) {
         console.log(`[FLATPICKR] onReady fired → adding .custom-flatpickr class for tab "${targetTab}"`);
         instance.calendarContainer.classList.add('custom-flatpickr');
-        adjustCalendarWidth(instance);
-      },
-
-      onOpen(selectedDates, dateStr, instance) {
-        adjustCalendarWidth(instance);
       }
     });
-
-    function adjustCalendarWidth(instance) {
-      const inputWidth = dateInput.offsetWidth;
-      instance.calendarContainer.style.width = `${inputWidth}px`;
-      instance.calendarContainer.style.minWidth = `${inputWidth}px`;
-      instance.calendarContainer.style.maxWidth = `${inputWidth}px`;
-      instance.calendarContainer.style.margin = '0 auto'; // center if needed
-    }
-
-    // Optional: keep in sync on resize (e.g., responsive layouts)
-    new ResizeObserver(() => {
-      if (dateRangePicker && dateRangePicker.calendarContainer) {
-        adjustCalendarWidth(dateRangePicker);
-      }
-    }).observe(dateInput);
 
     // Helper to open modal + Flatpickr
     function openDateModal() {
@@ -107,16 +86,4 @@ document.addEventListener('DOMContentLoaded', function () {
       console.log('[ACTION] Flatpickr calendar closed');
     });
   });
-});
-
-
-$('#dateRangeModal-requestsTab').on('shown.bs.modal', function () {
-  if (!window.datePickerInit) {
-    flatpickr(".daterange-input", {
-      mode: "range",
-      animate: false, // disables height animation
-      dateFormat: "Y-m-d",
-    });
-    window.datePickerInit = true; // avoid re-initializing
-  }
 });
