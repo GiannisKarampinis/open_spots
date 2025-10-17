@@ -1,6 +1,7 @@
 {% extends 'includes/base.html' %}
 {% load static %}
 {% load date_filters %}
+{% load i18n %}
 
 
 {% block extra_css %}
@@ -40,7 +41,7 @@
     
 {% endblock %}
 
-{% block title %}Venue Dashboard{% endblock %}
+{% block title %}{% trans "Venue Dashboard" %}{% endblock %}
 
 {% block content %}
 <div class="container mt-5" id="venue-dashboard" data-venue-id="{{ venue.id }}">
@@ -50,11 +51,11 @@
         <form action="{% url 'toggle_venue_full' venue.id %}" method="post" class="venue-status-toggle">
             {% csrf_token %}
             {% if venue.is_full %}
-                <span class="badge bg-danger me-2">🚫 Full</span>
-                <button type="submit" class="btn btn-outline-success btn-sm mark-availability">✅ Mark as Available</button>
+                <span class="badge bg-danger me-2">🚫 {% trans "Full" %}</span>
+                <button type="submit" class="btn btn-outline-success btn-sm mark-availability">✅ {% trans "Mark as Available" %}</button>
             {% else %}
-                <span class="badge bg-success me-2">✅ Available</span>
-                <button type="submit" class="btn btn-outline-danger btn-sm mark-availability">🚫 Mark as Full</button>
+                <span class="badge bg-success me-2">✅ {% trans "Available" %}</span>
+                <button type="submit" class="btn btn-outline-danger btn-sm mark-availability">🚫 {% trans "Mark as Full" %}</button>
             {% endif %}
         </form>
     </div>
@@ -62,7 +63,7 @@
     <!-- Tabs -->
     <div class="tabs">
         <button type="button" class="active d-flex align-items-center gap-1" data-tab="requests">
-            <span data-lucide="file-text"></span> Reservation Requests & Guest Arrivals
+            <span data-lucide="file-text"></span> {% trans "Reservation Requests & Guest Arrivals" %}
             <span id="notification-container" class="position-relative ms-2">
                 <span data-lucide="bell"></span>
                 <span id="notification-badge" 
@@ -74,13 +75,13 @@
         </button>
 
         <button type="button" data-tab="history">
-            <span data-lucide="clipboard-list"></span> Reservation History
+            <span data-lucide="clipboard-list"></span> {% trans "Reservation History" %}
         </button>
         <button type="button" data-tab="analytics">
-            <span data-lucide="bar-chart-2"></span> Analytics
+            <span data-lucide="bar-chart-2"></span> {% trans "Analytics" %}
         </button>
         <button type="button" data-tab="manage-venue">
-            <span data-lucide="settings-2"></span> Manage Venue
+            <span data-lucide="settings-2"></span> {% trans "Manage Venue" %}
         </button>
     </div>
 

@@ -1,26 +1,28 @@
 {% extends "includes/base.html" %}
 {% load static %}
+{% load i18n %}
+
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'venues/my_reservations.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 {% endblock %}
 
-{% block title %}My Reservations{% endblock %}
+{% block title %}{% trans "My Reservations" %}{% endblock %}
 
 {% block content %}
 
 <div class="reservations-container">
-    <h2>My Reservations</h2>
+    <h2>{% trans "My Reservations" %}</h2>
 
     <div class="tabs">
         <button class="tab-button active" data-tab="upcoming">
-            <i class="fa-solid fa-calendar-day"></i> Upcoming
+            <i class="fa-solid fa-calendar-day"></i> {% trans "Upcoming" %}
         </button>
         <button class="tab-button" data-tab="past">
-            <i class="fa-solid fa-clock-rotate-left"></i> Past
+            <i class="fa-solid fa-clock-rotate-left"></i> {% trans "Past" %}
         </button>
         <button class="tab-button" data-tab="cancelled">
-            <i class="fa-solid fa-ban"></i> Cancelled
+            <i class="fa-solid fa-ban"></i> {% trans "Cancelled" %}
         </button>
     </div>
 

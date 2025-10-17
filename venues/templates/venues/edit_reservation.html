@@ -1,7 +1,8 @@
 {% extends "includes/base.html" %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Edit Reservation - {{ reservation.venue.name }}{% endblock %}
+{% block title %}{% trans "Edit Reservation" %} - {{ reservation.venue.name }}{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'venues/venue_detail.css' %}">
@@ -12,7 +13,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <!-- Title -->
-            <h2 class="mb-4 text-center">Edit Reservation for {{ reservation.venue.name }}</h2>
+            <h2 class="mb-4 text-center">{% trans "Edit Reservation for" %} {{ reservation.venue.name }}</h2>
 
             <!-- Edit Form styled like reservation form -->
             {% include "venues/partials/_customer_reservation_form.html" with form=form submit_text="Save Changes" %}

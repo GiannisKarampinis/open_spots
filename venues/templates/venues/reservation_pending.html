@@ -1,7 +1,8 @@
 {% extends "includes/base.html" %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Reservation Pending{% endblock %}
+{% block title %}{% trans "Reservation Pending" %}{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'venues/reservation_pending.css' %}">
@@ -20,10 +21,10 @@
         
         </div>
     </div>
-    <h2>Reservation Pending</h2>
-    <p>Thank you for your booking request. Your reservation is currently pending and requires confirmation from the venue administrator.</p>
-    <p>You’ll receive a confirmation or update shortly via email.</p>
-    <a href="{% url 'venue_list' %}">Back to Venue List</a>
+    <h2>{% trans "Reservation Pending" %}</h2>
+    <p>{% trans "Thank you for your booking request. Your reservation is currently pending and requires confirmation from the venue administrator." %}</p>
+    <p>{% trans "You’ll receive a confirmation or update shortly via email." %}</p>
+    <a href="{% url 'venue_list' %}">{% trans "Back to Venue List" %}</a>
 </div>
 
 {% endblock %}

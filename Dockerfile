@@ -4,13 +4,14 @@ FROM python:3.12-slim
 # Set working directory inside container
 WORKDIR /app
 
-# Install system deps
-RUN apt-get update && apt-get install -y \
+# Install system dependencies (added gettext for translations)
+RUN apt-get update && apt-get install -y --no-install-recommends\
     build-essential \
     libpq-dev \
+    gettext \
     && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
+# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

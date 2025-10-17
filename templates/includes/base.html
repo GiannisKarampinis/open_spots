@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <title>{% block title %}{% endblock %}</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'base.css' %}">
     <link rel="stylesheet" href="{% static 'messages.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;700;900&display=swap" rel="stylesheet">
@@ -18,6 +19,36 @@
             {% include "includes/logo.svg.html" %}
         </a>
         <nav class="main-nav">
+            {% load static i18n %}
+            <form action="{% url 'set_language' %}" method="post" id="language-form">
+                {% csrf_token %}
+                <input name="next" type="hidden" value="{{ request.path }}">
+                <select name="language" id="language-select" class="hidden">
+                    <option value="el" {% if LANGUAGE_CODE == 'el' %}selected{% endif %}>GR</option>
+                    <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>EN</option>
+                </select>
+            </form>
+
+
+            <div class="language-menu">
+                <button class="language-menu-btn" id="languageMenuBtn" type="button">
+                    {% if LANGUAGE_CODE == 'el' %}
+                        <img src="{% static 'images/flags/gr.svg' %}" alt="Greek flag" class="flag-icon"> GR
+                    {% else %}
+                        <img src="{% static 'images/flags/gb.svg' %}" alt="British flag" class="flag-icon"> EN
+                    {% endif %}
+                    <span class="triangle">&#x25BC;</span>
+                </button>
+                <div class="language-dropdown" id="languageDropdown" role="menu" aria-labelledby="languageMenuBtn">
+                    <button type="button" class="language-option" data-lang="el">
+                        <img src="{% static 'images/flags/gr.svg' %}" alt="Greek flag" class="flag-icon"> GR
+                    </button>
+                    <button type="button" class="language-option" data-lang="en">
+                        <img src="{% static 'images/flags/gb.svg' %}" alt="British flag" class="flag-icon"> EN
+                    </button>
+                </div>
+            </div>
+
             {% if user.is_authenticated %}
                 <div class="user-menu">
                     {% if user.is_authenticated and user.user_type == 'venue_admin' and venue_id %}
@@ -78,13 +109,17 @@
     </footer>
 
     <!-- ✅ All JS at bottom -->
+
     <script>
+        let userTriangle; // Declare userTriangle outside the DOMContentLoaded listener
+        let languageTriangle; // Declare languageTriangle outside the DOMContentLoaded listener
+
         document.addEventListener("DOMContentLoaded", () => {
             const body = document.body;
             const themeToggle = document.getElementById("theme-toggle");
             const userMenuBtn = document.getElementById("userMenuBtn");
             const userDropdown = document.getElementById("userDropdown");
-            const userTriangle = userMenuBtn?.querySelector(".triangle");
+            userTriangle = userMenuBtn?.querySelector(".triangle"); // Assign value inside the listener
             const submenuBtn = document.querySelector(".submenu-btn");
             const submenu = document.querySelector(".submenu");
 
@@ -130,7 +165,50 @@
                     setTimeout(() => alert.style.display = 'none', 600);
                 }, 2000);
             });
+
+            // Language dropdown toggle
+            const languageMenuBtn = document.getElementById("languageMenuBtn");
+            const languageDropdown = document.getElementById("languageDropdown");
+            languageTriangle = languageMenuBtn?.querySelector(".triangle"); // Assign value inside the listener
+            const languageForm = document.getElementById("language-form");
+            const languageSelect = document.getElementById("language-select");
+
+            if (languageMenuBtn && languageDropdown) {
+                languageMenuBtn.addEventListener("click", e => {
+                    e.stopPropagation();
+                    languageDropdown.classList.toggle("show");
+                    languageTriangle?.classList.toggle("rotate");
+                });
+
+                document.addEventListener("click", () => {
+                    languageDropdown.classList.remove("show");
+                    languageTriangle?.classList.remove("rotate");
+                });
+
+                languageDropdown.addEventListener("click", e => e.stopPropagation());
+
+                // Handle language selection
+                languageDropdown.querySelectorAll(".language-option").forEach(option => {
+                    option.addEventListener("click", () => {
+                        console.log("Selected language:", option.dataset.lang);
+                        languageSelect.value = option.dataset.lang;
+                        languageForm.submit();
+                    });
+                });
+            }
         });
+        if (userMenuBtn && languageMenuBtn) {
+            userMenuBtn.addEventListener("click", e => {
+                e.stopPropagation();
+                languageDropdown?.classList.remove("show");
+                languageTriangle?.classList.remove("rotate");
+            });
+            languageMenuBtn.addEventListener("click", e => {
+                e.stopPropagation();
+                userDropdown?.classList.remove("show");
+                userTriangle?.classList.remove("rotate");
+            });
+        }
     </script>
 
     {% block extra_js %}{% endblock %}

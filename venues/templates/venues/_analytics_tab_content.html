@@ -1,12 +1,14 @@
+{% load i18n %}
+
 <div class="analytics-container" data-venue-id="{{ venue.id }}">
     <!-- Grouping Selection -->
     <form id="analyticsForm" method="get" class="d-flex justify-content-center mb-4" role="search" aria-label="Group analytics data">
-        <label for="group" class="me-2 fs-5">📈 Group by:</label>
+        <label for="group" class="me-2 fs-5">📈 {% trans "Group by:" %}</label>
         <select name="group" id="group" class="form-select w-auto" aria-describedby="group-help">
-            <option value="daily"   {% if grouping == 'daily' %}selected{% endif %}>📅 Daily (Last 30 days)</option>
-            <option value="weekly"  {% if grouping == 'weekly' %}selected{% endif %}>📆 Weekly (Last 12 weeks)</option>
-            <option value="monthly" {% if grouping == 'monthly' %}selected{% endif %}>🗓️ Monthly (Last 12 months)</option>
-            <option value="yearly"  {% if grouping == 'yearly' %}selected{% endif %}>📊 Yearly (Last 3 years)</option>
+            <option value="daily"   {% if grouping == 'daily' %}selected{% endif %}>📅 {% trans "Daily (Last 30 days)" %}</option>
+            <option value="weekly"  {% if grouping == 'weekly' %}selected{% endif %}>📆 {% trans "Weekly (Last 12 weeks)" %}</option>
+            <option value="monthly" {% if grouping == 'monthly' %}selected{% endif %}>🗓️ {% trans "Monthly (Last 12 months)" %}</option>
+            <option value="yearly"  {% if grouping == 'yearly' %}selected{% endif %}>📊 {% trans "Yearly (Last 3 years)" %}</option>
         </select>
     </form>
 
@@ -14,19 +16,19 @@
     <div id="analytics-stats" class="d-flex justify-content-around flex-wrap mb-4">
         <div class="stat-card text-center p-3 shadow-sm rounded" style="min-width: 120px;">
             <div class="stat-value fs-3 fw-bold" id="total-visits">{{ total_visits|default:"0" }}</div>
-            <div class="stat-label text-muted">Total Visits</div>
+            <div class="stat-label text-muted">{% trans "Total Visits" %}</div>
         </div>
         <div class="stat-card text-center p-3 shadow-sm rounded" style="min-width: 120px;">
             <div class="stat-value fs-3 fw-bold" id="avg-daily-visits">{{ avg_daily_visits|default:"0" }}</div>
-            <div class="stat-label text-muted">Avg Daily Visits</div>
+            <div class="stat-label text-muted">{% trans "Avg Daily Visits" %}</div>
         </div>
         <div class="stat-card text-center p-3 shadow-sm rounded" style="min-width: 120px;">
             <div class="stat-value fs-3 fw-bold" id="peak-visits">{{ peak_visits|default:"0" }}</div>
-            <div class="stat-label text-muted">Peak {{ grouping|capfirst }} Visits</div>
+            <div class="stat-label text-muted">{% trans "Peak" %} {{ grouping|capfirst }} {% trans "Visits" %}</div>
         </div>
         <div class="stat-card text-center p-3 shadow-sm rounded" style="min-width: 120px;">
             <div class="stat-value fs-3 fw-bold" id="total-reservations">{{ total_reservations|default:"0" }}</div>
-            <div class="stat-label text-muted">Total Reservations</div>
+            <div class="stat-label text-muted">{% trans "Total Reservations" %}</div>
         </div>
     </div>
 

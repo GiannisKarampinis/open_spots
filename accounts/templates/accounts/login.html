@@ -1,8 +1,9 @@
 {% extends "includes/base.html" %}
 {% load static %}
 {% load socialaccount %}
+{% load i18n %}
 
-{% block title %}Login{% endblock %}
+{% block title %}{% trans "Login" %}{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'accounts/login.css' %}">
@@ -10,32 +11,32 @@
 
 {% block content %}
 <div class="login-container">
-    <h2>Welcome Back</h2>
+    <h2>{% trans "Welcome Back" %}</h2>
 
     <div class="google-login-container">
         <a href="{% provider_login_url 'google' process='login' %}" class="google-login-link" aria-label="Login with Google">
             <img src="{% static 'accounts/google-icon.svg' %}" alt="Google logo" class="google-icon">
-            Login with Google
+            {% trans "Login with Google" %}
         </a>
     </div>
 
-    <div class="divider"><span>or</span></div>
+    <div class="divider"><span>{% trans "or" %}</span></div>
 
     <form method="post" class="login-form">
         {% csrf_token %}
-        <label for="id_username">Username</label>
+        <label for="id_username">{% trans "Username" %}</label>
         {{ form.username }}
         
-        <label for="id_password">Password</label>
+        <label for="id_password">{% trans "Password" %}</label>
         {{ form.password }}
         
-        <input type="submit" value="Login" class="btn primary-btn">
+        <input type="submit" value="{% trans "Login" %}" class="btn primary-btn">
     </form>
 
-    <p><a href="{% url 'password_recover' %}">Forgot your password?</a></p>
+    <p><a href="{% url 'password_recover' %}">{% trans "Forgot your password?" %}</a></p>
 
     <p class="signup-prompt">
-        Don't have an account? <a href="{% url 'signup' %}">Sign up</a>
+        {% trans "Don't have an account?" %} <a href="{% url 'signup' %}">{% trans "Sign up" %}</a>
     </p>
 </div>
 {% endblock %}

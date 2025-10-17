@@ -1,15 +1,16 @@
 {% extends "includes/base.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'accounts/signup.css' %}">
 {% endblock %}
 
-{% block title %} Sign Up {% endblock %}
+{% block title %} {% trans "Sign Up" %} {% endblock %}
 
 {% block content %}
 <div class="signup-container" id="signup-container">
-    <h2> Sign Up </h2>
+    <h2> {% trans "Sign Up" %} </h2>
 
     {% if form.non_field_errors %}
     <div class="flash-messages" id="form-errors" role="alert" aria-live="assertive">
@@ -32,10 +33,10 @@
         </ul>
         {% endfor %}
 
-        <input type="submit" value="Create Account" class="btn primary-btn" id="submit-btn">
+        <input type="submit" value="{% trans "Create Account" %}" class="btn primary-btn" id="submit-btn">
     </form>
     <p class="login-prompt">
-        Already have an account? <a href="{% url 'login' %}"> Login</a>
+        {% trans "Already have an account?" %} <a href="{% url 'login' %}"> {% trans "Login" %}</a>
     </p>
     
 </div>

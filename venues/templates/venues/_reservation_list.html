@@ -1,26 +1,28 @@
+{% load i18n %}
+
 {% if reservations %}
 <ul class="reservation-list">
     {% for r in reservations %}
     <li class="reservation-card">
         <div class="reservation-info">
-            <strong> Reservation at: {{ r.venue.name }}</strong><br>
-            <i class="fa-solid fa-calendar"></i> Date: {{ r.date }} at {{ r.time }}<br>
-            <i class="fa-solid fa-users"></i> Guests: {{ r.guests }}<br>
-            <span class="status-badge {{ r.status }}"> Status: {{ r.status|capfirst }}</span>
+            <strong>{% trans "Reservation at:" %} {{ r.venue.name }}</strong><br>
+            <i class="fa-solid fa-calendar"></i> {% trans "Date:" %} {{ r.date }} {% trans "at" %} {{ r.time }}<br>
+            <i class="fa-solid fa-users"></i> {% trans "Guests:" %} {{ r.guests }}<br>
+            <span class="status-badge {{ r.status }}">{% trans "Status:" %} {{ r.status|capfirst }}</span>
         </div>
 
         {% if r.status != "cancelled" and r.is_upcoming %}
         <div class="reservation-actions">
             <!-- Edit Button -->
             <a href="{% url 'edit_reservation' r.id %}" class="edit-btn">
-                <i class="fa-solid fa-pen"></i> Edit
+                <i class="fa-solid fa-pen"></i> {% trans "Edit" %}
             </a>
 
             <!-- Cancel Button -->
             <form action="{% url 'cancel_reservation' r.id %}" method="post" class="cancel-form">
                 {% csrf_token %}
                 <button type="submit" class="cancel-btn">
-                    <i class="fa-solid fa-times"></i> Cancel
+                    <i class="fa-solid fa-times"></i> {% trans "Cancel" %}
                 </button>
             </form>
         </div>
@@ -29,5 +31,5 @@
     {% endfor %}
 </ul>
 {% else %}
-<p class="empty-msg">No reservations found.</p>
+<p class="empty-msg">{% trans "No reservations found." %}</p>
 {% endif %}

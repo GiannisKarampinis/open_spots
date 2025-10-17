@@ -1,0 +1,692 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-17 12:07+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Greek <EMAIL@ADDRESS>\n"
+"Language: el\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: accounts/admin.py:25
+msgid "Personal info"
+msgstr "Προσωπικές πληροφορίες"
+
+#: accounts/admin.py:26
+msgid "Permissions"
+msgstr "Δικαιώματα"
+
+#: accounts/admin.py:27
+msgid "Important dates"
+msgstr "Σημαντικές ημερομηνίες"
+
+#: accounts/templates/accounts/administration_panel.html:10
+msgid "Your Venue Dashboard"
+msgstr ""
+
+#: accounts/templates/accounts/administration_panel.html:13
+#, python-format
+msgid "Welcome, %(user.username)s — Your Venue Dashboard"
+msgstr ""
+
+#: accounts/templates/accounts/administration_panel.html:22
+msgid "You don't have any venues yet."
+msgstr ""
+
+#: accounts/templates/accounts/login.html:6
+#: accounts/templates/accounts/login.html:33
+#: accounts/templates/accounts/signup.html:39
+msgid "Login"
+msgstr ""
+
+#: accounts/templates/accounts/login.html:14
+msgid "Welcome Back"
+msgstr ""
+
+#: accounts/templates/accounts/login.html:19
+msgid "Login with Google"
+msgstr ""
+
+#: accounts/templates/accounts/login.html:23
+msgid "or"
+msgstr ""
+
+#: accounts/templates/accounts/login.html:27
+msgid "Username"
+msgstr ""
+
+#: accounts/templates/accounts/login.html:30
+msgid "Password"
+msgstr ""
+
+#: accounts/templates/accounts/login.html:36
+msgid "Forgot your password?"
+msgstr ""
+
+#: accounts/templates/accounts/login.html:39
+msgid "Don't have an account?"
+msgstr ""
+
+#: accounts/templates/accounts/login.html:39
+msgid "Sign up"
+msgstr ""
+
+#: accounts/templates/accounts/password_recover.html:5
+msgid "Password recover"
+msgstr ""
+
+#: accounts/templates/accounts/password_recover.html:13
+msgid "Password Recovery"
+msgstr ""
+
+#: accounts/templates/accounts/password_recover.html:17
+msgid "Send Verification Code"
+msgstr ""
+
+#: accounts/templates/accounts/password_reset.html:5
+msgid "Password reset"
+msgstr ""
+
+#: accounts/templates/accounts/password_reset.html:13
+msgid "Reset Your Password"
+msgstr ""
+
+#: accounts/templates/accounts/password_reset.html:17
+msgid "Change Password"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:11
+#, python-format
+msgid "Welcome, %(user.username)s!"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:15
+#, python-format
+msgid ""
+"Your email (<strong>%(user.unverified_email|default:user.email)s</strong>) "
+"is not yet verified."
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:16
+msgid "Verify Now"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:21
+msgid "User Information"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:25
+msgid "Email:"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:30
+#: accounts/templates/accounts/profile.html:49
+#: venues/templates/venues/_reservation_list.html:18
+msgid "Edit"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:36
+#: accounts/templates/accounts/profile.html:55
+#: accounts/templates/accounts/profile.html:76
+msgid "Save"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:37
+#: accounts/templates/accounts/profile.html:56
+#: accounts/templates/accounts/profile.html:77
+#: accounts/templates/accounts/update_reservation_status.html:20
+#: venues/templates/venues/_reservation_list.html:25
+#: venues/templates/venues/edit_reservation_status.html:49
+#: venues/templates/venues/edit_reservation_status.html:61
+#: venues/templates/venues/update_arrival_status.html:39
+#: venues/templates/venues/update_arrival_status.html:49
+msgid "Cancel"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:44
+msgid "Phone:"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:63
+msgid "Password:"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:67
+msgid "Change"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:73
+msgid "Old password"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:74
+msgid "New password"
+msgstr ""
+
+#: accounts/templates/accounts/profile.html:75
+msgid "Confirm new password"
+msgstr ""
+
+#: accounts/templates/accounts/signup.html:9
+#: accounts/templates/accounts/signup.html:13
+msgid "Sign Up"
+msgstr ""
+
+#: accounts/templates/accounts/signup.html:36
+msgid "Create Account"
+msgstr ""
+
+#: accounts/templates/accounts/signup.html:39
+msgid "Already have an account?"
+msgstr ""
+
+#: accounts/templates/accounts/update_reservation_status.html:4
+msgid "Update Reservation Status"
+msgstr ""
+
+#: accounts/templates/accounts/update_reservation_status.html:7
+msgid "Update Status for Reservation"
+msgstr ""
+
+#: accounts/templates/accounts/update_reservation_status.html:9
+#, python-format
+msgid ""
+"<strong>Reservation:</strong> %(reservation.full_name)s at "
+"%(reservation.venue.name)s on %(reservation.date)s at %(reservation.time)s"
+msgstr ""
+
+#: accounts/templates/accounts/update_reservation_status.html:13
+msgid "Select new status:"
+msgstr ""
+
+#: accounts/templates/accounts/update_reservation_status.html:19
+msgid "Update"
+msgstr ""
+
+#: accounts/templates/accounts/verify_code.html:5
+#: venues/templates/venues/apply_venue.html:34
+msgid "Verify Email"
+msgstr ""
+
+#: accounts/templates/accounts/verify_code.html:13
+msgid "Verify Your Email"
+msgstr ""
+
+#: accounts/templates/accounts/verify_code.html:14
+msgid "Please enter the 6-digit code we sent to your email address."
+msgstr ""
+
+#: accounts/templates/accounts/verify_code.html:18
+msgid "Enter 6-digit code"
+msgstr ""
+
+#: accounts/templates/accounts/verify_code.html:19
+msgid "Verify"
+msgstr ""
+
+#: accounts/templates/accounts/verify_code.html:24
+msgid "Resend Code"
+msgstr ""
+
+#: accounts/templates/accounts/verify_code.html:30
+msgid "Verification code expires in"
+msgstr ""
+
+#: accounts/templates/accounts/verify_code.html:30
+msgid "seconds"
+msgstr ""
+
+#: accounts/templates/accounts/verify_code.html:52
+msgid "Verification code has expired."
+msgstr ""
+
+#: openspots/settings.py:200
+msgid "Greek"
+msgstr "Ελληνικά"
+
+#: openspots/settings.py:201
+msgid "English"
+msgstr "Αγγλικά"
+
+#: venues/templates/venues/_analytics_tab_content.html:6
+msgid "Group by:"
+msgstr ""
+
+#: venues/templates/venues/_analytics_tab_content.html:8
+msgid "Daily (Last 30 days)"
+msgstr ""
+
+#: venues/templates/venues/_analytics_tab_content.html:9
+msgid "Weekly (Last 12 weeks)"
+msgstr ""
+
+#: venues/templates/venues/_analytics_tab_content.html:10
+msgid "Monthly (Last 12 months)"
+msgstr ""
+
+#: venues/templates/venues/_analytics_tab_content.html:11
+msgid "Yearly (Last 3 years)"
+msgstr ""
+
+#: venues/templates/venues/_analytics_tab_content.html:19
+msgid "Total Visits"
+msgstr ""
+
+#: venues/templates/venues/_analytics_tab_content.html:23
+msgid "Avg Daily Visits"
+msgstr ""
+
+#: venues/templates/venues/_analytics_tab_content.html:27
+msgid "Peak"
+msgstr ""
+
+#: venues/templates/venues/_analytics_tab_content.html:27
+msgid "Visits"
+msgstr ""
+
+#: venues/templates/venues/_analytics_tab_content.html:31
+msgid "Total Reservations"
+msgstr ""
+
+#: venues/templates/venues/_manage_venue.html:10
+#, fuzzy
+#| msgid "Venues"
+msgid "Venue Name"
+msgstr "Χώροι"
+
+#: venues/templates/venues/_manage_venue.html:14
+msgid "Type"
+msgstr ""
+
+#: venues/templates/venues/_manage_venue.html:25
+msgid "Location"
+msgstr ""
+
+#: venues/templates/venues/_manage_venue.html:30
+msgid "Email"
+msgstr ""
+
+#: venues/templates/venues/_manage_venue.html:34
+msgid "Phone"
+msgstr ""
+
+#: venues/templates/venues/_manage_venue.html:41
+msgid "Description"
+msgstr ""
+
+#: venues/templates/venues/_manage_venue.html:48
+#, fuzzy
+#| msgid "Available"
+msgid "Available Tables"
+msgstr "Διαθέσιμα"
+
+#: venues/templates/venues/_manage_venue.html:63
+msgid "Select Venue Images"
+msgstr ""
+
+#: venues/templates/venues/_manage_venue.html:74
+#: venues/templates/venues/_manage_venue.html:93
+msgid "No files selected"
+msgstr ""
+
+#: venues/templates/venues/_manage_venue.html:82
+msgid "Select Menu Images"
+msgstr ""
+
+#: venues/templates/venues/_manage_venue.html:100
+msgid "Submit for Approval"
+msgstr ""
+
+#: venues/templates/venues/_reservation_list.html:8
+msgid "Reservation at:"
+msgstr ""
+
+#: venues/templates/venues/_reservation_list.html:9
+#: venues/templates/venues/edit_reservation_status.html:21
+#: venues/templates/venues/update_arrival_status.html:20
+msgid "Date:"
+msgstr ""
+
+#: venues/templates/venues/_reservation_list.html:9
+#: venues/templates/venues/confirm_cancel.html:10
+msgid "at"
+msgstr ""
+
+#: venues/templates/venues/_reservation_list.html:10
+#: venues/templates/venues/update_arrival_status.html:22
+msgid "Guests:"
+msgstr ""
+
+#: venues/templates/venues/_reservation_list.html:11
+msgid "Status:"
+msgstr ""
+
+#: venues/templates/venues/_reservation_list.html:34
+msgid "No reservations found."
+msgstr ""
+
+#: venues/templates/venues/_update_venue_success.html:1
+msgid "Your update request has been submitted for approval ✅"
+msgstr ""
+
+#: venues/templates/venues/_update_venue_success.html:2
+msgid "Our team will review and approve/reject it shortly."
+msgstr ""
+
+#: venues/templates/venues/application_submitted.html:5
+msgid "Application Submitted"
+msgstr ""
+
+#: venues/templates/venues/application_submitted.html:9
+msgid "Thank you!"
+msgstr ""
+
+#: venues/templates/venues/application_submitted.html:10
+msgid ""
+"Your application has been submitted. We will review it and contact you "
+"shortly."
+msgstr ""
+
+#: venues/templates/venues/application_submitted.html:11
+#, fuzzy
+#| msgid "Browse Venues"
+msgid "Back to Venues"
+msgstr "Περιήγηση στους Χώρους"
+
+#: venues/templates/venues/apply_venue.html:5
+msgid "Apply to Register a Venue"
+msgstr ""
+
+#: venues/templates/venues/apply_venue.html:13
+msgid "Apply to Register Your Venue"
+msgstr ""
+
+#: venues/templates/venues/apply_venue.html:50
+msgid "Submit Application"
+msgstr ""
+
+#: venues/templates/venues/confirm_cancel.html:5
+#: venues/templates/venues/confirm_cancel.html:9
+msgid "Cancel Reservation"
+msgstr ""
+
+#: venues/templates/venues/confirm_cancel.html:10
+msgid "Are you sure you want to cancel your reservation at"
+msgstr ""
+
+#: venues/templates/venues/confirm_cancel.html:10
+msgid "on"
+msgstr ""
+
+#: venues/templates/venues/confirm_cancel.html:14
+msgid "Yes, Cancel"
+msgstr ""
+
+#: venues/templates/venues/confirm_cancel.html:15
+msgid "No, go back"
+msgstr ""
+
+#: venues/templates/venues/edit_reservation.html:5
+msgid "Edit Reservation"
+msgstr ""
+
+#: venues/templates/venues/edit_reservation.html:16
+msgid "Edit Reservation for"
+msgstr ""
+
+#: venues/templates/venues/edit_reservation_status.html:17
+msgid "Edit Reservation Status"
+msgstr ""
+
+#: venues/templates/venues/edit_reservation_status.html:20
+#: venues/templates/venues/update_arrival_status.html:19
+msgid "Customer:"
+msgstr ""
+
+#: venues/templates/venues/edit_reservation_status.html:22
+#: venues/templates/venues/update_arrival_status.html:21
+msgid "Time:"
+msgstr ""
+
+#: venues/templates/venues/edit_reservation_status.html:23
+msgid "Party Size:"
+msgstr ""
+
+#: venues/templates/venues/edit_reservation_status.html:48
+#: venues/templates/venues/update_arrival_status.html:38
+msgid "Update Status"
+msgstr ""
+
+#: venues/templates/venues/edit_reservation_status.html:58
+#: venues/templates/venues/update_arrival_status.html:46
+msgid "Confirm Update"
+msgstr ""
+
+#: venues/templates/venues/edit_reservation_status.html:59
+msgid "Are you sure you want to update the reservation status?"
+msgstr ""
+
+#: venues/templates/venues/edit_reservation_status.html:62
+#: venues/templates/venues/update_arrival_status.html:50
+msgid "Yes, Update"
+msgstr ""
+
+#: venues/templates/venues/make_reservation.html:5
+msgid "Make a Reservation"
+msgstr ""
+
+#: venues/templates/venues/make_reservation.html:13
+msgid "Reserve at"
+msgstr ""
+
+#: venues/templates/venues/make_reservation.html:18
+msgid "Reserve"
+msgstr ""
+
+#: venues/templates/venues/my_reservations.html:10
+#: venues/templates/venues/my_reservations.html:15
+msgid "My Reservations"
+msgstr ""
+
+#: venues/templates/venues/my_reservations.html:19
+msgid "Upcoming"
+msgstr ""
+
+#: venues/templates/venues/my_reservations.html:22
+msgid "Past"
+msgstr ""
+
+#: venues/templates/venues/my_reservations.html:25
+msgid "Cancelled"
+msgstr ""
+
+#: venues/templates/venues/reservation_pending.html:5
+#: venues/templates/venues/reservation_pending.html:24
+msgid "Reservation Pending"
+msgstr ""
+
+#: venues/templates/venues/reservation_pending.html:25
+msgid ""
+"Thank you for your booking request. Your reservation is currently pending "
+"and requires confirmation from the venue administrator."
+msgstr ""
+
+#: venues/templates/venues/reservation_pending.html:26
+msgid "You’ll receive a confirmation or update shortly via email."
+msgstr ""
+
+#: venues/templates/venues/reservation_pending.html:27
+msgid "Back to Venue List"
+msgstr ""
+
+#: venues/templates/venues/update_arrival_status.html:16
+msgid "Update Arrival Status"
+msgstr ""
+
+#: venues/templates/venues/update_arrival_status.html:47
+msgid "Are you sure you want to update the arrival status?"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:44
+msgid "Venue Dashboard"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:54
+#: venues/templates/venues/venue_list.html:35
+msgid "Full"
+msgstr "Πλήρη"
+
+#: venues/templates/venues/venue_dashboard.html:55
+#, fuzzy
+#| msgid "Available"
+msgid "Mark as Available"
+msgstr "Διαθέσιμα"
+
+#: venues/templates/venues/venue_dashboard.html:57
+#: venues/templates/venues/venue_list.html:34
+msgid "Available"
+msgstr "Διαθέσιμα"
+
+#: venues/templates/venues/venue_dashboard.html:58
+msgid "Mark as Full"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:66
+msgid "Reservation Requests & Guest Arrivals"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:78
+msgid "Reservation History"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:81
+msgid "Analytics"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:84
+msgid "Manage Venue"
+msgstr ""
+
+#: venues/templates/venues/venue_detail.html:32
+msgid "View on Google Maps"
+msgstr ""
+
+#: venues/templates/venues/venue_detail.html:45
+#: venues/templates/venues/venue_detail.html:99
+msgid "Show More"
+msgstr ""
+
+#: venues/templates/venues/venue_detail.html:54
+msgid "Log in to make a reservation"
+msgstr ""
+
+#: venues/templates/venues/venue_detail.html:105
+msgid "Show Less"
+msgstr ""
+
+#: venues/templates/venues/venue_list.html:11
+msgid "Browse Venues"
+msgstr "Περιήγηση στους Χώρους"
+
+#: venues/templates/venues/venue_list.html:14
+msgid "Explore & Reserve Your Perfect Spot"
+msgstr "Ανακαλύψτε και Κλείστε το Ιδανικό σας Μέρος"
+
+#: venues/templates/venues/venue_list.html:23
+msgid "All Venues"
+msgstr "Όλοι οι Χώροι"
+
+#: venues/templates/venues/venue_list.html:24
+#: venues/templates/venues/venue_list.html:89
+msgid "Restaurants"
+msgstr "Εστιατόρια"
+
+#: venues/templates/venues/venue_list.html:25
+msgid "Cafes"
+msgstr "Καφετέριες"
+
+#: venues/templates/venues/venue_list.html:26
+msgid "Bars"
+msgstr "Μπαρ"
+
+#: venues/templates/venues/venue_list.html:27
+#: venues/templates/venues/venue_list.html:102
+msgid "Beach Bars"
+msgstr "Μπαρ Παραλίας"
+
+#: venues/templates/venues/venue_list.html:28
+msgid "Other"
+msgstr "Άλλοι"
+
+#: venues/templates/venues/venue_list.html:33
+msgid "All"
+msgstr "Όλα"
+
+#: venues/templates/venues/venue_list.html:39
+msgid "Clear"
+msgstr "Εκκαθάριση"
+
+#: venues/templates/venues/venue_list.html:48
+#: venues/templates/venues/venue_summary.html:10
+msgid "Venues"
+msgstr "Χώροι"
+
+#: venues/templates/venues/venue_list.html:57
+msgid "No venues available."
+msgstr "Δεν υπάρχουν διαθέσιμοι χώροι."
+
+#: venues/templates/venues/venue_list.html:62
+msgid "Full Venues"
+msgstr "Πλήρεις Χώροι"
+
+#: venues/templates/venues/venue_list.html:69
+msgid "No full venues available."
+msgstr "Δεν υπάρχουν πλήρεις χώροι."
+
+#: venues/templates/venues/venue_list.html:76
+msgid "Cafes & Bars"
+msgstr "Καφετέριες & Μπαρ"
+
+#: venues/templates/venues/venue_list.html:85
+msgid "No cafes or bars available."
+msgstr "Δεν υπάρχουν διαθέσιμες καφετέριες ή μπαρ."
+
+#: venues/templates/venues/venue_list.html:98
+msgid "No restaurants available."
+msgstr "Δεν υπάρχουν διαθέσιμα εστιατόρια."
+
+#: venues/templates/venues/venue_list.html:111
+msgid "No beach bars available."
+msgstr "Δεν υπάρχουν διαθέσιμα μπαρ παραλίας."
+
+#: venues/templates/venues/venue_list.html:115
+msgid "Other Venues"
+msgstr "Άλλοι Χώροι"
+
+#: venues/templates/venues/venue_list.html:124
+msgid "No other venues available."
+msgstr "Δεν υπάρχουν άλλοι διαθέσιμοι χώροι."
+
+#: venues/templates/venues/venue_summary.html:5
+#, python-format
+msgid "Summary for %(request.user.username)s"
+msgstr ""
+
+#: venues/templates/venues/venue_summary.html:7
+#, fuzzy
+#| msgid "All Venues"
+msgid "Total Venues:"
+msgstr "Όλοι οι Χώροι"
+
+#: venues/templates/venues/venue_summary.html:8
+msgid "Total Reservations:"
+msgstr ""

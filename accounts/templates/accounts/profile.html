@@ -1,5 +1,6 @@
 {% extends "includes/base.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'accounts/profile.css' %}">
@@ -7,73 +8,73 @@
 
 {% block content %}
 <div class="profile-container">
-    <h1>Welcome, {{ user.username }}!</h1>
+    <h1>{% blocktrans trimmed %}Welcome, {{ user.username }}!{% endblocktrans %}</h1>
 
     {% if not user.email_verified %}
     <div class="alert alert-warning">
-        Your email (<strong>{{ user.unverified_email|default:user.email }}</strong>) is not yet verified.
-        <a href="{% url 'confirm_code' %}" class="verify-now-btn">Verify Now</a>
+        {% blocktrans trimmed %}Your email (<strong>{{ user.unverified_email|default:user.email }}</strong>) is not yet verified.{% endblocktrans %}
+        <a href="{% url 'confirm_code' %}" class="verify-now-btn">{% trans "Verify Now" %}</a>
     </div>
     {% endif %}
 
     <div class="profile-section">
-        <h2>User Information</h2>
+        <h2>{% trans "User Information" %}</h2>
 
         <!-- Email field -->
         <div class="profile-info-row">
-            <div class="profile-info-label">Email:</div>
+            <div class="profile-info-label">{% trans "Email:" %}</div>
 
             <div class="profile-info-value">
                 <div id="email-view" class="profile-view-mode" {% if request.GET.edit == "email" %}style="display:none"{% endif %}>
                     <span>{{ user.unverified_email|default:user.email }}</span>
-                    <button class="profile-edit-button" onclick="toggleEdit('email')">Edit</button>
+                    <button class="profile-edit-button" onclick="toggleEdit('email')">{% trans "Edit" %}</button>
                 </div>
 
                 <form method="POST" action="{% url 'profile' %}" id="email-form" class="profile-form" {% if not request.GET.edit == "email" %}style="display:none"{% endif %}>
                     {% csrf_token %}
                     <input type="email" name="email" value="{{ user.unverified_email|default:user.email }}" required>
-                    <button type="submit">Save</button>
-                    <button type="button" class="btn-cancel" onclick="cancelEdit('email')">Cancel</button>
+                    <button type="submit">{% trans "Save" %}</button>
+                    <button type="button" class="btn-cancel" onclick="cancelEdit('email')">{% trans "Cancel" %}</button>
                 </form>
             </div>
         </div>
 
         <!-- Phone number field -->
         <div class="profile-info-row">
-            <div class="profile-info-label">Phone:</div>
+            <div class="profile-info-label">{% trans "Phone:" %}</div>
 
             <div class="profile-info-value">
                 <div id="phone-view" class="profile-view-mode" {% if request.GET.edit == "phone" %}style="display:none"{% endif %}>
                     <span>{{ user.phone_number|default:"—" }}</span>
-                    <button class="profile-edit-button" onclick="toggleEdit('phone')">Edit</button>
+                    <button class="profile-edit-button" onclick="toggleEdit('phone')">{% trans "Edit" %}</button>
                 </div>
 
                 <form method="POST" action="{% url 'profile' %}" id="phone-form" class="profile-form" {% if not request.GET.edit == "phone" %}style="display:none"{% endif %}>
                     {% csrf_token %}
                     <input type="text" name="phone_number" value="{{ user.phone_number }}">
-                    <button type="submit">Save</button>
-                    <button type="button" class="btn-cancel" onclick="cancelEdit('phone')">Cancel</button>
+                    <button type="submit">{% trans "Save" %}</button>
+                    <button type="button" class="btn-cancel" onclick="cancelEdit('phone')">{% trans "Cancel" %}</button>
                 </form>
             </div>
         </div>
 
         <!-- Password Change -->
         <div class="profile-info-row">
-            <div class="profile-info-label">Password:</div>
+            <div class="profile-info-label">{% trans "Password:" %}</div>
             <div class="profile-info-value">
                 <div id="password-view" class="profile-view-mode">
                     <span>********</span>
-                    <button class="profile-edit-button" onclick="toggleEdit('password')">Change</button>
+                    <button class="profile-edit-button" onclick="toggleEdit('password')">{% trans "Change" %}</button>
                 </div>
 
                 <form method="POST" action="{% url 'profile' %}" id="password-form" class="profile-form" style="display:none; flex-direction: column;">
                     {% csrf_token %}
                     {{ password_form.non_field_errors }}
-                    <input type="password" name="old_password" placeholder="Old password" required>
-                    <input type="password" name="new_password1" placeholder="New password" required>
-                    <input type="password" name="new_password2" placeholder="Confirm new password" required>
-                    <button type="submit">Save</button>
-                    <button type="button" class="btn-cancel" onclick="cancelEdit('password')">Cancel</button>
+                    <input type="password" name="old_password" placeholder="{% trans "Old password" %}" required>
+                    <input type="password" name="new_password1" placeholder="{% trans "New password" %}" required>
+                    <input type="password" name="new_password2" placeholder="{% trans "Confirm new password" %}" required>
+                    <button type="submit">{% trans "Save" %}</button>
+                    <button type="button" class="btn-cancel" onclick="cancelEdit('password')">{% trans "Cancel" %}</button>
                 </form>
             </div>
         </div>

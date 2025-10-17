@@ -1,7 +1,8 @@
 {% extends 'includes/base.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Apply to Register a Venue{% endblock %}
+{% block title %}{% trans "Apply to Register a Venue" %}{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'venues/apply_venue.css' %}">
@@ -9,7 +10,7 @@
 
 {% block content %}
 <div class="apply-container">
-    <h2>Apply to Register Your Venue</h2>
+    <h2>{% trans "Apply to Register Your Venue" %}</h2>
 
     {% if form.non_field_errors %}
         <ul class="errorlist">
@@ -24,13 +25,13 @@
         {% for field in form %}
         <div class="form-group {% if field.name == 'admin_email' %}email-verify-wrapper{% endif %}">
             <label for="{{ field.id_for_label }}">
-            {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+            {% trans field.label %}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
             </label>
 
             {% if field.name == 'admin_email' %}
             {{ field }}
             <a href="{% url 'confirm_code' %}?next={% url 'apply_venue' %}" class="btn btn-secondary">
-                Verify Email
+                {% trans "Verify Email" %}
             </a>
             {% else %}
             {{ field }}
@@ -46,7 +47,7 @@
         </div>
         {% endfor %}
 
-        <input type="submit" value="Submit Application" class="btn primary-btn mt-3">
+        <input type="submit" value="{% trans "Submit Application" %}" class="btn primary-btn mt-3">
         {% comment %} <input type="submit" value="Submit Application" 
             class="btn primary-btn mt-3" 
             {% if not email_verified %} disabled {% endif %}> {% endcomment %}

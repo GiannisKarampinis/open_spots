@@ -1,7 +1,8 @@
 {% extends "includes/base.html" %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Make a Reservation{% endblock %}
+{% block title %}{% trans "Make a Reservation" %}{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'venues/make_reservation.css' %}">
@@ -9,12 +10,12 @@
 
 {% block content %}
 <div class="max-w-xl mx-auto mt-8 p-6 bg-white rounded shadow">
-    <h2 class="text-2xl font-semibold mb-4">Reserve at {{ venue.name }}</h2>
+    <h2 class="text-2xl font-semibold mb-4">{% trans "Reserve at" %} {{ venue.name }}</h2>
 
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Reserve</button>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">{% trans "Reserve" %}</button>
     </form>
 
     {% comment %} <a href="{% url 'venue_detail' venue.id %}" class="text-blue-500 text-sm mt-4 inline-block">← Back to Venue</a> {% endcomment %}

@@ -1,5 +1,6 @@
 {% extends 'includes/base.html' %}
 {% load static %}
+{% load i18n %}
 
 {% block title %}{{ venue.name }} - OpenSpots{% endblock %}
 
@@ -28,7 +29,7 @@
         {% if venue.location %}
             <div id="venue-map" class="venue-map rounded shadow"></div>
                 <a href="https://www.google.com/maps/search/?api=1&query={{ venue.location|urlencode }}" target="_blank" style="color: white" class="google-maps-btn">
-                    View on Google Maps 
+                    {% trans "View on Google Maps" %}
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-icon lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
                 </a>
         {% endif %}
@@ -41,7 +42,7 @@
             <span id="remainingText" class="full-description">
                 {{ remaining_text }}
             </span>
-            <a href="#" id="readMore">Show More</a>
+            <a href="#" id="readMore">{% trans "Show More" %}</a>
         {% endif %}
     </p>
 
@@ -50,7 +51,7 @@
         {% include "venues/partials/_customer_reservation_form.html" with form=form submit_text="Submit Reservation" %}
     {% else %}
         <a class="btn btn-outline-primary w-100 mt-3" href="{% url 'account_login' %}?next={{ request.path }}" style="color: red">
-            Log in to make a reservation
+            {% trans "Log in to make a reservation" %}
         </a>
     {% endif %}
 >>>>>>> cba57de (Several critical fixes including email sending mechanism, Venue Images Thumbnails (ongoing), Time from Noon to Time Format elsewere.)
@@ -95,13 +96,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 remaining.style.maxHeight = "0px";
                 remaining.style.opacity = "0";
                 remaining.classList.remove("show");
-                btn.textContent = "Show More";
+                btn.textContent = "{% trans "Show More" %}";
             } else {
                 // --- Expand ---
                 remaining.style.maxHeight = remaining.scrollHeight + "px";
                 remaining.style.opacity = "1";
                 remaining.classList.add("show");
-                btn.textContent = "Show Less";
+                btn.textContent = "{% trans "Show Less" %}";
             }
         });
     }

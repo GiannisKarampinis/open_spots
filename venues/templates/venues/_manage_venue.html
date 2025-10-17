@@ -1,3 +1,5 @@
+{% load i18n %}
+
 <div class="container mt-5" id="manage-venue-form">
     <form method="POST" enctype="multipart/form-data" class="venue-form-card" action = "{% url 'submit_venue_update' venue.id %}">
         {% csrf_token %}
@@ -5,14 +7,14 @@
         <!-- Venue Basic Info -->
         <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div>
-                <label for="name">Venue Name</label>
+                <label for="name">{% trans "Venue Name" %}</label>
                 <input type="text" name="name" id="name" value="{{ venue.name }}" class="form-input" required>
             </div>
             <div>
-                <label for="kind">Type</label>
+                <label for="kind">{% trans "Type" %}</label>
                 <select name="kind" id="kind" class="form-input">
                     {% for key, value in venue.VENUE_TYPES %}
-                        <option value="{{ key }}" {% if venue.kind == key %}selected{% endif %}>{{ value }}</option>
+                        <option value="{{ key }}" {% if venue.kind == key %}selected{% endif %}>{% trans value %}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -20,30 +22,30 @@
 
         <!-- Location & Contact -->
         <div>
-            <label for="location">Location</label>
+            <label for="location">{% trans "Location" %}</label>
             <input type="text" name="location" id="location" value="{{ venue.location }}" class="form-input" required>
         </div>
         <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div>
-                <label for="email">Email</label>
+                <label for="email">{% trans "Email" %}</label>
                 <input type="email" name="email" id="email" value="{{ venue.email }}" class="form-input">
             </div>
             <div>
-                <label for="phone">Phone</label>
+                <label for="phone">{% trans "Phone" %}</label>
                 <input type="text" name="phone" id="phone" value="{{ venue.phone }}" class="form-input">
             </div>
         </div>
 
         <!-- Description -->
         <div>
-            <label for="description">Description</label>
+            <label for="description">{% trans "Description" %}</label>
             <textarea name="description" id="description" rows="4" class="form-input">{{ venue.description }}</textarea>
         </div>
 
         <!-- Availability & Full Status -->
         <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div>
-                <label for="available_tables">Available Tables</label>
+                <label for="available_tables">{% trans "Available Tables" %}</label>
                 <input type="number" name="available_tables" id="available_tables" value="{{ venue.available_tables }}" min="0" class="form-input">
             </div>
         </div>
@@ -57,7 +59,7 @@
         <!-- Venue Images Upload -->
         <div class="file-upload-group">
             <label class="custom-file-btn">
-                Select Venue Images
+                {% trans "Select Venue Images" %}
                 <input type="file" name="venue_images" id="venue_images" multiple hidden>
             </label>
             <div id="venue-preview" class="file-preview">
@@ -68,7 +70,7 @@
                         <input type="hidden" name="remove_venue_images" value="" disabled>
                     </div>
                 {% empty %}
-                    No files selected
+                    {% trans "No files selected" %}
                 {% endfor %}
             </div>
         </div>
@@ -76,7 +78,7 @@
         <!-- Menu Images Upload -->
         <div class="file-upload-group">
             <label class="custom-file-btn">
-                Select Menu Images
+                {% trans "Select Menu Images" %}
                 <input type="file" name="menu_images" id="menu_images" multiple hidden>
             </label>
             <div id="menu-preview" class="file-preview">
@@ -87,14 +89,14 @@
                         <input type="hidden" name="remove_menu_images" value="" disabled>
                     </div>
                 {% empty %}
-                    No files selected
+                    {% trans "No files selected" %}
                 {% endfor %}
             </div>
         </div>
         
         <!-- Submit Button -->
         <div class="text-center">
-            <button type="submit" class="btn-edit-status">Submit for Approval</button>
+            <button type="submit" class="btn-edit-status">{% trans "Submit for Approval" %}</button>
         </div>
     </form>
 </div>

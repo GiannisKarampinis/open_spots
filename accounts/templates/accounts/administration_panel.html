@@ -1,15 +1,16 @@
 {% extends "includes/base.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'venues/venue_list.css' %}">
     <link rel="stylesheet" href="{% static 'venues/venue_cards.css' %}">
 {% endblock %}
 
-{% block title %}Your Venue Dashboard{% endblock %}
+{% block title %}{% trans "Your Venue Dashboard" %}{% endblock %}
 
 {% block content %}
-    <h2>Welcome, {{ user.username }} — Your Venue Dashboard</h2>
+    <h2>{% blocktrans trimmed %}Welcome, {{ user.username }} — Your Venue Dashboard{% endblocktrans %}</h2>
 
     {% if venues %}
         <div class="venue-list">
@@ -18,6 +19,6 @@
         {% endfor %}
         </div>
     {% else %}
-        <p>You don't have any venues yet.</p>
+        <p>{% trans "You don't have any venues yet." %}</p>
     {% endif %}
 {% endblock %}

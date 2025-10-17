@@ -76,6 +76,12 @@ header {
     color: var(--text-color);
 }
 
+.main-nav {
+    display: flex;
+    align-items: center; /* ✅ ensures user & language menus align */
+    gap: 15px; /* optional, adds space between items */
+}
+
 .main-nav a {
     color: var(--button-text);
     font-weight: 600;
@@ -88,19 +94,89 @@ body.dark-theme .main-nav a {
 .main-nav a:hover {
     color: var(--button-text-hover);
 }
+/* ==========================
+   Language Dropdown Menu
+   ========================== */
+.language-menu,
+.user-menu {
+    display: flex;
+    align-items: center; /* ✅ centers text/flags/buttons perfectly */
+    position: relative;
+}
+
+.language-menu-btn {
+    display: flex;                  /* Align flag and text side by side */
+    align-items: center;
+    gap: 3px;                       /* space between flag and text */
+    background: none;
+    border: none;
+    color: var(--button-text);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.language-dropdown {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: var(--surface-color);
+    min-width: 80px;
+    box-shadow: 0 8px 16px var(--text-color);
+    border-radius: 5px;
+    z-index: 1000;
+    padding: 5px 0;
+}
+
+.language-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.language-option {
+    display: flex;                  /* ✅ Align icon + text in a row */
+    align-items: center;            /* ✅ Vertically center them */
+    gap: 3px;                       /* ✅ Add spacing between flag and text */
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--button-text);
+    padding: 12px 16px;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    font-size: 1rem;
+}
+
+.language-option:hover {
+    background-color: var(--primary-color);
+    color: var(--button-text);
+}
+
+.flag-icon {
+  width: 20px;
+  height: 14px;
+  margin-right: 3px;
+  vertical-align: middle;
+  border-radius: 2px;
+  object-fit: cover;
+}
 
 /* ==========================
    User Dropdown Menu
    ========================== */
-.user-menu {
-    position: relative;
-    display: inline-block;
-}
 
 .user-menu-btn {
     background: none;
     border: none;
     color: var(--button-text);
+    vertical-align: middle;
     cursor: pointer;
     font-weight: 600;
     font-size: 1rem;
@@ -394,6 +470,28 @@ ul.errorlist {
 
 /* Make the slider rounded variant (keeps compatibility) */
 .slider.round { border-radius: 999px; }
+
+/* Translation menu */
+.hidden {
+  display: none;
+}
+
+.language-toggle {
+  cursor: pointer;
+  color: var(--button-text);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+#language-select {
+  background: var(--text-color);
+  color: var(--button-text);
+  border: none;
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
 
 /* Small adjustments for small screens / dropdowns */
 @media (max-width: 420px) {

@@ -1,5 +1,6 @@
 {% extends "includes/base.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -7,10 +8,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 {% endblock %}
 
-{% block title %}Browse Venues{% endblock %}
+{% block title %}{% trans "Browse Venues" %}{% endblock %}
 
 {% block content %}
-<h2>Explore &amp; Reserve Your Perfect Spot</h2>
+<h2>{% trans "Explore & Reserve Your Perfect Spot" %}</h2>
 
 <form method="get" class="filter-form">
     <div class="sticky-wrapper">
@@ -19,23 +20,23 @@
 
             <!-- Kind filter -->
             <select name="kind" id="venue_type" onchange="this.form.submit()">
-                <option value="">All Venues</option>
-                <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>Restaurants</option>
-                <option value="cafe" {% if selected_kind == "cafe" %}selected{% endif %}>Cafes</option>
-                <option value="bar" {% if selected_kind == "bar" %}selected{% endif %}>Bars</option>
-                <option value="beach_bar" {% if selected_kind == "beach_bar" %}selected{% endif %}>Beach Bars</option>
-                <option value="other" {% if selected_kind == "other" %}selected{% endif %}>Other</option>
+                <option value="">{% trans "All Venues" %}</option>
+                <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>{% trans "Restaurants" %}</option>
+                <option value="cafe" {% if selected_kind == "cafe" %}selected{% endif %}>{% trans "Cafes" %}</option>
+                <option value="bar" {% if selected_kind == "bar" %}selected{% endif %}>{% trans "Bars" %}</option>
+                <option value="beach_bar" {% if selected_kind == "beach_bar" %}selected{% endif %}>{% trans "Beach Bars" %}</option>
+                <option value="other" {% if selected_kind == "other" %}selected{% endif %}>{% trans "Other" %}</option>
             </select>
 
             <!-- Availability filter -->
             <select name="availability" id="venue_availability" onchange="this.form.submit()">
-                <option value="">All</option>
-                <option value="available" {% if selected_availability == "available" %}selected{% endif %}>Available</option>
-                <option value="full" {% if selected_availability == "full" %}selected{% endif %}>Full</option>
+                <option value="">{% trans "All" %}</option>
+                <option value="available" {% if selected_availability == "available" %}selected{% endif %}>{% trans "Available" %}</option>
+                <option value="full" {% if selected_availability == "full" %}selected{% endif %}>{% trans "Full" %}</option>
             </select>
 
             {% if selected_kind or selected_availability %}
-            <a href="{% url 'venue_list' %}" class="clear-filter-btn">Clear</a>
+            <a href="{% url 'venue_list' %}" class="clear-filter-btn">{% trans "Clear" %}</a>
             {% endif %}
         </div> 
     </div>
@@ -43,9 +44,8 @@
 
 <!-- Venue sections -->
 {% if selected_kind %}
-    <!-- Show one filtered section by kind -->
     <h3 class="section-title">
-        {{ selected_kind|title }} Venues
+        {{ selected_kind|title }} {% trans "Venues" %}
         {% if selected_availability %} - {{ selected_availability|title }}{% endif %}
     </h3>
     <div class="venue-scroll-container">
@@ -54,27 +54,26 @@
             {% include "venues/venue_cards.html" with venue=venue %}
         </a>
         {% empty %}
-        <p>No venues available.</p>
+        <p>{% trans "No venues available." %}</p>
         {% endfor %}
     </div>
 
 {% elif selected_availability == "full" %}
-    <!-- Special case: Full venues only -->
-    <h3 class="section-title">Full Venues</h3>
+    <h3 class="section-title">{% trans "Full Venues" %}</h3>
     <div class="venue-scroll-container">
         {% for venue in venues %}
         <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
             {% include "venues/venue_cards.html" with venue=venue %}
         </a>
         {% empty %}
-        <p>No full venues available.</p>
+        <p>{% trans "No full venues available." %}</p>
         {% endfor %}
     </div>
 
 {% else %}
     <!-- Default grouped layout (All OR Available filter) -->
 
-    <h3 class="section-title">Cafes & Bars</h3>
+    <h3 class="section-title">{% trans "Cafes & Bars" %}</h3>
     <div class="venue-scroll-container">
         {% for venue in venues %}
             {% if venue.kind == "cafe" or venue.kind == "bar" %}
@@ -83,11 +82,11 @@
                 </a>
             {% endif %}
         {% empty %}
-        <p>No cafes or bars available.</p>
+        <p>{% trans "No cafes or bars available." %}</p>
         {% endfor %}
     </div>
 
-    <h3 class="section-title">Restaurants</h3>
+    <h3 class="section-title">{% trans "Restaurants" %}</h3>
     <div class="venue-scroll-container">
         {% for venue in venues %}
             {% if venue.kind == "restaurant" %}
@@ -96,11 +95,11 @@
                 </a>
             {% endif %}
         {% empty %}
-        <p>No restaurants available.</p>
+        <p>{% trans "No restaurants available." %}</p>
         {% endfor %}
     </div>
 
-    <h3 class="section-title">Beach Bars</h3>
+    <h3 class="section-title">{% trans "Beach Bars" %}</h3>
     <div class="venue-scroll-container">
         {% for venue in venues %}
             {% if venue.kind == "beach_bar" %}
@@ -109,11 +108,11 @@
                 </a>
             {% endif %}
         {% empty %}
-        <p>No beach bars available.</p>
+        <p>{% trans "No beach bars available." %}</p>
         {% endfor %}
     </div>
 
-    <h3 class="section-title">Other Venues</h3>
+    <h3 class="section-title">{% trans "Other Venues" %}</h3>
     <div class="venue-scroll-container">
         {% for venue in venues %}
             {% if venue.kind == "other" %}
@@ -122,11 +121,10 @@
                 </a>
             {% endif %}
         {% empty %}
-        <p>No other venues available.</p>
+        <p>{% trans "No other venues available." %}</p>
         {% endfor %}
     </div>
 {% endif %}
-
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
