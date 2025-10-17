@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-17 12:16+0000\n"
+"POT-Creation-Date: 2025-10-17 12:25+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Greek <EMAIL@ADDRESS>\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #: accounts/admin.py:25
 msgid "Personal info"
-msgstr "Προσωπικές πληροφορίες"
+msgstr "Προσωπικά στοιχεία"
 
 #: accounts/admin.py:26
 msgid "Permissions"
@@ -31,83 +31,83 @@ msgstr "Σημαντικές ημερομηνίες"
 
 #: accounts/templates/accounts/administration_panel.html:10
 msgid "Your Venue Dashboard"
-msgstr ""
+msgstr "Ο πίνακας ελέγχου του χώρου σας"
 
 #: accounts/templates/accounts/administration_panel.html:13
 #, python-format
 msgid "Welcome, %(user.username)s — Your Venue Dashboard"
-msgstr ""
+msgstr "Καλώς ορίσατε, %(user.username)s — Ο πίνακας ελέγχου του χώρου σας"
 
 #: accounts/templates/accounts/administration_panel.html:22
 msgid "You don't have any venues yet."
-msgstr ""
+msgstr "Δεν έχετε καταχωρήσει ακόμη χώρους."
 
 #: accounts/templates/accounts/login.html:6
 #: accounts/templates/accounts/login.html:33
 #: accounts/templates/accounts/signup.html:39
 msgid "Login"
-msgstr ""
+msgstr "Σύνδεση"
 
 #: accounts/templates/accounts/login.html:14
 msgid "Welcome Back"
-msgstr ""
+msgstr "Καλώς ήρθατε πίσω"
 
 #: accounts/templates/accounts/login.html:19
 msgid "Login with Google"
-msgstr ""
+msgstr "Σύνδεση με Google"
 
 #: accounts/templates/accounts/login.html:23
 msgid "or"
-msgstr ""
+msgstr "ή"
 
 #: accounts/templates/accounts/login.html:27
 msgid "Username"
-msgstr ""
+msgstr "Όνομα χρήστη"
 
 #: accounts/templates/accounts/login.html:30
 msgid "Password"
-msgstr ""
+msgstr "Κωδικός πρόσβασης"
 
 #: accounts/templates/accounts/login.html:36
 msgid "Forgot your password?"
-msgstr ""
+msgstr "Ξεχάσατε τον κωδικό σας;"
 
 #: accounts/templates/accounts/login.html:39
 msgid "Don't have an account?"
-msgstr ""
+msgstr "Δεν έχετε λογαριασμό;"
 
 #: accounts/templates/accounts/login.html:39
 msgid "Sign up"
-msgstr ""
+msgstr "Εγγραφή"
 
 #: accounts/templates/accounts/password_recover.html:5
 msgid "Password recover"
-msgstr ""
+msgstr "Ανάκτηση κωδικού πρόσβασης"
 
 #: accounts/templates/accounts/password_recover.html:13
 msgid "Password Recovery"
-msgstr ""
+msgstr "Ανάκτηση Κωδικού Πρόσβασης"
 
 #: accounts/templates/accounts/password_recover.html:17
 msgid "Send Verification Code"
-msgstr ""
+msgstr "Αποστολή Κωδικού Επαλήθευσης"
 
 #: accounts/templates/accounts/password_reset.html:5
 msgid "Password reset"
-msgstr ""
+msgstr "Επαναφορά κωδικού πρόσβασης"
 
 #: accounts/templates/accounts/password_reset.html:13
 msgid "Reset Your Password"
-msgstr ""
+msgstr "Επαναφέρετε τον κωδικό πρόσβασής σας"
 
 #: accounts/templates/accounts/password_reset.html:17
 msgid "Change Password"
-msgstr ""
+msgstr "Αλλαγή κωδικού πρόσβασης"
 
 #: accounts/templates/accounts/profile.html:11
 #, python-format
 msgid "Welcome, %(user.username)s!"
-msgstr ""
+msgstr "Καλώς ορίσατε, %(user.username)s!"
 
 #: accounts/templates/accounts/profile.html:15
 #, python-format
@@ -115,30 +115,32 @@ msgid ""
 "Your email (<strong>%(user.unverified_email|default:user.email)s</strong>) "
 "is not yet verified."
 msgstr ""
+"Το email σας (<strong>%(user.unverified_email|default:user.email)s</strong>) "
+"δεν έχει επαληθευτεί ακόμη."
 
 #: accounts/templates/accounts/profile.html:16
 msgid "Verify Now"
-msgstr ""
+msgstr "Επαλήθευση τώρα"
 
 #: accounts/templates/accounts/profile.html:21
 msgid "User Information"
-msgstr ""
+msgstr "Πληροφορίες χρήστη"
 
 #: accounts/templates/accounts/profile.html:25
 msgid "Email:"
-msgstr ""
+msgstr "Email:"
 
 #: accounts/templates/accounts/profile.html:30
 #: accounts/templates/accounts/profile.html:49
 #: venues/templates/venues/_reservation_list.html:18
 msgid "Edit"
-msgstr ""
+msgstr "Επεξεργασία"
 
 #: accounts/templates/accounts/profile.html:36
 #: accounts/templates/accounts/profile.html:55
 #: accounts/templates/accounts/profile.html:76
 msgid "Save"
-msgstr ""
+msgstr "Αποθήκευση"
 
 #: accounts/templates/accounts/profile.html:37
 #: accounts/templates/accounts/profile.html:56
@@ -150,52 +152,52 @@ msgstr ""
 #: venues/templates/venues/update_arrival_status.html:39
 #: venues/templates/venues/update_arrival_status.html:49
 msgid "Cancel"
-msgstr ""
+msgstr "Ακύρωση"
 
 #: accounts/templates/accounts/profile.html:44
 msgid "Phone:"
-msgstr ""
+msgstr "Τηλέφωνο:"
 
 #: accounts/templates/accounts/profile.html:63
 msgid "Password:"
-msgstr ""
+msgstr "Κωδικός πρόσβασης:"
 
 #: accounts/templates/accounts/profile.html:67
 msgid "Change"
-msgstr ""
+msgstr "Αλλαγή"
 
 #: accounts/templates/accounts/profile.html:73
 msgid "Old password"
-msgstr ""
+msgstr "Παλιός κωδικός πρόσβασης"
 
 #: accounts/templates/accounts/profile.html:74
 msgid "New password"
-msgstr ""
+msgstr "Νέος κωδικός πρόσβασης"
 
 #: accounts/templates/accounts/profile.html:75
 msgid "Confirm new password"
-msgstr ""
+msgstr "Επιβεβαίωση νέου κωδικού πρόσβασης"
 
 #: accounts/templates/accounts/signup.html:9
 #: accounts/templates/accounts/signup.html:13
 msgid "Sign Up"
-msgstr ""
+msgstr "Εγγραφή"
 
 #: accounts/templates/accounts/signup.html:36
 msgid "Create Account"
-msgstr ""
+msgstr "Δημιουργία λογαριασμού"
 
 #: accounts/templates/accounts/signup.html:39
 msgid "Already have an account?"
-msgstr ""
+msgstr "Έχετε ήδη λογαριασμό;"
 
 #: accounts/templates/accounts/update_reservation_status.html:4
 msgid "Update Reservation Status"
-msgstr ""
+msgstr "Ενημέρωση Κατάστασης Κράτησης"
 
 #: accounts/templates/accounts/update_reservation_status.html:7
 msgid "Update Status for Reservation"
-msgstr ""
+msgstr "Ενημέρωση Κατάστασης για την Κράτηση"
 
 #: accounts/templates/accounts/update_reservation_status.html:9
 #, python-format
@@ -203,51 +205,54 @@ msgid ""
 "<strong>Reservation:</strong> %(reservation.full_name)s at "
 "%(reservation.venue.name)s on %(reservation.date)s at %(reservation.time)s"
 msgstr ""
+"<strong>Κράτηση:</strong> %(reservation.full_name)s στο "
+"%(reservation.venue.name)s στις %(reservation.date)s ώρα %(reservation.time)s"
 
 #: accounts/templates/accounts/update_reservation_status.html:13
 msgid "Select new status:"
-msgstr ""
+msgstr "Επιλέξτε νέα κατάσταση:"
 
 #: accounts/templates/accounts/update_reservation_status.html:19
 msgid "Update"
-msgstr ""
+msgstr "Ενημέρωση"
 
 #: accounts/templates/accounts/verify_code.html:5
 #: venues/templates/venues/apply_venue.html:34
 msgid "Verify Email"
-msgstr ""
+msgstr "Επαλήθευση Email"
 
 #: accounts/templates/accounts/verify_code.html:13
 msgid "Verify Your Email"
-msgstr ""
+msgstr "Επαληθεύστε το Email σας"
 
 #: accounts/templates/accounts/verify_code.html:14
 msgid "Please enter the 6-digit code we sent to your email address."
 msgstr ""
+"Παρακαλώ εισάγετε τον 6-ψήφιο κωδικό που στείλαμε στη διεύθυνση email σας."
 
 #: accounts/templates/accounts/verify_code.html:18
 msgid "Enter 6-digit code"
-msgstr ""
+msgstr "Εισαγωγή 6-ψήφιου κωδικού"
 
 #: accounts/templates/accounts/verify_code.html:19
 msgid "Verify"
-msgstr ""
+msgstr "Επαλήθευση"
 
 #: accounts/templates/accounts/verify_code.html:24
 msgid "Resend Code"
-msgstr ""
+msgstr "Επαναποστολή κωδικού"
 
 #: accounts/templates/accounts/verify_code.html:30
 msgid "Verification code expires in"
-msgstr ""
+msgstr "Ο κωδικός επαλήθευσης λήγει σε"
 
 #: accounts/templates/accounts/verify_code.html:30
 msgid "seconds"
-msgstr ""
+msgstr "δευτερόλεπτα"
 
 #: accounts/templates/accounts/verify_code.html:52
 msgid "Verification code has expired."
-msgstr ""
+msgstr "Ο κωδικός επαλήθευσης έχει λήξει."
 
 #: openspots/settings.py:200
 msgid "Greek"
@@ -259,382 +264,378 @@ msgstr "Αγγλικά"
 
 #: venues/templates/venues/_analytics_tab_content.html:6
 msgid "Group by:"
-msgstr ""
+msgstr "Ομαδοποίηση κατά:"
 
 #: venues/templates/venues/_analytics_tab_content.html:8
 msgid "Daily (Last 30 days)"
-msgstr ""
+msgstr "Ημερήσια (Τελευταίες 30 ημέρες)"
 
 #: venues/templates/venues/_analytics_tab_content.html:9
 msgid "Weekly (Last 12 weeks)"
-msgstr ""
+msgstr "Εβδομαδιαία (Τελευταίες 12 εβδομάδες)"
 
 #: venues/templates/venues/_analytics_tab_content.html:10
 msgid "Monthly (Last 12 months)"
-msgstr ""
+msgstr "Μηνιαία (Τελευταίοι 12 μήνες)"
 
 #: venues/templates/venues/_analytics_tab_content.html:11
 msgid "Yearly (Last 3 years)"
-msgstr ""
+msgstr "Ετήσια (Τελευταία 3 χρόνια)"
 
 #: venues/templates/venues/_analytics_tab_content.html:19
 msgid "Total Visits"
-msgstr ""
+msgstr "Συνολικές Επισκέψεις"
 
 #: venues/templates/venues/_analytics_tab_content.html:23
 msgid "Avg Daily Visits"
-msgstr ""
+msgstr "Μέσος Όρος Ημερήσιων Επισκέψεων"
 
 #: venues/templates/venues/_analytics_tab_content.html:27
 msgid "Peak"
-msgstr ""
+msgstr "Υψηλότερη"
 
 #: venues/templates/venues/_analytics_tab_content.html:27
 msgid "Visits"
-msgstr ""
+msgstr "Επισκεψιμότητα"
 
 #: venues/templates/venues/_analytics_tab_content.html:31
 msgid "Total Reservations"
-msgstr ""
+msgstr "Συνολικές Κρατήσεις"
 
 #: venues/templates/venues/_manage_venue.html:10
-#, fuzzy
-#| msgid "Venues"
 msgid "Venue Name"
-msgstr "Χώροι"
+msgstr "Όνομα Χώρου"
 
 #: venues/templates/venues/_manage_venue.html:14
 msgid "Type"
-msgstr ""
+msgstr "Τύπος"
 
 #: venues/templates/venues/_manage_venue.html:25
 msgid "Location"
-msgstr ""
+msgstr "Τοποθεσία"
 
 #: venues/templates/venues/_manage_venue.html:30
 msgid "Email"
-msgstr ""
+msgstr "Email"
 
 #: venues/templates/venues/_manage_venue.html:34
 msgid "Phone"
-msgstr ""
+msgstr "Τηλέφωνο"
 
 #: venues/templates/venues/_manage_venue.html:41
 msgid "Description"
-msgstr ""
+msgstr "Περιγραφή"
 
 #: venues/templates/venues/_manage_venue.html:48
-#, fuzzy
-#| msgid "Available"
 msgid "Available Tables"
-msgstr "Διαθέσιμα"
+msgstr "Διαθέσιμα Τραπέζια"
 
 #: venues/templates/venues/_manage_venue.html:63
 msgid "Select Venue Images"
-msgstr ""
+msgstr "Επιλογή Εικόνων Χώρου"
 
 #: venues/templates/venues/_manage_venue.html:74
 #: venues/templates/venues/_manage_venue.html:93
 msgid "No files selected"
-msgstr ""
+msgstr "Δεν έχουν επιλεγεί αρχεία"
 
 #: venues/templates/venues/_manage_venue.html:82
 msgid "Select Menu Images"
-msgstr ""
+msgstr "Επιλογή Εικόνων Μενού"
 
 #: venues/templates/venues/_manage_venue.html:100
 msgid "Submit for Approval"
-msgstr ""
+msgstr "Υποβολή για Έγκριση"
 
 #: venues/templates/venues/_reservation_list.html:8
 msgid "Reservation at:"
-msgstr ""
+msgstr "Κράτηση στο:"
 
 #: venues/templates/venues/_reservation_list.html:9
 #: venues/templates/venues/edit_reservation_status.html:21
 #: venues/templates/venues/update_arrival_status.html:20
 msgid "Date:"
-msgstr ""
+msgstr "Ημερομηνία:"
 
 #: venues/templates/venues/_reservation_list.html:9
 #: venues/templates/venues/confirm_cancel.html:10
 msgid "at"
-msgstr ""
+msgstr "στις"
 
 #: venues/templates/venues/_reservation_list.html:10
 #: venues/templates/venues/update_arrival_status.html:22
 msgid "Guests:"
-msgstr ""
+msgstr "Αριθμός ατόμων:"
 
 #: venues/templates/venues/_reservation_list.html:11
 msgid "Status:"
-msgstr ""
+msgstr "Κατάσταση:"
 
 #: venues/templates/venues/_reservation_list.html:34
 msgid "No reservations found."
-msgstr ""
+msgstr "Δεν βρέθηκαν κρατήσεις."
 
 #: venues/templates/venues/_update_venue_success.html:1
 msgid "Your update request has been submitted for approval ✅"
-msgstr ""
+msgstr "Το αίτημά σας για ενημέρωση υποβλήθηκε για έγκριση ✅"
 
 #: venues/templates/venues/_update_venue_success.html:2
 msgid "Our team will review and approve/reject it shortly."
-msgstr ""
+msgstr "Η ομάδα μας θα το εξετάσει και θα το εγκρίνει/απορρίψει σύντομα."
 
 #: venues/templates/venues/application_submitted.html:5
 msgid "Application Submitted"
-msgstr ""
+msgstr "Η αίτηση υποβλήθηκε"
 
 #: venues/templates/venues/application_submitted.html:9
 msgid "Thank you!"
-msgstr ""
+msgstr "Ευχαριστούμε!"
 
 #: venues/templates/venues/application_submitted.html:10
 msgid ""
 "Your application has been submitted. We will review it and contact you "
 "shortly."
 msgstr ""
+"Η αίτησή σας υποβλήθηκε. Θα την εξετάσουμε και θα επικοινωνήσουμε μαζί σας "
+"σύντομα."
 
 #: venues/templates/venues/application_submitted.html:11
-#, fuzzy
-#| msgid "Browse Venues"
 msgid "Back to Venues"
-msgstr "Περιήγηση στους Χώρους"
+msgstr "Επιστροφή στους Χώρους"
 
 #: venues/templates/venues/apply_venue.html:5
 msgid "Apply to Register a Venue"
-msgstr ""
+msgstr "Αίτηση Καταχώρησης Χώρου"
 
 #: venues/templates/venues/apply_venue.html:13
 msgid "Apply to Register Your Venue"
-msgstr ""
+msgstr "Αίτηση για να Καταχωρήσετε τον Χώρο σας"
 
 #: venues/templates/venues/apply_venue.html:50
 msgid "Submit Application"
-msgstr ""
+msgstr "Υποβολή Αίτησης"
 
 #: venues/templates/venues/confirm_cancel.html:5
 #: venues/templates/venues/confirm_cancel.html:9
 msgid "Cancel Reservation"
-msgstr ""
+msgstr "Ακύρωση Κράτησης"
 
 #: venues/templates/venues/confirm_cancel.html:10
 msgid "Are you sure you want to cancel your reservation at"
-msgstr ""
+msgstr "Είστε σίγουροι ότι θέλετε να ακυρώσετε την κράτησή σας στο"
 
 #: venues/templates/venues/confirm_cancel.html:10
 msgid "on"
-msgstr ""
+msgstr "στις"
 
 #: venues/templates/venues/confirm_cancel.html:14
 msgid "Yes, Cancel"
-msgstr ""
+msgstr "Ναι, Ακύρωση"
 
 #: venues/templates/venues/confirm_cancel.html:15
 msgid "No, go back"
-msgstr ""
+msgstr "Όχι, επιστροφή"
 
 #: venues/templates/venues/edit_reservation.html:5
 msgid "Edit Reservation"
-msgstr ""
+msgstr "Επεξεργασία Κράτησης"
 
 #: venues/templates/venues/edit_reservation.html:16
 msgid "Edit Reservation for"
-msgstr ""
+msgstr "Επεξεργασία Κράτησης για"
 
 #: venues/templates/venues/edit_reservation_status.html:17
 msgid "Edit Reservation Status"
-msgstr ""
+msgstr "Επεξεργασία Κατάστασης Κράτησης"
 
 #: venues/templates/venues/edit_reservation_status.html:20
 #: venues/templates/venues/update_arrival_status.html:19
 msgid "Customer:"
-msgstr ""
+msgstr "Πελάτης:"
 
 #: venues/templates/venues/edit_reservation_status.html:22
 #: venues/templates/venues/update_arrival_status.html:21
 msgid "Time:"
-msgstr ""
+msgstr "Ώρα:"
 
 #: venues/templates/venues/edit_reservation_status.html:23
 msgid "Party Size:"
-msgstr ""
+msgstr "Αριθμός ατόμων:"
 
 #: venues/templates/venues/edit_reservation_status.html:48
 #: venues/templates/venues/update_arrival_status.html:38
 msgid "Update Status"
-msgstr ""
+msgstr "Ενημέρωση Κατάστασης"
 
 #: venues/templates/venues/edit_reservation_status.html:58
 #: venues/templates/venues/update_arrival_status.html:46
 msgid "Confirm Update"
-msgstr ""
+msgstr "Επιβεβαίωση Ενημέρωσης"
 
 #: venues/templates/venues/edit_reservation_status.html:59
 msgid "Are you sure you want to update the reservation status?"
-msgstr ""
+msgstr "Είστε σίγουροι ότι θέλετε να ενημερώσετε την κατάσταση της κράτησης;"
 
 #: venues/templates/venues/edit_reservation_status.html:62
 #: venues/templates/venues/update_arrival_status.html:50
 msgid "Yes, Update"
-msgstr ""
+msgstr "Ναι, Ενημέρωση"
 
 #: venues/templates/venues/make_reservation.html:5
 msgid "Make a Reservation"
-msgstr ""
+msgstr "Κάντε Κράτηση"
 
 #: venues/templates/venues/make_reservation.html:13
 msgid "Reserve at"
-msgstr ""
+msgstr "Κράτηση στο"
 
 #: venues/templates/venues/make_reservation.html:18
 msgid "Reserve"
-msgstr ""
+msgstr "Κράτηση"
 
 #: venues/templates/venues/my_reservations.html:10
 #: venues/templates/venues/my_reservations.html:15
 msgid "My Reservations"
-msgstr ""
+msgstr "Οι Κρατήσεις Μου"
 
 #: venues/templates/venues/my_reservations.html:19
 msgid "Upcoming"
-msgstr ""
+msgstr "Επερχόμενες"
 
 #: venues/templates/venues/my_reservations.html:22
 msgid "Past"
-msgstr ""
+msgstr "Παλαιότερες"
 
 #: venues/templates/venues/my_reservations.html:25
 msgid "Cancelled"
-msgstr ""
+msgstr "Ακυρωμένες"
 
 #: venues/templates/venues/reservation_pending.html:5
 #: venues/templates/venues/reservation_pending.html:24
 msgid "Reservation Pending"
-msgstr ""
+msgstr "Κράτηση σε Εκκρεμότητα"
 
 #: venues/templates/venues/reservation_pending.html:25
 msgid ""
 "Thank you for your booking request. Your reservation is currently pending "
 "and requires confirmation from the venue administrator."
 msgstr ""
+"Ευχαριστούμε για το αίτημα κράτησής σας. Η κράτησή σας είναι σε εκκρεμότητα "
+"και απαιτεί επιβεβαίωση από τον διαχειριστή του χώρου."
 
 #: venues/templates/venues/reservation_pending.html:26
 msgid "You’ll receive a confirmation or update shortly via email."
-msgstr ""
+msgstr "Θα λάβετε σύντομα επιβεβαίωση ή ενημέρωση μέσω email."
 
 #: venues/templates/venues/reservation_pending.html:27
 msgid "Back to Venue List"
-msgstr ""
+msgstr "Επιστροφή στη Λίστα Χώρων"
 
 #: venues/templates/venues/update_arrival_status.html:16
 msgid "Update Arrival Status"
-msgstr ""
+msgstr "Ενημέρωση Κατάστασης Άφιξης"
 
 #: venues/templates/venues/update_arrival_status.html:47
 msgid "Are you sure you want to update the arrival status?"
-msgstr ""
+msgstr "Είστε σίγουροι ότι θέλετε να ενημερώσετε την κατάσταση άφιξης;"
 
 #: venues/templates/venues/venue_dashboard.html:44
 msgid "Venue Dashboard"
-msgstr ""
+msgstr "Πίνακας Ελέγχου Χώρου"
 
 #: venues/templates/venues/venue_dashboard.html:54
 #: venues/templates/venues/venue_list.html:35
 msgid "Full"
-msgstr "Πλήρη"
+msgstr "Πλήρης"
 
 #: venues/templates/venues/venue_dashboard.html:55
-#, fuzzy
-#| msgid "Available"
 msgid "Mark as Available"
-msgstr "Διαθέσιμα"
+msgstr "Σήμανση ως Διαθέσιμο"
 
 #: venues/templates/venues/venue_dashboard.html:57
 #: venues/templates/venues/venue_list.html:34
 msgid "Available"
-msgstr "Διαθέσιμα"
+msgstr "Διαθέσιμο"
 
 #: venues/templates/venues/venue_dashboard.html:58
 msgid "Mark as Full"
-msgstr ""
+msgstr "Σήμανση ως Πλήρες"
 
 #: venues/templates/venues/venue_dashboard.html:66
 msgid "Reservation Requests & Guest Arrivals"
-msgstr ""
+msgstr "Αιτήματα Κρατήσεων & Αφίξεις Επισκεπτών"
 
 #: venues/templates/venues/venue_dashboard.html:78
 msgid "Reservation History"
-msgstr ""
+msgstr "Ιστορικό Κρατήσεων"
 
 #: venues/templates/venues/venue_dashboard.html:81
 msgid "Analytics"
-msgstr ""
+msgstr "Αναλυτικά Στοιχεία"
 
 #: venues/templates/venues/venue_dashboard.html:84
 msgid "Manage Venue"
-msgstr ""
+msgstr "Διαχείριση Χώρου"
 
 #: venues/templates/venues/venue_dashboard.html:95
 msgid "Pending Reservation Requests"
-msgstr ""
+msgstr "Αιτήματα Κρατήσεων σε Εκκρεμότητα"
 
 #: venues/templates/venues/venue_dashboard.html:105
 #: venues/templates/venues/venue_dashboard.html:132
 #: venues/templates/venues/venue_dashboard.html:162
 msgid "Customer"
-msgstr ""
+msgstr "Πελάτης"
 
 #: venues/templates/venues/venue_dashboard.html:106
 #: venues/templates/venues/venue_dashboard.html:133
 #: venues/templates/venues/venue_dashboard.html:163
 msgid "Date"
-msgstr ""
+msgstr "Ημερομηνία"
 
 #: venues/templates/venues/venue_dashboard.html:107
 #: venues/templates/venues/venue_dashboard.html:134
 #: venues/templates/venues/venue_dashboard.html:164
 msgid "Time"
-msgstr ""
+msgstr "Ώρα"
 
 #: venues/templates/venues/venue_dashboard.html:108
 #: venues/templates/venues/venue_dashboard.html:135
 #: venues/templates/venues/venue_dashboard.html:165
 msgid "Guests"
-msgstr ""
+msgstr "Αριθμός ατόμων"
 
 #: venues/templates/venues/venue_dashboard.html:109
 #: venues/templates/venues/venue_dashboard.html:136
 #: venues/templates/venues/venue_dashboard.html:166
 msgid "Status"
-msgstr ""
+msgstr "Κατάσταση"
 
 #: venues/templates/venues/venue_dashboard.html:110
 #: venues/templates/venues/venue_dashboard.html:137
 msgid "Action"
-msgstr ""
+msgstr "Ενέργεια"
 
 #: venues/templates/venues/venue_dashboard.html:122
 msgid "Guest Arrivals & Cancellations"
-msgstr ""
+msgstr "Αφίξεις Επισκεπτών & Ακυρώσεις"
 
 #: venues/templates/venues/venue_detail.html:32
 msgid "View on Google Maps"
-msgstr ""
+msgstr "Προβολή στους Χάρτες Google"
 
 #: venues/templates/venues/venue_detail.html:45
 #: venues/templates/venues/venue_detail.html:99
 msgid "Show More"
-msgstr ""
+msgstr "Εμφάνιση Περισσοτέρων"
 
 #: venues/templates/venues/venue_detail.html:54
 msgid "Log in to make a reservation"
-msgstr ""
+msgstr "Συνδεθείτε για να κάνετε κράτηση"
 
 #: venues/templates/venues/venue_detail.html:105
 msgid "Show Less"
-msgstr ""
+msgstr "Εμφάνιση Λιγότερων"
 
 #: venues/templates/venues/venue_list.html:11
 msgid "Browse Venues"
@@ -722,14 +723,12 @@ msgstr "Δεν υπάρχουν άλλοι διαθέσιμοι χώροι."
 #: venues/templates/venues/venue_summary.html:5
 #, python-format
 msgid "Summary for %(request.user.username)s"
-msgstr ""
+msgstr "Σύνοψη για τον χρήστη %(request.user.username)s"
 
 #: venues/templates/venues/venue_summary.html:7
-#, fuzzy
-#| msgid "All Venues"
 msgid "Total Venues:"
-msgstr "Όλοι οι Χώροι"
+msgstr "Σύνολο Χώρων:"
 
 #: venues/templates/venues/venue_summary.html:8
 msgid "Total Reservations:"
-msgstr ""
+msgstr "Συνολικές Κρατήσεις:"
