@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-17 12:07+0000\n"
+"POT-Creation-Date: 2025-10-17 12:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Greek <EMAIL@ADDRESS>\n"
@@ -574,6 +574,49 @@ msgstr ""
 
 #: venues/templates/venues/venue_dashboard.html:84
 msgid "Manage Venue"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:95
+msgid "Pending Reservation Requests"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:105
+#: venues/templates/venues/venue_dashboard.html:132
+#: venues/templates/venues/venue_dashboard.html:162
+msgid "Customer"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:106
+#: venues/templates/venues/venue_dashboard.html:133
+#: venues/templates/venues/venue_dashboard.html:163
+msgid "Date"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:107
+#: venues/templates/venues/venue_dashboard.html:134
+#: venues/templates/venues/venue_dashboard.html:164
+msgid "Time"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:108
+#: venues/templates/venues/venue_dashboard.html:135
+#: venues/templates/venues/venue_dashboard.html:165
+msgid "Guests"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:109
+#: venues/templates/venues/venue_dashboard.html:136
+#: venues/templates/venues/venue_dashboard.html:166
+msgid "Status"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:110
+#: venues/templates/venues/venue_dashboard.html:137
+msgid "Action"
+msgstr ""
+
+#: venues/templates/venues/venue_dashboard.html:122
+msgid "Guest Arrivals & Cancellations"
 msgstr ""
 
 #: venues/templates/venues/venue_detail.html:32
