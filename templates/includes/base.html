@@ -22,7 +22,7 @@
             {% load static i18n %}
             <form action="{% url 'set_language' %}" method="post" id="language-form">
                 {% csrf_token %}
-                <input name="next" type="hidden" value="{{ request.path }}">
+                <input name="next" type="hidden" value="{{ request.path|cut:'/el' }}">
                 <select name="language" id="language-select" class="hidden">
                     <option value="el" {% if LANGUAGE_CODE == 'el' %}selected{% endif %}>GR</option>
                     <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>EN</option>
@@ -175,7 +175,6 @@
 
             if (languageMenuBtn && languageDropdown) {
                 languageMenuBtn.addEventListener("click", e => {
-                    e.stopPropagation();
                     languageDropdown.classList.toggle("show");
                     languageTriangle?.classList.toggle("rotate");
                 });
@@ -196,19 +195,19 @@
                     });
                 });
             }
+            if (userMenuBtn && languageMenuBtn) {
+                userMenuBtn.addEventListener("click", e => {
+                    e.stopPropagation();
+                    languageDropdown?.classList.remove("show");
+                    languageTriangle?.classList.remove("rotate");
+                });
+                languageMenuBtn.addEventListener("click", e => {
+                    e.stopPropagation();
+                    userDropdown?.classList.remove("show");
+                    userTriangle?.classList.remove("rotate");
+                });
+            }
         });
-        if (userMenuBtn && languageMenuBtn) {
-            userMenuBtn.addEventListener("click", e => {
-                e.stopPropagation();
-                languageDropdown?.classList.remove("show");
-                languageTriangle?.classList.remove("rotate");
-            });
-            languageMenuBtn.addEventListener("click", e => {
-                e.stopPropagation();
-                userDropdown?.classList.remove("show");
-                userTriangle?.classList.remove("rotate");
-            });
-        }
     </script>
 
     {% block extra_js %}{% endblock %}

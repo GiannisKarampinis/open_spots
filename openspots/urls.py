@@ -29,13 +29,11 @@ from rest_framework_simplejwt.views import (
 
 urlpatterns = [
     # Translation URLs
-    path('i18n/setlanguage/', set_language, name='set_language'),
     path('i18n/', include('django.conf.urls.i18n')),
 
     # API JWT endpoints
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path('', include('venues.urls')),  # Homepage = venue_list
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += i18n_patterns(
