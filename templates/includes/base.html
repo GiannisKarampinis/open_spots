@@ -175,6 +175,7 @@
 
             if (languageMenuBtn && languageDropdown) {
                 languageMenuBtn.addEventListener("click", e => {
+                    e.stopPropagation();
                     languageDropdown.classList.toggle("show");
                     languageTriangle?.classList.toggle("rotate");
                 });
