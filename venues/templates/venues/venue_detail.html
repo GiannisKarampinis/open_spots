@@ -59,13 +59,17 @@
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+{{ venue.latitude|default:"null"|json_script:"venue_lat" }}
+{{ venue.longitude|default:"null"|json_script:"venue_lng" }}
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    // --- Map initialization ---
     const defaultLat = 40.6401;
     const defaultLng = 22.9444;
-    const venueLat = {{ venue.latitude|default:"null" }};
-    const venueLng = {{ venue.longitude|default:"null" }};
+
+    const venueLat = JSON.parse(document.getElementById("venue_lat").textContent);
+    const venueLng = JSON.parse(document.getElementById("venue_lng").textContent);
     const hasCoords = venueLat !== null && venueLng !== null;
 
     const map = L.map('venue-map', { scrollWheelZoom: false }).setView(
@@ -83,6 +87,8 @@ document.addEventListener("DOMContentLoaded", function () {
             .openPopup();
     }
 });
+</script>
+<script>
 document.addEventListener("DOMContentLoaded", function () {
     const btn = document.getElementById("readMore");
     if (btn) {
