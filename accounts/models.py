@@ -10,7 +10,7 @@ class CustomUser(AbstractUser):
     user_type           = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='customer')
     phone_number        = models.CharField(max_length=20, blank=True, null=True)
     email_verified      = models.BooleanField(default=False)
-    unverified_email    = models.EmailField(blank=True, null=True)
+    unverified_email    = models.EmailField(blank=True, null=True) # FIXME: A wrapper class could be developed to handle Emails as an separate entity.
     #FIXME - tsevre: Do not call unverified_email the variable 'cause it handles both states.
 
     def __str__(self):
