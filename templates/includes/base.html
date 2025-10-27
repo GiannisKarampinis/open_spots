@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -19,7 +19,6 @@
             {% include "includes/logo.svg.html" %}
         </a>
         <nav class="main-nav">
-            {% load static i18n %}
             <form action="{% url 'set_language' %}" method="post" id="language-form">
                 {% csrf_token %}
                 <input name="next" type="hidden" value="{{ request.path|cut:'/el' }}">
@@ -52,7 +51,7 @@
             {% if user.is_authenticated %}
                 <div class="user-menu">
                     {% if user.is_authenticated and user.user_type == 'venue_admin' and venue_id %}
-                        <a href="{% url 'venue_dashboard' venue_id %}" class="dashboard-link">Dashboard</a>
+                        <a href="{% url 'venue_dashboard' venue_id %}" class="dashboard-link">{% trans "Dashboard" %}</a>
                     {% endif %}
 
                     <button class="user-menu-btn" id="userMenuBtn">
@@ -61,19 +60,19 @@
                     </button>
 
                     <div class="user-dropdown" id="userDropdown" role="menu" aria-labelledby="userMenuBtn">
-                        <a href="{% url 'profile' %}" role="menuitem">Profile</a>
+                        <a href="{% url 'profile' %}" role="menuitem">{% trans "Profile" %}</a>
 
                         <!-- Settings with vertical submenu -->
                         <div class="submenu">
                             <button class="submenu-btn" type="button">
-                                Settings <span class="triangle">&#x25BC;</span>
+                                {% trans "Settings" %} <span class="triangle">&#x25BC;</span>
                             </button>
                             <div class="submenu-content">
                                 <div class="theme-toggle-container">
-                                    <span class="theme-label">Dark Mode</span>
+                                    <span class="theme-label">{% trans "Dark Mode" %}</span>
 
                                     <!-- styled switch; checkbox has id so JS can find it -->
-                                    <label class="switch" aria-label="Toggle dark mode">
+                                    <label class="switch" aria-label="{% trans 'Toggle dark mode' %}">
                                     <input type="checkbox" id="theme-toggle" aria-checked="false" />
                                     <span class="slider round" role="switch" aria-hidden="true"></span>
                                     </label>
@@ -83,18 +82,18 @@
 
                         <form method="post" action="{% url 'logout' %}" class="logout-form" role="none">
                             {% csrf_token %}
-                            <button type="submit" class="logout-link" role="menuitem">Logout</button>
+                            <button type="submit" class="logout-link" role="menuitem">{% trans "Logout" %}</button>
                         </form>
 
-                        <a href="{% url 'my_reservations' %}" role="menuitem">My Reservations</a>
+                        <a href="{% url 'my_reservations' %}" role="menuitem">{% trans "My Reservations" %}</a>
                     </div>
                 </div>
             {% else %}
-                <a href="{% url 'apply_venue' %}" class="apply-venue-btn">Apply to Register a Venue</a>
+                <a href="{% url 'apply_venue' %}" class="apply-venue-btn">{% trans "Apply to Register a Venue" %}</a>
                 <span class="separator">|</span>
-                <a href="{% url 'login' %}" class="nav-link">Login</a>
+                <a href="{% url 'login' %}" class="nav-link">{% trans "Login" %}</a>
                 <span class="separator">|</span>
-                <a href="{% url 'signup' %}" class="nav-link">Sign Up</a>
+                <a href="{% url 'signup' %}" class="nav-link">{% trans "Sign Up" %}</a>
             {% endif %}
         </nav>
     </header>

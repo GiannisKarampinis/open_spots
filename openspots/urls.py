@@ -39,6 +39,7 @@ urlpatterns = [
 urlpatterns += i18n_patterns(
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),
+    path("accounts/", include("allauth.urls")),
     path("venues/", include("venues.urls")),
     prefix_default_language=False,
 )

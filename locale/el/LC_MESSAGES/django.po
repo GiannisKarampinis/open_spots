@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-17 12:25+0000\n"
+"POT-Creation-Date: 2025-10-27 09:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Greek <EMAIL@ADDRESS>\n"
@@ -44,7 +44,7 @@ msgstr "Δεν έχετε καταχωρήσει ακόμη χώρους."
 
 #: accounts/templates/accounts/login.html:6
 #: accounts/templates/accounts/login.html:33
-#: accounts/templates/accounts/signup.html:39
+#: accounts/templates/accounts/signup.html:39 templates/includes/base.html:94
 msgid "Login"
 msgstr "Σύνδεση"
 
@@ -179,7 +179,7 @@ msgid "Confirm new password"
 msgstr "Επιβεβαίωση νέου κωδικού πρόσβασης"
 
 #: accounts/templates/accounts/signup.html:9
-#: accounts/templates/accounts/signup.html:13
+#: accounts/templates/accounts/signup.html:13 templates/includes/base.html:96
 msgid "Sign Up"
 msgstr "Εγγραφή"
 
@@ -261,6 +261,42 @@ msgstr "Ελληνικά"
 #: openspots/settings.py:201
 msgid "English"
 msgstr "Αγγλικά"
+
+#: templates/includes/base.html:54
+#, fuzzy
+#| msgid "Venue Dashboard"
+msgid "Dashboard"
+msgstr "Πίνακας Ελέγχου Χώρου"
+
+#: templates/includes/base.html:63
+msgid "Profile"
+msgstr ""
+
+#: templates/includes/base.html:68
+msgid "Settings"
+msgstr ""
+
+#: templates/includes/base.html:72
+msgid "Dark Mode"
+msgstr ""
+
+#: templates/includes/base.html:75
+msgid "Toggle dark mode"
+msgstr ""
+
+#: templates/includes/base.html:85
+msgid "Logout"
+msgstr ""
+
+#: templates/includes/base.html:88
+#: venues/templates/venues/my_reservations.html:10
+#: venues/templates/venues/my_reservations.html:15
+msgid "My Reservations"
+msgstr "Οι Κρατήσεις Μου"
+
+#: templates/includes/base.html:92 venues/templates/venues/apply_venue.html:5
+msgid "Apply to Register a Venue"
+msgstr "Αίτηση Καταχώρησης Χώρου"
 
 #: venues/templates/venues/_analytics_tab_content.html:6
 msgid "Group by:"
@@ -403,10 +439,6 @@ msgstr ""
 msgid "Back to Venues"
 msgstr "Επιστροφή στους Χώρους"
 
-#: venues/templates/venues/apply_venue.html:5
-msgid "Apply to Register a Venue"
-msgstr "Αίτηση Καταχώρησης Χώρου"
-
 #: venues/templates/venues/apply_venue.html:13
 msgid "Apply to Register Your Venue"
 msgstr "Αίτηση για να Καταχωρήσετε τον Χώρο σας"
@@ -492,11 +524,6 @@ msgstr "Κράτηση στο"
 #: venues/templates/venues/make_reservation.html:18
 msgid "Reserve"
 msgstr "Κράτηση"
-
-#: venues/templates/venues/my_reservations.html:10
-#: venues/templates/venues/my_reservations.html:15
-msgid "My Reservations"
-msgstr "Οι Κρατήσεις Μου"
 
 #: venues/templates/venues/my_reservations.html:19
 msgid "Upcoming"

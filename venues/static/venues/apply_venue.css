@@ -1,11 +1,11 @@
 .apply-container {
-    background-color:      #2a2a2a;                /* Dark gray background */
+    background-color:      var(--surface-color);                /* Dark gray background */
     padding:               40px;                     /* Padding inside container */
     border-radius:         10px;                     /* Rounded corners */
     box-shadow:            0 0 25px rgba(255,255,255,0.1); /* Soft white glow */
     max-width:             500px;                    /* Max container width */
     margin:                60px auto;                /* Center horizontally, top/bottom margin */
-    color:                 white;                  /* Text color */
+    color:                 var(--button-text);                  /* Text color */
     font-family:           'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean readable font */
     width:                 100%;                     /* Make width flexible */
     box-sizing:            border-box;               /* Include padding in width */
@@ -17,13 +17,13 @@
     margin-bottom:         30px;                      /* Space below heading */
     font-weight:           700;                       /* Bold font */
     font-size:             2rem;                      /* Large font size */
-    color:                 #eee;                    /* Light gray text */
+    color:                 var(--button-text);                    /* Light gray text */
 }
 
 /* Labels */
 .apply-container .form-group label {
     display:               block;                     /* Full width */
-    color:                 white;                   /* Keep white */
+    color:                 var(--button-text);                   /* Keep white */
 }
 
 /* Form group spacing */
@@ -41,9 +41,9 @@
 .apply-container .form-group textarea {
     width:                 100%;
     padding:               12px 15px;
-    background-color:      #3a3a3a;
+    background-color:      var(--background-color);              /* Darker background */
     border:                1px solid #555;
-    color:                 white;
+    color:                 var(--text-color);
     border-radius:         6px;
     margin-bottom:         15px;                     /* consistent spacing */
     font-size:             1rem;
@@ -56,8 +56,8 @@
 .apply-container .form-group input:focus,
 .apply-container .form-group select:focus,
 .apply-container .form-group textarea:focus {
-    border-color:          #007bff;                   /* Blue border on focus */
-    box-shadow:            0 0 6px #007bff;           /* Blue glow */
+    border-color:          var(--primary-color);                   /* Blue border on focus */
+    box-shadow:            0 0 6px var(--primary-hover);           /* Blue glow */
 }
 
 /* Email verify wrapper label */
@@ -81,8 +81,8 @@
 
 /* Verify Email button */
 .apply-container .form-group a.btn.btn-secondary {
-    background-color:      #007bff;                   /* Bootstrap blue */
-    color:                 white;
+    background-color:      var(--primary-color);                   /* Bootstrap blue */
+    color:                 var(--button-text);
     border:                none;
     border-radius:         6px;
     padding:               10px 18px;
@@ -98,7 +98,7 @@
 }
 
 .apply-container .form-group a.btn.btn-secondary:hover {
-    background-color:      #0056b3;                   /* Darker blue on hover */
+    background-color:      var(--primary-hover);                   /* Darker blue on hover */
 }
 
 /* Error list */
@@ -125,8 +125,8 @@
     width:                 100%;
     padding:               14px;
     margin-top:            20px;
-    background-color:      #007bff;
-    color:                 white;
+    background-color:      var(--primary-color);
+    color:                 var(--button-text);
     border-radius:         6px;
     border:                none;
     cursor:                pointer;
