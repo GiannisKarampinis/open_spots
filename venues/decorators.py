@@ -5,11 +5,12 @@ from .models import Venue, Reservation
 
 def venue_admin_required(view_func):
     """
-    Decorator to ensure that the current user is the owner of the venue.
-    Works with views that accept either:
-    - `venue_id` as a parameter, or
-    - `reservation_id` as a parameter (fetches venue via reservation)
+        Decorator to ensure that the current user is the owner of the venue.
+        Works with views that accept either:
+        - `venue_id` as a parameter, or
+        - `reservation_id` as a parameter (fetches venue via reservation)
     """
+    
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         venue = None
@@ -22,8 +23,8 @@ def venue_admin_required(view_func):
         # Check if reservation_id is passed
         reservation_id = kwargs.get('reservation_id')
         if reservation_id:
-            reservation = get_object_or_404(Reservation, id=reservation_id)
-            venue = reservation.venue
+            reservation     = get_object_or_404(Reservation, id=reservation_id)
+            venue           = reservation.venue
 
         if not venue:
             return HttpResponseForbidden("Access denied: venue not found.")

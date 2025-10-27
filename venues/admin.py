@@ -1,10 +1,9 @@
-from django.utils import timezone
-from django.contrib import admin
-from django.utils.html import format_html
-from django.core.files.base import ContentFile
-from django.urls import reverse
-from .models import Venue, Table, Reservation, VenueApplication, VenueUpdateRequest, VenueVisit, VenueUpdateImage, VenueUpdateMenuImage, VenueImage, VenueMenuImage
-from django.utils.html import format_html
+from django.utils               import timezone
+from django.contrib             import admin
+from django.utils.html          import format_html
+from django.core.files.base     import ContentFile
+from .models                    import Venue, Table, Reservation, VenueApplication, VenueUpdateRequest, VenueVisit, VenueUpdateImage, VenueUpdateMenuImage, VenueImage, VenueMenuImage
+from django.utils.html          import format_html
 
 
 class TableInline(admin.TabularInline):

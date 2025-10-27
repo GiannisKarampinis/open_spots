@@ -1,0 +1,21 @@
+{% extends "emails_manager/_base_email.html" %}
+
+{% block content %}
+  <h2 style="color: #ffffff;">New Venue Application Submitted</h2>
+
+  <div style="color: #e0e0e0; font-size: 15px; line-height: 1.6;">
+    <p><strong>Name:</strong> {{ venue_application.name }}</p>
+    <p><strong>Email:</strong> {{ venue_application.email }}</p>
+    <p><strong>Location:</strong> {{ venue_application.location }}</p>
+    <p><strong>Kind:</strong> {{ venue_application.kind }}</p>
+    <p><strong>Submitted at:</strong> {{ submitted_at }}</p>
+  </div>
+
+  <p style="margin-top: 20px; text-align: center;">
+    <a href="{{ admin_url }}" 
+       style="background-color: #007BFF; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; display: inline-block;">
+      Review in Admin Panel
+    </a>
+  </p>
+{% endblock %}
+

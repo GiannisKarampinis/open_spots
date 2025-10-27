@@ -13,9 +13,10 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from .forms                         import CustomUserCreationForm, ProfileEditForm
 from .forms                         import ProfileEditForm, PasswordChangeRequestForm
 from .forms                         import PasswordResetRequestForm, PasswordResetForm
-from .tools                         import send_verification_code
-from .models                        import CustomUser, EmailVerificationCode
-from venues.models                  import Venue
+from .services.emails               import send_verification_code
+from emails_manager.models          import EmailVerificationCode                        #FIXME: circular import
+from .models                        import CustomUser
+from venues.models                  import Venue                                        #FIXME: circular import + a commented out email sending
 from rest_framework_simplejwt.tokens import RefreshToken
 
 

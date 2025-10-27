@@ -1,0 +1,9 @@
+New Venue Application Submitted
+
+Name: {{ venue_application.name }}
+Email: {{ venue_application.email }}
+Location: {{ venue_application.location }}
+Kind: {{ venue_application.kind }}
+Submitted at: {{ submitted_at }}
+
+Please review this application in the admin panel.

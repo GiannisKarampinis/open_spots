@@ -1,9 +1,10 @@
 import logging
 import os
-from django.db                          import models
+
+from django.db                          import models, transaction
 from django.conf                        import settings
 from django.utils                       import timezone
-from datetime                           import datetime
+from datetime                           import datetime, timedelta
 from django.db.models.signals           import post_save
 from django.dispatch                    import receiver
 from django.core.mail                   import send_mail
@@ -11,7 +12,7 @@ from django.contrib.auth                import get_user_model
 from django.utils.crypto                import get_random_string
 from django.contrib.auth.models         import Permission
 from django.contrib.contenttypes.models import ContentType
-from accounts.tools                     import send_verification_code
+#from emails_manager.utils               import send_verification_code
 from .utils                             import get_coords_nominatim, convert_image_to_webp
 
 
@@ -52,6 +53,20 @@ class Venue(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def has_overlapping_reservation(self, date, start_time, duration_hours=1):
+        start_dt = datetime.combine(date, start_time)
+        end_dt = start_dt + timedelta(hours=duration_hours)
+
+        overlap_start = start_dt - timedelta(hours=2) #FIXME
+        overlap_end = end_dt
+
+        return self.reservations.filter(
+            date=date,
+            time__gte=overlap_start.time(),
+            time__lt=overlap_end.time()
+        ).exists()
+
 
     class Meta:
         ordering = ['name']
@@ -259,7 +274,17 @@ def create_admin_user_for_venue(sender, instance, created, **kwargs):
             instance.owner = user
             instance.save(update_fields=["owner"])
 
-            send_verification_code(user)  # Send verification code to unverified_email
+             # send_verification_code(user)  # Send verification code to unverified_email
+            # Send verification code after transaction commit to avoid circular imports / race conditions.
+            # Import is done lazily inside the callback.
+            def _send_verification_code():
+                try:
+                    from emails_manager.utils import send_verification_code
+                    send_verification_code(user)
+                except Exception:
+                    logger.exception(f"Failed to send verification code to new venue admin {getattr(user, 'username', None)}")
+
+            transaction.on_commit(_send_verification_code)
 
             send_mail(
                 subject='Your OpenSpots Venue Admin Account',
