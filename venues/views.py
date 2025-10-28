@@ -13,7 +13,7 @@ from django.utils.safestring         import mark_safe
 from django.core.exceptions          import PermissionDenied
 from django.http                     import HttpResponse, Http404, JsonResponse
 from django.template.loader          import render_to_string
-from django.db                       import transaction
+from django.db                       import transaction, models
 from django.urls                     import reverse
 from .models                         import Venue, VenueUpdateRequest, VenueVisit, Reservation, VenueUpdateImage, VenueUpdateMenuImage, VenueImage, VenueMenuImage
 from .forms                          import ReservationForm, VenueApplicationForm, ArrivalStatusForm
@@ -64,12 +64,26 @@ def venue_list(request):
         if venue:
             venue_id = venue.id
 
+    upcoming_reservation = None
+    if request.user.is_authenticated:
+        upcoming_reservation = (
+            Reservation.objects
+            .filter(user=request.user)
+            .exclude(status='cancelled')
+            .select_related('venue')
+            .order_by('date', 'time')
+            .upcoming()   # <- DB-level filter using the new QuerySet method
+            .first()
+        )
+    print("Upcoming reservation:", upcoming_reservation)
+
     return render(request, "venues/venue_list.html", {
         "venues":                   venues,
         "venue_data_json":          mark_safe(json.dumps(venue_data, cls=DjangoJSONEncoder)),
         "selected_kind":            kind,
         "selected_availability":    availability,
         "venue_id":                 venue_id,
+        "upcoming_reservation": upcoming_reservation,
     })
 
 ###########################################################################################

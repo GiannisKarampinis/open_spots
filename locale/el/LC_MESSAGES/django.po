@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-27 09:47+0000\n"
+"POT-Creation-Date: 2025-10-28 08:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Greek <EMAIL@ADDRESS>\n"
@@ -133,6 +133,7 @@ msgstr "Email:"
 #: accounts/templates/accounts/profile.html:30
 #: accounts/templates/accounts/profile.html:49
 #: venues/templates/venues/_reservation_list.html:18
+#: venues/templates/venues/venue_list.html:58
 msgid "Edit"
 msgstr "Επεξεργασία"
 
@@ -151,6 +152,7 @@ msgstr "Αποθήκευση"
 #: venues/templates/venues/edit_reservation_status.html:61
 #: venues/templates/venues/update_arrival_status.html:39
 #: venues/templates/venues/update_arrival_status.html:49
+#: venues/templates/venues/venue_list.html:61
 msgid "Cancel"
 msgstr "Ακύρωση"
 
@@ -254,11 +256,11 @@ msgstr "δευτερόλεπτα"
 msgid "Verification code has expired."
 msgstr "Ο κωδικός επαλήθευσης έχει λήξει."
 
-#: openspots/settings.py:200
+#: openspots/settings.py:201
 msgid "Greek"
 msgstr "Ελληνικά"
 
-#: openspots/settings.py:201
+#: openspots/settings.py:202
 msgid "English"
 msgstr "Αγγλικά"
 
@@ -652,7 +654,7 @@ msgid "View on Google Maps"
 msgstr "Προβολή στους Χάρτες Google"
 
 #: venues/templates/venues/venue_detail.html:45
-#: venues/templates/venues/venue_detail.html:99
+#: venues/templates/venues/venue_detail.html:105
 msgid "Show More"
 msgstr "Εμφάνιση Περισσοτέρων"
 
@@ -660,7 +662,7 @@ msgstr "Εμφάνιση Περισσοτέρων"
 msgid "Log in to make a reservation"
 msgstr "Συνδεθείτε για να κάνετε κράτηση"
 
-#: venues/templates/venues/venue_detail.html:105
+#: venues/templates/venues/venue_detail.html:111
 msgid "Show Less"
 msgstr "Εμφάνιση Λιγότερων"
 
@@ -677,7 +679,7 @@ msgid "All Venues"
 msgstr "Όλοι οι Χώροι"
 
 #: venues/templates/venues/venue_list.html:24
-#: venues/templates/venues/venue_list.html:89
+#: venues/templates/venues/venue_list.html:111
 msgid "Restaurants"
 msgstr "Εστιατόρια"
 
@@ -690,7 +692,7 @@ msgid "Bars"
 msgstr "Μπαρ"
 
 #: venues/templates/venues/venue_list.html:27
-#: venues/templates/venues/venue_list.html:102
+#: venues/templates/venues/venue_list.html:124
 msgid "Beach Bars"
 msgstr "Μπαρ Παραλίας"
 
@@ -707,43 +709,53 @@ msgid "Clear"
 msgstr "Εκκαθάριση"
 
 #: venues/templates/venues/venue_list.html:48
+#, fuzzy
+#| msgid "Total Reservations"
+msgid "Your Next Reservation"
+msgstr "Συνολικές Κρατήσεις"
+
+#: venues/templates/venues/venue_list.html:53
+msgid "Table"
+msgstr ""
+
+#: venues/templates/venues/venue_list.html:70
 #: venues/templates/venues/venue_summary.html:10
 msgid "Venues"
 msgstr "Χώροι"
 
-#: venues/templates/venues/venue_list.html:57
+#: venues/templates/venues/venue_list.html:79
 msgid "No venues available."
 msgstr "Δεν υπάρχουν διαθέσιμοι χώροι."
 
-#: venues/templates/venues/venue_list.html:62
+#: venues/templates/venues/venue_list.html:84
 msgid "Full Venues"
 msgstr "Πλήρεις Χώροι"
 
-#: venues/templates/venues/venue_list.html:69
+#: venues/templates/venues/venue_list.html:91
 msgid "No full venues available."
 msgstr "Δεν υπάρχουν πλήρεις χώροι."
 
-#: venues/templates/venues/venue_list.html:76
+#: venues/templates/venues/venue_list.html:98
 msgid "Cafes & Bars"
 msgstr "Καφετέριες & Μπαρ"
 
-#: venues/templates/venues/venue_list.html:85
+#: venues/templates/venues/venue_list.html:107
 msgid "No cafes or bars available."
 msgstr "Δεν υπάρχουν διαθέσιμες καφετέριες ή μπαρ."
 
-#: venues/templates/venues/venue_list.html:98
+#: venues/templates/venues/venue_list.html:120
 msgid "No restaurants available."
 msgstr "Δεν υπάρχουν διαθέσιμα εστιατόρια."
 
-#: venues/templates/venues/venue_list.html:111
+#: venues/templates/venues/venue_list.html:133
 msgid "No beach bars available."
 msgstr "Δεν υπάρχουν διαθέσιμα μπαρ παραλίας."
 
-#: venues/templates/venues/venue_list.html:115
+#: venues/templates/venues/venue_list.html:137
 msgid "Other Venues"
 msgstr "Άλλοι Χώροι"
 
-#: venues/templates/venues/venue_list.html:124
+#: venues/templates/venues/venue_list.html:146
 msgid "No other venues available."
 msgstr "Δεν υπάρχουν άλλοι διαθέσιμοι χώροι."
 

@@ -42,6 +42,34 @@
     </div>
 </form>
 
+<!--Recent Reservation-->
+{% if upcoming_reservation %}
+<div class="quick-reservation-card">
+    <h3>{% trans "Your Next Reservation" %}</h3>
+    <div class="reservation-info">
+        <strong>{{ upcoming_reservation.venue.name }}</strong><br>
+        {{ upcoming_reservation.date|date:"M d, Y" }} {{ upcoming_reservation.time|time:"H:i" }}<br>
+        {% if upcoming_reservation.table_number %}
+            {% trans "Table" %}: {{ upcoming_reservation.table_number }}
+        {% endif %}
+    </div>
+    <img
+        class="venue-image"
+        src="{% if upcoming_reservation.venue.image %}{{ upcoming_reservation.venue.image.url }}{% else %}{% static 'images/venue-placeholder.png' %}{% endif %}"
+        alt="{{ upcoming_reservation.venue.name }}"
+        onerror="this.style.display='none'">
+
+    <div class="reservation-actions">
+        <a href="{% url 'edit_reservation' upcoming_reservation.id %}" class="edit-btn">
+            <i class="fa-solid fa-pen-to-square"></i> {% trans "Edit" %}
+        </a>
+        <a href="{% url 'cancel_reservation' upcoming_reservation.id %}" class="cancel-btn">
+            <i class="fa-solid fa-xmark"></i> {% trans "Cancel" %}
+        </a>
+    </div>
+</div>
+{% endif %}
+
 <!-- Venue sections -->
 {% if selected_kind %}
     <h3 class="section-title">

@@ -7,6 +7,7 @@ from django.utils                       import timezone
 from datetime                           import datetime, timedelta
 from django.db.models.signals           import post_save
 from django.dispatch                    import receiver
+from django.db.models                   import Q
 from django.core.mail                   import send_mail
 from django.contrib.auth                import get_user_model
 from django.utils.crypto                import get_random_string
@@ -104,6 +105,24 @@ class Table(models.Model):
 ###########################################################################################
 
 ###########################################################################################
+class ReservationQuerySet(models.QuerySet):
+    def upcoming(self):
+        now = timezone.now()
+        today = now.date()
+        now_time = now.time()
+        # Reservations after today OR today and time >= now
+        return self.filter(
+            Q(date__gt=today) |
+            Q(date=today, time__gte=now_time)
+        )
+
+class ReservationManager(models.Manager):
+    def get_queryset(self):
+        return ReservationQuerySet(self.model, using=self._db)
+
+    def upcoming(self):
+        return self.get_queryset().upcoming()
+
 class Reservation(models.Model):
     STATUS_CHOICES = [
         ('pending',     'Pending'),
@@ -144,6 +163,7 @@ class Reservation(models.Model):
     comments        = models.TextField(blank=True, null=True)
     special_requests = models.CharField(max_length=20, choices=SPECIAL_REQUESTS_CHOICES, default='none')
     allergies       = models.TextField(blank=True, null=True)
+    objects         = ReservationManager()
 
     def __str__(self):
         return f"{self.full_name} - {self.date} at {self.time} ({self.venue.name})"
