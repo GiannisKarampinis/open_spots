@@ -2,7 +2,7 @@
 .container {
     max-width:  1080px;
     margin:     0 auto;
-    color:      #e0e0e0;
+    color:      var(--button-text);
 }
 
 /* === Page Title === */
@@ -528,7 +528,7 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
     box-shadow: 0 0 20px rgba(0,0,0,0.6);
     max-width: 960px;
     margin: 0 auto 2rem auto;
-    color: #e0e0e0;
+    color: #000;
 }
 
 /* Form headings */
@@ -731,6 +731,7 @@ button {
     flex-direction: column;       /* stack button on top, banner below */
     gap:            0.5rem;
     width:          100%;
+    margin:         10px 0px;
 }
 
 /* Preview area on the left */
@@ -745,6 +746,7 @@ button {
     background:     #f9f9f9;
     overflow-y:     auto;           /* enable vertical scrolling */
     max-height:     150px;          /* fixed height banner */
+    min-height:     150px;
 }
 
 /* Upload button on the right */
@@ -758,6 +760,9 @@ button {
     font-weight: 600;
     transition: background 0.2s;
     white-space: nowrap;       /* avoid breaking into two lines */
+    width: 25%;
+    align-self: flex-end;
+    text-align: center;
 }
 .custom-file-btn:hover {
     background-color: #45a049;

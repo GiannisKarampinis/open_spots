@@ -1,116 +1,365 @@
 {% load i18n %}
 
 <div class="container mt-5" id="manage-venue-form">
-    <form method="POST" enctype="multipart/form-data" class="venue-form-card" action = "{% url 'submit_venue_update' venue.id %}">
-        {% csrf_token %}
+  <form method="POST" enctype="multipart/form-data" class="venue-form-card"
+        action="{% url 'submit_venue_update' venue.id %}">
+    {% csrf_token %}
 
-        <!-- Venue Basic Info -->
-        <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div>
-                <label for="name">{% trans "Venue Name" %}</label>
-                <input type="text" name="name" id="name" value="{{ venue.name }}" class="form-input" required>
-            </div>
-            <div>
-                <label for="kind">{% trans "Type" %}</label>
-                <select name="kind" id="kind" class="form-input">
-                    {% for key, value in venue.VENUE_TYPES %}
-                        <option value="{{ key }}" {% if venue.kind == key %}selected{% endif %}>{% trans value %}</option>
-                    {% endfor %}
-                </select>
-            </div>
+    <!-- 🟩 NON-SENSITIVE SECTION -->
+    <div class="section-card mb-4">
+      <button class="section-header" type="button"
+              data-bs-toggle="collapse" data-bs-target="#nonSensitiveSection"
+              aria-expanded="true" aria-controls="nonSensitiveSection">
+        <h5 class="mb-0">{% trans "Publicly Adjustable Information" %}</h5>
+        <span class="toggle-icon">▾</span>
+      </button>
+
+      <div id="nonSensitiveSection" class="collapse show section-body">
+        <div class="grid">
+          <div>
+            <label for="available_tables">{% trans "Available Tables (Today)" %}</label>
+            <input type="number" name="available_tables" id="available_tables"
+                   value="{{ venue.available_tables }}" min="0" class="form-input">
+          </div>
         </div>
 
-        <!-- Location & Contact -->
+        <!-- Image Sequence -->
+        <div class="mt-4">
+          <label>{% trans "Image Display Order" %}</label>
+          <p class="small text-muted mb-2">{% trans "Drag and drop to change the order of images as they appear publicly." %}</p>
+          <div id="sortable-image-sequence" class="image-sequence-grid">
+            {% for img in venue.images.all %}
+              <div class="sortable-thumb" data-id="{{ img.id }}">
+                <img src="{{ img.image.url }}" alt="Venue Image" width="100">
+              </div>
+            {% empty %}
+              <p class="text-muted">{% trans "No images uploaded yet." %}</p>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="image_sequence" id="image_sequence" value="">
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔒 SENSITIVE SECTION -->
+    <div class="section-card mb-4">
+      <button class="section-header collapsed" type="button"
+              data-bs-toggle="collapse" data-bs-target="#sensitiveSection"
+              aria-expanded="false" aria-controls="sensitiveSection">
+        <h5 class="mb-0">{% trans "Sensitive & Contact Information" %}</h5>
+        <span class="toggle-icon">▸</span>
+      </button>
+
+      <div id="sensitiveSection" class="collapse section-body">
+        <div class="grid">
+          <div>
+            <label for="name">{% trans "Venue Name" %}</label>
+            <input type="text" name="name" id="name" value="{{ venue.name }}" class="form-input" required>
+          </div>
+          <div>
+            <label for="kind">{% trans "Type" %}</label>
+            <select name="kind" id="kind" class="form-input">
+              {% for key, value in venue.VENUE_TYPES %}
+                <option value="{{ key }}" {% if venue.kind == key %}selected{% endif %}>
+                  {% trans value %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
         <div>
-            <label for="location">{% trans "Location" %}</label>
-            <input type="text" name="location" id="location" value="{{ venue.location }}" class="form-input" required>
-        </div>
-        <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div>
-                <label for="email">{% trans "Email" %}</label>
-                <input type="email" name="email" id="email" value="{{ venue.email }}" class="form-input">
-            </div>
-            <div>
-                <label for="phone">{% trans "Phone" %}</label>
-                <input type="text" name="phone" id="phone" value="{{ venue.phone }}" class="form-input">
-            </div>
+          <label for="location">{% trans "Location" %}</label>
+          <input type="text" name="location" id="location" value="{{ venue.location }}" class="form-input" required>
         </div>
 
-        <!-- Description -->
         <div>
-            <label for="description">{% trans "Description" %}</label>
-            <textarea name="description" id="description" rows="4" class="form-input">{{ venue.description }}</textarea>
+          <label for="description">{% trans "Description" %}</label>
+          <textarea name="description" id="description" rows="4" class="form-input">{{ venue.description }}</textarea>
         </div>
 
-        <!-- Availability & Full Status -->
-        <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div>
-                <label for="available_tables">{% trans "Available Tables" %}</label>
-                <input type="number" name="available_tables" id="available_tables" value="{{ venue.available_tables }}" min="0" class="form-input">
-            </div>
+        <div class="grid">
+          <div>
+            <label for="email">{% trans "Email" %}</label>
+            <input type="email" name="email" id="email" value="{{ venue.email }}" class="form-input">
+          </div>
+          <div>
+            <label for="phone">{% trans "Phone" %}</label>
+            <input type="text" name="phone" id="phone" value="{{ venue.phone }}" class="form-input">
+          </div>
         </div>
 
-        {% comment %} Image Modal {% endcomment %}
-        <div id="imageModal" class="image-modal">
-            <button type="button" class="close-btn">&times;</button>
-            <img src="" alt="Full Preview">
-        </div>
-
-        <!-- Venue Images Upload -->
         <div class="file-upload-group">
-            <label class="custom-file-btn">
-                {% trans "Select Venue Images" %}
-                <input type="file" name="venue_images" id="venue_images" multiple hidden>
-            </label>
-            <div id="venue-preview" class="file-preview">
-                {% for img in venue.images.all %}
-                    <div class="thumb-wrapper" data-existing="true" data-id="{{ img.id }}">
-                        <img src="{{ img.image.url }}" width="80" style="margin:2px; border-radius:4px;">
-                        <button type="button" class="remove-btn">&times;</button>
-                        <input type="hidden" name="remove_venue_images" value="" disabled>
-                    </div>
-                {% empty %}
-                    {% trans "No files selected" %}
-                {% endfor %}
-            </div>
+          
+          <div id="venue-preview" class="file-preview">
+            {% for img in venue.images.all %}
+              <div class="thumb-wrapper" data-existing="true" data-id="{{ img.id }}">
+                <img src="{{ img.image.url }}" width="80">
+                <button type="button" class="remove-btn">&times;</button>
+              </div>
+            {% empty %}
+              {% trans "No files selected" %}
+            {% endfor %}
+          </div>
+
+          <label class="custom-file-btn">
+            {% trans "Select Venue Images" %}
+            <input type="file" name="venue_images" id="venue_images" multiple hidden>
+          </label>
+
         </div>
 
-        <!-- Menu Images Upload -->
         <div class="file-upload-group">
-            <label class="custom-file-btn">
-                {% trans "Select Menu Images" %}
-                <input type="file" name="menu_images" id="menu_images" multiple hidden>
-            </label>
-            <div id="menu-preview" class="file-preview">
-                {% for img in venue.menu_images.all %}
-                    <div class="thumb-wrapper" data-existing="true" data-id="{{ img.id }}">
-                        <img src="{{ img.image.url }}" width="80" style="margin:2px; border-radius:4px;">
-                        <button type="button" class="remove-btn">&times;</button>
-                        <input type="hidden" name="remove_menu_images" value="" disabled>
-                    </div>
-                {% empty %}
-                    {% trans "No files selected" %}
-                {% endfor %}
-            </div>
+          
+          <div id="menu-preview" class="file-preview">
+            {% for img in venue.menu_images.all %}
+              <div class="thumb-wrapper" data-existing="true" data-id="{{ img.id }}">
+                <img src="{{ img.image.url }}" width="80">
+                <button type="button" class="remove-btn">&times;</button>
+              </div>
+            {% empty %}
+              {% trans "No files selected" %}
+            {% endfor %}
+          </div>
+          
+          <label class="custom-file-btn">
+            {% trans "Select Menu Images" %}
+            <input type="file" name="menu_images" id="menu_images" multiple hidden>
+          </label>
         </div>
-        
-        <!-- Submit Button -->
-        <div class="text-center">
-            <button type="submit" class="btn-edit-status">{% trans "Submit for Approval" %}</button>
-        </div>
-    </form>
+      <!-- Submit -->
+        <button type="submit" class="btn-edit-status">{% trans "Submit for Approval" %}</button>
+    </div>
+  </form>
 </div>
 
+<!-- SortableJS (lightweight drag & drop library) -->
+<!-- Ensure SortableJS is loaded (keep this) -->
+<!-- Bootstrap JS (required for collapse to work) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- SortableJS (lightweight drag & drop library) -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // ---------- Helper: test for Bootstrap collapse availability ----------
+  const hasBootstrapCollapse = (() => {
+    try {
+      return typeof bootstrap !== 'undefined' && typeof bootstrap.Collapse === 'function';
+    } catch (e) {
+      return false;
+    }
+  })();
+
+  // ---------- If Bootstrap available, wire icon sync safely ----------
+  if (hasBootstrapCollapse) {
+    document.querySelectorAll('.section-header').forEach(header => {
+      const icon = header.querySelector('.toggle-icon');
+      const targetSelector = header.getAttribute('data-bs-target');
+      if (!targetSelector) return;
+      const collapseEl = document.querySelector(targetSelector);
+      if (!collapseEl) return;
+
+      // Sync initial icon based on initial expanded state
+      const expanded = header.getAttribute('aria-expanded') === 'true';
+      icon.textContent = expanded ? '▾' : '▸';
+
+      // Use Bootstrap events
+      collapseEl.addEventListener('shown.bs.collapse', () => icon.textContent = '▾');
+      collapseEl.addEventListener('hidden.bs.collapse', () => icon.textContent = '▸');
+    });
+  } else {
+    // ---------- Fallback collapse implementation (no Bootstrap required) ----------
+    document.querySelectorAll('.section-header').forEach(header => {
+      const targetSelector = header.getAttribute('data-bs-target');
+      if (!targetSelector) return;
+      const collapseEl = document.querySelector(targetSelector);
+      if (!collapseEl) return;
+
+      const icon = header.querySelector('.toggle-icon');
+      // initialize aria controls & state
+      header.setAttribute('aria-controls', collapseEl.id);
+      if (!collapseEl.classList.contains('show')) {
+        header.setAttribute('aria-expanded', 'false');
+        icon.textContent = '▸';
+        collapseEl.style.maxHeight = '0';
+        collapseEl.style.overflow = 'hidden';
+        collapseEl.classList.remove('show');
+      } else {
+        header.setAttribute('aria-expanded', 'true');
+        icon.textContent = '▾';
+        collapseEl.style.maxHeight = collapseEl.scrollHeight + 'px';
+        collapseEl.classList.add('show');
+      }
+
+      // click toggles
+      header.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isExpanded = header.getAttribute('aria-expanded') === 'true';
+        if (isExpanded) {
+          // collapse
+          collapseEl.style.maxHeight = collapseEl.scrollHeight + 'px'; // set current height first
+          // force reflow for transition
+          // eslint-disable-next-line no-unused-expressions
+          collapseEl.offsetHeight;
+          collapseEl.style.transition = 'max-height 220ms ease';
+          collapseEl.style.maxHeight = '0';
+          collapseEl.classList.remove('show');
+          header.setAttribute('aria-expanded', 'false');
+          icon.textContent = '▸';
+          // cleanup after transition
+          collapseEl.addEventListener('transitionend', function _h() {
+            collapseEl.style.transition = '';
+            collapseEl.removeEventListener('transitionend', _h);
+          });
+        } else {
+          // expand
+          collapseEl.style.maxHeight = '0';
+          collapseEl.classList.add('show');
+          // set to full height
+          const full = collapseEl.scrollHeight + 'px';
+          collapseEl.style.transition = 'max-height 220ms ease';
+          // force reflow
+          // eslint-disable-next-line no-unused-expressions
+          collapseEl.offsetHeight;
+          collapseEl.style.maxHeight = full;
+          header.setAttribute('aria-expanded', 'true');
+          icon.textContent = '▾';
+          collapseEl.addEventListener('transitionend', function _h2() {
+            // after expanding, remove inline maxHeight so content can grow naturally
+            collapseEl.style.transition = '';
+            collapseEl.style.maxHeight = '';
+            collapseEl.removeEventListener('transitionend', _h2);
+          });
+        }
+      });
+    });
+  }
+
+  // ---------- Sortable image order (unchanged) ----------
+  (function initSortable() {
+    const sortableContainer = document.getElementById('sortable-image-sequence');
+    const sequenceInput = document.getElementById('image_sequence');
+    if (!sortableContainer || !sequenceInput) return;
+    new Sortable(sortableContainer, {
+      animation: 150,
+      ghostClass: 'dragging',
+      onSort: function () {
+        const orderedIds = Array.from(sortableContainer.children)
+          .map(el => el.dataset.id);
+        sequenceInput.value = orderedIds.join(',');
+      }
+    });
+    // Initialize default order
+    const initialOrder = Array.from(sortableContainer.children)
+      .map(el => el.dataset.id)
+      .join(',');
+    sequenceInput.value = initialOrder;
+  })();
+});
+</script>
+
+
+
+
 <style>
-.thumb-wrapper {
+    .section-card {
+        border:           1px solid #ddd;
+        border-radius:    12px;
+        background-color: #fff;
+        box-shadow:       0 2px 6px rgba(0,0,0,0.05);
+        overflow:         hidden;
+        margin:           15px;
+    }
+
+    .section-header {
+        width:          100%;
+        text-align:     left;
+        background:     #f8f9fa;
+        border:         none;
+        padding:        0.75rem 1rem;
+        font-weight:    600;
+        display:        flex;
+        align-items:    center;
+        justify-content: space-between;
+        cursor:         pointer;
+        transition:     background 0.2s ease;
+        font-size:      larger;
+    }
+
+    .section-header:hover {
+    background: #eef1f5;
+    }
+
+    .section-body {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #eee;
+    }
+
+    .toggle-icon {
+    font-size: 1.2rem;
+    transition: transform 0.2s ease;
+    }
+
+    /* Rotate toggle when expanded */
+    .section-header[aria-expanded="true"] .toggle-icon {
+    transform: rotate(180deg);
+    }
+
+    .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    }
+
+    /* Draggable images */
+    .image-sequence-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    border: 1px dashed #ccc;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: #fafafa;
+    }
+
+    .sortable-thumb {
+    position: relative;
+    cursor: grab;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    transition: transform 0.15s ease, border 0.2s;
+    }
+
+    .sortable-thumb:hover {
+    border-color: #007bff;
+    transform: scale(1.05);
+    }
+
+    .sortable-thumb img {
+    border-radius: 8px;
+    width: 100px;
+    height: 80px;
+    object-fit: cover;
+    }
+
+    .dragging {
+    opacity: 0.6;
+    border-color: #007bff !important;
+    transform: scale(1.05);
+    }
+
+    .thumb-wrapper {
     display: inline-block;
     position: relative;
-}
-.remove-btn {
+    }
+
+    .remove-btn {
     position: absolute;
     top: 0;
     right: 0;
-    background: rgba(255,0,0,0.7);
+    background: rgba(255, 0, 0, 0.7);
     border: none;
     color: white;
     font-weight: bold;
@@ -120,5 +369,14 @@
     height: 18px;
     line-height: 14px;
     padding: 0;
-}
+    }
+    /* ensure collapse body can animate with max-height fallback */
+    .collapse {
+    transition: none; /* let JS control the transition for fallback */
+    }
+
+    .collapse.show {
+    /* when using bootstrap JS it sets display; fallback uses max-height */
+    /* nothing required here */
+    }
 </style>
