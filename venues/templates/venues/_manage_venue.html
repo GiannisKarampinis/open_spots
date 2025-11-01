@@ -15,28 +15,23 @@
 
       <div id="nonSensitiveSection" class="collapse show section-body">
         <label for="available_tables">{% trans "Available Tables (Today)" %}</label>
-        <div class="grid">
-          <div>
-            <input type="number" name="available_tables" id="available_tables"
-                   value="{{ venue.available_tables }}" min="0" class="form-input">
-          </div>
-        </div>
 
-        <!-- Image Sequence -->
-          <div class="mt-4">
-            <label>{% trans "Image Display Order" %}</label>
-            <p class="small text-muted mb-2">{% trans "Drag and drop to change the order of images as they appear publicly." %}</p>
-            <div id="sortable-image-sequence" class="image-sequence-grid">
-              {% for img in venue.images.all %}
-                <div class="sortable-thumb" data-id="{{ img.id }}">
-                  <img src="{{ img.image.url }}" alt="Venue Image" width="100">
-                </div>
-              {% empty %}
-                <p class="text-muted">{% trans "No images uploaded yet." %}</p>
-              {% endfor %}
-            </div>
-            <input type="hidden" name="image_sequence" id="image_sequence" value="">
+        <!-- Image Sequence (active now) -->
+        <div class="mt-4">
+          <label>{% trans "Image Display Order" %}</label>
+          <p class="small text-muted mb-2">{% trans "Drag and drop to change the order of images as they appear publicly." %}</p>
+
+          <div id="sortable-image-sequence" class="image-sequence-grid" aria-label="{% trans 'Sortable image list' %}">
+            {% for img in venue.images.all %}
+              <div class="sortable-thumb" data-id="{{ img.id }}" role="listitem" title="{% trans 'Drag to reorder' %}">
+                <img src="{{ img.image.url }}" alt="{% trans 'Venue image' %}" width="100" height="80">
+              </div>
+            {% empty %}
+              <p class="text-muted">{% trans "No images uploaded yet." %}</p>
+            {% endfor %}
           </div>
+          <input type="hidden" name="image_sequence" id="image_sequence" value="">
+        </div>
 
       </div>
     </div>
@@ -92,7 +87,7 @@
           <div id="venue-preview" class="file-preview">
             {% for img in venue.images.all %}
               <div class="thumb-wrapper" data-existing="true" data-id="{{ img.id }}">
-                <img src="{{ img.image.url }}" width="80">
+                <img src="{{ img.image.url }}" width="80" alt="{% trans 'Venue preview' %}">
                 <button type="button" class="remove-btn">&times;</button>
               </div>
             {% empty %}
@@ -110,7 +105,7 @@
           <div id="menu-preview" class="file-preview">
             {% for img in venue.menu_images.all %}
               <div class="thumb-wrapper" data-existing="true" data-id="{{ img.id }}">
-                <img src="{{ img.image.url }}" width="80">
+                <img src="{{ img.image.url }}" width="80" alt="{% trans 'Menu preview' %}">
                 <button type="button" class="remove-btn">&times;</button>
               </div>
             {% empty %}
@@ -130,28 +125,26 @@
   </form>
 </div>
 
+<!-- SortableJS (drag & drop) -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
 <!-- ---------- JS: no Bootstrap required ---------- -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+  // Collapse handling (Bootstrap-free)
   document.querySelectorAll(".section-header").forEach(header => {
-    // support either data-bs-target or data-target
     const rawTarget = header.getAttribute("data-bs-target") || header.getAttribute("data-target") || header.dataset.bsTarget || header.dataset.target;
     if (!rawTarget) return;
     const target = document.querySelector(rawTarget);
     if (!target) return;
 
-    // initialize state based on presence of 'show' class
     const initiallyShown = target.classList.contains("show");
     header.setAttribute("aria-expanded", initiallyShown ? "true" : "false");
     const icon = header.querySelector(".toggle-icon");
     if (icon) icon.textContent = initiallyShown ? "▾" : "▸";
-    // ensure initial max-height for shown elements so animation can run later
     if (initiallyShown) {
       target.style.maxHeight = target.scrollHeight + "px";
-      // expand to natural size then clear it after a tick
-      requestAnimationFrame(() => {
-        target.style.maxHeight = "";
-      });
+      requestAnimationFrame(() => target.style.maxHeight = "");
     } else {
       target.style.maxHeight = "0";
     }
@@ -159,9 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function collapseSection() {
       header.setAttribute("aria-expanded", "false");
       if (icon) icon.textContent = "▸";
-      // animate to 0
-      target.style.maxHeight = target.scrollHeight + "px"; // start
-      // force reflow
+      target.style.maxHeight = target.scrollHeight + "px";
       target.offsetHeight;
       target.style.transition = "max-height 220ms ease";
       target.style.maxHeight = "0";
@@ -177,7 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (icon) icon.textContent = "▾";
       target.classList.add("show");
       target.style.maxHeight = "0";
-      // force reflow
       target.offsetHeight;
       target.style.transition = "max-height 220ms ease";
       target.style.maxHeight = target.scrollHeight + "px";
@@ -192,8 +182,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const expanded = header.getAttribute("aria-expanded") === "true";
       if (expanded) collapseSection(); else expandSection();
     });
-
-    // keyboard accessibility
     header.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " " || e.code === "Space") {
         e.preventDefault();
@@ -201,6 +189,39 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+
+  // Sortable image sequence initialization
+  (function initSortableImageSequence() {
+    const container = document.getElementById('sortable-image-sequence');
+    const sequenceInput = document.getElementById('image_sequence');
+    if (!container || !sequenceInput) return;
+    if (typeof Sortable === 'undefined') {
+      console.warn('SortableJS not loaded.');
+      return;
+    }
+    // Avoid double-init
+    if (container._sortableInit) return;
+
+    const updateSequenceInput = () => {
+      const ordered = Array.from(container.children)
+        .map(child => child.dataset.id)
+        .filter(Boolean);
+      sequenceInput.value = ordered.join(',');
+    };
+
+    // Initialize Sortable
+    new Sortable(container, {
+      animation: 150,
+      ghostClass: 'dragging',
+      onSort: updateSequenceInput,
+      // touch support and accessibility defaults are provided by SortableJS
+    });
+
+    // mark initialized and set initial order value
+    container._sortableInit = true;
+    updateSequenceInput();
+  })();
+
 });
 </script>
 
@@ -228,12 +249,9 @@ document.addEventListener("DOMContentLoaded", () => {
   cursor: pointer;
   transition: background 0.2s ease;
   font-size: larger;
-  /* make header focusable styling */
   outline: none;
 }
-.section-header:focus {
-  box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
-}
+.section-header:focus { box-shadow: 0 0 0 3px rgba(0,123,255,0.12); }
 .section-header:hover { background: #eef1f5; }
 
 .section-body {
@@ -242,24 +260,12 @@ document.addEventListener("DOMContentLoaded", () => {
   padding: 0 1.25rem;
   border-top: 1px solid #eee;
 }
-.section-body.show {
-  padding: 1rem 1.25rem;
-  max-height: none; /* when explicitly set by JS it's cleared after open */
-}
+.section-body.show { padding: 1rem 1.25rem; max-height: none; }
 
-.toggle-icon {
-  font-size: 1.2rem;
-  transition: transform 0.2s ease;
-}
-.section-header[aria-expanded="true"] .toggle-icon {
-  transform: rotate(180deg);
-}
+.toggle-icon { font-size: 1.2rem; transition: transform 0.2s ease; }
+.section-header[aria-expanded="true"] .toggle-icon { transform: rotate(180deg); }
 
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
 .form-input {
   width: 100%;
@@ -278,7 +284,35 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 .btn-edit-status:hover { background: #0056b3; }
 
-/* keep your original image/drag styles if used later */
-.image-sequence-grid { display:flex; flex-wrap:wrap; gap:.75rem; border:1px dashed #ccc; padding:.75rem; border-radius:8px; background:#fafafa; }
-.sortable-thumb img { width:100px; height:80px; object-fit:cover; border-radius:8px; }
+/* image sequence styles */
+.image-sequence-grid {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.75rem;
+  border:1px dashed #ccc;
+  padding:.75rem;
+  border-radius:8px;
+  background:#fafafa;
+}
+.sortable-thumb {
+  position: relative;
+  cursor: grab;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  transition: transform 0.15s ease, border 0.2s;
+}
+.sortable-thumb:hover { border-color:#007bff; transform: scale(1.05); }
+.sortable-thumb img { border-radius:8px; width:100px; height:80px; object-fit:cover; }
+
+/* dragging ghost */
+.dragging { opacity: 0.6; border-color: #007bff !important; transform: scale(1.05); }
+
+/* small preview/thumb styles */
+.thumb-wrapper { display:inline-block; position:relative; margin-right:8px; }
+.remove-btn {
+  position: absolute; top: 0; right: 0;
+  background: rgba(255,0,0,0.7); border: none; color: white;
+  width:18px; height:18px; border-radius:50%; cursor:pointer;
+  font-weight:bold; line-height:14px; padding:0;
+}
 </style>
