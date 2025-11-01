@@ -169,7 +169,7 @@
                     <tbody>
                         {% for r in past_reservations %}
                         <tr>
-                            <td>{{ r.user.username }}</td>
+                            <td>{{ r.full_name }}</td>
                             <td>{{ r.date|format_date_display }}</td>
                             <td>{{ r.time|format_time_display }}</td>
                             <td>{{ r.guests }}</td>

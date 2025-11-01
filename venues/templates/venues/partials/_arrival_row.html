@@ -1,5 +1,5 @@
 <tr id="reservation-row-{{ r.id }}" data-reservation-id="{{ r.id }}">
-  <td>{{ r.user.username }}</td>
+  <td>{{ r.full_name }}</td>
   
   <!-- Date: data-order = YYYY-MM-DD -->
   <td data-order="{{ r.date|date:'Y-m-d' }}">{{ r.date|date:'M d, Y' }}</td>
