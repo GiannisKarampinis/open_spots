@@ -6,3 +6,4 @@ __pycache__/
 *.sqlite3
 media_backup/
 staticfiles/*
+node_modules
