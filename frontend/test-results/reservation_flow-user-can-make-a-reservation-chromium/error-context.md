@@ -1,0 +1,60 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "Open Spots logo" [ref=e3] [cursor=pointer]:
+      - /url: /venues/
+      - img "Open Spots logo" [ref=e4]:
+        - generic [ref=e38]: OPEN
+        - generic [ref=e39]: SP
+        - generic [ref=e43]: TS
+    - navigation [ref=e44]:
+      - button "British flag EN ▼" [ref=e46] [cursor=pointer]:
+        - img "British flag" [ref=e47]
+        - text: EN
+        - generic [ref=e48]: ▼
+      - link "Apply to Register a Venue" [ref=e49] [cursor=pointer]:
+        - /url: /venues/apply-venue/
+      - generic [ref=e50]: "|"
+      - link "Login" [ref=e51] [cursor=pointer]:
+        - /url: /accounts/login/
+      - generic [ref=e52]: "|"
+      - link "Sign Up" [ref=e53] [cursor=pointer]:
+        - /url: /accounts/signup/
+  - main [ref=e54]:
+    - heading "Explore & Reserve Your Perfect Spot" [level=2] [ref=e55]
+    - generic [ref=e58]:
+      - generic [ref=e59]: 
+      - combobox [ref=e60] [cursor=pointer]:
+        - option "All Venues" [selected]
+        - option "Restaurants"
+        - option "Cafes"
+        - option "Bars"
+        - option "Beach Bars"
+        - option "Other"
+      - combobox [ref=e61] [cursor=pointer]:
+        - option "All" [selected]
+        - option "Available"
+        - option "Full"
+    - heading "Cafes & Bars" [level=3] [ref=e62]
+    - link "Model Model  P. Mela 26, Evosmos 562 24  Available (40 tables)  4.5" [ref=e64] [cursor=pointer]:
+      - /url: /venues/venue/1/
+      - generic [ref=e65]:
+        - img "Model" [ref=e66]
+        - heading "Model" [level=3] [ref=e67]
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - generic [ref=e70]: 
+            - generic [ref=e71]: P. Mela 26, Evosmos 562 24
+          - generic [ref=e72]:
+            - generic [ref=e73]: 
+            - generic [ref=e74]: Available (40 tables)
+          - generic [ref=e75]:
+            - generic [ref=e76]: 
+            - generic [ref=e77]: "4.5"
+    - heading "Restaurants" [level=3] [ref=e78]
+    - heading "Beach Bars" [level=3] [ref=e80]
+    - heading "Other Venues" [level=3] [ref=e82]
+  - contentinfo [ref=e84]: © 2025 OpenSpots. All rights reserved.
+```

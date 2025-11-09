@@ -1,10 +1,10 @@
-const spawn = require('cross-spawn');
+const { spawn } = require("child_process");
 const waitOn = require('wait-on');
 
 (async () => {
   try {
     console.log('Running Jest unit tests...');
-    const jest = spawn('npx', ['jest'], { stdio: 'inherit', shell: true });
+    const jest = spawn("node", ["node_modules/jest/bin/jest.js"], { stdio: "inherit" });
 
     jest.on('close', async (jestCode) => {
       if (jestCode !== 0) {

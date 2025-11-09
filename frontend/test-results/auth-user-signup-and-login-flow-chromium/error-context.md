@@ -1,0 +1,50 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - link "Open Spots logo" [ref=e3] [cursor=pointer]:
+      - /url: /venues/
+      - img "Open Spots logo" [ref=e4]:
+        - generic [ref=e38]: OPEN
+        - generic [ref=e39]: SP
+        - generic [ref=e43]: TS
+    - navigation [ref=e44]:
+      - button "British flag EN ▼" [ref=e46] [cursor=pointer]:
+        - img "British flag" [ref=e47]
+        - text: EN
+        - generic [ref=e48]: ▼
+      - link "Apply to Register a Venue" [ref=e49] [cursor=pointer]:
+        - /url: /venues/apply-venue/
+      - generic [ref=e50]: "|"
+      - link "Login" [ref=e51] [cursor=pointer]:
+        - /url: /accounts/login/
+      - generic [ref=e52]: "|"
+      - link "Sign Up" [ref=e53] [cursor=pointer]:
+        - /url: /accounts/signup/
+  - main [ref=e54]:
+    - generic [ref=e55]:
+      - heading "Sign Up" [level=2] [ref=e56]
+      - generic [ref=e57]:
+        - generic [ref=e58]: Username
+        - textbox "Username" [ref=e59]
+        - alert
+        - generic [ref=e60]: Email address
+        - textbox "Email address" [ref=e61]: e2euser@example.com
+        - alert
+        - generic [ref=e62]: Phone number
+        - textbox "Phone number" [ref=e63]
+        - alert
+        - generic [ref=e64]: Password
+        - textbox "Password" [ref=e65]: pass1234!
+        - alert
+        - generic [ref=e66]: Password confirmation
+        - textbox "Password confirmation" [active] [ref=e67]: pass1234!
+        - alert
+        - button "Create Account" [ref=e68] [cursor=pointer]
+      - paragraph [ref=e69]:
+        - text: Already have an account?
+        - link "Login" [ref=e70] [cursor=pointer]:
+          - /url: /accounts/login/
+  - contentinfo [ref=e71]: © 2025 OpenSpots. All rights reserved.
+```

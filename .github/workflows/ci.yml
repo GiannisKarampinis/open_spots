@@ -1,0 +1,72 @@
+name: CI - OpenSpots Full Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: openspots
+          POSTGRES_USER: openspots
+          POSTGRES_PASSWORD: openspots
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U openspots"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Django unit & integration tests
+        env:
+          DATABASE_URL: postgres://openspots:openspots@localhost:5432/openspots
+        run: |
+          python backend/manage.py migrate
+          python backend/manage.py check
+          pytest backend/ --disable-warnings
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run Jest unit tests
+        working-directory: frontend
+        run: npm test -- --ci --passWithNoTests
+
+      - name: Start Django (Docker simulated)
+        run: |
+          nohup python backend/manage.py runserver 0.0.0.0:8000 &
+          sleep 10
+
+      - name: Run Playwright E2E tests
+        working-directory: frontend
+        run: |
+          npx playwright install --with-deps
+          npx playwright test

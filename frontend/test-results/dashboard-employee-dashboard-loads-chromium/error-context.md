@@ -1,0 +1,47 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - link "Open Spots logo" [ref=e3] [cursor=pointer]:
+      - /url: /venues/
+      - img "Open Spots logo" [ref=e4]:
+        - generic [ref=e38]: OPEN
+        - generic [ref=e39]: SP
+        - generic [ref=e43]: TS
+    - navigation [ref=e44]:
+      - button "British flag EN ▼" [ref=e46] [cursor=pointer]:
+        - img "British flag" [ref=e47]
+        - text: EN
+        - generic [ref=e48]: ▼
+      - link "Apply to Register a Venue" [ref=e49] [cursor=pointer]:
+        - /url: /venues/apply-venue/
+      - generic [ref=e50]: "|"
+      - link "Login" [ref=e51] [cursor=pointer]:
+        - /url: /accounts/login/
+      - generic [ref=e52]: "|"
+      - link "Sign Up" [ref=e53] [cursor=pointer]:
+        - /url: /accounts/signup/
+  - main [ref=e54]:
+    - generic [ref=e55]:
+      - heading "Welcome Back" [level=2] [ref=e56]
+      - link "Login with Google" [ref=e58] [cursor=pointer]:
+        - /url: /accounts/google/login/?process=login
+        - img "Google logo" [ref=e59]
+        - text: Login with Google
+      - generic [ref=e60]: or
+      - generic [ref=e61]:
+        - generic [ref=e62]: Username
+        - textbox "Username" [active] [ref=e63]
+        - generic [ref=e64]: Password
+        - textbox "Password" [ref=e65]
+        - button "Login" [ref=e66] [cursor=pointer]
+      - paragraph [ref=e67]:
+        - link "Forgot your password?" [ref=e68] [cursor=pointer]:
+          - /url: /accounts/password-recover/
+      - paragraph [ref=e69]:
+        - text: Don't have an account?
+        - link "Sign up" [ref=e70] [cursor=pointer]:
+          - /url: /accounts/signup/
+  - contentinfo [ref=e71]: © 2025 OpenSpots. All rights reserved.
+```
