@@ -1,8 +1,8 @@
 def send_verification_code(user):
     # Import locally to avoid circular imports
-    from venues.signals         import send_email_with_template
+    from emails_manager.utils   import send_email_with_template
     from emails_manager.models  import EmailVerificationCode
-    from venues.utils           import _build_site_url
+    from emails_manager.utils   import _build_site_url
 
     # 1. Remove old codes
     EmailVerificationCode.objects.filter(user=user).delete()

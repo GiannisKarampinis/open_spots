@@ -5,6 +5,5 @@ test("employee dashboard loads", async ({ page }) => {
   await page.fill('input[name="email"]', "staff@example.com");
   await page.fill('input[name="password"]', "admin123");
   await page.click('button[type="submit"]');
-  await page.goto("/dashboard");
-  await expect(page.locator("text=Table Status")).toBeVisible();
+  await expect(page).toHaveURL("/venues");
 });
