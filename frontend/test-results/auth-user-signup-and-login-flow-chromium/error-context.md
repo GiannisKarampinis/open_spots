@@ -27,19 +27,19 @@
       - heading "Sign Up" [level=2] [ref=e56]
       - generic [ref=e57]:
         - generic [ref=e58]: Username
-        - textbox "Username" [ref=e59]
+        - textbox "Username" [active] [ref=e59]
         - alert
         - generic [ref=e60]: Email address
-        - textbox "Email address" [ref=e61]: e2euser@example.com
+        - textbox "Email address" [ref=e61]
         - alert
         - generic [ref=e62]: Phone number
         - textbox "Phone number" [ref=e63]
         - alert
         - generic [ref=e64]: Password
-        - textbox "Password" [ref=e65]: pass1234!
+        - textbox "Password" [ref=e65]
         - alert
         - generic [ref=e66]: Password confirmation
-        - textbox "Password confirmation" [active] [ref=e67]: pass1234!
+        - textbox "Password confirmation" [ref=e67]
         - alert
         - button "Create Account" [ref=e68] [cursor=pointer]
       - paragraph [ref=e69]:

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-28 08:45+0000\n"
+"POT-Creation-Date: 2025-11-15 08:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Greek <EMAIL@ADDRESS>\n"
@@ -133,7 +133,7 @@ msgstr "Email:"
 #: accounts/templates/accounts/profile.html:30
 #: accounts/templates/accounts/profile.html:49
 #: venues/templates/venues/_reservation_list.html:18
-#: venues/templates/venues/venue_list.html:58
+#: venues/templates/venues/venue_list.html:64
 msgid "Edit"
 msgstr "Επεξεργασία"
 
@@ -152,7 +152,7 @@ msgstr "Αποθήκευση"
 #: venues/templates/venues/edit_reservation_status.html:61
 #: venues/templates/venues/update_arrival_status.html:39
 #: venues/templates/venues/update_arrival_status.html:49
-#: venues/templates/venues/venue_list.html:61
+#: venues/templates/venues/venue_list.html:67
 msgid "Cancel"
 msgstr "Ακύρωση"
 
@@ -329,59 +329,100 @@ msgid "Avg Daily Visits"
 msgstr "Μέσος Όρος Ημερήσιων Επισκέψεων"
 
 #: venues/templates/venues/_analytics_tab_content.html:27
-msgid "Peak"
-msgstr "Υψηλότερη"
-
-#: venues/templates/venues/_analytics_tab_content.html:27
-msgid "Visits"
-msgstr "Επισκεψιμότητα"
+msgid "Peak Daily Visits"
+msgstr "Υψηλότερη Ημερήσια Επισκεψιμότητα"
 
 #: venues/templates/venues/_analytics_tab_content.html:31
 msgid "Total Reservations"
 msgstr "Συνολικές Κρατήσεις"
 
-#: venues/templates/venues/_manage_venue.html:10
+#: venues/templates/venues/_manage_venue.html:12
+msgid "Publicly Adjustable Information"
+msgstr "Προσαρμόσιμες Πληροφορίες"
+
+#: venues/templates/venues/_manage_venue.html:17
+#, fuzzy
+msgid "Available Tables (Today)"
+msgstr "Διαθέσιμα Τραπέζια"
+
+#: venues/templates/venues/_manage_venue.html:21
+msgid "Image Display Order"
+msgstr "Σειρά προβολής εικόνων"
+
+#: venues/templates/venues/_manage_venue.html:22
+msgid "Drag and drop to change the order of images as they appear publicly."
+msgstr "Σύρε και άλλαξε την σειρά των εικόνων όπως εμφανίζεται δημόσια"
+
+#: venues/templates/venues/_manage_venue.html:24
+msgid "Sortable image list"
+msgstr "Λίστα Εικόνων"
+
+#: venues/templates/venues/_manage_venue.html:26
+msgid "Drag to reorder"
+msgstr "Σύρε για αναδιάταξη"
+
+#: venues/templates/venues/_manage_venue.html:27
+#, fuzzy
+#| msgid "Venue Name"
+msgid "Venue image"
+msgstr "Όνομα Χώρου"
+
+#: venues/templates/venues/_manage_venue.html:30
+msgid "No images uploaded yet."
+msgstr "Καμία εικόνα δεν έχει αναρτηθεί μέχρι στιγμής"
+
+#: venues/templates/venues/_manage_venue.html:43
+msgid "Sensitive & Contact Information"
+msgstr "Πληροφορίες επικοινωνίας και Ευαίσθητο περιερχόμενο"
+
+#: venues/templates/venues/_manage_venue.html:50
 msgid "Venue Name"
 msgstr "Όνομα Χώρου"
 
-#: venues/templates/venues/_manage_venue.html:14
+#: venues/templates/venues/_manage_venue.html:54
 msgid "Type"
 msgstr "Τύπος"
 
-#: venues/templates/venues/_manage_venue.html:25
+#: venues/templates/venues/_manage_venue.html:66
 msgid "Location"
 msgstr "Τοποθεσία"
 
-#: venues/templates/venues/_manage_venue.html:30
-msgid "Email"
-msgstr "Email"
-
-#: venues/templates/venues/_manage_venue.html:34
-msgid "Phone"
-msgstr "Τηλέφωνο"
-
-#: venues/templates/venues/_manage_venue.html:41
+#: venues/templates/venues/_manage_venue.html:71
 msgid "Description"
 msgstr "Περιγραφή"
 
-#: venues/templates/venues/_manage_venue.html:48
-msgid "Available Tables"
-msgstr "Διαθέσιμα Τραπέζια"
+#: venues/templates/venues/_manage_venue.html:77
+msgid "Email"
+msgstr "Email"
 
-#: venues/templates/venues/_manage_venue.html:63
-msgid "Select Venue Images"
-msgstr "Επιλογή Εικόνων Χώρου"
+#: venues/templates/venues/_manage_venue.html:81
+msgid "Phone"
+msgstr "Τηλέφωνο"
 
-#: venues/templates/venues/_manage_venue.html:74
-#: venues/templates/venues/_manage_venue.html:93
+#: venues/templates/venues/_manage_venue.html:90
+#, fuzzy
+#| msgid "Venue Name"
+msgid "Venue preview"
+msgstr "Όνομα Χώρου"
+
+#: venues/templates/venues/_manage_venue.html:94
+#: venues/templates/venues/_manage_venue.html:112
 msgid "No files selected"
 msgstr "Δεν έχουν επιλεγεί αρχεία"
 
-#: venues/templates/venues/_manage_venue.html:82
+#: venues/templates/venues/_manage_venue.html:99
+msgid "Select Venue Images"
+msgstr "Επιλογή Εικόνων Χώρου"
+
+#: venues/templates/venues/_manage_venue.html:108
+msgid "Menu preview"
+msgstr ""
+
+#: venues/templates/venues/_manage_venue.html:117
 msgid "Select Menu Images"
 msgstr "Επιλογή Εικόνων Μενού"
 
-#: venues/templates/venues/_manage_venue.html:100
+#: venues/templates/venues/_manage_venue.html:122
 msgid "Submit for Approval"
 msgstr "Υποβολή για Έγκριση"
 
@@ -679,7 +720,7 @@ msgid "All Venues"
 msgstr "Όλοι οι Χώροι"
 
 #: venues/templates/venues/venue_list.html:24
-#: venues/templates/venues/venue_list.html:111
+#: venues/templates/venues/venue_list.html:117
 msgid "Restaurants"
 msgstr "Εστιατόρια"
 
@@ -692,7 +733,7 @@ msgid "Bars"
 msgstr "Μπαρ"
 
 #: venues/templates/venues/venue_list.html:27
-#: venues/templates/venues/venue_list.html:124
+#: venues/templates/venues/venue_list.html:130
 msgid "Beach Bars"
 msgstr "Μπαρ Παραλίας"
 
@@ -718,44 +759,44 @@ msgstr "Συνολικές Κρατήσεις"
 msgid "Table"
 msgstr ""
 
-#: venues/templates/venues/venue_list.html:70
+#: venues/templates/venues/venue_list.html:76
 #: venues/templates/venues/venue_summary.html:10
 msgid "Venues"
 msgstr "Χώροι"
 
-#: venues/templates/venues/venue_list.html:79
+#: venues/templates/venues/venue_list.html:85
 msgid "No venues available."
 msgstr "Δεν υπάρχουν διαθέσιμοι χώροι."
 
-#: venues/templates/venues/venue_list.html:84
+#: venues/templates/venues/venue_list.html:90
 msgid "Full Venues"
 msgstr "Πλήρεις Χώροι"
 
-#: venues/templates/venues/venue_list.html:91
+#: venues/templates/venues/venue_list.html:97
 msgid "No full venues available."
 msgstr "Δεν υπάρχουν πλήρεις χώροι."
 
-#: venues/templates/venues/venue_list.html:98
+#: venues/templates/venues/venue_list.html:104
 msgid "Cafes & Bars"
 msgstr "Καφετέριες & Μπαρ"
 
-#: venues/templates/venues/venue_list.html:107
+#: venues/templates/venues/venue_list.html:113
 msgid "No cafes or bars available."
 msgstr "Δεν υπάρχουν διαθέσιμες καφετέριες ή μπαρ."
 
-#: venues/templates/venues/venue_list.html:120
+#: venues/templates/venues/venue_list.html:126
 msgid "No restaurants available."
 msgstr "Δεν υπάρχουν διαθέσιμα εστιατόρια."
 
-#: venues/templates/venues/venue_list.html:133
+#: venues/templates/venues/venue_list.html:139
 msgid "No beach bars available."
 msgstr "Δεν υπάρχουν διαθέσιμα μπαρ παραλίας."
 
-#: venues/templates/venues/venue_list.html:137
+#: venues/templates/venues/venue_list.html:143
 msgid "Other Venues"
 msgstr "Άλλοι Χώροι"
 
-#: venues/templates/venues/venue_list.html:146
+#: venues/templates/venues/venue_list.html:152
 msgid "No other venues available."
 msgstr "Δεν υπάρχουν άλλοι διαθέσιμοι χώροι."
 
@@ -771,3 +812,8 @@ msgstr "Σύνολο Χώρων:"
 #: venues/templates/venues/venue_summary.html:8
 msgid "Total Reservations:"
 msgstr "Συνολικές Κρατήσεις:"
+
+#, fuzzy
+#~| msgid "Total Visits"
+#~ msgid "Visits"
+#~ msgstr "Συνολικές Επισκέψεις"

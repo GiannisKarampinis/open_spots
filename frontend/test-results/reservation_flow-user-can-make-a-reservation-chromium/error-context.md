@@ -23,38 +23,35 @@
       - link "Sign Up" [ref=e53] [cursor=pointer]:
         - /url: /accounts/signup/
   - main [ref=e54]:
-    - heading "Explore & Reserve Your Perfect Spot" [level=2] [ref=e55]
-    - generic [ref=e58]:
-      - generic [ref=e59]: 
-      - combobox [ref=e60] [cursor=pointer]:
-        - option "All Venues" [selected]
-        - option "Restaurants"
-        - option "Cafes"
-        - option "Bars"
-        - option "Beach Bars"
-        - option "Other"
-      - combobox [ref=e61] [cursor=pointer]:
-        - option "All" [selected]
-        - option "Available"
-        - option "Full"
-    - heading "Cafes & Bars" [level=3] [ref=e62]
-    - link "Model Model  P. Mela 26, Evosmos 562 24  Available (40 tables)  4.5" [ref=e64] [cursor=pointer]:
-      - /url: /venues/venue/1/
-      - generic [ref=e65]:
-        - img "Model" [ref=e66]
-        - heading "Model" [level=3] [ref=e67]
-        - generic [ref=e68]:
-          - generic [ref=e69]:
-            - generic [ref=e70]: 
-            - generic [ref=e71]: P. Mela 26, Evosmos 562 24
-          - generic [ref=e72]:
-            - generic [ref=e73]: 
-            - generic [ref=e74]: Available (40 tables)
-          - generic [ref=e75]:
-            - generic [ref=e76]: 
-            - generic [ref=e77]: "4.5"
-    - heading "Restaurants" [level=3] [ref=e78]
-    - heading "Beach Bars" [level=3] [ref=e80]
-    - heading "Other Venues" [level=3] [ref=e82]
-  - contentinfo [ref=e84]: © 2025 OpenSpots. All rights reserved.
+    - generic [ref=e55]:
+      - heading "Model" [level=2] [ref=e57]
+      - generic [ref=e58]:
+        - img "Model" [ref=e60]
+        - generic [ref=e61]:
+          - generic:
+            - button "Marker" [ref=e62] [cursor=pointer]
+            - generic [ref=e63]:
+              - generic [ref=e65]:
+                - text: Model
+                - text: P. Mela 26, Evosmos 562 24
+              - button "Close popup" [ref=e67] [cursor=pointer]: ×
+          - generic:
+            - generic [ref=e68]:
+              - button "Zoom in" [ref=e69] [cursor=pointer]: +
+              - button "Zoom out" [ref=e70] [cursor=pointer]: −
+            - generic [ref=e71]:
+              - link "Leaflet" [ref=e72] [cursor=pointer]:
+                - /url: https://leafletjs.com
+                - img [ref=e73]
+                - text: Leaflet
+              - text: "| © OpenStreetMap contributors"
+        - link "View on Google Maps" [ref=e77] [cursor=pointer]:
+          - /url: https://www.google.com/maps/search/?api=1&query=P.%20Mela%2026%2C%20Evosmos%20562%2024
+          - text: View on Google Maps
+          - img [ref=e78]
+      - paragraph [ref=e81]: Food wine and more
+      - link "Log in to make a reservation" [ref=e82] [cursor=pointer]:
+        - /url: /accounts/login/?next=/venues/venue/1/
+      - text: ">>>>>>> cba57de (Several critical fixes including email sending mechanism, Venue Images Thumbnails (ongoing), Time from Noon to Time Format elsewere.)"
+  - contentinfo [ref=e83]: © 2025 OpenSpots. All rights reserved.
 ```
