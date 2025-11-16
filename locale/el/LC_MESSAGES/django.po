@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-15 08:44+0000\n"
+"POT-Creation-Date: 2025-11-16 21:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Greek <EMAIL@ADDRESS>\n"
@@ -28,6 +28,69 @@ msgstr "Δικαιώματα"
 #: accounts/admin.py:27
 msgid "Important dates"
 msgstr "Σημαντικές ημερομηνίες"
+
+#: accounts/forms.py:14 accounts/forms.py:42
+#: accounts/templates/accounts/login.html:27
+msgid "Username"
+msgstr "Όνομα χρήστη"
+
+#: accounts/forms.py:15 accounts/forms.py:43 accounts/forms.py:63
+#: accounts/forms.py:84 venues/forms.py:26
+#: venues/templates/venues/_manage_venue.html:77
+msgid "Email"
+msgstr "Email"
+
+#: accounts/forms.py:16 accounts/forms.py:44 accounts/forms.py:64
+msgid "Phone number"
+msgstr ""
+
+#: accounts/forms.py:17 accounts/forms.py:46
+#: accounts/templates/accounts/login.html:30
+msgid "Password"
+msgstr "Κωδικός πρόσβασης"
+
+#: accounts/forms.py:18 accounts/forms.py:47
+#, fuzzy
+#| msgid "Confirm new password"
+msgid "Confirm password"
+msgstr "Επιβεβαίωση νέου κωδικού πρόσβασης"
+
+#: accounts/forms.py:35 accounts/forms.py:45
+msgid "User type"
+msgstr ""
+
+#: accounts/forms.py:77
+msgid "Enter a valid phone number (7–15 digits, optional +)."
+msgstr ""
+
+#: accounts/forms.py:91 accounts/forms.py:119 accounts/forms.py:120
+#: accounts/templates/accounts/profile.html:74
+msgid "New password"
+msgstr "Νέος κωδικός πρόσβασης"
+
+#: accounts/forms.py:96 accounts/forms.py:123 accounts/forms.py:124
+#: accounts/templates/accounts/profile.html:75
+msgid "Confirm new password"
+msgstr "Επιβεβαίωση νέου κωδικού πρόσβασης"
+
+#: accounts/forms.py:107
+msgid "Passwords do not match."
+msgstr ""
+
+#: accounts/forms.py:115 accounts/forms.py:116
+#: accounts/templates/accounts/profile.html:73
+msgid "Old password"
+msgstr "Παλιός κωδικός πρόσβασης"
+
+#: accounts/forms.py:134
+#, fuzzy
+#| msgid "Old password"
+msgid "Old password is incorrect."
+msgstr "Παλιός κωδικός πρόσβασης"
+
+#: accounts/forms.py:143
+msgid "The new passwords do not match."
+msgstr ""
 
 #: accounts/templates/accounts/administration_panel.html:10
 msgid "Your Venue Dashboard"
@@ -59,14 +122,6 @@ msgstr "Σύνδεση με Google"
 #: accounts/templates/accounts/login.html:23
 msgid "or"
 msgstr "ή"
-
-#: accounts/templates/accounts/login.html:27
-msgid "Username"
-msgstr "Όνομα χρήστη"
-
-#: accounts/templates/accounts/login.html:30
-msgid "Password"
-msgstr "Κωδικός πρόσβασης"
 
 #: accounts/templates/accounts/login.html:36
 msgid "Forgot your password?"
@@ -167,18 +222,6 @@ msgstr "Κωδικός πρόσβασης:"
 #: accounts/templates/accounts/profile.html:67
 msgid "Change"
 msgstr "Αλλαγή"
-
-#: accounts/templates/accounts/profile.html:73
-msgid "Old password"
-msgstr "Παλιός κωδικός πρόσβασης"
-
-#: accounts/templates/accounts/profile.html:74
-msgid "New password"
-msgstr "Νέος κωδικός πρόσβασης"
-
-#: accounts/templates/accounts/profile.html:75
-msgid "Confirm new password"
-msgstr "Επιβεβαίωση νέου κωδικού πρόσβασης"
 
 #: accounts/templates/accounts/signup.html:9
 #: accounts/templates/accounts/signup.html:13 templates/includes/base.html:96
@@ -300,6 +343,102 @@ msgstr "Οι Κρατήσεις Μου"
 msgid "Apply to Register a Venue"
 msgstr "Αίτηση Καταχώρησης Χώρου"
 
+#: venues/forms.py:14 venues/templates/venues/venue_dashboard.html:107
+#: venues/templates/venues/venue_dashboard.html:134
+#: venues/templates/venues/venue_dashboard.html:164
+msgid "Time"
+msgstr "Ώρα"
+
+#: venues/forms.py:24
+msgid "First name"
+msgstr "Όνομα"
+
+#: venues/forms.py:25
+msgid "Last name"
+msgstr "Επίθετο"
+
+#: venues/forms.py:27 venues/forms.py:82
+#: venues/templates/venues/_manage_venue.html:81
+msgid "Phone"
+msgstr "Τηλέφωνο"
+
+#: venues/forms.py:28 venues/templates/venues/venue_dashboard.html:106
+#: venues/templates/venues/venue_dashboard.html:133
+#: venues/templates/venues/venue_dashboard.html:163
+msgid "Date"
+msgstr "Ημερομηνία"
+
+#: venues/forms.py:29
+msgid "Number of guests"
+msgstr "Αριθμός Επισκεπτών"
+
+#: venues/forms.py:30
+msgid "Special requests"
+msgstr "Ειδικά Αιτήματα"
+
+#: venues/forms.py:31
+msgid "Allergies"
+msgstr "Αλλεργίες"
+
+#: venues/forms.py:32
+msgid "Comments"
+msgstr "Σχόλια"
+
+#: venues/forms.py:62
+msgid "Invalid reservation time selected."
+msgstr "Επιλέχθηκε λανθασμένη ώρα κράτησης"
+
+#: venues/forms.py:75 venues/forms.py:91
+#, fuzzy
+#| msgid "Venue Name"
+msgid "Venue name"
+msgstr "Όνομα Χώρου"
+
+#: venues/forms.py:76
+#, fuzzy
+#| msgid "Venue Name"
+msgid "Venue type"
+msgstr "Όνομα Χώρου"
+
+#: venues/forms.py:77 venues/forms.py:92
+#: venues/templates/venues/_manage_venue.html:66
+msgid "Location"
+msgstr "Τοποθεσία"
+
+#: venues/forms.py:78 venues/templates/venues/_manage_venue.html:71
+msgid "Description"
+msgstr "Περιγραφή"
+
+#: venues/forms.py:79 venues/forms.py:93
+msgid "Capacity"
+msgstr "Χωριτηκότητα"
+
+#: venues/forms.py:80
+msgid "Admin name"
+msgstr "Όνομα Διαχειριστή"
+
+#: venues/forms.py:81
+msgid "Admin email"
+msgstr "email Διαχειριστή"
+
+#: venues/forms.py:101
+#, fuzzy
+#| msgid "Pending Reservation Requests"
+msgid "Move back to Reservation Requests"
+msgstr "Αιτήματα Κρατήσεων σε Εκκρεμότητα"
+
+#: venues/forms.py:102
+msgid ""
+"Check this if you want to move this booking back to the Reservation Requests "
+"table."
+msgstr ""
+
+#: venues/forms.py:112
+#, fuzzy
+#| msgid "Update Arrival Status"
+msgid "Arrival status"
+msgstr "Ενημέρωση Κατάστασης Άφιξης"
+
 #: venues/templates/venues/_analytics_tab_content.html:6
 msgid "Group by:"
 msgstr "Ομαδοποίηση κατά:"
@@ -382,22 +521,6 @@ msgstr "Όνομα Χώρου"
 #: venues/templates/venues/_manage_venue.html:54
 msgid "Type"
 msgstr "Τύπος"
-
-#: venues/templates/venues/_manage_venue.html:66
-msgid "Location"
-msgstr "Τοποθεσία"
-
-#: venues/templates/venues/_manage_venue.html:71
-msgid "Description"
-msgstr "Περιγραφή"
-
-#: venues/templates/venues/_manage_venue.html:77
-msgid "Email"
-msgstr "Email"
-
-#: venues/templates/venues/_manage_venue.html:81
-msgid "Phone"
-msgstr "Τηλέφωνο"
 
 #: venues/templates/venues/_manage_venue.html:90
 #, fuzzy
@@ -577,8 +700,51 @@ msgid "Past"
 msgstr "Παλαιότερες"
 
 #: venues/templates/venues/my_reservations.html:25
+#: venues/templates/venues/partials/_arrival_row.html:29
 msgid "Cancelled"
 msgstr "Ακυρωμένες"
+
+#: venues/templates/venues/partials/_arrival_row.html:27
+#: venues/templates/venues/partials/_reservation_row.html:26
+msgid "Rejected"
+msgstr ""
+
+#: venues/templates/venues/partials/_arrival_row.html:32
+#: venues/templates/venues/partials/_reservation_row.html:22
+msgid "Pending"
+msgstr ""
+
+#: venues/templates/venues/partials/_arrival_row.html:34
+#: venues/templates/venues/partials/_arrival_row.html:51
+msgid "Checked in"
+msgstr ""
+
+#: venues/templates/venues/partials/_arrival_row.html:36
+#: venues/templates/venues/partials/_arrival_row.html:57
+msgid "No show"
+msgstr ""
+
+#: venues/templates/venues/partials/_arrival_row.html:64
+#, fuzzy
+#| msgid "Pending Reservation Requests"
+msgid "Move to Requests"
+msgstr "Αιτήματα Κρατήσεων σε Εκκρεμότητα"
+
+#: venues/templates/venues/partials/_reservation_row.html:24
+msgid "Accepted"
+msgstr ""
+
+#: venues/templates/venues/partials/_reservation_row.html:36
+msgid "Accept"
+msgstr ""
+
+#: venues/templates/venues/partials/_reservation_row.html:42
+msgid "Reject"
+msgstr ""
+
+#: venues/templates/venues/partials/_reservation_row.html:46
+msgid "—"
+msgstr ""
 
 #: venues/templates/venues/reservation_pending.html:5
 #: venues/templates/venues/reservation_pending.html:24
@@ -656,18 +822,6 @@ msgstr "Αιτήματα Κρατήσεων σε Εκκρεμότητα"
 #: venues/templates/venues/venue_dashboard.html:162
 msgid "Customer"
 msgstr "Πελάτης"
-
-#: venues/templates/venues/venue_dashboard.html:106
-#: venues/templates/venues/venue_dashboard.html:133
-#: venues/templates/venues/venue_dashboard.html:163
-msgid "Date"
-msgstr "Ημερομηνία"
-
-#: venues/templates/venues/venue_dashboard.html:107
-#: venues/templates/venues/venue_dashboard.html:134
-#: venues/templates/venues/venue_dashboard.html:164
-msgid "Time"
-msgstr "Ώρα"
 
 #: venues/templates/venues/venue_dashboard.html:108
 #: venues/templates/venues/venue_dashboard.html:135

@@ -1,31 +1,49 @@
+{% load i18n %}
+
 <tr id="reservation-row-{{ r.id }}" data-reservation-id="{{ r.id }}">
   <td>{{ r.full_name }}</td>
-  
-  <!-- Date: data-order = YYYY-MM-DD -->
+
+  <!-- Date -->
   <td data-order="{{ r.date|date:'Y-m-d' }}">{{ r.date|date:'M d, Y' }}</td>
-  
-  <!-- Time: data-order = HH:MM -->
+
+  <!-- Time -->
   <td data-order="{{ r.time|time:'H:i' }}">{{ r.time|time:'g:i A' }}</td>
 
-  
   <td>{{ r.guests }}</td>
-  
+
   <td>
     <span class="badge 
       {% if   r.status == 'pending' %}bg-warning text-dark
       {% elif r.status == 'accepted' %}bg-success
-      {% else %}bg-danger{% endif %}">
-      {{ r.status|capfirst }}
+      {% else %}bg-danger
+      {% endif %}
+    ">
+      {% if r.status == 'pending' %}
+        {% trans "Pending" %}
+      {% elif r.status == 'accepted' %}
+        {% trans "Accepted" %}
+      {% elif r.status == 'rejected' %}
+        {% trans "Rejected" %}
+      {% endif %}
     </span>
   </td>
-  
-  <!-- Update arrival status buttons -->
+
   <td>
     {% if r.status == 'pending' %}
-      <a href="{% url 'update_reservation_status' r.id 'accepted' %}" class="btn btn-success btn-sm me-1 btn-accept-reservation" data-status="accepted" >✅ Accept</a>
-      <a href="{% url 'update_reservation_status' r.id 'rejected' %}" class="btn btn-danger btn-sm btn-accept-reservation" data-status="rejected">❌ Reject</a>
+      <a href="{% url 'update_reservation_status' r.id 'accepted' %}"
+         class="btn btn-success btn-sm me-1 btn-accept-reservation"
+         data-status="accepted">
+         ✅ {% trans "Accept" %}
+      </a>
+
+      <a href="{% url 'update_reservation_status' r.id 'rejected' %}"
+         class="btn btn-danger btn-sm btn-accept-reservation"
+         data-status="rejected">
+         ❌ {% trans "Reject" %}
+      </a>
+
     {% else %}
-      <span class="text-muted">—</span>
+      <span class="text-muted">{% trans "—" %}</span>
     {% endif %}
   </td>
 </tr>

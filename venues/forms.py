@@ -3,16 +3,34 @@ from .models import Reservation, VenueApplication, Venue
 from .utils import generate_time_choices
 from django.utils.timezone import now
 import datetime
+from django.utils.translation import gettext_lazy as _
 
 
 class ReservationForm(forms.ModelForm):
-    # Meta class defines metadata for the form
+
+    time = forms.ChoiceField(
+        choices=generate_time_choices(),
+        widget=forms.Select(),
+        label=_("Time")
+    )
+
     class Meta:
         model = Reservation
         fields = [
             'first_name', 'last_name', 'email', 'phone', 'date', 'time',
             'guests', 'special_requests', 'allergies', 'comments'
         ]
+        labels = {
+            'first_name': _("First name"),
+            'last_name': _("Last name"),
+            'email': _("Email"),
+            'phone': _("Phone"),
+            'date': _("Date"),
+            'guests': _("Number of guests"),
+            'special_requests': _("Special requests"),
+            'allergies': _("Allergies"),
+            'comments': _("Comments"),
+        }
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -35,22 +53,15 @@ class ReservationForm(forms.ModelForm):
             'allergies': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
-    # Override the 'time' field to use a dropdown select input with predefined time choices
-    time = forms.ChoiceField(
-        choices=generate_time_choices(),     # Generates a list of time choices (e.g., every 15 minutes)
-        widget=forms.Select()                # Use a select dropdown widget
-    )
 
-    # Custom validator for the 'time' field
     def clean_time(self):
-        selected_time = self.cleaned_data['time']  # Retrieve user-submitted time
-        valid_times = dict(generate_time_choices())  # Convert time choices into a dict for quick lookup
+        selected_time = self.cleaned_data['time']
+        valid_times = dict(generate_time_choices())
 
-        # Check if the selected time is one of the allowed options
         if selected_time not in valid_times:
-            raise forms.ValidationError("Invalid reservation time selected.")
+            raise forms.ValidationError(_("Invalid reservation time selected."))
 
-        return selected_time  # Return cleaned (validated) time
+        return selected_time
 
 
 class VenueApplicationForm(forms.ModelForm):
@@ -60,32 +71,43 @@ class VenueApplicationForm(forms.ModelForm):
             'venue_name', 'venue_type', 'location', 'description',
             'capacity', 'admin_name', 'admin_email', 'phone'
         ]
+        labels = {
+            'venue_name': _("Venue name"),
+            'venue_type': _("Venue type"),
+            'location': _("Location"),
+            'description': _("Description"),
+            'capacity': _("Capacity"),
+            'admin_name': _("Admin name"),
+            'admin_email': _("Admin email"),
+            'phone': _("Phone"),
+        }
+
 
 class VenueSignupForm(forms.ModelForm):
     class Meta:
         model = Venue
         exclude = ['owner']
-
-
-# class ReservationStatusForm(forms.ModelForm):
-#     class Meta:
-#         model = Reservation
-#         fields = ['arrival_status']
-#         widgets = {
-#             'arrival_status': forms.Select(attrs={'class': 'form-select'})
-#         }
+        labels = {
+            'name': _("Venue name"),
+            'location': _("Location"),
+            'capacity': _("Capacity"),
+        }
 
 
 class ArrivalStatusForm(forms.ModelForm):
+
     move_to_requests = forms.BooleanField(
         required=False,
-        label="Move back to Reservation Requests",
-        help_text="Check this if you want to move this booking back to the Reservation Requests table."
+        label=_("Move back to Reservation Requests"),
+        help_text=_("Check this if you want to move this booking back to the Reservation Requests table."),
     )
 
     class Meta:
         model = Reservation
-        fields = ['arrival_status']  # Only model fields go here
+        fields = ['arrival_status']
         widgets = {
             'arrival_status': forms.Select(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'arrival_status': _("Arrival status"),
         }

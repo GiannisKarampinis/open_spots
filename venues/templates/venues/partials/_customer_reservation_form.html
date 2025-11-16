@@ -1,3 +1,5 @@
+{% load i18n %}
+
 <div class="card card-body shadow" id="reservationForm" style="color: white;">
     <form method="post">
         {% csrf_token %}
@@ -16,7 +18,7 @@
 
         {% if submit_text %}
             <button type="submit" class="btn btn-success w-100 mt-3">
-                <i class="fa-solid fa-save"></i> {{ submit_text }}
+                <i class="fa-solid fa-save"></i> {% trans submit_text %}
             </button>
         {% endif %}
     </form>
