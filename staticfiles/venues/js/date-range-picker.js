@@ -11,6 +11,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const modalInstance = new bootstrap.Modal(modalEl);
 
+    let minDate = null;
+    let maxDate = null;
+
+    if (targetTab === 'requestsTab') {
+        // Only allow today and future dates
+        minDate = new Date(); // today
+    } else if (targetTab === 'historyTab') {
+        // Only allow past dates
+        maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() - 1); // yesterday
+    }
+
     // Initialize Flatpickr once per input
     const dateRangePicker = flatpickr(dateInput, {
       mode:               'range',
@@ -19,6 +31,8 @@ document.addEventListener('DOMContentLoaded', function () {
       clickOpens:         false, // we open manually
       appendTo:           modalEl.querySelector('.modal-body'),
       monthSelectorType:  'dropdown',
+      minDate:            minDate,
+      maxDate:            maxDate,
 
       onChange: function (selectedDates) {
         const start = selectedDates[0] || null;

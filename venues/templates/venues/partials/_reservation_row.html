@@ -1,13 +1,16 @@
 {% load i18n %}
+{% load date_filters %}
 
 <tr id="reservation-row-{{ r.id }}" data-reservation-id="{{ r.id }}">
   <td>{{ r.full_name }}</td>
 
   <!-- Date -->
-  <td data-order="{{ r.date|date:'Y-m-d' }}">{{ r.date|date:'M d, Y' }}</td>
+  {% comment %} <td data-order="{{ r.date|date:'Y-m-d' }}">{{ r.date|date:'M d, Y' }}</td> {% endcomment %}
+  <td data-order="{{ r.date }}">{{ r.date|format_date_display }}</td>
 
   <!-- Time -->
-  <td data-order="{{ r.time|time:'H:i' }}">{{ r.time|time:'g:i A' }}</td>
+  {% comment %} <td data-order="{{ r.time|time:'H:i' }}">{{ r.time|time:'g:i A' }}</td> {% endcomment %}
+  <td data-order="{{ r.time }}">{{ r.time|format_time_display }}</td>
 
   <td>{{ r.guests }}</td>
 

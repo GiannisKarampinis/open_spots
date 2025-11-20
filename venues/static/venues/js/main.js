@@ -44,9 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-window.addEventListener('resize', () => {
-    preview.querySelectorAll('img').forEach(img => {
-        const wrapperHeight = preview.clientHeight;
-        img.style.maxHeight = wrapperHeight + 'px';
-    });
-});
+// window.addEventListener('resize', () => {
+//     preview.querySelectorAll('img').forEach(img => {
+//         const wrapperHeight = preview.clientHeight;
+//         img.style.maxHeight = wrapperHeight + 'px';
+//     });
+// });
