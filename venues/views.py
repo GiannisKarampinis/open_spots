@@ -373,7 +373,7 @@ def toggle_venue_full(request, venue_id):
         raise PermissionDenied
 
     venue.is_full = not venue.is_full
-    venue.save(editor = request.user, update_fields = ['is_full'])
+    venue.save(update_fields = ['is_full'])
 
     return redirect('venue_dashboard', venue_id = venue.id)
 
