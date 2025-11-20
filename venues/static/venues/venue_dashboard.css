@@ -780,6 +780,7 @@ button {
     width: auto;                /* maintain aspect ratio */
     border-radius: 4px;
     object-fit: cover;
+    cursor: pointer;
 }
 
 .remove-btn {
@@ -798,10 +799,6 @@ button {
     cursor: pointer;
     text-align: center;
 }
-
-
-
-
 
 /* Modal background */
 .image-modal {

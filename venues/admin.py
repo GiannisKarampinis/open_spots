@@ -38,7 +38,7 @@ class VenueAdmin(admin.ModelAdmin):
     readonly_fields     = ['image_tag']
     inlines             = [TableInline, VenueImageInline, VenueMenuImageInline]
 
-    list_display = ('name', 'kind', 'location', 'available_tables', 'average_rating', 'image_tag', 'owner')
+    list_display = ('name', 'kind', 'location', 'average_rating', 'image_tag', 'owner')
     
     def image_tag(self, obj):
         if obj.image:
@@ -220,7 +220,7 @@ class VenueUpdateRequestAdmin(admin.ModelAdmin):
         if not changes:
             return "No changes"
 
-        html = "<ul>"
+        html = "<ul style='margin:0; padding-left:1rem;'>"
         for field, (old, new) in changes.items():
             if field in ["images", "menu_images"]:
                 # Display images as thumbnails
@@ -237,18 +237,28 @@ class VenueUpdateRequestAdmin(admin.ModelAdmin):
     preview_changes.short_description = "Proposed Changes"
 
     def approve_requests(self, request, queryset):
-        for update in queryset.filter(approval_status="pending"):
+        pending_requests = queryset.filter(approval_status="pending")
+        approved_count = 0
+
+        for update in pending_requests:
             venue = update.venue
-            # Copy over requested fields
-            venue.name = update.name
-            venue.kind = update.kind
-            venue.location = update.location
-            venue.email = update.email
-            venue.phone = update.phone
-            venue.description = update.description
-            venue.available_tables = update.available_tables
+
+            # ----------------------------
+            # (1) COPY ALL TEXT FIELDS
+            # ----------------------------
+            for field in ["name", "kind", "location", "email", "phone", "description"]:
+                setattr(venue, field, getattr(update, field))
             venue.save()
 
+            # ----------------------------
+            # (2) DELETE ALL EXISTING VENUE IMAGES
+            # ----------------------------
+            venue.images.all().delete()          # VenueImage
+            venue.menu_images.all().delete()     # VenueMenuImage
+
+            # ----------------------------
+            # (3) ADD ONLY THE IMAGES FROM UPDATE REQUEST
+            # ----------------------------
             for img in update.images.all():
                 VenueImage.objects.create(
                     venue=venue,
@@ -261,16 +271,23 @@ class VenueUpdateRequestAdmin(admin.ModelAdmin):
                     image=ContentFile(menu_img.image.read(), name=menu_img.image.name)
                 )
 
+            # ----------------------------
+            # (4) MARK REQUEST APPROVED
+            # ----------------------------
             update.approval_status = "approved"
             update.reviewed_by = request.user
             update.reviewed_at = timezone.now()
             update.save()
 
-        self.message_user(request, f"{queryset.filter(approval_status='pending').count()} requests approved.")
+            approved_count += 1
+
+        self.message_user(request, f"{approved_count} venue update request(s) approved.")
+
 
     approve_requests.short_description = "Approve selected requests"
 
     def reject_requests(self, request, queryset):
+       
         queryset.filter(approval_status="pending").update(
             approval_status="rejected",
             reviewed_by=request.user,
@@ -279,5 +296,3 @@ class VenueUpdateRequestAdmin(admin.ModelAdmin):
         self.message_user(request, f"{queryset.filter(approval_status='pending').count()} requests rejected.")
 
     reject_requests.short_description = "Reject selected requests"
-
-

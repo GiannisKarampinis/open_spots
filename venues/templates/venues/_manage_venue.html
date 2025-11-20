@@ -1,66 +1,73 @@
 {% load i18n %}
 
 <div class="container mt-5" id="manage-venue-form">
-  <form method="POST" enctype="multipart/form-data" class="venue-form-card"
-        action="{% url 'submit_venue_update' venue.id %}">
-    {% csrf_token %}
 
     <!-- 🟩 NON-SENSITIVE SECTION -->
-    <div class="section-card mb-4">
-      <button class="section-header" type="button"
-              data-bs-target="#nonSensitiveSection" aria-expanded="true">
-        <h5 class="mb-0">{% trans "Publicly Adjustable Information" %}</h5>
-        <span class="toggle-icon">▾</span>
-      </button>
+    <div class="venue-form-card">
+      <div class="section-card mb-4">
+        <button class="section-header" type="button" data-bs-target="#nonSensitiveSection" aria-expanded="true">
+          <h5 class="mb-0">{% trans "Publicly Adjustable Information" %}</h5>
+          <span class="toggle-icon">▾</span>
+        </button>
+      </div> 
 
       <div id="nonSensitiveSection" class="collapse show section-body">
-        <label for="available_tables">{% trans "Available Tables (Today)" %}</label>
+          
+          <!-- Image Sequence (active now) -->
+          <div class="mt-4">
+            <p class="small text-muted mb-2">{% trans "Drag and drop images to change their order as they appear publicly." %}</p>
 
-        <!-- Image Sequence (active now) -->
-        <div class="mt-4">
-          <label>{% trans "Image Display Order" %}</label>
-          <p class="small text-muted mb-2">{% trans "Drag and drop to change the order of images as they appear publicly." %}</p>
+            <div id="sortable-image-sequence" class="image-sequence-grid" aria-label="{% trans 'Sortable image list' %}"
+              data-update-url="{% url 'update_image_order' venue.id %}"
+              data-csrf-token="{{ csrf_token }}">
+              {% for img in venue.images.all %}
+                <div class="sortable-thumb" data-id="{{ img.id }}" role="listitem" title="{% trans 'Drag to reorder' %}">
+                  <img src="{{ img.image.url }}" alt="{% trans 'Venue image' %}" width="100" height="80">
+                    {% if forloop.first %}
+                      <span class="profile-label">{% trans "Profile" %}</span>
+                    {% endif %}
+                </div>
+              {% empty %}
+                <p class="text-muted">{% trans "No images uploaded yet." %}</p>
+              {% endfor %}
+            </div>
 
-          <div id="sortable-image-sequence" class="image-sequence-grid" aria-label="{% trans 'Sortable image list' %}">
-            {% for img in venue.images.all %}
-              <div class="sortable-thumb" data-id="{{ img.id }}" role="listitem" title="{% trans 'Drag to reorder' %}">
-                <img src="{{ img.image.url }}" alt="{% trans 'Venue image' %}" width="100" height="80">
-              </div>
-            {% empty %}
-              <p class="text-muted">{% trans "No images uploaded yet." %}</p>
-            {% endfor %}
+            <input type="hidden" name="image_sequence" id="image_sequence" value="">
           </div>
-          <input type="hidden" name="image_sequence" id="image_sequence" value="">
-        </div>
 
+        </div>
       </div>
     </div>
 
-    <!-- 🔒 SENSITIVE SECTION -->
-    <div class="section-card mb-4">
-      <button class="section-header" type="button"
-              data-bs-target="#sensitiveSection" aria-expanded="false">
-        <h5 class="mb-0">{% trans "Sensitive & Contact Information" %}</h5>
-        <span class="toggle-icon">▸</span>
-      </button>
+    <!-- 🔒 SENSITIVE & CONTACT INFORMATION -->
+    <form method="POST" enctype="multipart/form-data" class="venue-form-card" action="{% url 'submit_venue_update' venue.id %}">
+        {% csrf_token %}
 
-      <div id="sensitiveSection" class="collapse section-body">
-        <div class="grid">
-          <div>
-            <label for="name">{% trans "Venue Name" %}</label>
-            <input type="text" name="name" id="name" value="{{ venue.name }}" class="form-input" required>
+      <div class="section-card mb-4">
+        <button class="section-header" type="button"
+                data-bs-target="#sensitiveSection" aria-expanded="false">
+          <h5 class="mb-0">{% trans "Sensitive & Contact Information" %}</h5>
+          <span class="toggle-icon">▸</span>
+        </button>
+
+        <div id="sensitiveSection" class="collapse section-body">
+        
+          <div class="grid">
+            <div>
+              <label for="name">{% trans "Venue Name" %}</label>
+              <input type="text" name="name" id="name" value="{{ venue.name }}" class="form-input" required>
+            </div>
+            <div>
+              <label for="kind">{% trans "Type" %}</label>
+              <select name="kind" id="kind" class="form-input">
+                {% for key, value in venue.VENUE_TYPES %}
+                  <option value="{{ key }}" {% if venue.kind == key %}selected{% endif %}>
+                    {% trans value %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="kind">{% trans "Type" %}</label>
-            <select name="kind" id="kind" class="form-input">
-              {% for key, value in venue.VENUE_TYPES %}
-                <option value="{{ key }}" {% if venue.kind == key %}selected{% endif %}>
-                  {% trans value %}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
 
         <div>
           <label for="location">{% trans "Location" %}</label>
@@ -91,7 +98,7 @@
                 <button type="button" class="remove-btn">&times;</button>
               </div>
             {% empty %}
-              {% trans "No files selected" %}
+              <span class="no-files-msg"> {% trans "No files selected" %} </span>
             {% endfor %}
           </div>
 
@@ -125,105 +132,15 @@
   </form>
 </div>
 
+<!-- Image Preview Modal -->
+<div id="imageModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:9999;">
+    <span class="close-btn" style="position:absolute; top:10px; right:15px; color:white; font-size:30px; cursor:pointer;">&times;</span>
+    <img src="" alt="Preview" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow:0 0 15px rgba(0,0,0,0.5);">
+</div>
+
+
 <!-- SortableJS (drag & drop) -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-
-<!-- ---------- JS: no Bootstrap required ---------- -->
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Collapse handling (Bootstrap-free)
-  document.querySelectorAll(".section-header").forEach(header => {
-    const rawTarget = header.getAttribute("data-bs-target") || header.getAttribute("data-target") || header.dataset.bsTarget || header.dataset.target;
-    if (!rawTarget) return;
-    const target = document.querySelector(rawTarget);
-    if (!target) return;
-
-    const initiallyShown = target.classList.contains("show");
-    header.setAttribute("aria-expanded", initiallyShown ? "true" : "false");
-    const icon = header.querySelector(".toggle-icon");
-    if (icon) icon.textContent = initiallyShown ? "▾" : "▸";
-    if (initiallyShown) {
-      target.style.maxHeight = target.scrollHeight + "px";
-      requestAnimationFrame(() => target.style.maxHeight = "");
-    } else {
-      target.style.maxHeight = "0";
-    }
-
-    function collapseSection() {
-      header.setAttribute("aria-expanded", "false");
-      if (icon) icon.textContent = "▸";
-      target.style.maxHeight = target.scrollHeight + "px";
-      target.offsetHeight;
-      target.style.transition = "max-height 220ms ease";
-      target.style.maxHeight = "0";
-      target.addEventListener("transitionend", function onEnd() {
-        target.classList.remove("show");
-        target.style.transition = "";
-        target.removeEventListener("transitionend", onEnd);
-      });
-    }
-
-    function expandSection() {
-      header.setAttribute("aria-expanded", "true");
-      if (icon) icon.textContent = "▾";
-      target.classList.add("show");
-      target.style.maxHeight = "0";
-      target.offsetHeight;
-      target.style.transition = "max-height 220ms ease";
-      target.style.maxHeight = target.scrollHeight + "px";
-      target.addEventListener("transitionend", function onEnd() {
-        target.style.transition = "";
-        target.style.maxHeight = "";
-        target.removeEventListener("transitionend", onEnd);
-      });
-    }
-
-    header.addEventListener("click", () => {
-      const expanded = header.getAttribute("aria-expanded") === "true";
-      if (expanded) collapseSection(); else expandSection();
-    });
-    header.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " " || e.code === "Space") {
-        e.preventDefault();
-        header.click();
-      }
-    });
-  });
-
-  // Sortable image sequence initialization
-  (function initSortableImageSequence() {
-    const container = document.getElementById('sortable-image-sequence');
-    const sequenceInput = document.getElementById('image_sequence');
-    if (!container || !sequenceInput) return;
-    if (typeof Sortable === 'undefined') {
-      console.warn('SortableJS not loaded.');
-      return;
-    }
-    // Avoid double-init
-    if (container._sortableInit) return;
-
-    const updateSequenceInput = () => {
-      const ordered = Array.from(container.children)
-        .map(child => child.dataset.id)
-        .filter(Boolean);
-      sequenceInput.value = ordered.join(',');
-    };
-
-    // Initialize Sortable
-    new Sortable(container, {
-      animation: 150,
-      ghostClass: 'dragging',
-      onSort: updateSequenceInput,
-      // touch support and accessibility defaults are provided by SortableJS
-    });
-
-    // mark initialized and set initial order value
-    container._sortableInit = true;
-    updateSequenceInput();
-  })();
-
-});
-</script>
 
 <!-- ---------- CSS ---------- -->
 <style>
@@ -246,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  cursor: pointer;
+  {% comment %} cursor: pointer; {% endcomment %}
   transition: background 0.2s ease;
   font-size: larger;
   outline: none;
@@ -258,7 +175,6 @@ document.addEventListener("DOMContentLoaded", () => {
   overflow: hidden;
   max-height: 0;
   padding: 0 1.25rem;
-  border-top: 1px solid #eee;
 }
 .section-body.show { padding: 1rem 1.25rem; max-height: none; }
 
@@ -300,6 +216,10 @@ document.addEventListener("DOMContentLoaded", () => {
   border: 2px solid transparent;
   border-radius: 8px;
   transition: transform 0.15s ease, border 0.2s;
+  width:100px;
+  height:80px;
+  overflow:hidden;
+  display: inline-bloclk;
 }
 .sortable-thumb:hover { border-color:#007bff; transform: scale(1.05); }
 .sortable-thumb img { border-radius:8px; width:100px; height:80px; object-fit:cover; }
@@ -315,4 +235,40 @@ document.addEventListener("DOMContentLoaded", () => {
   width:18px; height:18px; border-radius:50%; cursor:pointer;
   font-weight:bold; line-height:14px; padding:0;
 }
+
+/* Thicker profile frame exactly around thumbnail */
+.sortable-thumb.profile {
+    border: 5px solid #007bff;  /* thicker border */
+    border-radius: 8px;
+    position: relative;
+    box-sizing: border-box;     /* ensures border doesn't crop image */
+    transition: all 0.3s ease;  /* smooth transition when frame moves */
+}
+
+/* Profile label sits above the border */
+.profile-label {
+    position: absolute;
+    top: -10px;                 /* above the thumbnail */
+    left: 50%;
+    transform: translateX(-50%);
+    background: #007bff;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 6px;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    opacity: 0.9;
+}
+
+/* optional: smooth ghost dragging */
+.dragging {
+    opacity: 0.6;
+    border-color: #007bff !important;
+    transform: scale(1.05);
+}
+
+
 </style>

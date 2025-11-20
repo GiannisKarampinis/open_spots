@@ -20,6 +20,7 @@ from .forms                          import ReservationForm, VenueApplicationFor
 from .utils                          import *
 from .decorators                     import venue_admin_required
 from venues.services.emails          import send_reservation_notification, send_new_venue_application_email
+from django.views.decorators.csrf    import csrf_exempt
 
 import  json
 import  plotly.graph_objs            as go
@@ -760,42 +761,75 @@ def submit_venue_update(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
 
     if request.method == "POST":
-        # Create a new update request instead of saving directly to Venue
         update_request = VenueUpdateRequest.objects.create(
-            venue               =   venue,
-            submitted_by        =   request.user,
-            name                =   request.POST.get("name"),
-            kind                =   request.POST.get("kind"),
-            location            =   request.POST.get("location"),
-            email               =   request.POST.get("email"),
-            phone               =   request.POST.get("phone"),
-            description         =   request.POST.get("description"),
-            available_tables    =   int(request.POST.get("available_tables") or 0),
+            venue            = venue,
+            submitted_by     = request.user,
+            name             = request.POST.get("name"),
+            kind             = request.POST.get("kind"),
+            location         = request.POST.get("location"),
+            email            = request.POST.get("email"),
+            phone            = request.POST.get("phone"),
+            description      = request.POST.get("description"),
+            available_tables = int(request.POST.get("available_tables") or 0),
         )
-        
-        for img in request.FILES.getlist('venue_images'):
+
+        # ---- Handle venue images ----
+        # Add newly uploaded images
+        for img in request.FILES.getlist("venue_images"):
             VenueUpdateImage.objects.create(update_request=update_request, image=img)
 
-        for img_id in request.POST.getlist('remove_venue_images'):
-            try:
-                img_obj = VenueImage.objects.get(id=img_id, venue=venue)
-                img_obj.delete()
-            except VenueImage.DoesNotExist:
-                pass
+        # Snapshot existing images currently displayed on front-end
+        # Assume front-end sends IDs of images still visible (can be via JS)
+        visible_ids_str = request.POST.get('visible_venue_image_ids[]', '')  # "4,5"
+        visible_ids = [int(i) for i in visible_ids_str.split(',') if i]  # [4, 5]
+        for img in venue.images.filter(id__in=visible_ids):
+            # just reference the same file, no new upload
+            VenueUpdateImage.objects.create(
+                update_request=update_request,
+                image=img.image,  # points to same file
+            )
 
-        for img in request.FILES.getlist('menu_images'):
+        # ---- Handle menu images similarly ----
+        for img in request.FILES.getlist("menu_images"):
             VenueUpdateMenuImage.objects.create(update_request=update_request, image=img)
-        
-        for img_id in request.POST.getlist('remove_menu_images'):
-            try:
-                img_obj = VenueMenuImage.objects.get(id=img_id, venue=venue)
-                img_obj.delete()
-            except VenueMenuImage.DoesNotExist:
-                pass
-        
+
+        visible_menu_ids_str = request.POST.get('visible_venue_image_ids[]', '')  # "4,5"
+        visible_menu_ids = [int(i) for i in visible_menu_ids_str.split(',') if i]  # [4, 5]
+        for img in venue.menu_images.filter(id__in=visible_menu_ids):
+            VenueUpdateMenuImage.objects.create(
+                update_request=update_request,
+                image=img.image,
+            )
+
+        # Optional: track removed images
+        # update_request.removed_venue_image_ids = request.POST.getlist("removed_venue_image_ids[]")
+        # update_request.removed_menu_image_ids  = request.POST.getlist("removed_menu_image_ids[]")
+        # update_request.save()
+
         return render(request, "venues/_update_venue_success.html")
 
     return render(request, "venues/_manage_venue.html", {"venue": venue})
+
+###########################################################################################
+
+###########################################################################################
+@csrf_exempt
+def update_image_order(request, venue_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        sequence = data.get("sequence", [])
+
+        for index, img_id in enumerate(sequence):
+            try:
+                img = VenueImage.objects.get(id=img_id, venue_id=venue_id)
+                img.order = index
+                img.save()
+            except VenueImage.DoesNotExist:
+                continue
+
+        return JsonResponse({"status": "success", "updated_order": sequence})
+
+    return JsonResponse({"status": "invalid request"}, status=400)
 
 ###########################################################################################
 

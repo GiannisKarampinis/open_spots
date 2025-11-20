@@ -33,7 +33,6 @@ class Venue(models.Model):
     kind                = models.CharField(max_length=20, choices=VENUE_TYPES, default='other')
     location            = models.CharField(max_length=255)
     description         = models.TextField(blank=True)
-    available_tables    = models.PositiveIntegerField()
     image               = models.ImageField(upload_to='media/venues/', blank=True, null=True)
     average_rating      = models.FloatField(default=0.0)
     is_full             = models.BooleanField(default=False)
@@ -349,7 +348,7 @@ class VenueUpdateRequest(models.Model):
     reviewed_by         = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_update_requests')
     reviewed_at         = models.DateTimeField(null=True, blank=True)
     submitted_at        = models.DateTimeField(auto_now_add=True)
-    
+        
     def __str__(self):
         return f"Venue Update Request for {self.venue.name} (status: {self.approval_status})"
 
@@ -361,7 +360,7 @@ class VenueUpdateRequest(models.Model):
         # List fields you want to track
         fields_to_check = [
             "name", "kind", "location", "email",
-            "phone", "description", "available_tables"
+            "phone", "description"
         ]
 
         for field in fields_to_check:
@@ -392,78 +391,92 @@ class VenueUpdateRequest(models.Model):
 ###########################################################################################
 def venue_image_upload(instance, filename):
     if hasattr(instance, 'update_request'):
-        # For VenueUpdateImage
-        venue_id = instance.update_request.venue.id
+        venue_id = instance.update_request.venue.id # For VenueUpdateImage
     else:
-        # For VenueImage
-        venue_id = instance.venue.id
-    return f'media/venues/{venue_id}/images/{filename}'
+        venue_id = instance.venue.id # For VenueImage
+    return f'venues/{venue_id}/images/{filename}'
 
 def menu_image_upload(instance, filename):
     if hasattr(instance, 'update_request'):
         venue_id = instance.update_request.venue.id
     else:
         venue_id = instance.venue.id
-    return f'media/venues/{venue_id}/menu/{filename}'
+    return f'venues/{venue_id}/menu/{filename}'
 
+###########################################################################################
+
+###########################################################################################
 class VenueImage(models.Model):
-    venue = models.ForeignKey(
-        Venue, on_delete=models.CASCADE, related_name='images'
-    )
+    venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to=venue_image_upload)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
 
     def save(self, *args, **kwargs):
         if self.image:
-            original_name = os.path.splitext(self.image.name)[0]
+            # Use only the file name, not the full path
+            base_name = os.path.splitext(os.path.basename(self.image.name))[0]
             webp_file = convert_image_to_webp(self.image)
-            self.image.save(f"{original_name}.webp", webp_file, save=False)
+            # Save using only base name + '.webp'
+            self.image.save(f"{base_name}.webp", webp_file, save=False)
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.venue.name} - Image"
 
+###########################################################################################
 
+###########################################################################################
 class VenueMenuImage(models.Model):
-    venue = models.ForeignKey(
-        Venue, on_delete=models.CASCADE, related_name='menu_images'
-    )
+    venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='menu_images')
     image = models.ImageField(upload_to=menu_image_upload)
 
     def save(self, *args, **kwargs):
         if self.image:
-            original_name = os.path.splitext(self.image.name)[0]
+            base_name = os.path.splitext(os.path.basename(self.image.name))[0]
             webp_file = convert_image_to_webp(self.image)
-            self.image.save(f"{original_name}.webp", webp_file, save=False)
+            self.image.save(f"{base_name}.webp", webp_file, save=False)
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.venue.name} - Menu Image"
 
+###########################################################################################
+
+###########################################################################################
 class VenueUpdateImage(models.Model):
     update_request  = models.ForeignKey(VenueUpdateRequest, on_delete=models.CASCADE, related_name='images')
     image           = models.ImageField(upload_to=venue_image_upload)
 
     def save(self, *args, **kwargs):
         if self.image:
-            original_name   = os.path.splitext(self.image.name)[0]
-            webp_file       = convert_image_to_webp(self.image)
-            self.image.save(f"{original_name}.webp", webp_file, save=False)
+            base_name = os.path.splitext(os.path.basename(self.image.name))[0]
+            webp_file = convert_image_to_webp(self.image)
+            self.image.save(f"{base_name}.webp", webp_file, save=False)
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.update_request.venue.name} - Image"
 
+###########################################################################################
 
+###########################################################################################
 class VenueUpdateMenuImage(models.Model):
     update_request  = models.ForeignKey(VenueUpdateRequest, on_delete=models.CASCADE, related_name='menu_images')
     image           = models.ImageField(upload_to=menu_image_upload)
 
     def save(self, *args, **kwargs):
         if self.image:
-            original_name   = os.path.splitext(self.image.name)[0]
-            webp_file       = convert_image_to_webp(self.image)
-            self.image.save(f"{original_name}.webp", webp_file, save=False)
+            base_name = os.path.splitext(os.path.basename(self.image.name))[0]
+            webp_file = convert_image_to_webp(self.image)
+            self.image.save(f"{base_name}.webp", webp_file, save=False)
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.update_request.venue.name} - Menu Image"    
+
+###########################################################################################
+
+###########################################################################################

@@ -1,7 +1,9 @@
 <div class="venue-card {% if venue.is_full %}full{% else %}available{% endif %}">
-    {% if venue.image %}
-    <img src="{{ venue.image.url }}" alt="{{ venue.name }}">
-    {% endif %}
+    {% with first_image=venue.images.all|first %}
+        {% if first_image %}
+            <img src="{{ first_image.image.url }}" alt="{{ venue.name }}">
+        {% endif %}
+    {% endwith %}
     <h3>{{ venue.name }}</h3>
     <div class="venue-info">
         <div class="venue-info-item">
@@ -14,7 +16,7 @@
                 {% if venue.is_full %}
                     Full
                 {% else %}
-                    Available ({{ venue.available_tables }} tables)
+                    Available tables
                 {% endif %}
             </span>
         </div>
