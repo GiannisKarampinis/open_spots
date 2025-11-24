@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-16 21:32+0000\n"
+"POT-Creation-Date: 2025-11-24 18:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Greek <EMAIL@ADDRESS>\n"
@@ -36,7 +36,7 @@ msgstr "Όνομα χρήστη"
 
 #: accounts/forms.py:15 accounts/forms.py:43 accounts/forms.py:63
 #: accounts/forms.py:84 venues/forms.py:26
-#: venues/templates/venues/_manage_venue.html:77
+#: venues/templates/venues/_manage_venue.html:43
 msgid "Email"
 msgstr "Email"
 
@@ -358,7 +358,7 @@ msgid "Last name"
 msgstr "Επίθετο"
 
 #: venues/forms.py:27 venues/forms.py:82
-#: venues/templates/venues/_manage_venue.html:81
+#: venues/templates/venues/_manage_venue.html:47
 msgid "Phone"
 msgstr "Τηλέφωνο"
 
@@ -401,11 +401,12 @@ msgid "Venue type"
 msgstr "Όνομα Χώρου"
 
 #: venues/forms.py:77 venues/forms.py:92
-#: venues/templates/venues/_manage_venue.html:66
+#: venues/templates/venues/_manage_venue.html:32
+#: venues/templates/venues/venue_detail.html:39
 msgid "Location"
 msgstr "Τοποθεσία"
 
-#: venues/forms.py:78 venues/templates/venues/_manage_venue.html:71
+#: venues/forms.py:78 venues/templates/venues/_manage_venue.html:37
 msgid "Description"
 msgstr "Περιγραφή"
 
@@ -431,7 +432,8 @@ msgstr "Αιτήματα Κρατήσεων σε Εκκρεμότητα"
 msgid ""
 "Check this if you want to move this booking back to the Reservation Requests "
 "table."
-msgstr "Πάτα εδώ αν θέλεις να μεταφέρεις την κράτηση πίσω στα αιτήματα κρατήσεων"
+msgstr ""
+"Πάτα εδώ αν θέλεις να μεταφέρεις την κράτηση πίσω στα αιτήματα κρατήσεων"
 
 #: venues/forms.py:112
 #, fuzzy
@@ -475,77 +477,42 @@ msgstr "Υψηλότερη Ημερήσια Επισκεψιμότητα"
 msgid "Total Reservations"
 msgstr "Συνολικές Κρατήσεις"
 
-#: venues/templates/venues/_manage_venue.html:12
-msgid "Publicly Adjustable Information"
-msgstr "Προσαρμόσιμες Πληροφορίες"
-
-#: venues/templates/venues/_manage_venue.html:17
-#, fuzzy
-msgid "Available Tables (Today)"
-msgstr "Διαθέσιμα Τραπέζια"
-
-#: venues/templates/venues/_manage_venue.html:21
-msgid "Image Display Order"
-msgstr "Σειρά προβολής εικόνων"
-
-#: venues/templates/venues/_manage_venue.html:22
-msgid "Drag and drop to change the order of images as they appear publicly."
-msgstr "Σύρε και άλλαξε την σειρά των εικόνων όπως εμφανίζεται δημόσια"
-
-#: venues/templates/venues/_manage_venue.html:24
-msgid "Sortable image list"
-msgstr "Λίστα Εικόνων"
-
-#: venues/templates/venues/_manage_venue.html:26
-msgid "Drag to reorder"
-msgstr "Σύρε για αναδιάταξη"
-
-#: venues/templates/venues/_manage_venue.html:27
-#, fuzzy
-#| msgid "Venue Name"
-msgid "Venue image"
-msgstr "Όνομα Χώρου"
-
-#: venues/templates/venues/_manage_venue.html:30
-msgid "No images uploaded yet."
-msgstr "Καμία εικόνα δεν έχει αναρτηθεί μέχρι στιγμής"
-
-#: venues/templates/venues/_manage_venue.html:43
+#: venues/templates/venues/_manage_venue.html:10
 msgid "Sensitive & Contact Information"
 msgstr "Πληροφορίες επικοινωνίας και Ευαίσθητο περιερχόμενο"
 
-#: venues/templates/venues/_manage_venue.html:50
+#: venues/templates/venues/_manage_venue.html:16
 msgid "Venue Name"
 msgstr "Όνομα Χώρου"
 
-#: venues/templates/venues/_manage_venue.html:54
+#: venues/templates/venues/_manage_venue.html:20
 msgid "Type"
 msgstr "Τύπος"
 
-#: venues/templates/venues/_manage_venue.html:90
+#: venues/templates/venues/_manage_venue.html:67
 #, fuzzy
 #| msgid "Venue Name"
 msgid "Venue preview"
 msgstr "Όνομα Χώρου"
 
-#: venues/templates/venues/_manage_venue.html:94
-#: venues/templates/venues/_manage_venue.html:112
+#: venues/templates/venues/_manage_venue.html:73
+#: venues/templates/venues/_manage_venue.html:104
 msgid "No files selected"
 msgstr "Δεν έχουν επιλεγεί αρχεία"
 
-#: venues/templates/venues/_manage_venue.html:99
+#: venues/templates/venues/_manage_venue.html:78
 msgid "Select Venue Images"
 msgstr "Επιλογή Εικόνων Χώρου"
 
-#: venues/templates/venues/_manage_venue.html:108
+#: venues/templates/venues/_manage_venue.html:98
 msgid "Menu preview"
 msgstr ""
 
-#: venues/templates/venues/_manage_venue.html:117
+#: venues/templates/venues/_manage_venue.html:109
 msgid "Select Menu Images"
 msgstr "Επιλογή Εικόνων Μενού"
 
-#: venues/templates/venues/_manage_venue.html:122
+#: venues/templates/venues/_manage_venue.html:114
 msgid "Submit for Approval"
 msgstr "Υποβολή για Έγκριση"
 
@@ -577,11 +544,11 @@ msgstr "Κατάσταση:"
 msgid "No reservations found."
 msgstr "Δεν βρέθηκαν κρατήσεις."
 
-#: venues/templates/venues/_update_venue_success.html:1
+#: venues/templates/venues/_update_venue_success.html:3
 msgid "Your update request has been submitted for approval ✅"
 msgstr "Το αίτημά σας για ενημέρωση υποβλήθηκε για έγκριση ✅"
 
-#: venues/templates/venues/_update_venue_success.html:2
+#: venues/templates/venues/_update_venue_success.html:4
 msgid "Our team will review and approve/reject it shortly."
 msgstr "Η ομάδα μας θα το εξετάσει και θα το εγκρίνει/απορρίψει σύντομα."
 
@@ -705,12 +672,12 @@ msgid "Cancelled"
 msgstr "Ακυρωμένες"
 
 #: venues/templates/venues/partials/_arrival_row.html:27
-#: venues/templates/venues/partials/_reservation_row.html:26
+#: venues/templates/venues/partials/_reservation_row.html:31
 msgid "Rejected"
 msgstr "Απορριφθήσα"
 
 #: venues/templates/venues/partials/_arrival_row.html:32
-#: venues/templates/venues/partials/_reservation_row.html:22
+#: venues/templates/venues/partials/_reservation_row.html:27
 msgid "Pending"
 msgstr "Αναμένουσα"
 
@@ -730,19 +697,19 @@ msgstr "Δεν εμφανίστηκε"
 msgid "Move to Requests"
 msgstr "Αιτήματα Κρατήσεων σε Εκκρεμότητα"
 
-#: venues/templates/venues/partials/_reservation_row.html:24
+#: venues/templates/venues/partials/_reservation_row.html:29
 msgid "Accepted"
 msgstr "Δεκτή"
 
-#: venues/templates/venues/partials/_reservation_row.html:36
+#: venues/templates/venues/partials/_reservation_row.html:41
 msgid "Accept"
 msgstr "Αποδέξου"
 
-#: venues/templates/venues/partials/_reservation_row.html:42
+#: venues/templates/venues/partials/_reservation_row.html:47
 msgid "Reject"
 msgstr "Απέρριψε"
 
-#: venues/templates/venues/partials/_reservation_row.html:46
+#: venues/templates/venues/partials/_reservation_row.html:51
 msgid "—"
 msgstr ""
 
@@ -844,22 +811,48 @@ msgstr "Ενέργεια"
 msgid "Guest Arrivals & Cancellations"
 msgstr "Αφίξεις Επισκεπτών & Ακυρώσεις"
 
-#: venues/templates/venues/venue_detail.html:32
-msgid "View on Google Maps"
-msgstr "Προβολή στους Χάρτες Google"
+#: venues/templates/venues/venue_detail.html:30
+msgid "About"
+msgstr "Σχετικά"
 
+#: venues/templates/venues/venue_detail.html:31
 #: venues/templates/venues/venue_detail.html:45
-#: venues/templates/venues/venue_detail.html:105
-msgid "Show More"
-msgstr "Εμφάνιση Περισσοτέρων"
+msgid "Menu"
+msgstr "Μενού"
 
-#: venues/templates/venues/venue_detail.html:54
-msgid "Log in to make a reservation"
+#: venues/templates/venues/venue_detail.html:32
+#: venues/templates/venues/venue_detail.html:51
+msgid "Photos"
+msgstr "Φωτογραφίες"
+
+#: venues/templates/venues/venue_detail.html:33
+#: venues/templates/venues/venue_detail.html:63
+msgid "Reviews"
+msgstr "Αξιολογήσεις"
+
+#: venues/templates/venues/venue_detail.html:46
+msgid "This venue has not added a menu yet."
+msgstr "Δεν έχουν προστεθεί φωτογραφίες για το μενού ακόμη."
+
+#: venues/templates/venues/venue_detail.html:56
+#, fuzzy
+msgid "No photos available."
+msgstr "Δεν υπάρχουν διαθέσιμες φωτογραφίες."
+
+#: venues/templates/venues/venue_detail.html:72
+msgid "No reviews yet."
+msgstr "Δεν υπάρχουν αξιολογήσεις."
+
+#: venues/templates/venues/venue_detail.html:82
+#, fuzzy
+msgid "Reserve a Table"
+msgstr "Κάνε Κράτηση"
+
+#: venues/templates/venues/venue_detail.html:88
+#, fuzzy
+#| msgid "Log in to make a reservation"
+msgid "Log in to reserve"
 msgstr "Συνδεθείτε για να κάνετε κράτηση"
-
-#: venues/templates/venues/venue_detail.html:111
-msgid "Show Less"
-msgstr "Εμφάνιση Λιγότερων"
 
 #: venues/templates/venues/venue_list.html:11
 msgid "Browse Venues"
@@ -966,6 +959,42 @@ msgstr "Σύνολο Χώρων:"
 #: venues/templates/venues/venue_summary.html:8
 msgid "Total Reservations:"
 msgstr "Συνολικές Κρατήσεις:"
+
+#~ msgid "Publicly Adjustable Information"
+#~ msgstr "Προσαρμόσιμες Πληροφορίες"
+
+#, fuzzy
+#~ msgid "Available Tables (Today)"
+#~ msgstr "Διαθέσιμα Τραπέζια"
+
+#~ msgid "Image Display Order"
+#~ msgstr "Σειρά προβολής εικόνων"
+
+#~ msgid "Drag and drop to change the order of images as they appear publicly."
+#~ msgstr "Σύρε και άλλαξε την σειρά των εικόνων όπως εμφανίζεται δημόσια"
+
+#~ msgid "Sortable image list"
+#~ msgstr "Λίστα Εικόνων"
+
+#~ msgid "Drag to reorder"
+#~ msgstr "Σύρε για αναδιάταξη"
+
+#, fuzzy
+#~| msgid "Venue Name"
+#~ msgid "Venue image"
+#~ msgstr "Όνομα Χώρου"
+
+#~ msgid "No images uploaded yet."
+#~ msgstr "Καμία εικόνα δεν έχει αναρτηθεί μέχρι στιγμής"
+
+#~ msgid "View on Google Maps"
+#~ msgstr "Προβολή στους Χάρτες Google"
+
+#~ msgid "Show More"
+#~ msgstr "Εμφάνιση Περισσοτέρων"
+
+#~ msgid "Show Less"
+#~ msgstr "Εμφάνιση Λιγότερων"
 
 #, fuzzy
 #~| msgid "Total Visits"

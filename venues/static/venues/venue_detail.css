@@ -3,11 +3,11 @@
 /* ============================ */
 
 body {
-  background: #f7f7f7;
+  background: var(--button-text);
   font-family: "Inter", sans-serif;
   margin: 0;
   padding: 0;
-  color: #333;
+  color: var(--text-color);
 }
 
 /* ============================ */
@@ -34,7 +34,7 @@ body {
   position: absolute;
   bottom: 30px;
   left: 40px;
-  color: white;
+  color: var(--button-text);
 }
 
 .hero-title h1 {
@@ -87,9 +87,9 @@ body {
 }
 
 .tab.active {
-  color: #222;
-  border-color: #32c36c;
-  background: white;
+  color: var(--text-color);
+  border-color: var(--surface-color);
+  background: var(--button-text);
 }
 
 .tab-content {
@@ -113,7 +113,7 @@ body {
 .venue-description {
   font-size: 17px;
   line-height: 1.6;
-  color: #555;
+  color: var(--button-text);
   margin-bottom: 30px;
 }
 
@@ -134,12 +134,13 @@ body {
 /* ============================ */
 
 .reserve-card {
-  background: #fff;
+  background: var(--surface-color);
   padding: 25px;
   border-radius: 14px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
   position: sticky;
   top: 120px;
+  color: var(--button-text);
 }
 
 .reserve-card h3 {
@@ -170,7 +171,7 @@ body {
 /* ============================ */
 
 .review-card {
-  background: #fff;
+  background: var(--text-color);
   padding: 18px;
   border-radius: 12px;
   margin-bottom: 14px;
@@ -185,6 +186,76 @@ body {
   color: #ffc107;
   margin: 5px 0 10px;
 }
+
+/* ============================ */
+/* RESERVATION FORM STYLES */
+/* ============================ */
+
+.reserve-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.reserve-card label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--button-text);
+  margin-bottom: 4px;
+}
+
+.reserve-card input,
+.reserve-card select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  background: var(--button-text);
+  transition: all .2s ease;
+}
+
+.reserve-card input:focus,
+.reserve-card select:focus {
+  border-color: var(--surface-color);
+  background: var(--button-text);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(50, 195, 108, 0.15);
+}
+
+.reserve-card button,
+.reserve-card input[type="submit"] {
+  margin-top: 10px;
+  width: 100%;
+  padding: 14px;
+  background: var(--button-text);
+  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.reserve-card button:hover,
+.reserve-card input[type="submit"]:hover {
+  background: var(--button-text-hover);
+}
+
+.reserve-card .helptext {
+  font-size: 13px;
+  color: #777;
+  margin-top: -5px;
+}
+
+.reserve-card .errorlist {
+  color: #d9534f;
+  font-size: 14px;
+  margin: -5px 0 5px 0;
+}
+
 
 /* ============================ */
 /* RESPONSIVE */
