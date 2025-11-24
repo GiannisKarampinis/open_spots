@@ -256,6 +256,91 @@ body {
   margin: -5px 0 5px 0;
 }
 
+/* ---------------------------- */
+/* RESERVATION MULTI-STEP FORM */
+/* ---------------------------- */
+
+.res-steps-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.res-step-tab {
+  flex: 1;
+  background: var(--button-text);
+  padding: 12px;
+  text-align: center;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: .2s;
+  opacity: 0.7;
+}
+
+.res-step-tab.disabled {
+  cursor: not-allowed;
+  opacity: .4;
+}
+
+.res-step-tab.active {
+  background: var(--surface-color);
+  color: var(--button-text);
+  opacity: 1;
+}
+
+.res-step {
+  display: none;
+}
+
+.res-step.active {
+  display: block;
+  animation: fadeIn .25s;
+}
+
+.res-input, .res-textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--button-text-hover);
+  font-size: 15px;
+}
+
+.res-textarea {
+  height: 80px;
+}
+
+.res-next-btn, .res-prev-btn, .res-submit-btn {
+  background: var(--surface-color);
+  color: var(--button-text);
+  border: none;
+  padding: 12px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.res-prev-btn {
+  background: #999;
+}
+
+.res-step-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.input-error {
+  border-color: #d9534f !important;
+}
+
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(4px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
 
 /* ============================ */
 /* RESPONSIVE */

@@ -3,10 +3,12 @@
 {% load i18n %}
 
 {% block title %}{{ venue.name }} - OpenSpots{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'venues/venue_detail.css' %}">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 {% endblock %}
 
 {% block content %}
@@ -82,11 +84,82 @@
       <h3>{% trans "Reserve a Table" %}</h3>
 
       {% if user.is_authenticated %}
-        {% include "venues/partials/_customer_reservation_form.html" with form=form submit_text="Submit Reservation" %}
+
+      <div id="reservation-steps">
+
+        <!-- STEP TABS -->
+        <div class="res-steps-tabs">
+          <div class="res-step-tab active" data-step="1">
+            <i class="fa fa-user"></i> {% trans "Personal Info" %}
+          </div>
+          <div class="res-step-tab disabled" data-step="2">
+            <i class="fa fa-clock"></i> {% trans "Date & Time" %}
+          </div>
+          <div class="res-step-tab disabled" data-step="3">
+            <i class="fa fa-comment"></i> {% trans "Notes" %}
+          </div>
+        </div>
+
+        <!-- FORM -->
+        <form method="post" id="reservation-form">
+          {% csrf_token %}
+
+          <!-- STEP 1 -->
+          <div class="res-step active" id="step-1">
+            <label>{% trans "Name" %}</label>
+            <input name="name" type="text" class="res-input" required>
+
+            <label>{% trans "Email" %}</label>
+            <input name="email" type="email" class="res-input" required>
+
+            <label>{% trans "Phone" %}</label>
+            <input name="phone" type="text" class="res-input" required>
+
+            <button type="button" class="res-next-btn" data-next="2">{% trans "Next" %}</button>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="res-step" id="step-2">
+            <label>{% trans "Date" %}</label>
+            <input name="date" type="date" class="res-input" required>
+
+            <label>{% trans "Time" %}</label>
+            <input name="time" type="time" class="res-input" required>
+
+            <label>{% trans "Guests" %}</label>
+            <input name="guests" type="number" min="1" max="20" class="res-input" required>
+
+            <div class="res-step-actions">
+              <button type="button" class="res-prev-btn" data-prev="1">{% trans "Back" %}</button>
+              <button type="button" class="res-next-btn" data-next="3">{% trans "Next" %}</button>
+            </div>
+          </div>
+
+          <!-- STEP 3 -->
+          <div class="res-step" id="step-3">
+            <label>{% trans "Special Requests" %}</label>
+            <textarea name="special_requests" class="res-textarea"></textarea>
+
+            <label>{% trans "Allergies" %}</label>
+            <textarea name="allergies" class="res-textarea"></textarea>
+
+            <label>{% trans "Comments" %}</label>
+            <textarea name="comments" class="res-textarea"></textarea>
+
+            <div class="res-step-actions">
+              <button type="button" class="res-prev-btn" data-prev="2">{% trans "Back" %}</button>
+              <button type="submit" class="res-submit-btn">{% trans "Submit Reservation" %}</button>
+            </div>
+          </div>
+
+        </form>
+
+      </div>
+
       {% else %}
-        <a class="btn btn-success w-100" href="{% url 'account_login' %}?next={{ request.path }}">
-          {% trans "Log in to reserve" %}
-        </a>
+      <a class="btn btn-success w-100" href="{% url 'account_login' %}?next={{ request.path }}">
+        {% trans "Log in to reserve" %}
+      </a>
       {% endif %}
     </div>
   </div>
@@ -109,7 +182,7 @@ if (lat && lng) {
   L.marker([lat, lng]).addTo(map);
 }
 
-// TABS
+// LEFT SIDE TABS
 const tabs = document.querySelectorAll('.tab');
 const contents = document.querySelectorAll('.tab-content');
 tabs.forEach(tab => {
@@ -118,6 +191,50 @@ tabs.forEach(tab => {
     contents.forEach(c => c.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+// RESERVATION MULTI-STEP FORM
+const resTabs = document.querySelectorAll('.res-step-tab');
+const resSteps = document.querySelectorAll('.res-step');
+const nextBtns = document.querySelectorAll('.res-next-btn');
+const prevBtns = document.querySelectorAll('.res-prev-btn');
+
+function showResStep(stepNumber) {
+  resSteps.forEach(s => s.classList.remove('active'));
+  resTabs.forEach(t => t.classList.remove('active'));
+  document.querySelector(`#step-${stepNumber}`).classList.add('active');
+  document.querySelector(`.res-step-tab[data-step="${stepNumber}"]`).classList.add('active');
+}
+
+nextBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const next = btn.dataset.next;
+    const currentStep = btn.closest('.res-step');
+    const inputs = currentStep.querySelectorAll('input[required], textarea[required]');
+    for (let input of inputs) {
+      if (!input.value.trim()) {
+        input.classList.add("input-error");
+        return;
+      }
+      input.classList.remove("input-error");
+    }
+    document.querySelector(`.res-step-tab[data-step="${next}"]`).classList.remove("disabled");
+    showResStep(next);
+  });
+});
+
+prevBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const prev = btn.dataset.prev;
+    showResStep(prev);
+  });
+});
+
+resTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    if (tab.classList.contains('disabled')) return;
+    showResStep(tab.dataset.step);
   });
 });
 </script>
