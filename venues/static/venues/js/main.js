@@ -43,10 +43,54 @@ document.addEventListener('DOMContentLoaded', () => {
     styleDataTableControls();
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+        const tabs = document.querySelectorAll(".tabs button");
+        const tabContents = document.querySelectorAll(".tab-content > div");
 
-// window.addEventListener('resize', () => {
-//     preview.querySelectorAll('img').forEach(img => {
-//         const wrapperHeight = preview.clientHeight;
-//         img.style.maxHeight = wrapperHeight + 'px';
-//     });
-// });
+        const tabIdMap = {
+            "requests": "requests",
+            "history": "history",
+            "analytics": "analytics-tab",
+            "manage-venue": "manage-venue"
+        };
+
+        function activateTab(tabName, triggerClick = false) {
+            const targetId = tabIdMap[tabName];
+            if (!targetId) return;
+
+            if (triggerClick) {// If we want to simulate a REAL click
+                const btn = document.querySelector(`.tabs button[data-tab="${tabName}"]`);
+                if (btn) {
+                    btn.click(); // IMPORTANT!!! 
+                    return; 
+                }
+            }
+
+            // Fallback: manual activation
+            tabs.forEach(btn =>
+                btn.classList.toggle("active", btn.dataset.tab === tabName)
+            );
+            tabContents.forEach(content =>
+                content.classList.toggle("active", content.id === targetId)
+            );
+        }
+
+        // Load saved tab
+        const saved = localStorage.getItem("venue_active_tab");
+
+        if (saved && tabIdMap[saved]) {
+            // 🔥 Trigger actual click to load analytics charts or any dynamic content
+            activateTab(saved, true);
+        }
+
+        // Save tab on click
+        tabs.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const tabName = btn.dataset.tab;
+                localStorage.setItem("venue_active_tab", tabName);
+            });
+        });
+
+    }, 100);  // ensures other JS has already set up event listeners
+});
