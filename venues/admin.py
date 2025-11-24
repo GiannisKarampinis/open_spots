@@ -109,9 +109,9 @@ class TableAdmin(admin.ModelAdmin):
 
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
-    list_display    = ('venue', 'first_name', 'last_name', 'email', 'date', 'time', 'guests', 'status', 'table')
+    list_display    = ('venue', 'name', 'email', 'date', 'time', 'guests', 'status', 'table')
     list_filter     = ('venue', 'status', 'date')
-    search_fields   = ('first_name', 'last_name', 'email', 'venue__name')
+    search_fields   = ('name', 'email', 'venue__name')
     ordering        = ('-date', 'time')
 
     def get_queryset(self, request):

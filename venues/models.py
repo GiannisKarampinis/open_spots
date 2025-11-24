@@ -153,8 +153,7 @@ class Reservation(models.Model):
     
     user            = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
     venue           = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='reservations')
-    first_name      = models.CharField(max_length=100)
-    last_name       = models.CharField(max_length=100)
+    name            = models.CharField(max_length=100)
     email           = models.EmailField()
     phone           = models.CharField(max_length=20)
     date            = models.DateField()
@@ -207,7 +206,7 @@ class Reservation(models.Model):
         
     @property
     def full_name(self):
-        return f"{self.first_name} {self.last_name}" 
+        return f"{self.name}" 
 
     class Meta:
         ordering = ['-updated_at', '-created_at', 'time']

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-24 18:44+0000\n"
+"POT-Creation-Date: 2025-11-24 19:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Greek <EMAIL@ADDRESS>\n"
@@ -35,7 +35,7 @@ msgid "Username"
 msgstr "Όνομα χρήστη"
 
 #: accounts/forms.py:15 accounts/forms.py:43 accounts/forms.py:63
-#: accounts/forms.py:84 venues/forms.py:26
+#: accounts/forms.py:84 venues/forms.py:25
 #: venues/templates/venues/_manage_venue.html:43
 msgid "Email"
 msgstr "Email"
@@ -350,92 +350,88 @@ msgid "Time"
 msgstr "Ώρα"
 
 #: venues/forms.py:24
-msgid "First name"
+msgid "Name"
 msgstr "Όνομα"
 
-#: venues/forms.py:25
-msgid "Last name"
-msgstr "Επίθετο"
-
-#: venues/forms.py:27 venues/forms.py:82
+#: venues/forms.py:26 venues/forms.py:80
 #: venues/templates/venues/_manage_venue.html:47
 msgid "Phone"
 msgstr "Τηλέφωνο"
 
-#: venues/forms.py:28 venues/templates/venues/venue_dashboard.html:106
+#: venues/forms.py:27 venues/templates/venues/venue_dashboard.html:106
 #: venues/templates/venues/venue_dashboard.html:133
 #: venues/templates/venues/venue_dashboard.html:163
 msgid "Date"
 msgstr "Ημερομηνία"
 
-#: venues/forms.py:29
+#: venues/forms.py:28
 msgid "Number of guests"
 msgstr "Αριθμός Επισκεπτών"
 
-#: venues/forms.py:30
+#: venues/forms.py:29
 msgid "Special requests"
 msgstr "Ειδικά Αιτήματα"
 
-#: venues/forms.py:31
+#: venues/forms.py:30
 msgid "Allergies"
 msgstr "Αλλεργίες"
 
-#: venues/forms.py:32
+#: venues/forms.py:31
 msgid "Comments"
 msgstr "Σχόλια"
 
-#: venues/forms.py:62
+#: venues/forms.py:60
 msgid "Invalid reservation time selected."
 msgstr "Επιλέχθηκε λανθασμένη ώρα κράτησης"
 
-#: venues/forms.py:75 venues/forms.py:91
+#: venues/forms.py:73 venues/forms.py:89
 #, fuzzy
 #| msgid "Venue Name"
 msgid "Venue name"
 msgstr "Όνομα Χώρου"
 
-#: venues/forms.py:76
+#: venues/forms.py:74
 #, fuzzy
 #| msgid "Venue Name"
 msgid "Venue type"
 msgstr "Όνομα Χώρου"
 
-#: venues/forms.py:77 venues/forms.py:92
+#: venues/forms.py:75 venues/forms.py:90
 #: venues/templates/venues/_manage_venue.html:32
 #: venues/templates/venues/venue_detail.html:39
 msgid "Location"
 msgstr "Τοποθεσία"
 
-#: venues/forms.py:78 venues/templates/venues/_manage_venue.html:37
+#: venues/forms.py:76 venues/templates/venues/_manage_venue.html:37
 msgid "Description"
 msgstr "Περιγραφή"
 
-#: venues/forms.py:79 venues/forms.py:93
+#: venues/forms.py:77 venues/forms.py:91
 msgid "Capacity"
 msgstr "Χωριτηκότητα"
 
-#: venues/forms.py:80
+#: venues/forms.py:78
 msgid "Admin name"
 msgstr "Όνομα Διαχειριστή"
 
-#: venues/forms.py:81
+#: venues/forms.py:79
 msgid "Admin email"
 msgstr "email Διαχειριστή"
 
-#: venues/forms.py:101
+#: venues/forms.py:99
 #, fuzzy
 #| msgid "Pending Reservation Requests"
 msgid "Move back to Reservation Requests"
 msgstr "Αιτήματα Κρατήσεων σε Εκκρεμότητα"
 
-#: venues/forms.py:102
+#: venues/forms.py:100
 msgid ""
 "Check this if you want to move this booking back to the Reservation Requests "
 "table."
 msgstr ""
 "Πάτα εδώ αν θέλεις να μεταφέρεις την κράτηση πίσω στα αιτήματα κρατήσεων"
 
-#: venues/forms.py:112
+#: venues/forms.py:110
 #, fuzzy
 #| msgid "Update Arrival Status"
 msgid "Arrival status"

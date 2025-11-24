@@ -17,12 +17,11 @@ class ReservationForm(forms.ModelForm):
     class Meta:
         model = Reservation
         fields = [
-            'first_name', 'last_name', 'email', 'phone', 'date', 'time',
+            'name', 'email', 'phone', 'date', 'time',
             'guests', 'special_requests', 'allergies', 'comments'
         ]
         labels = {
-            'first_name': _("First name"),
-            'last_name': _("Last name"),
+            'name': _("Name"),
             'email': _("Email"),
             'phone': _("Phone"),
             'date': _("Date"),
@@ -32,8 +31,7 @@ class ReservationForm(forms.ModelForm):
             'comments': _("Comments"),
         }
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'date': forms.DateInput(attrs={
