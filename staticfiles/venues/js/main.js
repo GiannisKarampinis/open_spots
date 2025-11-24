@@ -59,12 +59,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const targetId = tabIdMap[tabName];
             if (!targetId) return;
 
-            // If we want to simulate a REAL click
-            if (triggerClick) {
+            if (triggerClick) {// If we want to simulate a REAL click
                 const btn = document.querySelector(`.tabs button[data-tab="${tabName}"]`);
                 if (btn) {
-                    console.log("Triggering real click for tab:", tabName);
-                    btn.click();      // IMPORTANT!!!
+                    btn.click(); // IMPORTANT!!! 
                     return; 
                 }
             }
