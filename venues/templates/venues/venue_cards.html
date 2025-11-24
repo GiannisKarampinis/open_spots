@@ -1,15 +1,20 @@
 <div class="venue-card {% if venue.is_full %}full{% else %}available{% endif %}">
-    {% with first_image=venue.images.all|first %}
+    
+    {% with first_image=venue.get_first_image %}
         {% if first_image %}
             <img src="{{ first_image.image.url }}" alt="{{ venue.name }}">
         {% endif %}
     {% endwith %}
+
     <h3>{{ venue.name }}</h3>
+
     <div class="venue-info">
+
         <div class="venue-info-item">
             <i class="fa-solid fa-location-dot"></i>
             <span>{{ venue.location }}</span>
         </div>
+
         <div class="venue-info-item">
             <i class="fa-solid fa-chair"></i>
             <span>
@@ -20,9 +25,11 @@
                 {% endif %}
             </span>
         </div>
+
         <div class="venue-info-item rating">
             <i class="fa-solid fa-star"></i>
             <span>{{ venue.average_rating|floatformat:1 }}</span>
         </div>
+
     </div>
 </div>

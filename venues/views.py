@@ -15,13 +15,13 @@ from django.http                     import HttpResponse, Http404, JsonResponse
 from django.template.loader          import render_to_string
 from django.db                       import transaction, models
 from django.urls                     import reverse
-from .models                         import Venue, VenueUpdateRequest, VenueVisit, Reservation, VenueUpdateImage, VenueUpdateMenuImage, VenueImage, VenueMenuImage
+from .models                         import Venue, VenueUpdateRequest, VenueVisit, Reservation, VenueImage, VenueMenuImage
 from .forms                          import ReservationForm, VenueApplicationForm, ArrivalStatusForm
 from .utils                          import *
 from .decorators                     import venue_admin_required
 from venues.services.emails          import send_reservation_notification, send_new_venue_application_email
 from django.views.decorators.csrf    import csrf_exempt
-
+from django.http                     import JsonResponse
 import  json
 import  plotly.graph_objs            as go
 
@@ -319,6 +319,8 @@ def venue_dashboard(request, venue_id):
 
     context = {
         'venue':                    venue,
+        'venue_images':             venue.images.filter(approved=True, marked_for_deletion=False).order_by("order"),
+        'menu_images':              venue.menu_images.filter(approved=True, marked_for_deletion=False).order_by("order"),
         'upcoming_reservations':    upcoming_reservations,
         'past_reservations':        past_reservations,
         'arrivals':                 arrivals,
@@ -762,49 +764,89 @@ def submit_venue_update(request, venue_id):
 
     if request.method == "POST":
         update_request = VenueUpdateRequest.objects.create(
-            venue            = venue,
-            submitted_by     = request.user,
-            name             = request.POST.get("name"),
-            kind             = request.POST.get("kind"),
-            location         = request.POST.get("location"),
-            email            = request.POST.get("email"),
-            phone            = request.POST.get("phone"),
-            description      = request.POST.get("description"),
-            available_tables = int(request.POST.get("available_tables") or 0),
+            venue        = venue,
+            submitted_by = request.user,
+            name         = request.POST.get("name"),
+            kind         = request.POST.get("kind"),
+            location     = request.POST.get("location"),
+            email        = request.POST.get("email"),
+            phone        = request.POST.get("phone"),
+            description  = request.POST.get("description"),
         )
 
-        # ---- Handle venue images ----
-        # Add newly uploaded images
-        for img in request.FILES.getlist("venue_images"):
-            VenueUpdateImage.objects.create(update_request=update_request, image=img)
+        # ========== 1. Venue Images ==========
+        venue_files = request.FILES.getlist("venue_images")
+        venue_file_map = {f"new-{i}": file for i, file in enumerate(venue_files)}
 
-        # Snapshot existing images currently displayed on front-end
-        # Assume front-end sends IDs of images still visible (can be via JS)
-        visible_ids_str = request.POST.get('visible_venue_image_ids[]', '')  # "4,5"
-        visible_ids = [int(i) for i in visible_ids_str.split(',') if i]  # [4, 5]
-        for img in venue.images.filter(id__in=visible_ids):
-            # just reference the same file, no new upload
-            VenueUpdateImage.objects.create(
-                update_request=update_request,
-                image=img.image,  # points to same file
-            )
+        visible_venue_ids = request.POST.get("visible_venue_image_ids[]", "")
+        venue_sequence = visible_venue_ids.split(",") if visible_venue_ids else []
 
-        # ---- Handle menu images similarly ----
-        for img in request.FILES.getlist("menu_images"):
-            VenueUpdateMenuImage.objects.create(update_request=update_request, image=img)
+        updated_venue_images = []
+        for order_index, img_id in enumerate(venue_sequence):
+            if img_id.startswith("new-"):
+                # New upload → create VenueImage
+                file = venue_file_map.get(img_id)
+                if file:
+                    new_img = VenueImage.objects.create(
+                        venue=venue,
+                        image=file,
+                        approved=False,
+                        marked_for_deletion=False,
+                        order=order_index
+                    )
+                    updated_venue_images.append(new_img)
+            else:
+                try:
+                    existing_img = VenueImage.objects.get(
+                        pk=int(img_id), venue=venue, approved=True
+                    )
+                    existing_img.order = order_index
+                    existing_img.marked_for_deletion = False
+                    existing_img.save(update_fields=["order", "marked_for_deletion"])
+                    updated_venue_images.append(existing_img)
+                except VenueImage.DoesNotExist:
+                    continue
 
-        visible_menu_ids_str = request.POST.get('visible_venue_image_ids[]', '')  # "4,5"
-        visible_menu_ids = [int(i) for i in visible_menu_ids_str.split(',') if i]  # [4, 5]
-        for img in venue.menu_images.filter(id__in=visible_menu_ids):
-            VenueUpdateMenuImage.objects.create(
-                update_request=update_request,
-                image=img.image,
-            )
+        # Mark any other approved images as deleted
+        VenueImage.objects.filter(
+            venue=venue, approved=True
+        ).exclude(id__in=[img.id for img in updated_venue_images]).update(marked_for_deletion=True)
 
-        # Optional: track removed images
-        # update_request.removed_venue_image_ids = request.POST.getlist("removed_venue_image_ids[]")
-        # update_request.removed_menu_image_ids  = request.POST.getlist("removed_menu_image_ids[]")
-        # update_request.save()
+        # ========== 2. Menu Images ==========
+        menu_files = request.FILES.getlist("menu_images")
+        menu_file_map = {f"new-{i}": file for i, file in enumerate(menu_files)}
+
+        visible_menu_ids = request.POST.get("visible_menu_image_ids[]", "")
+        menu_sequence = visible_menu_ids.split(",") if visible_menu_ids else []
+
+        updated_menu_images = []
+        for order_index, img_id in enumerate(menu_sequence):
+            if img_id.startswith("new-"):
+                file = menu_file_map.get(img_id)
+                if file:
+                    new_img = VenueMenuImage.objects.create(
+                        venue=venue,
+                        image=file,
+                        approved=False,
+                        marked_for_deletion=False,
+                        order=order_index
+                    )
+                    updated_menu_images.append(new_img)
+            else:
+                try:
+                    existing_img = VenueMenuImage.objects.get(
+                        pk=int(img_id), venue=venue, approved=True
+                    )
+                    existing_img.order = order_index
+                    existing_img.marked_for_deletion = False
+                    existing_img.save(update_fields=["order", "marked_for_deletion"])
+                    updated_menu_images.append(existing_img)
+                except VenueMenuImage.DoesNotExist:
+                    continue
+
+        VenueMenuImage.objects.filter(
+            venue=venue, approved=True
+        ).exclude(id__in=[img.id for img in updated_menu_images]).update(marked_for_deletion=True)
 
         return render(request, "venues/_update_venue_success.html")
 
@@ -813,23 +855,65 @@ def submit_venue_update(request, venue_id):
 ###########################################################################################
 
 ###########################################################################################
-@csrf_exempt
-def update_image_order(request, venue_id):
-    if request.method == "POST":
+def reorder_images(request, venue_id, model_cls):
+    print("1 >>>>>>>>>>>>>>>")
+    if request.method != "POST":
+        return JsonResponse({"status": "invalid request"}, status=400)
+
+    try:
         data = json.loads(request.body)
         sequence = data.get("sequence", [])
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "invalid JSON"}, status=400)
 
-        for index, img_id in enumerate(sequence):
-            try:
-                img = VenueImage.objects.get(id=img_id, venue_id=venue_id)
-                img.order = index
-                img.save()
-            except VenueImage.DoesNotExist:
-                continue
+    # 🔒 Ownership Check
+    venue = model_cls._meta.model.objects.model._meta.get_field('venue').related_model.objects.get(id=venue_id)
+    if venue.owner != request.user:
+        return JsonResponse({"status": "forbidden"}, status=403)
 
-        return JsonResponse({"status": "success", "updated_order": sequence})
+    # 🚦 Throttle Check
+    throttle_key = f"reorder:{model_cls.__name__}:{venue_id}"
+    if is_throttled(request.user, throttle_key, limit=5, period=60):
+        return JsonResponse({
+            "status": "throttled",
+            "message": "Too many reorder attempts. Please try again in a minute."
+        }, status=429)
 
-    return JsonResponse({"status": "invalid request"}, status=400)
+    updated = []
+    for index, img_id in enumerate(sequence):
+        try:
+            img = model_cls.objects.get(
+                id=img_id,
+                venue_id=venue_id,
+                approved=True,
+                marked_for_deletion=False
+            )
+            img.order = index
+            img.save(update_fields=["order"])
+            updated.append(img_id)
+        except model_cls.DoesNotExist:
+            continue
+
+    # 📝 Log
+    print(f"[ImageOrder] {request.user} reordered {model_cls.__name__} for venue {venue_id}: {updated}")
+
+    return JsonResponse({"status": "success", "updated_order": updated})
+
+
+@csrf_exempt
+@require_POST
+@login_required
+@venue_admin_required
+def update_image_order(request, venue_id):
+    return reorder_images(request, venue_id, VenueImage)
+
+
+@csrf_exempt
+@require_POST
+@login_required
+@venue_admin_required
+def update_menu_image_order(request, venue_id):
+    return reorder_images(request, venue_id, VenueMenuImage)
 
 ###########################################################################################
 

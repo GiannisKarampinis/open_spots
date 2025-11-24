@@ -1,57 +1,16 @@
 {% load i18n %}
 
 <div class="container mt-5" id="manage-venue-form">
-
-    <!-- 🟩 NON-SENSITIVE SECTION -->
-    <div class="venue-form-card">
-      <div class="section-card mb-4">
-        <button class="section-header" type="button" data-bs-target="#nonSensitiveSection" aria-expanded="true">
-          <h5 class="mb-0">{% trans "Publicly Adjustable Information" %}</h5>
-          <span class="toggle-icon">▾</span>
-        </button>
-      </div> 
-
-      <div id="nonSensitiveSection" class="collapse show section-body">
-          
-          <!-- Image Sequence (active now) -->
-          <div class="mt-4">
-            <p class="small text-muted mb-2">{% trans "Drag and drop images to change their order as they appear publicly." %}</p>
-
-            <div id="sortable-image-sequence" class="image-sequence-grid" aria-label="{% trans 'Sortable image list' %}"
-              data-update-url="{% url 'update_image_order' venue.id %}"
-              data-csrf-token="{{ csrf_token }}">
-              {% for img in venue.images.all %}
-                <div class="sortable-thumb" data-id="{{ img.id }}" role="listitem" title="{% trans 'Drag to reorder' %}">
-                  <img src="{{ img.image.url }}" alt="{% trans 'Venue image' %}" width="100" height="80">
-                    {% if forloop.first %}
-                      <span class="profile-label">{% trans "Profile" %}</span>
-                    {% endif %}
-                </div>
-              {% empty %}
-                <p class="text-muted">{% trans "No images uploaded yet." %}</p>
-              {% endfor %}
-            </div>
-
-            <input type="hidden" name="image_sequence" id="image_sequence" value="">
-          </div>
-
-        </div>
-      </div>
-    </div>
-
     <!-- 🔒 SENSITIVE & CONTACT INFORMATION -->
     <form method="POST" enctype="multipart/form-data" class="venue-form-card" action="{% url 'submit_venue_update' venue.id %}">
         {% csrf_token %}
 
       <div class="section-card mb-4">
-        <button class="section-header" type="button"
-                data-bs-target="#sensitiveSection" aria-expanded="false">
+        <div class="section-header">
           <h5 class="mb-0">{% trans "Sensitive & Contact Information" %}</h5>
-          <span class="toggle-icon">▸</span>
-        </button>
+        </div>
 
-        <div id="sensitiveSection" class="collapse section-body">
-        
+        <div id="sensitiveSection" class="section-body show">
           <div class="grid">
             <div>
               <label for="name">{% trans "Venue Name" %}</label>
@@ -91,16 +50,29 @@
         </div>
 
         <div class="file-upload-group">
-          <div id="venue-preview" class="file-preview">
-            {% for img in venue.images.all %}
-              <div class="thumb-wrapper" data-existing="true" data-id="{{ img.id }}">
+          <div  id              = "venue-preview" 
+                class           = "file-preview"
+                data-update-url = "{% url 'update_image_order' venue.id %}"
+                data-csrf-token = "{{ csrf_token }}">
+
+          {% for img in venue_images %}
+            
+            {% if img.approved and not img.marked_for_deletion %}
+              <div class="thumb-wrapper"
+                  data-existing="true"
+                  data-id="{{ img.id }}"
+                  data-approved="true"
+                  data-deleted="false">
+                  
                 <img src="{{ img.image.url }}" width="80" alt="{% trans 'Venue preview' %}">
                 <button type="button" class="remove-btn">&times;</button>
               </div>
-            {% empty %}
-              <span class="no-files-msg"> {% trans "No files selected" %} </span>
-            {% endfor %}
-          </div>
+            {% endif %}
+          
+          {% empty %}
+            <span class="no-files-msg"> {% trans "No files selected" %} </span>
+          {% endfor %}
+        </div>
 
           <label class="custom-file-btn">
             {% trans "Select Venue Images" %}
@@ -109,14 +81,27 @@
         </div>
 
         <div class="file-upload-group">
-          <div id="menu-preview" class="file-preview">
-            {% for img in venue.menu_images.all %}
-              <div class="thumb-wrapper" data-existing="true" data-id="{{ img.id }}">
-                <img src="{{ img.image.url }}" width="80" alt="{% trans 'Menu preview' %}">
-                <button type="button" class="remove-btn">&times;</button>
-              </div>
+          <div  id                = "menu-preview" 
+                class             = "file-preview"
+                data-update-url   = "{% url 'update_menu_image_order' venue.id %}"
+                data-csrf-token   = "{{ csrf_token }}">
+
+            {% for img in menu_images %}
+              
+              {% if img.approved and not img.marked_for_deletion %}
+                <div class="thumb-wrapper"
+                    data-existing="true"
+                    data-id="{{ img.id }}"
+                    data-approved="true"
+                    data-deleted="false">
+                    
+                  <img src="{{ img.image.url }}" width="80" alt="{% trans 'Menu preview' %}">
+                  <button type="button" class="remove-btn">&times;</button>
+                </div>
+              {% endif %}
+
             {% empty %}
-              {% trans "No files selected" %}
+              <span class="no-files-msg"> {% trans "No files selected" %} </span>
             {% endfor %}
           </div>
 
@@ -269,6 +254,5 @@
     border-color: #007bff !important;
     transform: scale(1.05);
 }
-
 
 </style>

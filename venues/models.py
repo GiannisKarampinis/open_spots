@@ -14,6 +14,7 @@ from django.utils.crypto                import get_random_string
 from django.contrib.auth.models         import Permission
 from django.contrib.contenttypes.models import ContentType
 #from emails_manager.utils               import send_verification_code
+from django.db.models                   import JSONField  # Django 3.1+ has models.JSONField; import whichever is appropriate
 from .utils                             import get_coords_nominatim, convert_image_to_webp
 
 
@@ -33,7 +34,7 @@ class Venue(models.Model):
     kind                = models.CharField(max_length=20, choices=VENUE_TYPES, default='other')
     location            = models.CharField(max_length=255)
     description         = models.TextField(blank=True)
-    image               = models.ImageField(upload_to='media/venues/', blank=True, null=True)
+    image               = models.ImageField(upload_to='venues/', blank=True, null=True)
     average_rating      = models.FloatField(default=0.0)
     is_full             = models.BooleanField(default=False)
     latitude            = models.DecimalField(max_digits=18, decimal_places=12, blank=True, null=True)
@@ -67,6 +68,11 @@ class Venue(models.Model):
             time__lt=overlap_end.time()
         ).exists()
 
+    def get_first_image(self):
+        return self.images.filter(
+            approved=True,
+            marked_for_deletion=False
+        ).order_by("order").first()
 
     class Meta:
         ordering = ['name']
@@ -336,7 +342,6 @@ class VenueUpdateRequest(models.Model):
     email               = models.EmailField(null=True, blank=True)
     phone               = models.CharField(max_length=20, blank=True, null=True)
     description         = models.TextField(blank=True, null=True)
-    available_tables    = models.PositiveIntegerField(default=0)
     
     APPROVAL_STATUS_CHOICES = [
         ('pending',     'Pending'),
@@ -349,6 +354,9 @@ class VenueUpdateRequest(models.Model):
     reviewed_at         = models.DateTimeField(null=True, blank=True)
     submitted_at        = models.DateTimeField(auto_now_add=True)
         
+    # Backup snapshot to allow rollback. Requires migration.
+    backup_data         = JSONField(null=True, blank=True)    
+        
     def __str__(self):
         return f"Venue Update Request for {self.venue.name} (status: {self.approval_status})"
 
@@ -358,10 +366,7 @@ class VenueUpdateRequest(models.Model):
         changes = {}
 
         # List fields you want to track
-        fields_to_check = [
-            "name", "kind", "location", "email",
-            "phone", "description"
-        ]
+        fields_to_check = [ "name", "kind", "location", "email", "phone", "description" ]
 
         for field in fields_to_check:
             old_value = getattr(venue, field)
@@ -369,17 +374,28 @@ class VenueUpdateRequest(models.Model):
             if old_value != new_value:
                 changes[field] = (old_value, new_value)
 
-        # Track images
-        old_images = [img.image.url for img in venue.images.all()]
-        new_images = [img.image.url for img in self.images.all()]
-        if old_images != new_images:
-            changes["images"] = (old_images, new_images)
 
-        # Track menu images
-        old_menu = [img.image.url for img in venue.menu_images.all()]
-        new_menu = [img.image.url for img in self.menu_images.all()]
-        if old_menu != new_menu:
-            changes["menu_images"] = (old_menu, new_menu)
+        existing_images = venue.images.filter(approved=True, marked_for_deletion=False)
+        new_images      = venue.images.filter(approved=False)   # Newly uploaded
+        deleted_images  = venue.images.filter(marked_for_deletion=True)
+        
+        # Only report changes if sets differ
+        if new_images.exists():
+            changes["new_images"] = [img.image.url for img in new_images]
+
+        if deleted_images.exists():
+            changes["deleted_images"] = [img.image.url for img in deleted_images]
+
+        # Menu images
+        existing_menu = venue.menu_images.filter(approved=True, marked_for_deletion=False)
+        new_menu      = venue.menu_images.filter(approved=False)
+        deleted_menu  = venue.menu_images.filter(marked_for_deletion=True)
+
+        if new_menu.exists():
+            changes["new_menu_images"] = [img.image.url for img in new_menu]
+
+        if deleted_menu.exists():
+            changes["deleted_menu_images"] = [img.image.url for img in deleted_menu]
 
         return changes
     
@@ -390,23 +406,19 @@ class VenueUpdateRequest(models.Model):
 
 ###########################################################################################
 def venue_image_upload(instance, filename):
-    if hasattr(instance, 'update_request'):
-        venue_id = instance.update_request.venue.id # For VenueUpdateImage
-    else:
-        venue_id = instance.venue.id # For VenueImage
-    return f'venues/{venue_id}/images/{filename}'
+    return f"venues/{instance.venue.id}/images/{filename}"
 
 def menu_image_upload(instance, filename):
-    if hasattr(instance, 'update_request'):
-        venue_id = instance.update_request.venue.id
-    else:
-        venue_id = instance.venue.id
-    return f'venues/{venue_id}/menu/{filename}'
+    return f"venues/{instance.venue.id}/menu/{filename}"
 
 ###########################################################################################
 
 ###########################################################################################
 class BaseWebpImageModel(models.Model):
+    """
+    Abstract base model that ensures images are converted to webp only if changed.
+    Child models must declare their own `image = models.ImageField(upload_to=...)`.
+    """
     image = models.ImageField(upload_to="")  # overridden by children
 
     class Meta:
@@ -414,15 +426,42 @@ class BaseWebpImageModel(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Store original filename to detect changes
-        self._original_image_name = self.image.name
+        self._original_image_name = self.image.name # Store initial name to detect changes
 
     def image_has_changed(self):
-        return self.image and self.image.name != self._original_image_name
+        """
+        Detect real file changes:
+        - New file? convert.
+        - Same file name? No conversion.
+        - Already a .webp file coming from copying? No conversion.
+        """
+        if not self.image:
+            return False
+
+        new_name = os.path.basename(self.image.name)
+        old_name = os.path.basename(self._original_image_name or "")
+
+        # Case 1: New object → convert once
+        if not old_name:
+            return True
+
+        # Case 2: Same basename → same file → NO conversion
+        if new_name == old_name:
+            return False
+
+        # Case 3: Already .webp → do NOT reconvert
+        if new_name.endswith(".webp"):
+            return False
+
+        return True
 
     def convert_and_save_webp(self):
-        base_name = os.path.splitext(os.path.basename(self.image.name))[0]
+        uploaded_name = os.path.basename(self.image.name)
+        base_name = os.path.splitext(uploaded_name)[0]
+
         webp_file = convert_image_to_webp(self.image)
+
+        # Save using cleaned filename (no directories!)
         self.image.save(f"{base_name}.webp", webp_file, save=False)
 
     def save(self, *args, **kwargs):
@@ -436,46 +475,36 @@ class BaseWebpImageModel(models.Model):
 
 ###########################################################################################
 class VenueImage(BaseWebpImageModel):
-    venue = models.ForeignKey(Venue, on_delete = models.CASCADE, related_name = 'images')
-    image = models.ImageField(upload_to = venue_image_upload)
-    order = models.PositiveIntegerField(default = 0)
+    venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to=venue_image_upload)
+    order = models.PositiveIntegerField(default=0)
+
+    # NEW FIELDS
+    approved = models.BooleanField(default=True)
+    marked_for_deletion = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
         return f"{self.venue.name} - Image"
-
 ###########################################################################################
 
 ###########################################################################################
 class VenueMenuImage(BaseWebpImageModel):
-    venue = models.ForeignKey(Venue, on_delete = models.CASCADE, related_name = 'menu_images')
-    image = models.ImageField(upload_to = menu_image_upload)
-    
+    venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='menu_images')
+    image = models.ImageField(upload_to=menu_image_upload)
+    order = models.PositiveIntegerField(default=0)
+
+    # NEW FIELDS
+    approved = models.BooleanField(default=True)
+    marked_for_deletion = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['order']
+
     def __str__(self):
         return f"{self.venue.name} - Menu Image"
-
-###########################################################################################
-
-###########################################################################################
-class VenueUpdateImage(BaseWebpImageModel):
-    update_request  = models.ForeignKey(VenueUpdateRequest, on_delete = models.CASCADE, related_name = 'images')
-    image           = models.ImageField(upload_to = venue_image_upload)
-    order           = models.PositiveIntegerField(default = 0)
-    
-    def __str__(self):
-        return f"{self.update_request.venue.name} - Image"
-
-###########################################################################################
-
-###########################################################################################
-class VenueUpdateMenuImage(BaseWebpImageModel):
-    update_request  = models.ForeignKey(VenueUpdateRequest, on_delete = models.CASCADE, related_name = 'menu_images')
-    image           = models.ImageField(upload_to = menu_image_upload)
-
-    def __str__(self):
-        return f"{self.update_request.venue.name} - Menu Image"    
 
 ###########################################################################################
 

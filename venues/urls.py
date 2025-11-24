@@ -31,6 +31,6 @@ urlpatterns = [
     path("reservations/<int:pk>/edit/",                                             views.edit_reservation,                     name="edit_reservation"),
     path('venue/<int:venue_id>/update/',                                            views.submit_venue_update,                  name='submit_venue_update'),
     path("venue/<int:venue_id>/update-order/",                                      views.update_image_order,                   name="update_image_order"),
-
+    path("venue/<int:venue_id>/update-menu-order/",                                 views.update_menu_image_order,              name="update_menu_image_order"),
 ]
 

@@ -9,6 +9,8 @@ from django.core.files.base         import ContentFile
 from typing                         import Tuple, Optional
 from functools                      import lru_cache
 from django.db                      import IntegrityError
+from django.core.cache              import cache
+from time                           import time as current_timestamp
 
 import  logging
 import  requests
@@ -345,3 +347,25 @@ def log_venue_visit(venue, request):
 ###########################################################################################
 
 ###########################################################################################
+def is_throttled(user, key, limit=5, period=60):
+    """
+    Simple throttle using Django cache.
+    Allows `limit` actions per `period` seconds for each user and key.
+    """
+    if not user.is_authenticated:
+        return False  # Or optionally throttle anonymous differently
+
+    cache_key = f"throttle:{key}:{user.id}"
+    now = current_timestamp()
+    window = cache.get(cache_key, [])
+
+    # Filter out old timestamps
+    window = [ts for ts in window if now - ts < period]
+
+    if len(window) >= limit:
+        return True
+
+    window.append(now)
+    cache.set(cache_key, window, timeout=period)
+    return False
+

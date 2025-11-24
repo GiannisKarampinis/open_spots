@@ -2,9 +2,9 @@ from django.utils               import timezone
 from django.contrib             import admin
 from django.utils.html          import format_html
 from django.core.files.base     import ContentFile
-from .models                    import Venue, Table, Reservation, VenueApplication, VenueUpdateRequest, VenueVisit, VenueUpdateImage, VenueUpdateMenuImage, VenueImage, VenueMenuImage
+from .models                    import Venue, Table, Reservation, VenueApplication, VenueUpdateRequest, VenueVisit, VenueImage, VenueMenuImage
 from django.utils.html          import format_html
-
+import os
 
 class TableInline(admin.TabularInline):
     model = Table
@@ -184,58 +184,69 @@ class VenueVisitAdmin(admin.ModelAdmin):
             return super().get_model_perms(request)
         return {}
 
-class VenueUpdateImageInline(admin.TabularInline):
-    model = VenueUpdateImage
-    extra = 0
-    readonly_fields = ("image_tag",)
-    fields = ("image_tag",)
-    
-    def image_tag(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" width="100" />', obj.image.url)
-        return "-"
-    image_tag.short_description = "Image"
-
-class VenueUpdateMenuImageInline(admin.TabularInline):
-    model = VenueUpdateMenuImage
-    extra = 0
-    readonly_fields = ("image_tag",)
-    fields = ("image_tag",)
-    
-    def image_tag(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" width="100" />', obj.image.url)
-        return "-"
-    image_tag.short_description = "Menu Image"
 
 @admin.register(VenueUpdateRequest)
 class VenueUpdateRequestAdmin(admin.ModelAdmin):
     list_display    = ("venue", "submitted_by", "approval_status", "submitted_at", "preview_changes")
     list_filter     = ("approval_status",)
     actions         = ["approve_requests", "reject_requests"]
-    inlines         = [ VenueUpdateImageInline, VenueUpdateMenuImageInline ]
 
     def preview_changes(self, obj):
-        changes = obj.get_changes()
-        if not changes:
-            return "No changes"
+        venue = obj.venue
 
-        html = "<ul style='margin:0; padding-left:1rem;'>"
-        for field, (old, new) in changes.items():
-            if field in ["images", "menu_images"]:
-                # Display images as thumbnails
-                html += f"<li><b>{field}</b>: "
-                for url in new:  # new is a list of image URLs
-                    html += f'<img src="{url}" width="50" style="margin:2px;" />'
-                html += "</li>"
-            else:
-                html += f"<li><b>{field}</b>: <span style='color:red;'>{old}</span> ➝ <span style='color:green;'>{new}</span></li>"
-        html += "</ul>"
+        html = "<h3>FIELD CHANGES</h3>"
+
+        for field in ["name", "kind", "location", "email", "phone", "description"]:
+            venue_val = getattr(venue, field)
+            req_val = getattr(obj, field)
+
+            if venue_val != req_val:
+                html += f"<b>{field.title()} changed:</b> {venue_val} → <span style='color: green;'>{req_val}</span><br>"
+
+        # ---------------------------------------------------------
+        # IMAGE CHANGES
+        # ---------------------------------------------------------
+        html += "<h3>VENUE IMAGES</h3>"
+
+        # Existing approved images
+        html += "<b>Approved Images:</b><br>"
+        for img in venue.images.filter(approved=True, marked_for_deletion=False).order_by("order"):
+            html += f'<img src="{img.image.url}" width="60" style="margin:2px; border:1px solid #ccc;">'
+
+        # New → approved=False
+        html += "<br><b>Newly Added Images (Pending Approval):</b><br>"
+        for img in venue.images.filter(approved=False, marked_for_deletion=False):
+            html += f'<img src="{img.image.url}" width="60" style="margin:2px; border:2px solid green;">'
+
+        # Deleted → marked_for_deletion=True
+        html += "<br><b>Images Marked for Deletion:</b><br>"
+        for img in venue.images.filter(marked_for_deletion=True):
+            html += f'<img src="{img.image.url}" width="60" style="margin:2px; opacity:0.4; border:2px solid red;">'
+
+        # ---------------------------------------------------------
+        # MENU IMAGES
+        # ---------------------------------------------------------
+        html += "<h3>MENU IMAGES</h3>"
+
+        html += "<b>Approved Menu Images:</b><br>"
+        for img in venue.menu_images.filter(approved=True, marked_for_deletion=False).order_by("order"):
+            html += f'<img src="{img.image.url}" width="60" style="margin:2px; border:1px solid #ccc;">'
+
+        html += "<br><b>New Menu Images (Pending Approval):</b><br>"
+        for img in venue.menu_images.filter(approved=False, marked_for_deletion=False):
+            html += f'<img src="{img.image.url}" width="60" style="margin:2px; border:2px solid green;">'
+
+        html += "<br><b>Menu Images Marked for Deletion:</b><br>"
+        for img in venue.menu_images.filter(marked_for_deletion=True):
+            html += f'<img src="{img.image.url}" width="60" style="margin:2px; opacity:0.4; border:2px solid red;">'
 
         return format_html(html)
 
     preview_changes.short_description = "Proposed Changes"
 
+    # ===============================================================================
+    # APPROVE REQUEST
+    # ===============================================================================
     def approve_requests(self, request, queryset):
         pending_requests = queryset.filter(approval_status="pending")
         approved_count = 0
@@ -243,37 +254,44 @@ class VenueUpdateRequestAdmin(admin.ModelAdmin):
         for update in pending_requests:
             venue = update.venue
 
-            # ----------------------------
-            # (1) COPY ALL TEXT FIELDS
-            # ----------------------------
+            # 1) APPLY TEXT FIELD UPDATES
             for field in ["name", "kind", "location", "email", "phone", "description"]:
                 setattr(venue, field, getattr(update, field))
             venue.save()
 
-            # ----------------------------
-            # (2) DELETE ALL EXISTING VENUE IMAGES
-            # ----------------------------
-            venue.images.all().delete()          # VenueImage
-            venue.menu_images.all().delete()     # VenueMenuImage
+            # ====================================================
+            # 2) VENUE IMAGES
+            # ====================================================
 
-            # ----------------------------
-            # (3) ADD ONLY THE IMAGES FROM UPDATE REQUEST
-            # ----------------------------
-            for img in update.images.all():
-                VenueImage.objects.create(
-                    venue=venue,
-                    image=ContentFile(img.image.read(), name=img.image.name)
-                )
+            # (A) APPROVE NEW IMAGES
+            for img in venue.images.filter(approved=False, marked_for_deletion=False):
+                img.approved = True
+                img.save(update_fields=["approved"])
 
-            for menu_img in update.menu_images.all():
-                VenueMenuImage.objects.create(
-                    venue=venue,
-                    image=ContentFile(menu_img.image.read(), name=menu_img.image.name)
-                )
+            # (B) DO NOT DELETE — just keep marked_for_deletion=True
+            # No action needed; already marked
+            # OPTIONALLY: enforce approved=True for deleted images too:
+            for img in venue.images.filter(marked_for_deletion=True):
+                if not img.approved:
+                    img.approved = True
+                    img.save(update_fields=["approved"])
 
-            # ----------------------------
-            # (4) MARK REQUEST APPROVED
-            # ----------------------------
+            # ====================================================
+            # 3) MENU IMAGES
+            # ====================================================
+
+            for img in venue.menu_images.filter(approved=False, marked_for_deletion=False):
+                img.approved = True
+                img.save(update_fields=["approved"])
+
+            for img in venue.menu_images.filter(marked_for_deletion=True):
+                if not img.approved:
+                    img.approved = True
+                    img.save(update_fields=["approved"])
+
+            # ====================================================
+            # 4) MARK REQUEST APPROVED
+            # ====================================================
             update.approval_status = "approved"
             update.reviewed_by = request.user
             update.reviewed_at = timezone.now()
@@ -281,18 +299,37 @@ class VenueUpdateRequestAdmin(admin.ModelAdmin):
 
             approved_count += 1
 
-        self.message_user(request, f"{approved_count} venue update request(s) approved.")
-
+        self.message_user(request, f"{approved_count} update request(s) approved.")
 
     approve_requests.short_description = "Approve selected requests"
 
+    # ===============================================================================
+    # REJECT REQUEST
+    # ===============================================================================
     def reject_requests(self, request, queryset):
-       
-        queryset.filter(approval_status="pending").update(
-            approval_status="rejected",
-            reviewed_by=request.user,
-            reviewed_at=timezone.now()
-        )
-        self.message_user(request, f"{queryset.filter(approval_status='pending').count()} requests rejected.")
+
+        # REMOVE NEW IMAGES (approved=False)
+        for update in queryset.filter(approval_status="pending"):
+            venue = update.venue
+
+            venue.images.filter(approved=False).delete()
+            venue.menu_images.filter(approved=False).delete()
+
+            # UNMARK DELETED IMAGES
+            for img in venue.images.filter(marked_for_deletion=True):
+                img.marked_for_deletion = False
+                img.save()
+
+            for img in venue.menu_images.filter(marked_for_deletion=True):
+                img.marked_for_deletion = False
+                img.save()
+
+            # SET REQUEST REJECTED
+            update.approval_status = "rejected"
+            update.reviewed_by = request.user
+            update.reviewed_at = timezone.now()
+            update.save()
+
+        self.message_user(request, "Selected requests rejected.")
 
     reject_requests.short_description = "Reject selected requests"
