@@ -3,117 +3,123 @@
 {% load i18n %}
 
 {% block title %}{{ venue.name }} - OpenSpots{% endblock %}
-
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'venues/venue_detail.css' %}">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="{% static 'venues/venue_detail.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <!-- Title -->
-    <div class="venue-title me-auto">
-        <h2>{{ venue.name }}</h2>
+
+<!-- HERO SECTION -->
+<div class="hero-section" style="background-image:url('{% if venue.image %}{{ venue.image.url }}{% endif %}')">
+  <div class="hero-overlay"></div>
+  <div class="hero-title">
+    <h1>{{ venue.name }}</h1>
+    <p>{{ venue.location }}</p>
+  </div>
+</div>
+
+<div class="page-container">
+
+  <!-- LEFT SIDE -->
+  <div>
+
+    <!-- TABS -->
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-tab="about">{% trans "About" %}</div>
+      <div class="tab" data-tab="menu">{% trans "Menu" %}</div>
+      <div class="tab" data-tab="photos">{% trans "Photos" %}</div>
+      <div class="tab" data-tab="reviews">{% trans "Reviews" %}</div>
     </div>
 
-    <!-- Title + Badge + Map Horizontal Layout -->
-    <div class="d-flex flex-wrap align-items-center mb-4">
-        
-        <!-- Badge -->
-        <div class="venue-badge me-3 position-relative">
-            <img src="{% if venue.image %}{{ venue.image.url }}{% else %}{% static 'images/default_venue.jpg' %}{% endif %}" 
-                 alt="{{ venue.name }}" class="img-fluid rounded-circle">
-        </div>
-
-        <!-- Map -->
-        {% if venue.location %}
-            <div id="venue-map" class="venue-map rounded shadow"></div>
-                <a href="https://www.google.com/maps/search/?api=1&query={{ venue.location|urlencode }}" target="_blank" style="color: white" class="google-maps-btn">
-                    {% trans "View on Google Maps" %}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-icon lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
-                </a>
-        {% endif %}
+    <!-- ABOUT SECTION -->
+    <div class="tab-content active" id="about">
+      <p class="venue-description">{{ venue.description }}</p>
+      <h3>{% trans "Location" %}</h3>
+      <div id="venue-map"></div>
     </div>
 
-    <!-- Truncated Description -->
-    <p class="venue-description text-muted">
-        {{ preview_text }}
-        {% if remaining_text %}
-            <span id="remainingText" class="full-description">
-                {{ remaining_text }}
-            </span>
-            <a href="#" id="readMore">{% trans "Show More" %}</a>
-        {% endif %}
-    </p>
+    <!-- MENU SECTION -->
+    <div class="tab-content" id="menu">
+      <h3>{% trans "Menu" %}</h3>
+      <p>{% trans "This venue has not added a menu yet." %}</p>
+    </div>
 
-    <!-- Reservation Form -->
-    {% if user.is_authenticated %}
+    <!-- PHOTOS SECTION -->
+    <div class="tab-content" id="photos">
+      <h3>{% trans "Photos" %}</h3>
+      <div class="gallery">
+        {% for image in venue.gallery_images.all %}
+          <img src="{{ image.image.url }}" alt="Photo">
+        {% empty %}
+          <p>{% trans "No photos available." %}</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- REVIEWS SECTION -->
+    <div class="tab-content" id="reviews">
+      <h3>{% trans "Reviews" %}</h3>
+      <div class="reviews">
+        {% for review in venue.reviews.all %}
+          <div class="review-card">
+            <strong>{{ review.user.username }}</strong>
+            <div class="stars">★★★★★</div>
+            <p>{{ review.comment }}</p>
+          </div>
+        {% empty %}
+          <p>{% trans "No reviews yet." %}</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT SIDE RESERVATION CARD -->
+  <div>
+    <div class="reserve-card">
+      <h3>{% trans "Reserve a Table" %}</h3>
+
+      {% if user.is_authenticated %}
         {% include "venues/partials/_customer_reservation_form.html" with form=form submit_text="Submit Reservation" %}
-    {% else %}
-        <a class="btn btn-outline-primary w-100 mt-3" href="{% url 'account_login' %}?next={{ request.path }}" style="color: red">
-            {% trans "Log in to make a reservation" %}
+      {% else %}
+        <a class="btn btn-success w-100" href="{% url 'account_login' %}?next={{ request.path }}">
+          {% trans "Log in to reserve" %}
         </a>
-    {% endif %}
->>>>>>> cba57de (Several critical fixes including email sending mechanism, Venue Images Thumbnails (ongoing), Time from Noon to Time Format elsewere.)
+      {% endif %}
+    </div>
+  </div>
 
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
 {{ venue.latitude|default:"null"|json_script:"venue_lat" }}
 {{ venue.longitude|default:"null"|json_script:"venue_lng" }}
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const defaultLat = 40.6401;
-    const defaultLng = 22.9444;
+// MAP INIT
+const lat = JSON.parse(document.getElementById("venue_lat").textContent);
+const lng = JSON.parse(document.getElementById("venue_lng").textContent);
+if (lat && lng) {
+  const map = L.map('venue-map').setView([lat, lng], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  L.marker([lat, lng]).addTo(map);
+}
 
-    const venueLat = JSON.parse(document.getElementById("venue_lat").textContent);
-    const venueLng = JSON.parse(document.getElementById("venue_lng").textContent);
-    const hasCoords = venueLat !== null && venueLng !== null;
-
-    const map = L.map('venue-map', { scrollWheelZoom: false }).setView(
-        hasCoords ? [venueLat, venueLng] : [defaultLat, defaultLng],
-        15
-    );
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    if (hasCoords) {
-        L.marker([venueLat, venueLng]).addTo(map)
-            .bindPopup("<b>{{ venue.name|escapejs }}</b><br>{{ venue.location|escapejs }}")
-            .openPopup();
-    }
+// TABS
+const tabs = document.querySelectorAll('.tab');
+const contents = document.querySelectorAll('.tab-content');
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    contents.forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
 });
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const btn = document.getElementById("readMore");
-    if (btn) {
-        const remaining = document.getElementById("remainingText");
-
-        btn.addEventListener("click", function (e) {
-            e.preventDefault();
-
-            if (remaining.classList.contains("show")) {
-                // --- Collapse ---
-                remaining.style.maxHeight = "0px";
-                remaining.style.opacity = "0";
-                remaining.classList.remove("show");
-                btn.textContent = "{% trans "Show More" %}";
-            } else {
-                // --- Expand ---
-                remaining.style.maxHeight = remaining.scrollHeight + "px";
-                remaining.style.opacity = "1";
-                remaining.classList.add("show");
-                btn.textContent = "{% trans "Show Less" %}";
-            }
-        });
-    }
-});
-
 </script>
 
 {% endblock %}

@@ -1,234 +1,222 @@
-/* ================== Container ================== */
+/* ============================ */
+/* GLOBAL */
+/* ============================ */
 
-/* Main Content */
-.container.py-5 {
-    margin:             50px auto;
-    max-width:          960px;
-    background-color:   var(--surface-color);
-    border-radius:      10px;
-    box-shadow:         0 0 25px rgba(0, 0, 0, 0.12);
-    padding:            40px 30px;
-    color:              var(--text-color);
-    font-family:        'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+body {
+  background: #f7f7f7;
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #333;
 }
 
-.venue-title {
-    color:              var(--button-text);
-    font-size:          2rem;
-    font-family:        'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* ============================ */
+/* HERO SECTION */
+/* ============================ */
+
+.hero-section {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 0 0 20px 20px;
 }
 
-/* ================== Venue Description ================== */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.10));
+  border-radius: 0 0 20px 20px;
+}
+
+.hero-title {
+  position: absolute;
+  bottom: 30px;
+  left: 40px;
+  color: white;
+}
+
+.hero-title h1 {
+  font-size: 42px;
+  margin: 0;
+  font-weight: 700;
+}
+
+.hero-title p {
+  margin: 5px 0 0;
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+/* ============================ */
+/* PAGE GRID */
+/* ============================ */
+
+.page-container {
+  max-width: 1300px;
+  margin: 40px auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 35px;
+}
+
+/* ============================ */
+/* TABS */
+/* ============================ */
+
+.tabs {
+  display: flex;
+  border-bottom: 2px solid #eee;
+  margin-bottom: 20px;
+  gap: 5px;
+}
+
+.tab {
+  padding: 14px 22px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all .2s ease;
+  border-radius: 6px 6px 0 0;
+}
+
+.tab:hover {
+  background: #f0f0f0;
+}
+
+.tab.active {
+  color: #222;
+  border-color: #32c36c;
+  background: white;
+}
+
+.tab-content {
+  display: none;
+  animation: fadeIn .25s ease;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ============================ */
+/* ABOUT SECTION */
+/* ============================ */
+
 .venue-description {
-    color:              var(--button-text);
-    font-size:          1.1rem;
-    line-height:        1.6;
-    margin-bottom:      0.25rem;
+  font-size: 17px;
+  line-height: 1.6;
+  color: #555;
+  margin-bottom: 30px;
 }
 
-.full-description {
-    display:    block;
-    max-height: 0;
-    opacity:    0;
-    overflow:   hidden;
-    transition: max-height 0.5s ease, opacity 0.5s ease;
-}
-.full-description.show {
-    opacity: 1;
-}
+/* ============================ */
+/* MAP */
+/* ============================ */
 
-
-/* ================== Venue Header ================== */
-/* Badge */
-.venue-badge img {
-    width:              400px;
-    height:             300px;
-    border-radius:      0.5rem;
+#venue-map {
+  width: 100%;
+  height: 260px;
+  border-radius: 12px;
+  margin-top: 10px;
+  overflow: hidden;
 }
 
-/* Title + badge + map layout */
-.d-flex.flex-wrap.align-items-center {
-    display:            flex;
-    flex-wrap:          wrap;
-    align-items:        center;
-    justify-content:    center; /* center horizontally */
-    gap:                1rem;
+/* ============================ */
+/* RESERVATION CARD */
+/* ============================ */
+
+.reserve-card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+  position: sticky;
+  top: 120px;
 }
 
-/* Remove auto margin on title */
-.venue-title {
-    margin:             0; /* remove me-auto or any auto margins */
-    text-align:         center;
+.reserve-card h3 {
+  margin: 0 0 15px;
+  font-weight: 700;
+  font-size: 22px;
 }
 
-/* Map and Badge spacing */
-.venue-badge, .venue-map {
-    flex-shrink:        0;
+/* ============================ */
+/* PHOTO GALLERY */
+/* ============================ */
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
 }
 
-.venue-badge .google-maps-btn {
-    position:           absolute;
-    bottom:             8px;
-    right:              8px;
-    background-color:   rgba(255, 255, 255, 0.9);
-    color:              #d33;
-    padding:            6px 8px;
-    border-radius:      50%;
-    display:            flex;
-    align-items:        center;
-    justify-content:    center;
-    font-size:          0.85rem;
-    font-weight:        600;
-    text-decoration:    none;
-    box-shadow:         0 2px 6px rgba(0,0,0,0.3);
-    transition:         transform 0.2s ease, background-color 0.2s ease;
+.gallery img {
+  width: 100%;
+  border-radius: 10px;
+  height: 170px;
+  object-fit: cover;
 }
 
-.venue-badge .google-maps-btn:hover {
-    transform:          scale(1.1);
-    background-color:   rgba(255, 255, 255, 1);
+/* ============================ */
+/* REVIEWS */
+/* ============================ */
+
+.review-card {
+  background: #fff;
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-/* Map */
-.venue-map {
-    width:              400px;
-    height:             300px;
-    border-radius:      0.5rem;
+.review-card strong {
+  font-size: 16px;
 }
 
-/* Show More link */
-#readMore {
-    color:              #f5f9ff;
-    cursor:             pointer;
-    text-decoration:    underline;
-    font-size:          0.95rem;
+.stars {
+  color: #ffc107;
+  margin: 5px 0 10px;
 }
 
-#readMore:hover {
-    color:              #084298;
+/* ============================ */
+/* RESPONSIVE */
+/* ============================ */
+
+@media (max-width: 1100px) {
+  .page-container {
+    grid-template-columns: 3fr 2fr;
+  }
 }
 
-/* ================== Reservation Form ================== */
-.card-body .mb-3 {
-    font-weight:        500;
+@media (max-width: 992px) {
+  .page-container {
+    grid-template-columns: 1fr;
+  }
+  .reserve-card {
+    position: static;
+    margin-top: 20px;
+  }
 }
 
-.btn-success {
-    font-weight:        500;
-    font-size:          1rem;
+@media (max-width: 768px) {
+  .hero-title h1 {
+    font-size: 32px;
+  }
 }
 
-/* Login link button style */
-.btn-outline-primary {
-    font-weight:        500;
-    text-align:         center;
-}
-
-/* ================== Optional Enhancements ================== */
-.venue-badge,
-.venue-title,
-.venue-map {
-    display:            flex;
-    align-items:        center;
-}
-
-/* Submit Reservation Button */
-.col-md-4.text-end > button.btn.btn-primary {
-    background-color:   var(--primary-color);
-    border:             none;
-    border-radius:      6px;
-    padding:            12px 25px;
-    font-size:          1.1rem;
-    font-weight:        700;
-    cursor:             pointer;
-    transition:         background-color 0.3s ease, box-shadow 0.3s ease;
-    box-shadow:         0 4px 10px rgba(0, 123, 255, 0.3);
-    color:              var(--button-text);
-}
-
-.col-md-4.text-end > button.btn.btn-primary:hover {
-    background-color:   var(--primary-hover);
-    box-shadow:         0 6px 15px rgba(0, 86, 179, 0.5);
-}
-
-
-
-/* Reservation Form */
-#reservationForm {
-    width:              57%;
-    margin:             auto;
-}
-
-#reservationForm.collapse {
-    margin-top:         1rem;
-}
-
-#reservationForm .card.card-body.shadow {
-    /* background-color:   var(--primary-color); */
-    background-color: color-mix(in srgb, var(--primary-color) 60%, black);
-
-    /* filter: brightness(90%); */
-
-    /* background-color:   rgb(139, 137, 114); */
-    border-radius:      10px;
-    box-shadow:         0 0 20px rgba(0, 0, 0, 0.1);
-    padding:            25px 20px;
-    color:              var(--button-text);
-}
-
-/* Inputs */
-#reservationForm form p {
-    margin-bottom:      15px;
-}
-
-#reservationForm form input,
-#reservationForm form select,
-#reservationForm form textarea {
-    width:              100%;
-    padding:            12px 15px;
-    border-radius:      6px;
-    box-shadow:         0 0 20px rgba(0, 0, 0, 0.1);
-    border:             1px solid var(--input-border);
-    background-color:   var(--background-color);
-    color:              var(--text-color);
-    font-size:          1rem;
-    transition:         border-color 0.3s ease, box-shadow 0.3s ease;
-    outline:            none;
-}
-
-#reservationForm form input:focus,
-#reservationForm form select:focus,
-#reservationForm form textarea:focus {
-    border-color:       var(--primary-color);
-    box-shadow:         0 0 6px var(--primary-color);
-}
-
-/* Submit Button */
-#reservationForm form button.btn.btn-success {
-    background-color:   var(--surface-color);
-    border:             none;
-    border-radius:      6px;
-    font-weight:        700;
-    font-size:          1.1rem;
-    padding:            14px;
-    margin-top:         15px;
-    width:              100%;
-    cursor:             pointer;
-    transition:         background-color 0.3s ease, box-shadow 0.3s ease;
-    color:              white;
-}
-
-#reservationForm form button.btn.btn-success:hover {
-    background-color:   #000091;
-}
-
-.full-description {
-    display: inline;
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    transition: max-height 0.5s ease, opacity 0.5s ease;
-}
-.full-description.show {
-    opacity: 1;
+@media (max-width: 480px) {
+  .hero-section {
+    height: 240px;
+  }
+  .hero-title h1 {
+    font-size: 26px;
+  }
 }

@@ -27,24 +27,25 @@
       - heading "Sign Up" [level=2] [ref=e56]
       - generic [ref=e57]:
         - generic [ref=e58]: Username
-        - textbox "Username" [active] [ref=e59]
+        - textbox "Username" [active] [ref=e59]: yoda
+        - alert [ref=e60]:
+          - listitem [ref=e61]: A user with that username already exists.
+        - generic [ref=e62]: Email
+        - textbox "Email" [ref=e63]: yoda@starwars.com
         - alert
-        - generic [ref=e60]: Email address
-        - textbox "Email address" [ref=e61]
+        - generic [ref=e64]: Phone number
+        - textbox "Phone number" [ref=e65]: "6912345678"
         - alert
-        - generic [ref=e62]: Phone number
-        - textbox "Phone number" [ref=e63]
+        - generic [ref=e66]: Password
+        - textbox "Password" [ref=e67]
         - alert
-        - generic [ref=e64]: Password
-        - textbox "Password" [ref=e65]
+        - generic [ref=e68]: Password confirmation
+        - textbox "Password confirmation" [ref=e69]
         - alert
-        - generic [ref=e66]: Password confirmation
-        - textbox "Password confirmation" [ref=e67]
-        - alert
-        - button "Create Account" [ref=e68] [cursor=pointer]
-      - paragraph [ref=e69]:
+        - button "Create Account" [ref=e70] [cursor=pointer]
+      - paragraph [ref=e71]:
         - text: Already have an account?
-        - link "Login" [ref=e70] [cursor=pointer]:
+        - link "Login" [ref=e72] [cursor=pointer]:
           - /url: /accounts/login/
-  - contentinfo [ref=e71]: © 2025 OpenSpots. All rights reserved.
+  - contentinfo [ref=e73]: © 2025 OpenSpots. All rights reserved.
 ```

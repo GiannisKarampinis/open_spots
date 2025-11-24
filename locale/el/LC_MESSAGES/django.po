@@ -42,7 +42,7 @@ msgstr "Email"
 
 #: accounts/forms.py:16 accounts/forms.py:44 accounts/forms.py:64
 msgid "Phone number"
-msgstr ""
+msgstr "Αριθμός τηλεφώνου"
 
 #: accounts/forms.py:17 accounts/forms.py:46
 #: accounts/templates/accounts/login.html:30
@@ -57,11 +57,11 @@ msgstr "Επιβεβαίωση νέου κωδικού πρόσβασης"
 
 #: accounts/forms.py:35 accounts/forms.py:45
 msgid "User type"
-msgstr ""
+msgstr "Είδος Χρήστη"
 
 #: accounts/forms.py:77
 msgid "Enter a valid phone number (7–15 digits, optional +)."
-msgstr ""
+msgstr "Εισάγετε έγκυρο αριρμό τηλεφώνου"
 
 #: accounts/forms.py:91 accounts/forms.py:119 accounts/forms.py:120
 #: accounts/templates/accounts/profile.html:74
@@ -75,7 +75,7 @@ msgstr "Επιβεβαίωση νέου κωδικού πρόσβασης"
 
 #: accounts/forms.py:107
 msgid "Passwords do not match."
-msgstr ""
+msgstr "Οι κωδικοί πρόσβασης δεν ταιριάζουν"
 
 #: accounts/forms.py:115 accounts/forms.py:116
 #: accounts/templates/accounts/profile.html:73
@@ -90,7 +90,7 @@ msgstr "Παλιός κωδικός πρόσβασης"
 
 #: accounts/forms.py:143
 msgid "The new passwords do not match."
-msgstr ""
+msgstr "Οι νέοι κωδικοί πρόσβασης δεν ταιριάζουν"
 
 #: accounts/templates/accounts/administration_panel.html:10
 msgid "Your Venue Dashboard"
@@ -431,7 +431,7 @@ msgstr "Αιτήματα Κρατήσεων σε Εκκρεμότητα"
 msgid ""
 "Check this if you want to move this booking back to the Reservation Requests "
 "table."
-msgstr ""
+msgstr "Πάτα εδώ αν θέλεις να μεταφέρεις την κράτηση πίσω στα αιτήματα κρατήσεων"
 
 #: venues/forms.py:112
 #, fuzzy
@@ -707,22 +707,22 @@ msgstr "Ακυρωμένες"
 #: venues/templates/venues/partials/_arrival_row.html:27
 #: venues/templates/venues/partials/_reservation_row.html:26
 msgid "Rejected"
-msgstr ""
+msgstr "Απορριφθήσα"
 
 #: venues/templates/venues/partials/_arrival_row.html:32
 #: venues/templates/venues/partials/_reservation_row.html:22
 msgid "Pending"
-msgstr ""
+msgstr "Αναμένουσα"
 
 #: venues/templates/venues/partials/_arrival_row.html:34
 #: venues/templates/venues/partials/_arrival_row.html:51
 msgid "Checked in"
-msgstr ""
+msgstr "Έγινε Άφιξη"
 
 #: venues/templates/venues/partials/_arrival_row.html:36
 #: venues/templates/venues/partials/_arrival_row.html:57
 msgid "No show"
-msgstr ""
+msgstr "Δεν εμφανίστηκε"
 
 #: venues/templates/venues/partials/_arrival_row.html:64
 #, fuzzy
@@ -732,15 +732,15 @@ msgstr "Αιτήματα Κρατήσεων σε Εκκρεμότητα"
 
 #: venues/templates/venues/partials/_reservation_row.html:24
 msgid "Accepted"
-msgstr ""
+msgstr "Δεκτή"
 
 #: venues/templates/venues/partials/_reservation_row.html:36
 msgid "Accept"
-msgstr ""
+msgstr "Αποδέξου"
 
 #: venues/templates/venues/partials/_reservation_row.html:42
 msgid "Reject"
-msgstr ""
+msgstr "Απέρριψε"
 
 #: venues/templates/venues/partials/_reservation_row.html:46
 msgid "—"

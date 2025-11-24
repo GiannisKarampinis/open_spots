@@ -133,3 +133,14 @@ deploy:
 ci-deploy:
 	make ci
 	make deploy
+
+# Run backend tests with debugger on failure
+debug-backend:
+	pytest backend/ --disable-warnings --pdb
+
+# Run e2e tests with debugger on failure
+test-e2e-debug:
+	@echo "🌐 Running Playwright E2E tests in DEBUG mode..."
+	cd $(FRONTEND_DIR) && npx playwright test --debug
+
+
