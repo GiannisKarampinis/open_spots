@@ -91,15 +91,28 @@ def venue_list(request):
 
 ###########################################################################################
 def venue_detail(request, pk):
-    venue   = get_object_or_404(Venue, pk=pk)
+    venue = get_object_or_404(Venue, pk=pk)
 
     # Log visit
     log_venue_visit(venue, request)
 
     # --- Description split ---
-    words           = venue.description.split()
-    preview_text    = " ".join(words[:20])
-    remaining_text  = " ".join(words[20:]) if len(words) > 20 else ""
+    words = venue.description.split()
+    preview_text = " ".join(words[:20])
+    remaining_text = " ".join(words[20:]) if len(words) > 20 else ""
+
+    # --- Determine selected date (POST or default today) ---
+    selected_date = None
+    if request.method == "POST":
+        selected_date = request.POST.get("date")
+    if not selected_date:
+        selected_date = now().date()
+    else:
+        selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+
+    # --- Fetch available time slots for that date ---
+    available_slots = venue.get_available_time_slots(selected_date)
+    time_choices = [(t.strftime("%H:%M"), t.strftime("%H:%M")) for t in available_slots]
 
     # --- Reservation logic ---
     if request.method == "POST":
@@ -108,11 +121,13 @@ def venue_detail(request, pk):
             return redirect("login")
 
         form = ReservationForm(request.POST)
+        form.fields["time"].choices = time_choices  # <-- override choices dynamically
+
         if form.is_valid():
-            reservation         = form.save(commit=False)
-            reservation.venue   = venue
-            reservation.status  = "pending"
-            reservation.user    = request.user
+            reservation = form.save(commit=False)
+            reservation.venue = venue
+            reservation.status = "pending"
+            reservation.user = request.user
 
             if venue.has_overlapping_reservation(reservation.date, reservation.time):
                 messages.error(request, "Sorry, that time slot is already reserved.")
@@ -121,24 +136,26 @@ def venue_detail(request, pk):
                 return render(
                     request,
                     "venues/reservation_pending.html",
-                    {
-                        "venue":        venue, 
-                        "reservation":  reservation
-                    },
+                    {"venue": venue, "reservation": reservation},
                 )
+        else:
+            print("FORM ERRORS:", form.errors)
     else:
         form = ReservationForm()
+        form.fields["time"].choices = time_choices  # <-- initial load
 
     return render(
         request,
         "venues/venue_detail.html",
         {
-            "venue":            venue,
-            "form":             form,
-            "preview_text":     preview_text,
-            "remaining_text":   remaining_text,
+            "venue": venue,
+            "form": form,
+            "preview_text": preview_text,
+            "remaining_text": remaining_text,
+            "time_choices": time_choices,
         },
     )
+
     
 ###########################################################################################
 

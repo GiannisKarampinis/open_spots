@@ -191,150 +191,108 @@ body {
 /* RESERVATION FORM STYLES */
 /* ============================ */
 
-.reserve-card form {
+/* Step Tabs */
+/* ============================ */
+/* MULTI-STEP RESERVATION FORM */
+/* ============================ */
+
+/* Step tabs (horizontal small circles) */
+.res-tabs {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 10px;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
-.reserve-card label {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--button-text);
-  margin-bottom: 4px;
+.res-tab {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
-.reserve-card input,
-.reserve-card select {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid #ddd;
-  border-radius: 10px;
-  font-size: 15px;
-  background: var(--button-text);
-  transition: all .2s ease;
-}
-
-.reserve-card input:focus,
-.reserve-card select:focus {
-  border-color: var(--surface-color);
-  background: var(--button-text);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(50, 195, 108, 0.15);
-}
-
-.reserve-card button,
-.reserve-card input[type="submit"] {
-  margin-top: 10px;
-  width: 100%;
-  padding: 14px;
+.res-tab.active {
   background: var(--button-text);
   color: var(--text-color);
-  font-size: 16px;
-  font-weight: 600;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background .2s ease;
 }
 
-.reserve-card button:hover,
-.reserve-card input[type="submit"]:hover {
-  background: var(--button-text-hover);
+.res-tab.disabled {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
-.reserve-card .helptext {
-  font-size: 13px;
-  color: #777;
-  margin-top: -5px;
-}
-
-.reserve-card .errorlist {
-  color: #d9534f;
-  font-size: 14px;
-  margin: -5px 0 5px 0;
-}
-
-/* ---------------------------- */
-/* RESERVATION MULTI-STEP FORM */
-/* ---------------------------- */
-
-.res-steps-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 18px;
-}
-
-.res-step-tab {
-  flex: 1;
-  background: var(--button-text);
-  padding: 12px;
-  text-align: center;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: .2s;
-  opacity: 0.7;
-}
-
-.res-step-tab.disabled {
-  cursor: not-allowed;
-  opacity: .4;
-}
-
-.res-step-tab.active {
-  background: var(--surface-color);
-  color: var(--button-text);
-  opacity: 1;
-}
-
+/* Step container */
 .res-step {
   display: none;
 }
 
 .res-step.active {
   display: block;
-  animation: fadeIn .25s;
 }
 
-.res-input, .res-textarea {
+/* Form fields */
+.res-step input.form-control,
+.res-step select.form-control,
+.res-step textarea.form-control {
   width: 100%;
-  padding: 12px;
-  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1.5px solid #ddd;
   border-radius: 8px;
-  border: 1px solid var(--button-text-hover);
-  font-size: 15px;
+  font-size: 14px;
+  background: var(--button-text);
+  transition: all 0.2s ease;
 }
 
-.res-textarea {
-  height: 80px;
+.res-step input.form-control:focus,
+.res-step select.form-control:focus,
+.res-step textarea.form-control:focus {
+  border-color: var(--surface-color);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(50, 195, 108, 0.15);
 }
 
-.res-next-btn, .res-prev-btn, .res-submit-btn {
-  background: var(--surface-color);
-  color: var(--button-text);
-  border: none;
-  padding: 12px 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
+/* Buttons */
+.res-step .res-next-btn,
+.res-step .res-prev-btn,
+.res-step .res-submit-btn {
   width: 100%;
-  margin-top: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  margin-top: 12px;
 }
 
-.res-prev-btn {
-  background: #999;
+.res-step .res-next-btn {
+  background: var(--button-text);
+  color: var(--text-color);
 }
 
-.res-step-actions {
-  display: flex;
-  gap: 10px;
+.res-step .res-prev-btn {
+  background: #444;
+  color: #fff;
 }
 
+.res-step .res-submit-btn {
+  background: #d7263d;
+  color: #fff;
+}
+
+/* Highlight invalid fields */
 .input-error {
   border-color: #d9534f !important;
 }
+
+
 
 @keyframes fadeIn {
   from {opacity: 0; transform: translateY(4px);}

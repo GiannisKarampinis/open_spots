@@ -4,7 +4,7 @@ import os
 from django.db                          import models, transaction
 from django.conf                        import settings
 from django.utils                       import timezone
-from datetime                           import datetime, timedelta
+from datetime                           import datetime, timedelta, time
 from django.db.models.signals           import post_save
 from django.dispatch                    import receiver
 from django.db.models                   import Q
@@ -73,6 +73,37 @@ class Venue(models.Model):
             approved=True,
             marked_for_deletion=False
         ).order_by("order").first()
+    
+    def get_available_time_slots(self, date):
+        """
+        Returns available 15-minute time slots for the selected date.
+        Removes slots already reserved for this venue on that date.
+        Covers 06:00 → 04:00 next day (22 hours total).
+        """
+
+        # Define default operating hours
+        start_time = time(6, 0)   # 06:00
+        end_time   = time(4, 0)   # 04:00 (next day)
+
+        start_dt = datetime.combine(date, start_time)
+        end_dt   = datetime.combine(date + timedelta(days=1), end_time)
+
+        # Generate all 15-minute time slots
+        slots = []
+        current = start_dt
+        while current < end_dt:
+            slots.append(current.time())
+            current += timedelta(minutes=15)
+
+        # Fetch booked times for this date
+        booked = set(
+            self.reservations.filter(date=date).values_list("time", flat=True)
+        )
+
+        # Remove booked slots
+        available = [t for t in slots if t not in booked]
+
+        return available
 
     class Meta:
         ordering = ['name']
