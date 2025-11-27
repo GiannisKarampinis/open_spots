@@ -279,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let hour = 12;
         let minute = 0;
 
-        while (hour < 23 || (hour === 23 && minute === 0)) {
+        while (hour < 24 || (hour === 23 && minute === 30)) {
             const hh = hour.toString().padStart(2, '0');
             const mm = minute.toString().padStart(2, '0');
 
