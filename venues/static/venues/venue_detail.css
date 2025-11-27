@@ -292,6 +292,52 @@ body {
   border-color: #d9534f !important;
 }
 
+/* Container grid */
+#time-slot-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.time-slot {
+    padding: 12px 0;
+    background: #f4f4f4;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    user-select: none;
+    border: 1px solid #ddd;
+}
+
+.time-slot:hover {
+    background: #e0e0e0;
+    border-color: #bbb;
+}
+
+.time-slot.active {
+    background: #007bff;
+    color: #fff;
+    font-weight: bold;
+    border-color: #0056b3;
+}
+
+@media (max-width: 480px) {
+    #time-slot-container {
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+        gap: 8px;
+    }
+    .time-slot {
+        font-size: 13px;
+        padding: 10px 0;
+    }
+}
+
+
+
 
 
 @keyframes fadeIn {

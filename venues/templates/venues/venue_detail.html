@@ -117,27 +117,30 @@
                 {{ form.phone }}
                 {{ form.phone.errors }}
 
-                <button type="button" class="res-next-btn" data-next="2">Next</button>
+                <!--<button type="button" class="res-next-btn" data-next="2">Next</button>-->
             </div>
 
             <!-- STEP 2: Reservation Details -->
             <div class="res-step" data-step="2">
-                <h3>Reservation Details</h3>
+              <h3>Reservation Details</h3>
+
                 {{ form.date.label_tag }}
                 {{ form.date }}
                 {{ form.date.errors }}
 
-                {{ form.time.label_tag }}
-                {{ form.time }}
+                <label for="selected-time">Time</label>
+                <div id="time-slot-container" class="time-slot-container"></div>
+                <input type="hidden" name="time" id="selected-time">
                 {{ form.time.errors }}
 
                 {{ form.guests.label_tag }}
                 {{ form.guests }}
                 {{ form.guests.errors }}
 
-                <button type="button" class="res-prev-btn" data-prev="1">Back</button>
-                <button type="button" class="res-next-btn" data-next="3">Next</button>
-            </div>
+              <!--<button type="button" class="res-prev-btn" data-prev="1">Back</button>-->
+              <!--<button type="button" class="res-next-btn" data-next="3">Next</button>-->
+          </div>
+
 
             <!-- STEP 3: Additional Notes -->
             <div class="res-step" data-step="3">
@@ -151,7 +154,7 @@
                 {{ form.comments.label_tag }}
                 {{ form.comments }}
 
-                <button type="button" class="res-prev-btn" data-prev="2">Back</button>
+                <!--<button type="button" class="res-prev-btn" data-prev="2">Back</button>-->
                 <button type="submit" class="res-submit-btn">Submit Reservation</button>
             </div>
 
@@ -174,85 +177,162 @@
 {{ venue.longitude|default:"null"|json_script:"venue_lng" }}
 
 <script>
-// MAP INIT
+// ---------------------------
+// MAP INITIALIZATION
+// ---------------------------
 const lat = JSON.parse(document.getElementById("venue_lat").textContent);
 const lng = JSON.parse(document.getElementById("venue_lng").textContent);
+
 if (lat && lng) {
   const map = L.map('venue-map').setView([lat, lng], 15);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
   L.marker([lat, lng]).addTo(map);
 }
 
-// LEFT SIDE TABS
-const tabs = document.querySelectorAll('.tab');
-const contents = document.querySelectorAll('.tab-content');
-tabs.forEach(tab => {
+// ---------------------------
+// TAB NAVIGATION (LEFT SIDE)
+// ---------------------------
+const leftTabs = document.querySelectorAll('.tab');
+const tabContents = document.querySelectorAll('.tab-content');
+
+leftTabs.forEach(tab => {
   tab.addEventListener('click', () => {
-    tabs.forEach(t => t.classList.remove('active'));
-    contents.forEach(c => c.classList.remove('active'));
+    leftTabs.forEach(t => t.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+
     tab.classList.add('active');
     document.getElementById(tab.dataset.tab).classList.add('active');
   });
 });
 
+// ---------------------------
 // RESERVATION MULTI-STEP FORM
-document.addEventListener("DOMContentLoaded", function () {
+// ---------------------------
+document.addEventListener("DOMContentLoaded", () => {
 
-  const steps = document.querySelectorAll(".res-step");
-  const tabs = document.querySelectorAll(".res-tab");
-  const nextBtns = document.querySelectorAll(".res-next-btn");
-  const prevBtns = document.querySelectorAll(".res-prev-btn");
+    const steps = document.querySelectorAll(".res-step");
+    const tabs = document.querySelectorAll(".res-tab");
 
-  function goToStep(step) {
-    // Show step
-    steps.forEach(s => s.classList.remove("active"));
-    document.querySelector(`.res-step[data-step="${step}"]`).classList.add("active");
+    // ---------------------------
+    // SHOW STEP
+    // ---------------------------
+    function showStep(stepNumber) {
+        steps.forEach(s => s.classList.remove("active"));
+        const step = document.querySelector(`.res-step[data-step="${stepNumber}"]`);
+        step.classList.add("active");
 
-    // Highlight tab
-    tabs.forEach(t => t.classList.remove("active"));
-    document.querySelector(`.res-tab[data-step="${step}"]`).classList.add("active");
-  }
+        tabs.forEach(t => t.classList.remove("active"));
+        document.querySelector(`.res-tab[data-step="${stepNumber}"]`).classList.add("active");
 
-  // Next buttons
-  nextBtns.forEach(btn => {
-    btn.addEventListener("click", function () {
-      const next = this.getAttribute("data-next");
+        // Render time slots only when Step 2 is active
+        if (stepNumber == 2) renderTimeSlots();
+    }
 
-      // Validate required inputs in current step
-      const currentStep = this.closest(".res-step");
-      const inputs = currentStep.querySelectorAll("input[required], select[required], textarea[required]");
-      for (let input of inputs) {
-        if (!input.value.trim()) {
-          input.classList.add("input-error");
-          return;
+    // ---------------------------
+    // VALIDATE STEP AND UNLOCK NEXT TAB
+    // ---------------------------
+    function validateStep(stepNumber) {
+        const step = document.querySelector(`.res-step[data-step="${stepNumber}"]`);
+        const inputs = step.querySelectorAll('input[required], select[required], textarea[required]');
+        let allFilled = true;
+
+        inputs.forEach(input => {
+            if (!input.value.trim()) allFilled = false;
+        });
+
+        const nextTab = document.querySelector(`.res-tab[data-step="${stepNumber + 1}"]`);
+        if (nextTab) {
+            nextTab.classList.toggle("disabled", !allFilled);
         }
-        input.classList.remove("input-error");
-      }
+    }
 
-      // Unlock next tab
-      document.querySelector(`.res-tab[data-step="${next}"]`).classList.remove("disabled");
-      goToStep(next);
+    // ---------------------------
+    // INPUT LISTENER
+    // ---------------------------
+    document.querySelectorAll('.res-step input, .res-step select').forEach(input => {
+        input.addEventListener('input', () => {
+            validateStep(1);
+            validateStep(2);
+        });
     });
-  });
 
-  // Previous buttons
-  prevBtns.forEach(btn => {
-    btn.addEventListener("click", function () {
-      const prev = this.getAttribute("data-prev");
-      goToStep(prev);
+    // ---------------------------
+    // TAB CLICK
+    // ---------------------------
+    tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+            if (tab.classList.contains("disabled")) return;
+            showStep(tab.dataset.step);
+        });
     });
-  });
 
-  // Tab click
-  tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      if (tab.classList.contains("disabled")) return;
-      goToStep(tab.getAttribute("data-step"));
-    });
-  });
+    // ---------------------------
+    // INITIAL DISPLAY
+    // ---------------------------
+    showStep(1);
 
+    // ---------------------------
+    // TIME SLOT PICKER
+    // ---------------------------
+    function generateTimeSlots() {
+        const slots = [];
+        let hour = 12;
+        let minute = 0;
+
+        while (hour < 23 || (hour === 23 && minute === 0)) {
+            const hh = hour.toString().padStart(2, '0');
+            const mm = minute.toString().padStart(2, '0');
+
+            const value = `${hh}:${mm}`;
+            const label = new Date(`2000-01-01T${value}:00`).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+
+            slots.push({ value, label });
+
+            minute += 30;
+            if (minute >= 60) {
+                minute = 0;
+                hour++;
+            }
+        }
+
+        return slots;
+    }
+
+    function renderTimeSlots() {
+        const container = document.getElementById("time-slot-container");
+        if (!container) return;
+
+        const hiddenInput = document.getElementById("selected-time");
+        const slots = generateTimeSlots();
+
+        container.innerHTML = "";
+
+        slots.forEach(slot => {
+            const box = document.createElement("div");
+            box.classList.add("time-slot");
+            box.textContent = slot.label;
+            box.dataset.value = slot.value;
+
+            if (hiddenInput.value === slot.value) box.classList.add("active");
+
+            box.addEventListener("click", () => {
+                container.querySelectorAll(".time-slot").forEach(b => b.classList.remove("active"));
+                box.classList.add("active");
+                hiddenInput.value = slot.value;
+
+                // Trigger validation
+                const step2Inputs = document.querySelectorAll('.res-step[data-step="2"] input[required]');
+                step2Inputs.forEach(input => input.dispatchEvent(new Event('input')));
+            });
+
+            container.appendChild(box);
+        });
+    }
 });
-
 </script>
+
 
 {% endblock %}
