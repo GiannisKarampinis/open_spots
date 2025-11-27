@@ -93,7 +93,7 @@ class Venue(models.Model):
         current = start_dt
         while current < end_dt:
             slots.append(current.time())
-            current += timedelta(minutes=15)
+            current += timedelta(minutes=30)
 
         # Fetch booked times for this date
         booked = set(

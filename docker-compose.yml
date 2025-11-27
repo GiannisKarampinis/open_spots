@@ -13,7 +13,7 @@ services:
   web:
     build: .
     container_name: openspots
-    command: daphne -b 0.0.0.0 -p 8000 openspots.asgi:application
+    command: python -u -m daphne -b 0.0.0.0 -p 8000 openspots.asgi:application
     volumes:
       - .:/app
       - ./locale:/app/locale   # ✅ keeps translations between rebuilds
@@ -28,7 +28,8 @@ services:
       - DATABASE_NAME=openspots_db
       - DATABASE_USER=openspots_user
       - DATABASE_PASSWORD=supersecret123
-      - DATABASE_HOST=db   # ✅ Add this line
+      - DATABASE_HOST=db
+      - PYTHONUNBUFFERED=1
 
   redis:
     image: redis:7

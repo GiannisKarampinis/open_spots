@@ -96,8 +96,8 @@ def generate_time_choices():
         time_value  = current_datetime.time()
         label       = current_datetime.strftime("%I:%M %p")
         
-        times.append((time_value.strftime("%H:%M:%S"), label))
-        
+        times.append((time_value, label))
+
         current_datetime += delta
     
     return times

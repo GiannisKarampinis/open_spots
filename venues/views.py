@@ -140,6 +140,7 @@ def venue_detail(request, pk):
                 )
         else:
             print("FORM ERRORS:", form.errors)
+
     else:
         form = ReservationForm()
         form.fields["time"].choices = time_choices  # <-- initial load

@@ -2,7 +2,7 @@ from django import forms
 from .models import Reservation, VenueApplication, Venue
 from .utils import generate_time_choices
 from django.utils.timezone import now
-import datetime
+from datetime import datetime
 from django.utils.translation import gettext_lazy as _
 
 
@@ -54,8 +54,12 @@ class ReservationForm(forms.ModelForm):
 
     def clean_time(self):
         selected_time = self.cleaned_data['time']
-        valid_times = dict(generate_time_choices())
 
+        # Convert "23:00" → datetime.time(23, 0)
+        if isinstance(selected_time, str):
+            selected_time = datetime.strptime(selected_time, "%H:%M").time()
+
+        valid_times = dict(generate_time_choices())
         if selected_time not in valid_times:
             raise forms.ValidationError(_("Invalid reservation time selected."))
 
