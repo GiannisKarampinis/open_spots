@@ -107,6 +107,124 @@ body {
 }
 
 /* ============================ */
+/* REVIEW SECTION */
+/* ============================ */
+
+.review-stars {
+    display: flex;
+    gap: 3px;
+}
+
+.star {
+    font-size: 22px;
+    color: #ccc;
+}
+
+.star.full::before {
+    content: "★";
+    color: #f5b301; /* gold */
+}
+
+.star.empty::before {
+    content: "★";
+    color: #ddd; /* light grey */
+}
+
+
+/* --- REVIEW FORM WRAPPER --- */
+.review-form-container {
+    background: var(--scroll-container-bg);
+    border: 1px solid #ddd;
+    padding: 18px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+/* Title */
+.review-form-container h4 {
+    margin-bottom: 12px;
+    font-size: 18px;
+}
+
+/* --- LABELS --- */
+.review-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.review-label span {
+    color: red;
+}
+
+/* --- STAR RATING --- */
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label.star {
+    font-size: 28px;
+    color: var(--background-color);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+/* Highlight on hover */
+.star-rating label.star:hover,
+.star-rating label.star:hover ~ label.star {
+    color: #f5b301;
+}
+
+/* When selected */
+.star-rating input:checked ~ label.star {
+    color: #f5b301;
+}
+
+/* --- TEXTAREA --- */
+.review-textarea {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    resize: vertical;
+    font-size: 14px;
+}
+
+/* --- SUBMIT BUTTON --- */
+.review-submit-btn {
+    width: 100%;
+    padding: 10px;
+    background: var(--primary-color);
+    color: var(--button-text);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 14px;
+    transition: background 0.2s ease;
+}
+
+.review-submit-btn:hover {
+    background: var(--primary-hover);
+}
+
+/* --- MOBILE FRIENDLY --- */
+@media (max-width: 480px) {
+    .star-rating label.star {
+        font-size: 24px;
+    }
+}
+
+
+/* ============================ */
 /* ABOUT SECTION */
 /* ============================ */
 
@@ -165,28 +283,6 @@ body {
   height: 170px;
   object-fit: cover;
 }
-
-/* ============================ */
-/* REVIEWS */
-/* ============================ */
-
-.review-card {
-  background: var(--text-color);
-  padding: 18px;
-  border-radius: 12px;
-  margin-bottom: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.review-card strong {
-  font-size: 16px;
-}
-
-.stars {
-  color: #ffc107;
-  margin: 5px 0 10px;
-}
-
 /* ============================ */
 /* RESERVATION FORM STYLES */
 /* ============================ */
@@ -209,7 +305,7 @@ body {
   height: 35px;
   border-radius: 50%;
   border: none;
-  background: #eee;
+  background: var(--background-color);
   cursor: pointer;
   font-size: 14px;
   display: flex;
@@ -283,8 +379,12 @@ body {
 }
 
 .res-step .res-submit-btn {
-  background: #d7263d;
-  color: #fff;
+  background: var(--primary-color);
+  color: var(--button-text);
+}
+
+.res-submit-btn:hover {
+  background: var(--primary-hover);
 }
 
 /* Highlight invalid fields */
@@ -302,7 +402,7 @@ body {
 
 .time-slot {
     padding: 12px 0;
-    background: #f4f4f4;
+    background: var(--background-color);
     border-radius: 8px;
     text-align: center;
     cursor: pointer;
@@ -320,10 +420,10 @@ body {
 }
 
 .time-slot.active {
-    background: #007bff;
-    color: #fff;
+    background: var(--primary-color);
+    color: var(--button-text);
     font-weight: bold;
-    border-color: #0056b3;
+    border-color: var(--primary-hover);
 }
 
 @media (max-width: 480px) {

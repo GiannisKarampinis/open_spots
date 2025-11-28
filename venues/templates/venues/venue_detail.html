@@ -26,7 +26,6 @@
 
   <!-- LEFT SIDE -->
   <div>
-
     <!-- TABS -->
     <div class="tabs" id="tabs">
       <div class="tab active" data-tab="about">{% trans "About" %}</div>
@@ -64,16 +63,72 @@
     <div class="tab-content" id="reviews">
       <h3>{% trans "Reviews" %}</h3>
       <div class="reviews">
-        {% for review in venue.reviews.all %}
+        {% for review in reviews %}
           <div class="review-card">
-            <strong>{{ review.user.username }}</strong>
-            <div class="stars">★★★★★</div>
-            <p>{{ review.comment }}</p>
+              <strong>{{ review.user.username }}</strong>
+
+              <div class="review-stars">
+                {% for i in "12345" %}
+                    {% if forloop.counter <= review.rating %}
+                        <span class="star full"></span>
+                    {% else %}
+                        <span class="star empty"></span>
+                    {% endif %}
+                {% endfor %}
+              </div>
+
+              {% if review.comment %}
+                  <p>{{ review.comment }}</p>
+              {% endif %}
           </div>
         {% empty %}
-          <p>{% trans "No reviews yet." %}</p>
+            <p>{% trans "No reviews yet." %}</p>
         {% endfor %}
       </div>
+      <!-- REVIEW FORM -->
+      <div class="review-form-container">
+          <h4>Leave a Review</h4>
+
+          <form method="POST" id="reviewForm" class="review-form">
+              {% csrf_token %}
+
+              <!-- STAR RATING -->
+              <div class="review-star-group">
+                  <label class="review-label">Rating <span>*</span></label>
+
+                  <div class="star-rating">
+                      <input type="radio" name="rating" id="star-5" value="5" required>
+                      <label for="star-5" class="star">&#9733;</label>
+
+                      <input type="radio" name="rating" id="star-4" value="4">
+                      <label for="star-4" class="star">&#9733;</label>
+
+                      <input type="radio" name="rating" id="star-3" value="3">
+                      <label for="star-3" class="star">&#9733;</label>
+
+                      <input type="radio" name="rating" id="star-2" value="2">
+                      <label for="star-2" class="star">&#9733;</label>
+
+                      <input type="radio" name="rating" id="star-1" value="1">
+                      <label for="star-1" class="star">&#9733;</label>
+                  </div>
+              </div>
+
+              <!-- OPTIONAL COMMENT -->
+              <div class="review-comment-group">
+                  <label class="review-label">Comment (optional)</label>
+                  <textarea 
+                      name="comment" 
+                      rows="4" 
+                      class="review-textarea" 
+                      placeholder="Share your experience..."></textarea>
+              </div>
+
+              <!-- SUBMIT -->
+              <button type="submit" class="review-submit-btn" name="submit_review">Submit Review</button>
+          </form>
+      </div>
+
     </div>
 
   </div>
@@ -155,7 +210,7 @@
                 {{ form.comments }}
 
                 <!--<button type="button" class="res-prev-btn" data-prev="2">Back</button>-->
-                <button type="submit" class="res-submit-btn">Submit Reservation</button>
+                <button type="submit" class="res-submit-btn" name="submit_reservation">Submit Reservation</button>
             </div>
 
             </div>

@@ -1,10 +1,8 @@
 from django.utils               import timezone
 from django.contrib             import admin
 from django.utils.html          import format_html
-from django.core.files.base     import ContentFile
-from .models                    import Venue, Table, Reservation, VenueApplication, VenueUpdateRequest, VenueVisit, VenueImage, VenueMenuImage
+from .models                    import Venue, Table, Reservation, Review, VenueApplication, VenueUpdateRequest, VenueVisit, VenueImage, VenueMenuImage
 from django.utils.html          import format_html
-import os
 
 class TableInline(admin.TabularInline):
     model = Table
@@ -333,3 +331,10 @@ class VenueUpdateRequestAdmin(admin.ModelAdmin):
         self.message_user(request, "Selected requests rejected.")
 
     reject_requests.short_description = "Reject selected requests"
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ("id", "venue", "user", "rating", "created_at")
+    list_filter = ("rating", "created_at")
+    search_fields = ("user__username", "venue__name", "comment")
+    readonly_fields = ("created_at", "updated_at")

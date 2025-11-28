@@ -16,7 +16,7 @@ from django.template.loader          import render_to_string
 from django.db                       import transaction, models
 from django.urls                     import reverse
 from .models                         import Venue, VenueUpdateRequest, VenueVisit, Reservation, VenueImage, VenueMenuImage
-from .forms                          import ReservationForm, VenueApplicationForm, ArrivalStatusForm
+from .forms                          import ReservationForm, VenueApplicationForm, ArrivalStatusForm, ReviewForm
 from .utils                          import *
 from .decorators                     import venue_admin_required
 from venues.services.emails          import send_reservation_notification, send_new_venue_application_email
@@ -102,9 +102,7 @@ def venue_detail(request, pk):
     remaining_text = " ".join(words[20:]) if len(words) > 20 else ""
 
     # --- Determine selected date (POST or default today) ---
-    selected_date = None
-    if request.method == "POST":
-        selected_date = request.POST.get("date")
+    selected_date = request.POST.get("date") if request.method == "POST" else None
     if not selected_date:
         selected_date = now().date()
     else:
@@ -114,46 +112,66 @@ def venue_detail(request, pk):
     available_slots = venue.get_available_time_slots(selected_date)
     time_choices = [(t.strftime("%H:%M"), t.strftime("%H:%M")) for t in available_slots]
 
+    # ------------------------------------------------------
+    # ALWAYS create both forms so template never breaks
+    # ------------------------------------------------------
+    form = ReservationForm()
+    form.fields["time"].choices = time_choices
+    review_form = ReviewForm()
+
+    #--- Gather existing reviews ---
+    reviews = venue.reviews.select_related('user').order_by('-created_at')
+
     # --- Reservation logic ---
     if request.method == "POST":
         if not request.user.is_authenticated:
             messages.error(request, "Please log in to make a reservation.")
             return redirect("login")
 
-        form = ReservationForm(request.POST)
-        form.fields["time"].choices = time_choices  # <-- override choices dynamically
+        if "submit_reservation" in request.POST:
+            form = ReservationForm(request.POST)
+            form.fields["time"].choices = time_choices  # <-- override choices dynamically
 
-        if form.is_valid():
-            reservation = form.save(commit=False)
-            reservation.venue = venue
-            reservation.status = "pending"
-            reservation.user = request.user
+            if form.is_valid():
+                reservation = form.save(commit=False)
+                reservation.venue = venue
+                reservation.status = "pending"
+                reservation.user = request.user
 
-            if venue.has_overlapping_reservation(reservation.date, reservation.time):
-                messages.error(request, "Sorry, that time slot is already reserved.")
-            else:
+                #if venue.has_overlapping_reservation(reservation.date, reservation.time):
+                    #messages.error(request, "Sorry, that time slot is already reserved.")
+                #else:
                 reservation.save(editor=request.user)
                 return render(
                     request,
                     "venues/reservation_pending.html",
                     {"venue": venue, "reservation": reservation},
                 )
-        else:
-            print("FORM ERRORS:", form.errors)
-
-    else:
-        form = ReservationForm()
-        form.fields["time"].choices = time_choices  # <-- initial load
-
+            else:
+                print("FORM ERRORS:", form.errors)
+        elif "submit_review" in request.POST:
+            review_form = ReviewForm(request.POST)
+            if review_form.is_valid():
+                review = review_form.save(commit=False)
+                review.user = request.user
+                review.venue = venue
+                review.save()
+                messages.success(request, "Your review has been submitted.")
+                return redirect("venue_detail", pk=pk)
+            else:
+                print("FORM ERRORS:", form.errors)
+    print(venue.reviews.all().order_by('-created_at'))
     return render(
         request,
         "venues/venue_detail.html",
         {
             "venue": venue,
             "form": form,
+            "review_form": review_form,
             "preview_text": preview_text,
             "remaining_text": remaining_text,
             "time_choices": time_choices,
+            "reviews": venue.reviews.all().order_by('-created_at'),
         },
     )
 

@@ -111,6 +111,44 @@ class Venue(models.Model):
 ###########################################################################################
 
 ###########################################################################################
+
+User = settings.AUTH_USER_MODEL
+
+class Review(models.Model):
+    venue = models.ForeignKey(
+        "Venue",
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        help_text="Venue this review belongs to",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="venue_reviews",
+        help_text="Author of the review",
+    )
+
+    rating = models.PositiveSmallIntegerField(
+        choices=[(i, str(i)) for i in range(1, 6)],
+        help_text="Rating from 1 (worst) to 5 (best)",
+    )
+    comment = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("venue", "user")  # one review per user per venue
+        ordering = ["-created_at"]
+        verbose_name = "Review"
+        verbose_name_plural = "Reviews"
+
+    def __str__(self):
+        return f"Review {self.rating} — {self.user} @ {self.venue}"
+
+###########################################################################################
+
+###########################################################################################
+
 @receiver(post_save, sender=Venue)
 def update_venue_coordinates(sender, instance, created, **kwargs):
     # Only fetch if latitude or longitude are missing and location is set

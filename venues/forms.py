@@ -4,6 +4,8 @@ from .utils import generate_time_choices
 from django.utils.timezone import now
 from datetime import datetime
 from django.utils.translation import gettext_lazy as _
+from .models import Review
+
 
 
 class ReservationForm(forms.ModelForm):
@@ -112,4 +114,13 @@ class ArrivalStatusForm(forms.ModelForm):
         }
         labels = {
             'arrival_status': _("Arrival status"),
+        }
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ["rating", "comment"]
+        widgets = {
+            "rating": forms.NumberInput(attrs={"min": 1, "max": 5}),
+            "comment": forms.Textarea(attrs={"rows": 3, "placeholder": "Share your experience..."}),
         }
