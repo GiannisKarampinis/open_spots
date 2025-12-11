@@ -30,7 +30,11 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "testserver",
+]
 
 
 # Application definition
@@ -171,6 +175,9 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+if os.environ.get("DJANGO_RUNNING_IN_DOCKER") != "1":
+    DATABASES["default"]["HOST"] = "localhost"
 
 
 # Password validation

@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ request }) => {
   // Reset DB before every test run
-  await request.get("/test/reset-db/");
+  await request.get("/test/delete-yoda/");
 });
 
 test("user signup and login flow", async ({ page }) => {

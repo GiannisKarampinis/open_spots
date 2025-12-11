@@ -30,6 +30,7 @@ services:
       - DATABASE_PASSWORD=supersecret123
       - DATABASE_HOST=db
       - PYTHONUNBUFFERED=1
+      - DJANGO_RUNNING_IN_DOCKER=1
 
   redis:
     image: redis:7

@@ -20,9 +20,8 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
-from django.http import JsonResponse
-from django.contrib.auth import get_user_model
 from django.urls import path, include
+from .test_views import reset_test_user
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -47,10 +46,7 @@ urlpatterns += i18n_patterns(
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
-    def reset_db(request):
-        get_user_model().objects.all().delete()
-        return JsonResponse({"status": "ok"})
 
     urlpatterns += [
-        path("test/reset-db/", reset_db),
+        path("test/delete-yoda/", reset_test_user),
     ]
