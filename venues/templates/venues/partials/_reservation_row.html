@@ -5,12 +5,10 @@
   <td>{{ r.full_name }}</td>
 
   <!-- Date -->
-  {% comment %} <td data-order="{{ r.date|date:'Y-m-d' }}">{{ r.date|date:'M d, Y' }}</td> {% endcomment %}
-  <td data-order="{{ r.date }}">{{ r.date|format_date_display }}</td>
+  <td data-order="{{ r.date|date:'Y-m-d' }}">{{ r.date|format_date_display }}</td>
 
   <!-- Time -->
-  {% comment %} <td data-order="{{ r.time|time:'H:i' }}">{{ r.time|time:'g:i A' }}</td> {% endcomment %}
-  <td data-order="{{ r.time }}">{{ r.time|format_time_display }}</td>
+  <td data-order="{{ r.time|time:'H:i' }}">{{ r.time|format_time_display }}</td>
 
   <td>{{ r.guests }}</td>
 
@@ -27,26 +25,29 @@
         {% trans "Accepted" %}
       {% elif r.status == 'rejected' %}
         {% trans "Rejected" %}
+      {% else %}
+        {% trans "Unknown" %}        
       {% endif %}
     </span>
   </td>
 
   <td>
     {% if r.status == 'pending' %}
-      <a href="{% url 'update_reservation_status' r.id 'accepted' %}"
-         class="btn btn-success btn-sm me-1 btn-accept-reservation"
-         data-status="accepted">
+      
+      <a href         = "{% url 'update_reservation_status' r.id 'accepted' %}"
+         class        = "btn btn-success btn-sm me-1 btn-accept-reservation"
+         data-status  = "accepted">
          ✅ {% trans "Accept" %}
       </a>
 
-      <a href="{% url 'update_reservation_status' r.id 'rejected' %}"
-         class="btn btn-danger btn-sm btn-accept-reservation"
-         data-status="rejected">
+      <a href         = "{% url 'update_reservation_status' r.id 'rejected' %}"
+         class        = "btn btn-danger btn-sm btn-reject-reservation"
+         data-status  = "rejected">
          ❌ {% trans "Reject" %}
       </a>
 
     {% else %}
-      <span class="text-muted">{% trans "—" %}</span>
+      <span class = "text-muted">{% trans "—" %}</span>
     {% endif %}
   </td>
 </tr>

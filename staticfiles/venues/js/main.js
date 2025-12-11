@@ -92,5 +92,5 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
 
-    }, 100);  // ensures other JS has already set up event listeners
+    }, 10);  // ensures other JS has already set up event listeners
 });

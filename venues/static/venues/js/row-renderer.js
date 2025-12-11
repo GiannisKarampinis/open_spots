@@ -57,7 +57,7 @@ function renderRowFromData(data) {
     if (!data || !data.id) return '';
 
     const id                = data.id;
-    const customer          = data.customer_name || (data.customer && data.customer.name) || data.customer || '—';
+    const customer          = data.customer_name || '—';
     const dateISO           = data.date || '';
     const timeRaw           = data.time || '';
     const party             = (data.guests !== undefined && data.guests !== null) ? data.guests : '';

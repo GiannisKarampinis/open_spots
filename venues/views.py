@@ -425,18 +425,29 @@ def update_reservation_status(request, reservation_id, status):
     reservation = get_object_or_404(Reservation, id = reservation_id)
     
     if reservation.venue.owner != request.user:
+        # Ownership of venue check
+        # Insecure Direct Object Reference (IDOR) protection
         return JsonResponse({'error': 'permission denied'}, status=403)
     if status not in ['accepted', 'rejected']:
+        # Only 2 legal state changes via this endpoint
         return JsonResponse({'error': 'invalid status'}, status=400)
 
+    # Backend:  last one wins. There is no protection like “only allow Accept if status is still pending”.
+    # Frontend: you disable the button ($btn.prop('disabled', true)), so single user double-click is mostly handled.
+    # But two different admins could still fight over a reservation and override each other.
+    if reservation.status != 'pending':
+        return JsonResponse({'error': 'only pending reservations can be accepted or rejected'}, status=400)
+
+    # Actual update
     with transaction.atomic():
         if reservation.status != status:
             reservation.status = status
-            reservation.save(editor=request.user, update_fields=['status'])
+            reservation.save(editor = request.user, update_fields = ['status'])
 
+    # Build json payload for frontend
     reservation_data = {
         "id":               reservation.id,
-        "customer_name":    reservation.user.username if reservation.user else None,
+        "customer_name":    reservation.full_name,
         "date":             reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
         "time":             reservation.time.strftime("%H:%M") if reservation.time else None,
         "guests":           getattr(reservation, 'guests', None),
@@ -456,6 +467,111 @@ def update_reservation_status(request, reservation_id, status):
     # notify_venue_admin(venue=reservation.venue, event='reservation.status_updated', reservation=reservation_data)
 
     return JsonResponse({"reservation": reservation_data}, status=200)
+
+###########################################################################################
+
+###########################################################################################
+@login_required
+@venue_admin_required
+@require_POST
+def update_arrival_status(request, reservation_id, arrival_status):
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+
+    if reservation.venue.owner != request.user:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if arrival_status not in ('checked_in', 'no_show'):
+        return JsonResponse({'error': 'Invalid arrival status'}, status=400)
+
+    if reservation.status != 'accepted':
+        return JsonResponse(
+            {'error': 'Arrival status can only be updated for accepted reservations'},
+            status=400
+        )
+    
+    with transaction.atomic():
+        reservation.arrival_status = arrival_status
+        reservation.save(editor=request.user, update_fields=['arrival_status'])
+
+    reservation_data = {
+        "id":               reservation.id,
+        "customer_name":    reservation.full_name,
+        "date":             reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
+        "time":             reservation.time.strftime("%H:%M") if reservation.time else None,
+        "guests":           getattr(reservation, 'guests', None),
+        "status":           reservation.status,
+        "arrival_status":   reservation.arrival_status,
+        "urls": {
+            "move":     reverse('move_reservation_to_requests_ajax',    args=[reservation.id]),
+            "checkin":  reverse('update_arrival_status',                args=[reservation.id, 'checked_in']),
+            "no_show":  reverse('update_arrival_status',                args=[reservation.id, 'no_show']),
+            "accept":   reverse('update_reservation_status',            args=[reservation.id, 'accepted']),
+            "reject":   reverse('update_reservation_status',            args=[reservation.id, 'rejected']),
+        },
+        "updated_at": timezone.now().isoformat(),
+    }
+
+    # Optionally broadcast reservation_data via channels
+    # notify_venue_admin(venue=reservation.venue, event='reservation.arrival_updated', reservation=reservation_data)
+
+    return JsonResponse(
+        {
+            "updated": True,
+            "reservation": reservation_data,
+        }
+    )
+
+###########################################################################################
+
+###########################################################################################
+@login_required
+@venue_admin_required
+@require_POST
+def move_reservation_to_requests_ajax(request, reservation_id):
+    """
+        AJAX endpoint: move a reservation back to 'pending' (requests).
+        Returns JSON with 'reservation' dict (no HTML).
+    """
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+
+    if reservation.venue.owner != request.user:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    moved = False
+    with transaction.atomic():
+        if reservation.status != 'pending' or reservation.arrival_status != 'pending':
+            reservation.status = 'pending'
+            reservation.arrival_status = 'pending'
+            reservation.save(editor=request.user, update_fields=['status', 'arrival_status'])
+            moved = True
+
+    # Build a compact reservation dict for the frontend
+    reservation_data = {
+        "id":               reservation.id,
+        "customer_name":    reservation.full_name,
+        "date":             reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
+        "time":             reservation.time.strftime("%H:%M") if reservation.time else None,
+        "guests":           getattr(reservation, 'guests', None),
+        "status":           reservation.status,
+        "arrival_status":   reservation.arrival_status,
+        # Optional: include action URLs (recommended)
+        "urls": {
+            "accept":       reverse('update_reservation_status',            args = [reservation.id, 'accepted']),
+            "reject":       reverse('update_reservation_status',            args = [reservation.id, 'rejected']),
+            "move":         reverse('move_reservation_to_requests_ajax',    args = [reservation.id]),
+            "checkin":      reverse('update_arrival_status',                args = [reservation.id, 'checked_in']),
+            "no_show":      reverse('update_arrival_status',                args = [reservation.id, 'no_show']),
+        },
+        "updated_at": timezone.now().isoformat(),
+    }
+
+    # Optional: broadcast over channels here (use the same shape)
+    # notify_venue_admin(venue=reservation.venue, event='reservation.moved_to_requests', reservation=reservation_data)
+
+    return JsonResponse({
+        'moved':        moved,
+        'reservation':  reservation_data
+    })
 
 ###########################################################################################
 
@@ -645,106 +761,6 @@ def edit_reservation(request, pk):
 #         'selected_status': arrival_status,
 #     }
 #     return render(request, 'venues/update_arrival_status.html', context)
-
-###########################################################################################
-
-###########################################################################################
-@login_required
-@venue_admin_required
-@require_POST
-def move_reservation_to_requests_ajax(request, reservation_id):
-    """
-        AJAX endpoint: move a reservation back to 'pending' (requests).
-        Returns JSON with 'reservation' dict (no HTML).
-    """
-    reservation = get_object_or_404(Reservation, id=reservation_id)
-
-    if reservation.venue.owner != request.user:
-        return JsonResponse({'error': 'Permission denied'}, status=403)
-
-    moved = False
-    with transaction.atomic():
-        if reservation.status != 'pending' or reservation.arrival_status != 'pending':
-            reservation.status = 'pending'
-            reservation.arrival_status = 'pending'
-            reservation.save(editor=request.user, update_fields=['status', 'arrival_status'])
-            moved = True
-
-    # Build a compact reservation dict for the frontend
-    reservation_data = {
-        "id":               reservation.id,
-        "customer_name":    reservation.user.username if reservation.user else None,
-        "date":             reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
-        "time":             reservation.time.strftime("%H:%M") if reservation.time else None,
-        "guests":           getattr(reservation, 'guests', None),
-        "status":           reservation.status,
-        "arrival_status":   reservation.arrival_status,
-        # Optional: include action URLs (recommended)
-        "urls": {
-            "accept":       reverse('update_reservation_status',            args = [reservation.id, 'accepted']),
-            "reject":       reverse('update_reservation_status',            args = [reservation.id, 'rejected']),
-            "move":         reverse('move_reservation_to_requests_ajax',    args = [reservation.id]),
-            "checkin":      reverse('update_arrival_status',                args = [reservation.id, 'checked_in']),
-            "no_show":      reverse('update_arrival_status',                args = [reservation.id, 'no_show']),
-        },
-        "updated_at": timezone.now().isoformat(),
-    }
-
-    # Optional: broadcast over channels here (use the same shape)
-    # notify_venue_admin(venue=reservation.venue, event='reservation.moved_to_requests', reservation=reservation_data)
-
-    return JsonResponse({
-        'moved':        moved,
-        'reservation':  reservation_data
-    })
-
-###########################################################################################
-
-###########################################################################################
-@login_required
-@venue_admin_required
-@require_POST
-def update_arrival_status(request, reservation_id, arrival_status):
-    reservation = get_object_or_404(Reservation, id=reservation_id)
-
-    if reservation.venue.owner != request.user:
-        return JsonResponse({'error': 'Permission denied'}, status=403)
-
-    if arrival_status not in ('checked_in', 'no_show'):
-        return JsonResponse({'error': 'Invalid arrival status'}, status=400)
-
-    with transaction.atomic():
-        reservation.arrival_status = arrival_status
-        reservation.save(editor=request.user, update_fields=['arrival_status'])
-
-    reservation_data = {
-        "id":               reservation.id,
-        "customer_name":    reservation.user.username if reservation.user else None,
-        "date":             reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
-        "time":             reservation.time.strftime("%H:%M") if reservation.time else None,
-        "guests":           getattr(reservation, 'guests', None),
-        "status":           reservation.status,
-        "arrival_status":   reservation.arrival_status,
-        "urls": {
-            "move":     reverse('move_reservation_to_requests_ajax',    args=[reservation.id]),
-            "checkin":  reverse('update_arrival_status',                args=[reservation.id, 'checked_in']),
-            "no_show":  reverse('update_arrival_status',                args=[reservation.id, 'no_show']),
-            "accept":   reverse('update_reservation_status',            args=[reservation.id, 'accepted']),
-            "reject":   reverse('update_reservation_status',            args=[reservation.id, 'rejected']),
-        },
-        "updated_at": timezone.now().isoformat(),
-    }
-
-    # Optionally broadcast reservation_data via channels
-    # notify_venue_admin(venue=reservation.venue, event='reservation.arrival_updated', reservation=reservation_data)
-
-    return JsonResponse(
-        {
-            "updated": True,
-            "reservation": reservation_data,
-        }
-    )
-
 
 ###########################################################################################
 

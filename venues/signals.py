@@ -40,7 +40,7 @@ def build_reservation_payload(instance):
     # --- Build payload for WebSocket notification ---
     return {
         "id":                   instance.id,
-        "customer_name":        getattr(instance.user, "username", "Unknown"),
+        "customer_name":        instance.full_name,
         "date":                 instance.date.strftime("%Y-%m-%d") if instance.date else None,
         "time":                 instance.time.strftime("%H:%M") if instance.time else None,
         "guests":               getattr(instance, "guests", None),
