@@ -7,3 +7,4 @@ __pycache__/
 media_backup/
 staticfiles/*
 node_modules
+*.patch
