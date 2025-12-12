@@ -33,8 +33,19 @@ User = get_user_model()
 
 ###########################################################################################
 def venue_list(request):
-    kind            = request.GET.get("kind")
+    # What happens in venues that are not approved yet???
+    VALID_KINDS         = [k[0] for k in Venue.VENUE_TYPES]
+    VALID_AVAILABILITY  = ['available', 'full']
+    
+    kind = request.GET.get("kind")    
+    if kind not in VALID_KINDS:
+        # avoids weird string showing up in headers
+        kind = None
+    
     availability    = request.GET.get("availability")
+    if availability not in VALID_AVAILABILITY:
+        # avoids weird string showing up in headers
+        availability = None
 
     venues          = Venue.objects.all()
 
@@ -76,7 +87,6 @@ def venue_list(request):
             .upcoming()   # <- DB-level filter using the new QuerySet method
             .first()
         )
-    print("Upcoming reservation:", upcoming_reservation)
 
     return render(request, "venues/venue_list.html", {
         "venues":                   venues,
