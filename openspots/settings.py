@@ -111,7 +111,27 @@ SOCIALACCOUNT_PROVIDERS = {
 # Automatically proceeds with login when the OAuth2 GET callback is received,
 # skipping the intermediate confirmation screen ("You are about to sign in...")
 SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_REQUIRED = False
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.CustomSocialAccountAdapter'
+ACCOUNT_USERNAME_GENERATOR = 'accounts.utils.generate_username'
 
+# Authentication
+ACCOUNT_LOGIN_METHODS = {'email'}
+
+# Signup form fields
+ACCOUNT_SIGNUP_FIELDS = [
+    'email',
+    'password1*',
+    'password2*',
+]
+
+# Email handling
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+# Disable username entirely
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 
 SITE_ID = 1
 
@@ -123,8 +143,9 @@ AUTHENTICATION_BACKENDS = (
     "allauth.account.auth_backends.AuthenticationBackend",
 )
 
-LOGIN_REDIRECT_URL = '/'
-ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/venues/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
