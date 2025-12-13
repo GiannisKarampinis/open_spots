@@ -39,23 +39,23 @@ def _build_site_url(path: str) -> str:
 
 def send_email_with_template(subject: str, recipient: str, template_base: str, context: dict, async_send: bool = True, request=None):
     """
-    Generic email sender: render templates and send.
+        Generic email sender: render templates and send.
     """
 
-    text_content = ""
-    html_content = None
+    text_content        = ""
+    html_content        = None
     text_template_found = False
     html_template_found = False
 
     try:
-        text_content = render_to_string(f"emails/{template_base}.txt", context)
-        text_template_found = True
+        text_content            = render_to_string(f"emails/{template_base}.txt", context)
+        text_template_found     = True
     except TemplateDoesNotExist:
         text_content = context.get("intro", "You have a notification.")
 
     try:
-        html_content = render_to_string(f"emails/{template_base}.html", context, request=request)
-        html_template_found = True
+        html_content            = render_to_string(f"emails/{template_base}.html", context, request=request)
+        html_template_found     = True
     except TemplateDoesNotExist:
         logger.debug("HTML template %s not found. Sending text-only email.", template_base)
 

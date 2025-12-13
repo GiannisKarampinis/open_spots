@@ -1,0 +1,71 @@
+{% extends "includes/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Verify Email" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'accounts/verify_code.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="verification-container">
+  <h2>{% trans "Verify Your Email" %}</h2>
+  <p>{% trans "Please enter the 6-digit code we sent to your email address." %}</p>
+
+  <form method="post" class="verification-form">
+    {% csrf_token %}
+    <input type="text"
+           name="code"
+           maxlength="6"
+           required
+           pattern="\d{6}"
+           placeholder="{% trans "Enter 6-digit code" %}"
+           autofocus>
+    <button type="submit">{% trans "Verify" %}</button>
+  </form>
+
+  {# Optional: back link to request a new code from the application form #}
+  <div style="margin-top: 1em;">
+    <a href="{% url 'apply_venue' %}" class="resend-button">
+      {% trans "Need a new code? Go back to the application and verify again." %}
+    </a>
+  </div>
+</div>
+
+{% if remaining_seconds %}
+<div id="countdown">
+  {% trans "Verification code expires in" %} <span id="timer">{{ remaining_seconds }}</span> {% trans "seconds" %}.
+  <div id="countdown-bar-bg">
+    <div id="countdown-bar-fill"></div>
+  </div>
+</div>
+
+<script>
+  const timer        = document.getElementById("timer");
+  const barFill      = document.getElementById("countdown-bar-fill");
+  let seconds        = parseInt(timer.innerText);
+  const totalSeconds = seconds;
+
+  const interval = setInterval(() => {
+    seconds--;
+    timer.innerText = seconds;
+
+    let percent = (seconds / totalSeconds) * 100;
+    barFill.style.width = percent + "%";
+
+    if (seconds <= 0) {
+      clearInterval(interval);
+      document.getElementById("countdown").innerText =
+        "{% trans "Verification code has expired." %}";
+
+      setTimeout(() => {
+        // For venue flow, send them back to the application to request a new code
+        window.location.href = "{% url 'apply_venue' %}";
+      }, 2000);
+    }
+  }, 1000);
+</script>
+{% endif %}
+
+{% endblock %}

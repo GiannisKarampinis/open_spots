@@ -296,7 +296,6 @@ class VenueApplication(models.Model):
     venue_type      = models.CharField(max_length=20, choices=VENUE_TYPES, default='other')
     location        = models.CharField(max_length=255)
     description     = models.TextField(blank=True)
-    capacity        = models.PositiveIntegerField()
     admin_name      = models.CharField(max_length=100)
     admin_email     = models.EmailField()
     phone           = models.CharField(max_length=20, blank=True)
@@ -314,11 +313,11 @@ class VenueApplication(models.Model):
 
 ###########################################################################################        
 class VenueVisit(models.Model):
-    venue = models.ForeignKey(Venue, on_delete=models.CASCADE)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    session_key = models.CharField(max_length=40, blank=True, null=True)
-    ip_address = models.GenericIPAddressField(blank=True, null=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    venue           = models.ForeignKey(Venue, on_delete=models.CASCADE)
+    user            = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    session_key     = models.CharField(max_length=40, blank=True, null=True)
+    ip_address      = models.GenericIPAddressField(blank=True, null=True)
+    timestamp       = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         if self.user:

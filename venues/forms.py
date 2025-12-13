@@ -73,18 +73,34 @@ class VenueApplicationForm(forms.ModelForm):
         model = VenueApplication
         fields = [
             'venue_name', 'venue_type', 'location', 'description',
-            'capacity', 'admin_name', 'admin_email', 'phone'
+            'admin_name', 'admin_email', 'phone'
         ]
         labels = {
             'venue_name': _("Venue name"),
             'venue_type': _("Venue type"),
             'location': _("Location"),
             'description': _("Description"),
-            'capacity': _("Capacity"),
             'admin_name': _("Admin name"),
             'admin_email': _("Admin email"),
             'phone': _("Phone"),
         }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        required_fields = [
+            'venue_name', 
+            'venue_type', 
+            'location', 
+            'admin_name', 
+            'admin_email', 
+            'phone'
+        ]
+
+        for field_name in required_fields:
+            self.fields[field_name].required = True
+        self.fields["description"].required = False # Explicitly mark description as optional for future clarity
 
 
 class VenueSignupForm(forms.ModelForm):
@@ -94,12 +110,10 @@ class VenueSignupForm(forms.ModelForm):
         labels = {
             'name': _("Venue name"),
             'location': _("Location"),
-            'capacity': _("Capacity"),
         }
 
 
 class ArrivalStatusForm(forms.ModelForm):
-
     move_to_requests = forms.BooleanField(
         required=False,
         label=_("Move back to Reservation Requests"),

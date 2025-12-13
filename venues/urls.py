@@ -8,6 +8,13 @@ urlpatterns = [
 
     # Venue application and dashboard
     path('apply-venue/',                                                            views.apply_venue,                          name='apply_venue'), # add a new venue to our app
+    path("verify-email/",                                                           views.verify_venue_email,                   name="verify_venue_email"),
+    
+    # AJAX endpoints
+    path("ajax/send-venue-code/",                                                   views.ajax_send_venue_code,                 name="ajax_send_venue_code"),
+    path("ajax/verify-venue-code/",                                                 views.ajax_verify_venue_code,               name="ajax_verify_venue_code"),
+
+
     path('dashboard/<int:venue_id>/',                                               views.venue_dashboard,                      name='venue_dashboard'), # An owner of a venue can browse the reservations of their venue(/s)
 
     # Venue status toggle

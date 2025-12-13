@@ -150,3 +150,31 @@ def send_reservation_notification(instance, created=False, editor=None, changes_
             )
         except Exception:
             logger.exception("Failed to send reservation notification email to %s", email_info.get("recipient"))
+
+
+###########################################################################################
+
+###########################################################################################
+def send_venue_verification_code(email, code, async_send=True):
+    """
+    Reuses the SAME email template used for user email verification.
+    Only difference: we pass the code directly, not a user.
+    """
+    try:
+        send_email_with_template(
+            subject             =   "Verify your email address",
+            recipient           =   email,
+            template_base       =   "verification_code",  # SAME TEMPLATE            
+            context             =   {
+                "code"          :   code,  # template expects {{ code }}
+            },
+            async_send          =   async_send,
+        )
+        logger.info("Sent venue verification code to %s", email)
+    
+    except Exception:
+        logger.exception("Failed to send venue verification code to %s", email)
+        
+###########################################################################################
+
+###########################################################################################

@@ -8,11 +8,14 @@
   {{ code }}
 </p>
 
-<p>This code will expire soon. Please enter it in the verification form to confirm your email.</p>
+<p>
+  This code will expire soon. Please enter it in the verification form to confirm your email.
+</p>
 
 {% if verify_url %}
-<p style="text-align: center;">
-  <a href="{{ verify_url }}" class="button button-primary">Verify Email</a>
-</p>
+  <p style="text-align: center;">
+    <a href = "{{ verify_url }}" class = "button button-primary"> Verify Email </a>
+  </p>
 {% endif %}
+
 {% endblock %}
