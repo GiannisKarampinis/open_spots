@@ -335,68 +335,6 @@ def assign_venue_permissions(user):
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
-@receiver(post_save, sender=Venue)
-def create_admin_user_for_venue(sender, instance, created, **kwargs):
-    logger.info(f"Signal triggered for venue '{instance.name}', created={created}")
-
-    if not created:
-        return
-
-    if not instance.email:
-        logger.warning(f"No email provided for venue '{instance.name}', skipping admin user creation.")
-        return
-
-    try:
-        raw_password = get_random_string(12)
-        username = instance.name.lower().replace(" ", "_") + "_admin"
-
-        if not User.objects.filter(username=username).exists():
-            user = User.objects.create_user(
-                username=username,
-                email='',
-                password=raw_password
-            )
-            user.is_staff = True
-            user.user_type = 'venue_admin'
-            user.unverified_email = instance.email
-            user.email_verified = False
-            user.save()
-            assign_venue_permissions(user)
-
-            instance.owner = user
-            instance.save(update_fields=["owner"])
-
-             # send_verification_code(user)  # Send verification code to unverified_email
-            # Send verification code after transaction commit to avoid circular imports / race conditions.
-            # Import is done lazily inside the callback.
-            def _send_verification_code():
-                try:
-                    from emails_manager.utils import send_verification_code
-                    send_verification_code(user)
-                except Exception:
-                    logger.exception(f"Failed to send verification code to new venue admin {getattr(user, 'username', None)}")
-
-            transaction.on_commit(_send_verification_code)
-
-            send_mail(
-                subject='Your OpenSpots Venue Admin Account',
-                message=(
-                    f"Welcome to OpenSpots!\n\nYour admin account is ready:\n"
-                    f"Username: {username}\n"
-                    f"Email: {instance.email}\n"
-                    f"Password: {raw_password}\n\n"
-                    f"Login and change your password ASAP."
-                ),
-                from_email='openspots.application@gmail.com',
-                recipient_list=[instance.email],
-                fail_silently=False,
-            )
-
-            logger.info(f"Admin user created and email sent for venue '{instance.name}'.")
-
-    except Exception as e:
-        logger.error(f"Failed to create admin user or send email for venue '{instance.name}': {e}")
-
 ###########################################################################################
 
 ###########################################################################################

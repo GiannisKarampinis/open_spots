@@ -1,8 +1,183 @@
 from django.utils               import timezone
-from django.contrib             import admin
+from django.contrib             import admin, messages
 from django.utils.html          import format_html
-from .models                    import Venue, Table, Reservation, Review, VenueApplication, VenueUpdateRequest, VenueVisit, VenueImage, VenueMenuImage
 from django.utils.html          import format_html
+from django.contrib.auth        import get_user_model
+from django.db                  import transaction
+from django.utils.crypto        import get_random_string
+from django.contrib.auth.tokens import default_token_generator
+from django.urls                import reverse
+from django.conf                import settings
+from django.core.mail           import send_mail
+
+from .models                    import Venue, Table, Reservation, Review, VenueApplication, VenueUpdateRequest, VenueVisit, VenueImage, VenueMenuImage, VenueApplication
+from .models                    import assign_venue_permissions
+from django.utils.encoding      import force_bytes
+from django.utils.http          import urlsafe_base64_encode 
+
+User = get_user_model()
+
+
+@admin.register(VenueApplication)
+class VenueApplicationAdmin(admin.ModelAdmin):
+    list_display  = ("venue_name", "admin_email", "submitted_at", "reviewed", "accepted")
+    list_filter   = ("reviewed", "accepted")
+    search_fields = ("venue_name", "admin_email")
+    ordering      = ("-submitted_at",)
+    actions       = ["mark_as_accepted"]
+
+    @admin.action(description="Accept applications (create owner + venue)")
+    def mark_as_accepted(self, request, queryset):
+        accepted = 0
+        skipped  = 0
+        failed   = 0
+
+        # Process each row safely
+        for app in queryset:
+            try:
+                with transaction.atomic():
+                    # Lock the row inside a transaction (prevents double-accept in concurrent admins)
+                    app = (
+                        VenueApplication.objects.select_for_update()
+                        .get(pk=app.pk)
+                    )
+
+                    # Skip already processed
+                    if app.accepted is True:
+                        skipped += 1
+                        continue
+
+                    email = (app.admin_email or "").strip().lower()
+                    if not email:
+                        self.message_user(request, f"{app.venue_name}: missing admin_email", level=messages.ERROR)
+                        failed += 1
+                        continue
+
+                    # Optional: prevent duplicate venue creation
+                    if Venue.objects.filter(email__iexact=email, name=app.venue_name).exists():
+                        app.reviewed = True
+                        app.accepted = True
+                        app.save(update_fields=["reviewed", "accepted"])
+                        skipped += 1
+                        continue
+
+                    # -----------------------------
+                    # 1) Create or reuse user
+                    # -----------------------------
+                    user = User.objects.filter(email__iexact=email).first()
+                    created_user = False
+
+                    if not user:
+                        created_user = True
+
+                        # Generate a safe unique username
+                        base = email.split("@")[0][:24] or "venueadmin"
+                        username = base
+                        i = 1
+                        while User.objects.filter(username=username).exists():
+                            i += 1
+                            username = f"{base}{i}"
+
+                        password = get_random_string(16)  # not emailed
+
+                        user = User.objects.create_user(
+                            username=username,
+                            email=email,
+                            password=password,
+                        )
+
+                    # Ensure user is venue admin + staff
+                    # (Only set fields if they exist on your custom model)
+                    updates = []
+                    if getattr(user, "user_type", None) != "venue_admin":
+                        user.user_type = "venue_admin"
+                        updates.append("user_type")
+
+                    if not user.is_staff:
+                        user.is_staff = True
+                        updates.append("is_staff")
+
+                    # If you trust the verified-email flow, set it here
+                    if hasattr(user, "email_verified") and not user.email_verified:
+                        user.email_verified = True
+                        updates.append("email_verified")
+
+                    if updates:
+                        user.save(update_fields=updates)
+
+                    assign_venue_permissions(user)
+
+                    # Send password setup email ONLY for brand new users
+                    if created_user:
+                        self._send_password_setup_email(request, user)
+
+                    # -----------------------------
+                    # 2) Create venue
+                    # -----------------------------
+                    Venue.objects.create(
+                        name        = app.venue_name,
+                        kind        = app.venue_type,
+                        location    = app.location,
+                        description = app.description,
+                        email       = email,
+                        phone       = app.phone,
+                        owner       = user,
+                    )
+
+                    # -----------------------------
+                    # 3) Mark application accepted
+                    # -----------------------------
+                    app.reviewed = True
+                    app.accepted = True
+                    app.save(update_fields=["reviewed", "accepted"])
+
+                    accepted += 1
+
+            except Exception as e:
+                failed += 1
+                self.message_user(request, f"Failed for {getattr(app, 'venue_name', 'unknown')}: {e}", level=messages.ERROR)
+
+        self.message_user(
+            request,
+            f"Accepted: {accepted}, skipped: {skipped}, failed: {failed}",
+            level=messages.SUCCESS if failed == 0 else messages.WARNING
+        )
+
+    def _send_password_setup_email(self, request, user):
+        # Build proper Django password-reset-confirm URL (uidb64 + token)
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        token  = default_token_generator.make_token(user)
+
+        path = reverse("password_reset_confirm", kwargs={"uidb64": uidb64, "token": token})
+
+        # Build absolute URL from current request
+        reset_url = request.build_absolute_uri(path)
+
+        send_mail(
+            subject="Your OpenSpots venue account",
+            message=(
+                "Your venue has been approved 🎉\n\n"
+                "Set your password using the link below:\n\n"
+                f"{reset_url}\n"
+            ),
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
+    def get_model_perms(self, request):
+        return super().get_model_perms(request) if request.user.is_superuser else {}
+
+
+
+
+
+
+
+
+
+
+
 
 class TableInline(admin.TabularInline):
     model = Table
@@ -142,26 +317,6 @@ class ReservationAdmin(admin.ModelAdmin):
         Override to pass the editor (request.user) to Reservation.save()
         """
         obj.save(editor=request.user)
-
-
-@admin.register(VenueApplication)
-class VenueApplicationAdmin(admin.ModelAdmin):
-    list_display = ('venue_name', 'admin_email', 'submitted_at', 'reviewed', 'accepted')
-    list_filter = ('reviewed', 'accepted')
-    search_fields = ('venue_name', 'admin_email')
-    ordering = ('-submitted_at',)
-    actions = ['mark_as_accepted']
-
-    @admin.action(description="Mark selected applications as accepted")
-    def mark_as_accepted(self, request, queryset):
-        updated = queryset.update(reviewed=True, accepted=True)
-        self.message_user(request, f"{updated} application(s) marked as accepted.")
-
-    def get_model_perms(self, request):
-        # Only superusers should manage applications
-        if request.user.is_superuser:
-            return super().get_model_perms(request)
-        return {}
 
 
 @admin.register(VenueVisit)
