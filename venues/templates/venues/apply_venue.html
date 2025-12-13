@@ -5,180 +5,184 @@
 {% block title %}{% trans "Apply to Register a Venue" %}{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'venues/apply_venue.css' %}">
-    <link rel="stylesheet" href="{% static 'accounts/verify_code.css' %}">
-    <style>
-        /* Small popover modal anchored near the button */
-        .email-verify-wrapper { position: relative; }
+  <link rel="stylesheet" href="{% static 'venues/apply_venue.css' %}">
+  <link rel="stylesheet" href="{% static 'accounts/verify_code.css' %}">
+  <style>
+    /* Small popover modal anchored near the button */
+    .email-verify-wrapper { position: relative; }
 
-        .verify-popover {
-            position: absolute;
-            z-index: 9999;
-            top: calc(100% + 8px);
-            right: 0;
-            width: 320px;
-            max-width: 90vw;
-            display: none;
-        }
+    .verify-popover{
+      position:absolute;
+      z-index:9999;
+      top:calc(100% + 8px);
+      right:0;
+      width:320px;
+      max-width:90vw;
+      display:none;
+    }
 
-        /* Make it feel like your verification page but compact */
-        .verify-popover .verification-container {
-            padding: 16px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            background: #fff;
-        }
+    /* Make it feel like your verification page but compact */
+    .verify-popover .verification-container{
+      padding:16px;
+      border-radius:12px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.15);
+      background:#fff;
+    }
 
-        .verify-popover .verification-form input {
-            width: 100%;
-        }
+    .verify-popover .verification-form input{ width:100%; }
 
-        .verify-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 8px;
-        }
+    .verify-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-top:8px;
+    }
 
-        .verify-row .badge { white-space: nowrap; }
+    .verify-actions{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+    }
 
-        .verify-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
+    .verify-actions button{ flex:1; }
 
-        .verify-actions button {
-            flex: 1;
-        }
+    .verify-close-x{
+      position:absolute;
+      top:10px;
+      right:12px;
+      border:none;
+      background:transparent;
+      font-size:18px;
+      line-height:1;
+      cursor:pointer;
+    }
 
-        .verify-close-x {
-            position: absolute;
-            top: 10px;
-            right: 12px;
-            border: none;
-            background: transparent;
-            font-size: 18px;
-            line-height: 1;
-            cursor: pointer;
-        }
+    /* Verification message styling */
+    .verify-msg{
+      margin-top:8px;
+      font-size:0.95rem;
+      font-weight:600;
+    }
+    .verify-msg.is-error{ color:#d93025; }   /* red */
+    .verify-msg.is-success{ color:#188038; } /* green */
 
-        .verify-msg {
-            margin-top: 8px;
-            font-size: 0.95rem;
-        }
-    </style>
+  </style>
 {% endblock %}
 
 {% block content %}
-
 <div class="apply-container">
 
-    <div class="form-header">
-        <h2>{% trans "Apply to Register Your Venue" %}</h2>
-        <p class="form-intro">
-            {% trans "Fields marked with" %} <span class="text-danger">*</span>
-            {% trans "are required. You must also verify your admin email before submitting the application." %}
-        </p>
-    </div>
+  <div class="form-header">
+    <h2>{% trans "Apply to Register Your Venue" %}</h2>
+    <p class="form-intro">
+      {% trans "Fields marked with" %} <span class="text-danger">*</span>
+      {% trans "are required. You must also verify your admin email before submitting the application." %}
+    </p>
+  </div>
 
-    {% if form.non_field_errors %}
-        <ul class="errorlist">
-            {% for error in form.non_field_errors %}
-                <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+  {% if form.non_field_errors %}
+    <ul class="errorlist">
+      {% for error in form.non_field_errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
 
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="form-group {% if field.name == 'admin_email' %}email-verify-wrapper{% endif %}">
-                <label for="{{ field.id_for_label }}">
-                    {% trans field.label %}
-                    {% if field.field.required %} 
-                        <span class="text-danger">*</span>
-                    {% endif %}
-                </label>
+  <form method="post" novalidate>
+    {% csrf_token %}
 
-                {{ field }}
-                
-                {% if field.name == 'admin_email' %}
-                    <div class="verify-row">
-                        <button type="button" class="btn btn-secondary" id="openVerifyPopover">
-                            {% trans "Verify Email" %}
-                        </button>
+    {% for field in form %}
+      <div class="form-group {% if field.name == 'admin_email' %}email-verify-wrapper{% endif %}">
+        <label for="{{ field.id_for_label }}">
+          {% trans field.label %}
+          {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+        </label>
 
-                        <span id="verifiedBadge" class="badge badge-success" {% if not email_verified %}style="display:none;"{% endif %}>
-                            {% trans "Verified" %}
-                        </span>
-                    </div>
+        {{ field }}
 
-                    {# Popover (small version of verify_code page) #}
-                    <div id="verifyPopover" class="verify-popover">
-                        <div class="verification-container">
-                            <button type="button" class="verify-close-x" id="closeVerifyPopover" aria-label="{% trans 'Close' %}">×</button>
+        {% if field.name == 'admin_email' %}
+          <div class="verify-row">
+            <button type="button" class="btn btn-secondary" id="openVerifyPopover">
+              {% trans "Verify Email" %}
+            </button>
+          </div>
 
-                            <h2 style="font-size: 1.15rem; margin-bottom: 6px;">{% trans "Verify Your Email" %}</h2>
-                            <p style="margin: 0 0 10px 0;">{% trans "Enter the 6-digit code sent to your email." %}</p>
+          {# Popover (small version of verify_code page) #}
+          <div id="verifyPopover" class="verify-popover" aria-hidden="true">
+            <div class="verification-container">
+              <button type="button" class="verify-close-x" id="closeVerifyPopover" aria-label="{% trans 'Close' %}">×</button>
 
-                            <div id="verifyMsg" class="verify-msg"></div>
+              <h2 style="font-size:1.15rem; margin-bottom:6px;">{% trans "Verify Your Email" %}</h2>
+              <p style="margin:0 0 10px 0;">{% trans "Enter the 6-digit code sent to your email." %}</p>
 
-                            <form class="verification-form" onsubmit="return false;">
-                                <input type="text"
-                                    id="codeInput"
-                                    name="code"
-                                    maxlength="6"
-                                    required
-                                    pattern="\d{6}"
-                                    inputmode="numeric"
-                                    autocomplete="one-time-code"
-                                    placeholder="{% trans 'Enter 6-digit code' %}">
-                            </form>
+              <div id="verifyMsg" class="verify-msg" role="status" aria-live="polite"></div>
 
-                            <div class="verify-actions">
-                                <button type="button" class="resend-button" id="sendCodeBtn">
-                                    {% trans "Send Code" %}
-                                </button>
-                                <button type="button" id="verifyCodeBtn">
-                                    {% trans "Verify" %}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
+              {# IMPORTANT: no nested <form> inside the main form #}
+              <div class="verification-form">
+                <input
+                  type="text"
+                  id="codeInput"
+                  name="code"
+                  maxlength="6"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  placeholder="{% trans 'Enter 6-digit code' %}">
+              </div>
 
-                {% if field.errors %}
-                    <ul class="errorlist">
-                        {% for error in field.errors %}
-                        <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
+              <div class="verify-actions">
+                <button type="button" class="resend-button" id="sendCodeBtn">
+                  {% trans "Send Code" %}
+                </button>
+                <button type="button" id="verifyCodeBtn">
+                  {% trans "Verify" %}
+                </button>
+              </div>
             </div>
-        {% endfor %}
+          </div>
+        {% endif %}
 
-        <input  id    = "submitApplicationBtn"
-                type  = "submit" 
-                value = "{% trans "Submit Application" %}" 
-                class = "btn primary-btn mt-3"
-                {% if not email_verified %} disabled {% endif %}>
-    </form>
+        {% if field.errors %}
+          <ul class="errorlist">
+            {% for error in field.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <button id="submitApplicationBtn"
+            type="submit"
+            name="action"
+            value="submit_application"
+            class="btn primary-btn mt-3"
+            {% if not email_verified %}disabled{% endif %}>
+    {% trans "Submit Application" %}
+    </button>
+
+  </form>
 </div>
 
 <script>
-  const popover = document.getElementById("verifyPopover");
-  const msgEl = document.getElementById("verifyMsg");
-  const codeInput = document.getElementById("codeInput");
+  const popover      = document.getElementById("verifyPopover");
+  const msgEl        = document.getElementById("verifyMsg");
+  const codeInput    = document.getElementById("codeInput");
 
-  const openBtn = document.getElementById("openVerifyPopover");
-  const closeBtn = document.getElementById("closeVerifyPopover");
+  const openBtn      = document.getElementById("openVerifyPopover");
+  const closeBtn     = document.getElementById("closeVerifyPopover");
 
-  const sendBtn = document.getElementById("sendCodeBtn");
-  const verifyBtn = document.getElementById("verifyCodeBtn");
+  const sendBtn      = document.getElementById("sendCodeBtn");
+  const verifyBtn    = document.getElementById("verifyCodeBtn");
 
-  const submitBtn = document.getElementById("submitApplicationBtn");
-  const verifiedBadge = document.getElementById("verifiedBadge");
+  const verifyButton = document.getElementById("openVerifyPopover");
+  const submitBtn    = document.getElementById("submitApplicationBtn");
+  const emailInput   = document.getElementById("id_admin_email");
+
+  const VERIFY_DEFAULT_TEXT = verifyButton
+    ? verifyButton.textContent.trim()
+    : "{% trans 'Verify Email' %}";
+
+  let verifiedEmail = null;
 
   function getCSRFToken() {
     const name = "csrftoken=";
@@ -188,27 +192,55 @@
   }
 
   function adminEmailValue() {
-    const el = document.getElementById("id_admin_email");
-    return el ? el.value.trim() : "";
+    return emailInput ? emailInput.value.trim() : "";
   }
 
   function showMsg(text, ok=true) {
     msgEl.textContent = text;
-    msgEl.style.color = ok ? "" : "crimson";
+    msgEl.classList.remove("is-error", "is-success");
+    msgEl.classList.add(ok ? "is-success" : "is-error");
   }
 
   function openPopover() {
     popover.style.display = "block";
-    showMsg("");
+    popover.setAttribute("aria-hidden", "false");
+    showMsg("", true);
     codeInput.value = "";
     codeInput.focus();
   }
 
   function closePopover() {
     popover.style.display = "none";
+    popover.setAttribute("aria-hidden", "true");
   }
 
-  // Open/close handlers
+  function markVerified() {
+    if (!verifyButton) return;
+
+    verifiedEmail = adminEmailValue().toLowerCase();
+
+    verifyButton.classList.add("is-verified");
+    verifyButton.textContent = "{% trans 'Verified' %}";
+    verifyButton.disabled = true;
+    verifyButton.style.cursor = "default";
+
+    if (submitBtn) submitBtn.disabled = false;
+  }
+
+  function resetVerificationUI() {
+    if (!verifyButton) return;
+
+    verifyButton.classList.remove("is-verified");
+    verifyButton.textContent = VERIFY_DEFAULT_TEXT;
+    verifyButton.disabled = false;
+    verifyButton.style.cursor = "";
+
+    if (submitBtn) submitBtn.disabled = true;
+  }
+
+  // ---------------------------
+  // Open / close popover
+  // ---------------------------
   openBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     openPopover();
@@ -219,20 +251,23 @@
     closePopover();
   });
 
-  // Close when clicking outside the popover (nice UX)
+  // Close when clicking outside wrapper
   document.addEventListener("click", (e) => {
     if (!popover) return;
     const wrapper = popover.closest(".email-verify-wrapper");
     if (!wrapper) return;
-
-    const clickedInside = wrapper.contains(e.target);
-    if (!clickedInside) closePopover();
+    if (!wrapper.contains(e.target)) closePopover();
   });
 
-  // Send code
+  // ---------------------------
+  // Send verification code
+  // ---------------------------
   sendBtn?.addEventListener("click", async () => {
     const email = adminEmailValue();
-    if (!email) return showMsg("{% trans 'Enter admin email first.' %}", false);
+    if (!email) {
+      showMsg("{% trans 'Enter admin email first.' %}", false);
+      return;
+    }
 
     const formData = new FormData();
     formData.append("email", email);
@@ -244,15 +279,23 @@
     });
 
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) return showMsg(data.error || "{% trans 'Failed to send code.' %}", false);
+    if (!res.ok || !data.ok) {
+      showMsg(data.error || "{% trans 'Failed to send code.' %}", false);
+      return;
+    }
 
     showMsg("{% trans 'Code sent. Check your inbox.' %}", true);
   });
 
-  // Verify code (close modal on success)
+  // ---------------------------
+  // Verify code
+  // ---------------------------
   verifyBtn?.addEventListener("click", async () => {
     const code = (codeInput.value || "").trim();
-    if (!/^\d{6}$/.test(code)) return showMsg("{% trans 'Enter a valid 6-digit code.' %}", false);
+    if (!/^\d{6}$/.test(code)) {
+      showMsg("{% trans 'Enter a valid 6-digit code.' %}", false);
+      return;
+    }
 
     const formData = new FormData();
     formData.append("code", code);
@@ -264,17 +307,27 @@
     });
 
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) return showMsg(data.error || "{% trans 'Verification failed.' %}", false);
+    if (!res.ok || !data.ok) {
+      showMsg(data.error || "{% trans 'Verification failed.' %}", false);
+      return;
+    }
 
-    // ✅ success UI updates
     showMsg("{% trans 'Email verified ✅' %}", true);
+    markVerified();
 
-    if (verifiedBadge) verifiedBadge.style.display = "inline-block";
-    if (submitBtn) submitBtn.disabled = false;
-
-    // ✅ close popover shortly after success
     setTimeout(() => closePopover(), 400);
   });
-</script>
 
+  // ---------------------------
+  // Reset verification ONLY if email changes AFTER being verified
+  // ---------------------------
+  emailInput?.addEventListener("input", () => {
+    if (!verifiedEmail) return;
+
+    if (adminEmailValue().toLowerCase() !== verifiedEmail) {
+      resetVerificationUI();
+      verifiedEmail = null;
+    }
+  });
+</script>
 {% endblock %}
