@@ -139,6 +139,8 @@
               </div>
             </div>
           </div>
+        {% elif field.name == 'location' %}
+          <div id="locationSuggestions" class="location-suggestions" style="display:none;"></div>        
         {% endif %}
 
         {% if field.errors %}
@@ -329,5 +331,94 @@
       verifiedEmail = null;
     }
   });
+
+(() => {
+  const input = document.getElementById("id_location");
+  if (!input) return;
+
+  // Wrap suggestions under the same form-group
+  const formGroup = input.closest(".form-group");
+  formGroup.style.position = "relative";
+
+  let box = document.getElementById("locationSuggestions");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "locationSuggestions";
+    box.className = "location-suggestions";
+    box.style.display = "none";
+    formGroup.appendChild(box);
+  }
+
+  let timer = null;
+  let abort = null;
+
+  function hide() {
+    box.style.display = "none";
+    box.innerHTML = "";
+  }
+
+  function show(items) {
+    box.innerHTML = "";
+    items.forEach(it => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = it.display_name;
+      btn.addEventListener("click", () => {
+        input.value = it.display_name;
+        hide();
+      });
+      box.appendChild(btn);
+    });
+    box.style.display = items.length ? "block" : "none";
+  }
+
+  async function search(q) {
+    if (abort) abort.abort();
+    abort = new AbortController();
+
+    const url = new URL("https://nominatim.openstreetmap.org/search");
+    url.searchParams.set("format", "json");
+    url.searchParams.set("addressdetails", "1");
+    url.searchParams.set("limit", "6");
+    url.searchParams.set("countrycodes", "gr");
+    url.searchParams.set("q", q);
+
+    const res = await fetch(url.toString(), {
+      signal: abort.signal,
+      headers: {
+        // not always required in browsers, but harmless
+        "Accept": "application/json"
+      }
+    });
+
+    if (!res.ok) return [];
+    return await res.json();
+  }
+
+  input.addEventListener("input", () => {
+    const q = input.value.trim();
+    if (q.length < 3) return hide();
+
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+      try {
+        const items = await search(q);
+        show(items);
+      } catch (e) {
+        // aborted requests are normal
+      }
+    }, 250);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!formGroup.contains(e.target)) hide();
+  });
+
+  input.addEventListener("blur", () => {
+    // small delay so clicks register
+    setTimeout(hide, 150);
+  });
+})();
 </script>
+
 {% endblock %}

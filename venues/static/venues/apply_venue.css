@@ -282,3 +282,30 @@
   outline: none;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.35);
 }
+
+.location-suggestions {
+  position: absolute;
+  background: var(--surface-color);
+  border: 1px solid #555;
+  border-radius: 8px;
+  width: 100%;
+  max-height: 220px;
+  overflow: auto;
+  margin-top: 6px;
+  z-index: 9999;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.location-suggestions button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 10px 12px;
+  color: var(--button-text);
+  cursor: pointer;
+}
+
+.location-suggestions button:hover {
+  background: rgba(255,255,255,0.06);
+}

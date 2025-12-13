@@ -1,81 +1,311 @@
-/* ===============================
-   Admin email + verify button row
-   =============================== */
+.apply-container {
+    background-color:      var(--surface-color);     /* Dark gray background */
+    padding:               40px;                     /* Padding inside container */
+    border-radius:         10px;                     /* Rounded corners */
+    box-shadow:            0 0 25px rgba(255,255,255,0.1); /* Soft white glow */
+    margin:                60px auto;                /* Center horizontally, top/bottom margin */
+    color:                 var(--button-text);       /* Text color */
+    font-family:           'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean readable font */
+    max-width:             700px;                    /* Limit max width */
+    width:                 55%;                      /* Make width flexible */
+    box-sizing:            border-box;               /* Include padding in width */
+}
 
-/* Wrapper: label on top, input row below */
-.apply-container .form-group.email-verify-wrapper {
-    position: relative;
+.apply-container .form-header {
+    margin-bottom:         30px;                     /* Space below header */
+}
+
+/* Headings consistency */
+.apply-container h2 {
+    text-align:            center;                    /* Centered heading */
+    margin-bottom:         20px;                      /* Space below heading */
+    font-weight:           700;                       /* Bold font */
+    font-size:             2rem;                      /* Large font size */
+    color:                 var(--button-text);                    /* Light gray text */
+}
+
+/* Labels */
+.apply-container .form-group label {
+    display:               block;                     /* Full width */
+    color:                 var(--button-text);                   /* Keep white */
+}
+
+/* Form group spacing */
+.apply-container .form-group {
     display: flex;
     flex-direction: column;
+    margin-bottom: 20px;  /* consistent */
+    width: 100%;
     gap: 6px;
 }
 
-/* Label stays full width */
+/* Inputs consistent */
+.apply-container .form-group input,
+.apply-container .form-group select,
+.apply-container .form-group textarea {
+    width:                 100%;
+    padding:               12px 15px;
+    background-color:      var(--background-color);              /* Darker background */
+    border:                1px solid #555;
+    color:                 var(--text-color);
+    border-radius:         6px;
+    margin-bottom:         15px;                     /* consistent spacing */
+    font-size:             1rem;
+    outline:               none;
+    transition:            border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing:            border-box;
+}
+
+/* Focus style for inputs */
+.apply-container .form-group input:focus,
+.apply-container .form-group select:focus,
+.apply-container .form-group textarea:focus {
+    border-color:          var(--primary-color);                   /* Blue border on focus */
+    box-shadow:            0 0 6px var(--primary-hover);           /* Blue glow */
+}
+
+/* Email verify wrapper label */
 .apply-container .form-group.email-verify-wrapper > label {
-    width: 100%;
-    display: block;
+    width:                  100%;
+    display:                block;
 }
 
-/* Input spacing fix ONLY for admin_email */
+/* Error list */
+.apply-container .form-group ul.errorlist {
+    list-style:            none;
+    padding:               0;
+    margin:                -10px 0 10px;               /* consistent spacing */
+    color:                 #ff4d4f;
+    font-size:             0.95rem;
+    font-weight:           500;
+    animation:             fadeIn 0.3s ease forwards;
+}
+
+/* Inputs with errors */
+.apply-container input[aria-invalid="true"],
+.apply-container select[aria-invalid="true"],
+.apply-container textarea[aria-invalid="true"] {
+    border-color:          #ff4d4f !important;
+    box-shadow:            0 0 6px #ff4d4f;
+}
+
+/* Submit button */
+.apply-container .btn.primary-btn {
+    width:                 100%;
+    padding:               14px;
+    margin-top:            20px;
+    background-color:      var(--primary-color);
+    color:                 var(--button-text);
+    border-radius:         6px;
+    border:                none;
+    cursor:                pointer;
+    font-size:             1.1rem;
+    font-weight:           700;
+    transition:            background-color 0.3s ease;
+}
+
+.apply-container .btn.primary-btn:hover {
+    background-color:      #0056b3;
+}
+
+
+/* --- Keep your selectors, fix layout for admin_email row --- */
+
+/* admin_email form-group must be column: label on top, row below */
+.apply-container .form-group.email-verify-wrapper {
+  display:                  flex;
+  flex-direction:           column;
+  align-items:              stretch;
+  gap:                      8px;
+}
+
+/* make input + verify-row sit on same line */
+.apply-container .form-group.email-verify-wrapper > input,
+.apply-container .form-group.email-verify-wrapper > select,
+.apply-container .form-group.email-verify-wrapper > textarea {
+  margin-bottom:            0; /* remove the big margin that pushes layout down */
+}
+
+/* put field + verify-row into a single line by making verify-row float to the right */
+.apply-container .form-group.email-verify-wrapper {
+  position:                 relative; /* already set, keep */
+}
+
+/* force the admin_email input to leave space on the right for button+badge */
 .apply-container .form-group.email-verify-wrapper input#id_admin_email {
-    margin-bottom: 0;
-    padding-right: 210px; /* space for verify button + badge */
+  padding-right:            200px;              /* room for button + badge */
+  width:                    calc(100% - 145px); /* shrink input to fit */
 }
 
-/* Verify row sits on the same line as input */
+/* place verify-row on the right side of the same line as input */
 .apply-container .verify-row {
-    position: absolute;
-    right: 0;
-    top: 50%;                 /* anchor to input vertically */
-    transform: translateY(10px); /* fine-tune alignment */
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
+  position:                 absolute;
+  right:                    0;
+  top:                      34px; /* aligns with input line under label; tweak if needed */
+  margin-top:               0;    /* override your existing margin-top */
+  display:                  inline-flex;
+  align-items:              center;
+  gap:                      10px;
 }
 
-/* ===============================
-   Verify button (same UI language as Submit)
-   =============================== */
-
+/* Verify button - polished, UI-compatible */
 .apply-container .btn.btn-secondary#openVerifyPopover {
-    height: 46px;
-    padding: 0 18px;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 1rem;
+  height: 46px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
 
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 
-    background-color: transparent;
-    border: 1px solid var(--primary-color);
-    color: var(--button-text);
+  background:   linear-gradient(180deg, rgba(0, 123, 255, 0.22), rgba(0, 123, 255, 0.08));
+  border:       1px solid rgba(0, 123, 255, 0.55);
+  color:        var(--button-text);
+  width:        130px;
 
-    cursor: pointer;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .apply-container .btn.btn-secondary#openVerifyPopover:hover {
-    background-color: rgba(0, 123, 255, 0.12);
-    border-color: var(--primary-hover);
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, rgba(0, 123, 255, 0.28), rgba(0, 123, 255, 0.10));
+  border-color: rgba(0, 123, 255, 0.85);
+  box-shadow: 0 14px 22px rgba(0, 0, 0, 0.22);
 }
 
-/* Verified badge */
+.apply-container .btn.btn-secondary#openVerifyPopover:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.18);
+}
+
+.apply-container .btn.btn-secondary#openVerifyPopover:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.35), 0 10px 18px rgba(0, 0, 0, 0.18);
+}
+
+/* Verified (success) state for Verify Email button */
+.apply-container .btn.btn-secondary#openVerifyPopover.is-verified {
+  background: linear-gradient(180deg, #6fe39a, #4fd080); /* light green */
+  border-color: #4fd080;
+  color: #ffffff;              /* white text */
+
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.22);
+}
+
+/* No hover lift when already verified (feels "locked in") */
+.apply-container .btn.btn-secondary#openVerifyPopover.is-verified:hover {
+  background: linear-gradient(180deg, #6fe39a, #4fd080);
+  border-color: #4fd080;
+  transform: none;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.22);
+  cursor: default;
+}
+
+/* badge alignment */
 .apply-container .verify-row .badge {
-    height: 28px;
-    padding: 0 10px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
+  height:                   28px;
+  display:                  inline-flex;
+  align-items:              center;
+  padding:                  0 10px;
+  border-radius:            999px;
+  white-space:              nowrap;
+}
+
+/* popover should appear anchored under the verify row (right side) */
+.email-verify-wrapper .verify-popover {
+  right:                    0;
+  top:                      calc(100% + 8px);
 }
 
 /* ===============================
-   Verify popover alignment
+   Popover action buttons (Send / Verify)
    =============================== */
 
-.apply-container .email-verify-wrapper .verify-popover {
-    right: 0;
-    top: calc(100% + 8px);
+.verify-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* Shared base for both buttons */
+.verify-actions button {
+  height: 44px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease,
+              background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* ---- Send Code (secondary) ---- */
+.verify-actions .resend-button {
+  background: transparent;
+  border: 1px solid rgba(0, 123, 255, 0.55);
+  color: var(--primary-color);
+}
+
+.verify-actions .resend-button:hover {
+  background-color: rgba(0, 123, 255, 0.08);
+  border-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+/* ---- Verify (primary) ---- */
+.verify-actions #verifyCodeBtn {
+  background-color: var(--primary-color);
+  border: none;
+  color: var(--button-text);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.22);
+}
+
+.verify-actions #verifyCodeBtn:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.28);
+}
+
+.verify-actions #verifyCodeBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Focus accessibility */
+.verify-actions button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.35);
+}
+
+.location-suggestions {
+  position: absolute;
+  background: var(--surface-color);
+  border: 1px solid #555;
+  border-radius: 8px;
+  width: 100%;
+  max-height: 220px;
+  overflow: auto;
+  margin-top: 6px;
+  z-index: 9999;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.location-suggestions button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 10px 12px;
+  color: var(--button-text);
+  cursor: pointer;
+}
+
+.location-suggestions button:hover {
+  background: rgba(255,255,255,0.06);
 }
