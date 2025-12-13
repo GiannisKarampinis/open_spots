@@ -325,3 +325,20 @@
   visibility:             hidden;   /* keeps layout space */
   opacity:                0;        /* smooth fade */
 }
+
+/* clickable overlay when submit is disabled */
+.submit-guard {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  background: transparent;
+}
+
+/* make sure the hint uses reserved-space hiding (no jump) */
+.apply-container .errorlist.is-hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+.apply-container .errorlist {
+  transition: opacity .15s ease;
+}

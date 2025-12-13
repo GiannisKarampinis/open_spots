@@ -167,14 +167,20 @@
       </div>
     {% endfor %}
 
-    <button id="submitApplicationBtn"
-            type="submit"
-            name="action"
-            value="submit_application"
-            class="btn primary-btn mt-3"
-            {% if not email_verified %}disabled{% endif %}>
-    {% trans "Submit Application" %}
-    </button>
+    <div id="submitHintSlot" class="field-error-slot" style="margin-top:10px;">
+      <ul id="submitHint" class="errorlist is-hidden"><li>&nbsp;</li></ul>
+    </div>
+
+    <div id="submitGuardWrap" style="position:relative;">
+      <button id    = "submitApplicationBtn"
+              type  = "submit"
+              name  = "action"
+              value = "submit_application"
+              class = "btn primary-btn mt-3"
+              {% if not email_verified %}disabled{% endif %}>
+      {% trans "Submit Application" %}
+      </button>
+    </div>
 
   </form>
 </div>
@@ -475,5 +481,57 @@
   });
 })();
 </script>
+
+<script>
+(() => {
+  const submitBtn = document.getElementById("submitApplicationBtn");
+  const wrap = document.getElementById("submitGuardWrap");
+  const hint = document.getElementById("submitHint");
+
+  // reuse your existing verify popover function if it exists
+  // openPopover() is already defined in your big script
+  function showSubmitHint(msg) {
+    if (!hint) return;
+    hint.innerHTML = `<li>${msg}</li>`;
+    hint.classList.remove("is-hidden");
+  }
+
+  function hideSubmitHint() {
+    if (!hint) return;
+    hint.classList.add("is-hidden");
+  }
+
+  function ensureGuard() {
+    if (!submitBtn || !wrap) return;
+
+    // remove existing guard if any
+    const existing = wrap.querySelector(".submit-guard");
+    if (existing) existing.remove();
+
+    if (submitBtn.disabled) {
+      const guard = document.createElement("div");
+      guard.className = "submit-guard";
+      guard.addEventListener("click", () => {
+        showSubmitHint("{% trans 'Please verify your admin email before submitting.' %}");
+        // optional: open verify popover for convenience
+        if (typeof openPopover === "function") openPopover();
+      });
+      wrap.appendChild(guard);
+    } else {
+      hideSubmitHint();
+    }
+  }
+
+  // initial
+  ensureGuard();
+
+  // if you enable/disable submit in JS (after verification), call ensureGuard again.
+  // easiest: observe changes to disabled attribute
+  const obs = new MutationObserver(ensureGuard);
+  obs.observe(submitBtn, { attributes: true, attributeFilter: ["disabled"] });
+
+})();
+</script>
+
 
 {% endblock %}
