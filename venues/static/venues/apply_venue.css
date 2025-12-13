@@ -11,10 +11,14 @@
     box-sizing:            border-box;               /* Include padding in width */
 }
 
+.apply-container .form-header {
+    margin-bottom:         30px;                     /* Space below header */
+}
+
 /* Headings consistency */
 .apply-container h2 {
     text-align:            center;                    /* Centered heading */
-    margin-bottom:         30px;                      /* Space below heading */
+    margin-bottom:         20px;                      /* Space below heading */
     font-weight:           700;                       /* Bold font */
     font-size:             2rem;                      /* Large font size */
     color:                 var(--button-text);                    /* Light gray text */
@@ -62,43 +66,8 @@
 
 /* Email verify wrapper label */
 .apply-container .form-group.email-verify-wrapper > label {
-    width: 100%;
-    display: block;
-}
-
-/* Email verify wrapper flex stays same */
-.apply-container .form-group.email-verify-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* The input inside wrapper grows */
-.apply-container .form-group.email-verify-wrapper input {
-    flex-grow: 1;
-    margin-bottom: 0; /* override input margin-bottom to avoid double spacing */
-}
-
-/* Verify Email button */
-.apply-container .form-group a.btn.btn-secondary {
-    background-color:      var(--primary-color);                   /* Bootstrap blue */
-    color:                 var(--button-text);
-    border:                none;
-    border-radius:         6px;
-    padding:               10px 18px;
-    font-weight:           700;
-    font-size:             1rem;
-    cursor:                pointer;
-    height:                38px;
-    text-decoration:       none;
-    transition:            background-color 0.3s ease;
-    display:               inline-flex;
-    align-items:           center;
-    justify-content:       center;
-}
-
-.apply-container .form-group a.btn.btn-secondary:hover {
-    background-color:      var(--primary-hover);                   /* Darker blue on hover */
+    width:                  100%;
+    display:                block;
 }
 
 /* Error list */
@@ -137,4 +106,83 @@
 
 .apply-container .btn.primary-btn:hover {
     background-color:      #0056b3;
+}
+
+
+/* --- Keep your selectors, fix layout for admin_email row --- */
+
+/* admin_email form-group must be column: label on top, row below */
+.apply-container .form-group.email-verify-wrapper {
+  display:                  flex;
+  flex-direction:           column;
+  align-items:              stretch;
+  gap:                      8px;
+}
+
+/* make input + verify-row sit on same line */
+.apply-container .form-group.email-verify-wrapper > input,
+.apply-container .form-group.email-verify-wrapper > select,
+.apply-container .form-group.email-verify-wrapper > textarea {
+  margin-bottom:            0; /* remove the big margin that pushes layout down */
+}
+
+/* put field + verify-row into a single line by making verify-row float to the right */
+.apply-container .form-group.email-verify-wrapper {
+  position:                 relative; /* already set, keep */
+}
+
+/* force the admin_email input to leave space on the right for button+badge */
+.apply-container .form-group.email-verify-wrapper input#id_admin_email {
+  padding-right:            200px;              /* room for button + badge */
+  width:                    calc(100% - 145px); /* shrink input to fit */
+}
+
+/* place verify-row on the right side of the same line as input */
+.apply-container .verify-row {
+  position:                 absolute;
+  right:                    0;
+  top:                      34px; /* aligns with input line under label; tweak if needed */
+  margin-top:               0;    /* override your existing margin-top */
+  display:                  inline-flex;
+  align-items:              center;
+  gap:                      10px;
+}
+
+/* --- Make Verify button look compatible with Submit using SAME selector --- */
+.apply-container .btn.btn-secondary#openVerifyPopover {
+  height:                   46px; /* same “feel” as submit */
+  padding:                  0 18px;
+  border-radius:            6px;
+  font-weight:              700;
+  font-size:                1rem;
+  display:                  inline-flex;
+  align-items:              center;
+  justify-content:          center;
+
+  /* Secondary but compatible */
+  background-color:         transparent;
+  border:                   1px solid var(--primary-color);
+  color:                    var(--button-text);
+  transition:               background-color 0.3s ease, border-color 0.3s ease, opacity 0.2s ease;
+}
+
+.apply-container .btn.btn-secondary#openVerifyPopover:hover {
+  background-color:         rgba(0, 123, 255, 0.12);
+  border-color:             var(--primary-hover);
+}
+
+/* badge alignment */
+.apply-container .verify-row .badge {
+  height:                   28px;
+  display:                  inline-flex;
+  align-items:              center;
+  padding:                  0 10px;
+  border-radius:            999px;
+  white-space:              nowrap;
+}
+
+/* popover should appear anchored under the verify row (right side) */
+.email-verify-wrapper .verify-popover {
+  right:                    0;
+  top:                      calc(100% + 8px);
 }

@@ -1,140 +1,81 @@
-.apply-container {
-    background-color:      var(--surface-color);     /* Dark gray background */
-    padding:               40px;                     /* Padding inside container */
-    border-radius:         10px;                     /* Rounded corners */
-    box-shadow:            0 0 25px rgba(255,255,255,0.1); /* Soft white glow */
-    margin:                60px auto;                /* Center horizontally, top/bottom margin */
-    color:                 var(--button-text);       /* Text color */
-    font-family:           'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean readable font */
-    max-width:             700px;                    /* Limit max width */
-    width:                 55%;                      /* Make width flexible */
-    box-sizing:            border-box;               /* Include padding in width */
-}
+/* ===============================
+   Admin email + verify button row
+   =============================== */
 
-/* Headings consistency */
-.apply-container h2 {
-    text-align:            center;                    /* Centered heading */
-    margin-bottom:         30px;                      /* Space below heading */
-    font-weight:           700;                       /* Bold font */
-    font-size:             2rem;                      /* Large font size */
-    color:                 var(--button-text);                    /* Light gray text */
-}
-
-/* Labels */
-.apply-container .form-group label {
-    display:               block;                     /* Full width */
-    color:                 var(--button-text);                   /* Keep white */
-}
-
-/* Form group spacing */
-.apply-container .form-group {
+/* Wrapper: label on top, input row below */
+.apply-container .form-group.email-verify-wrapper {
+    position: relative;
     display: flex;
     flex-direction: column;
-    margin-bottom: 20px;  /* consistent */
-    width: 100%;
     gap: 6px;
 }
 
-/* Inputs consistent */
-.apply-container .form-group input,
-.apply-container .form-group select,
-.apply-container .form-group textarea {
-    width:                 100%;
-    padding:               12px 15px;
-    background-color:      var(--background-color);              /* Darker background */
-    border:                1px solid #555;
-    color:                 var(--text-color);
-    border-radius:         6px;
-    margin-bottom:         15px;                     /* consistent spacing */
-    font-size:             1rem;
-    outline:               none;
-    transition:            border-color 0.3s ease, box-shadow 0.3s ease;
-    box-sizing:            border-box;
-}
-
-/* Focus style for inputs */
-.apply-container .form-group input:focus,
-.apply-container .form-group select:focus,
-.apply-container .form-group textarea:focus {
-    border-color:          var(--primary-color);                   /* Blue border on focus */
-    box-shadow:            0 0 6px var(--primary-hover);           /* Blue glow */
-}
-
-/* Email verify wrapper label */
+/* Label stays full width */
 .apply-container .form-group.email-verify-wrapper > label {
     width: 100%;
     display: block;
 }
 
-/* Email verify wrapper flex stays same */
-.apply-container .form-group.email-verify-wrapper {
-    display: flex;
+/* Input spacing fix ONLY for admin_email */
+.apply-container .form-group.email-verify-wrapper input#id_admin_email {
+    margin-bottom: 0;
+    padding-right: 210px; /* space for verify button + badge */
+}
+
+/* Verify row sits on the same line as input */
+.apply-container .verify-row {
+    position: absolute;
+    right: 0;
+    top: 50%;                 /* anchor to input vertically */
+    transform: translateY(10px); /* fine-tune alignment */
+    display: inline-flex;
     align-items: center;
     gap: 10px;
 }
 
-/* The input inside wrapper grows */
-.apply-container .form-group.email-verify-wrapper input {
-    flex-grow: 1;
-    margin-bottom: 0; /* override input margin-bottom to avoid double spacing */
+/* ===============================
+   Verify button (same UI language as Submit)
+   =============================== */
+
+.apply-container .btn.btn-secondary#openVerifyPopover {
+    height: 46px;
+    padding: 0 18px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1rem;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--button-text);
+
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-/* Verify Email button */
-.apply-container .form-group a.btn.btn-secondary {
-    background-color:      var(--primary-color);                   /* Bootstrap blue */
-    color:                 var(--button-text);
-    border:                none;
-    border-radius:         6px;
-    padding:               10px 18px;
-    font-weight:           700;
-    font-size:             1rem;
-    cursor:                pointer;
-    height:                38px;
-    text-decoration:       none;
-    transition:            background-color 0.3s ease;
-    display:               inline-flex;
-    align-items:           center;
-    justify-content:       center;
+.apply-container .btn.btn-secondary#openVerifyPopover:hover {
+    background-color: rgba(0, 123, 255, 0.12);
+    border-color: var(--primary-hover);
 }
 
-.apply-container .form-group a.btn.btn-secondary:hover {
-    background-color:      var(--primary-hover);                   /* Darker blue on hover */
+/* Verified badge */
+.apply-container .verify-row .badge {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
 }
 
-/* Error list */
-.apply-container .form-group ul.errorlist {
-    list-style:            none;
-    padding:               0;
-    margin:                -10px 0 10px;               /* consistent spacing */
-    color:                 #ff4d4f;
-    font-size:             0.95rem;
-    font-weight:           500;
-    animation:             fadeIn 0.3s ease forwards;
-}
+/* ===============================
+   Verify popover alignment
+   =============================== */
 
-/* Inputs with errors */
-.apply-container input[aria-invalid="true"],
-.apply-container select[aria-invalid="true"],
-.apply-container textarea[aria-invalid="true"] {
-    border-color:          #ff4d4f !important;
-    box-shadow:            0 0 6px #ff4d4f;
-}
-
-/* Submit button */
-.apply-container .btn.primary-btn {
-    width:                 100%;
-    padding:               14px;
-    margin-top:            20px;
-    background-color:      var(--primary-color);
-    color:                 var(--button-text);
-    border-radius:         6px;
-    border:                none;
-    cursor:                pointer;
-    font-size:             1.1rem;
-    font-weight:           700;
-    transition:            background-color 0.3s ease;
-}
-
-.apply-container .btn.primary-btn:hover {
-    background-color:      #0056b3;
+.apply-container .email-verify-wrapper .verify-popover {
+    right: 0;
+    top: calc(100% + 8px);
 }

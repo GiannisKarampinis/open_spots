@@ -73,12 +73,14 @@
 {% block content %}
 
 <div class="apply-container">
-    <h2>{% trans "Apply to Register Your Venue" %}</h2>
 
-    <p class="form-intro">
-        {% trans "Fields marked with" %} <span class="text-danger">*</span>
-        {% trans "are required. You must also verify your admin email before submitting the application." %}
-    </p>
+    <div class="form-header">
+        <h2>{% trans "Apply to Register Your Venue" %}</h2>
+        <p class="form-intro">
+            {% trans "Fields marked with" %} <span class="text-danger">*</span>
+            {% trans "are required. You must also verify your admin email before submitting the application." %}
+        </p>
+    </div>
 
     {% if form.non_field_errors %}
         <ul class="errorlist">
