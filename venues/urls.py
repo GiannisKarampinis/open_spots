@@ -8,7 +8,6 @@ urlpatterns = [
 
     # Venue application and dashboard
     path('apply-venue/',                                                            views.apply_venue,                          name='apply_venue'), # add a new venue to our app
-    path("verify-email/",                                                           views.verify_venue_email,                   name="verify_venue_email"),
     
     # AJAX endpoints
     path("ajax/send-venue-code/",                                                   views.ajax_send_venue_code,                 name="ajax_send_venue_code"),

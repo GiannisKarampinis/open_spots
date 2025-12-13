@@ -37,114 +37,54 @@ User = get_user_model()
 def apply_venue(request):
     """
     View for venue application form (no login required).
-    Email verification is handled via a 6-digit code stored per email.
+    Email verification is stored in session:
+      - venue_email_verified: True/False
+      - venue_verified_email: normalized email
     """
-    # Session flag set after successful code verification
-    session_verified = request.session.get("venue_email_verified", False)
-    verified_email   = (request.session.get("venue_verified_email") or "").strip().lower()
-    email_verified   = False  # computed later, based on admin_email match
+    session_verified = bool(request.session.get("venue_email_verified", False))
+    session_email    = (request.session.get("venue_verified_email") or "").strip().lower()
 
     if request.method == "POST":
-        action  = request.POST.get("action")  # "verify_email" or "submit_application"
-        form    = VenueApplicationForm(request.POST)
+        action = request.POST.get("action")  # should be "submit_application"
+        form   = VenueApplicationForm(request.POST)
 
-        # Always validate form (at least partially) so we can show field errors.
+        # compute posted email (even if form invalid)
+        posted_admin_email = (request.POST.get("admin_email") or "").strip().lower()
+
+        # verified ONLY if session says verified AND email matches current input
+        email_verified = bool(session_verified and session_email and posted_admin_email and session_email == posted_admin_email)
+
+        # if invalid form -> re-render but KEEP email_verified
         if not form.is_valid():
-            return render(
-                request,
-                "venues/apply_venue.html",
-                {
-                    "form":             form, 
-                    "email_verified":   email_verified
-                },
-            )
+            return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
 
-        # Extract admin_email from cleaned_data
-        admin_email         = form.cleaned_data.get("admin_email")
-        admin_email_norm    = (admin_email or "").strip().lower()
-        email_verified      = bool(session_verified and verified_email and admin_email_norm and verified_email == admin_email_norm)
-
-        # --- 1) User clicked "Verify Email" ---
-        if action == "verify_email":
-            # We only need admin_email to be valid here; the rest of the form can be filled later.
-            if not admin_email:
-                form.add_error("admin_email", "Please provide a valid email address first.")
-                return render(
-                    request,
-                    "venues/apply_venue.html",
-                    {
-                        "form":             form, 
-                        "email_verified":   False
-                    },
-                )
-
-            # Invalidate previous verification for this session
-            request.session["venue_verified_email"] = admin_email_norm
-            VenueEmailVerificationCode.objects.filter(email=admin_email_norm).delete()
-            code_obj = VenueEmailVerificationCode.create_for_email(admin_email_norm)
-            send_venue_verification_code(admin_email_norm, code_obj.code)
-
-            messages.info(
-                request,
-                "We've sent a 6-digit verification code to your email. "
-                "Please enter it to verify your email address."
-            )
-            return redirect("verify_venue_email")  # new view
-
-        # --- 2) User clicked "Submit Application" ---
-        elif action == "submit_application":
-            # Strict server-side check
+        # Submit application only
+        if action == "submit_application":
             if not email_verified:
-                form.add_error(
-                    "admin_email",
-                    "You must verify this email before submitting the application."
-                )
-                return render(
-                    request,
-                    "venues/apply_venue.html",
-                    {
-                        "form":             form, 
-                        "email_verified":   False
-                    },
-                )
+                form.add_error("admin_email", "You must verify this email before submitting the application.")
+                return render(request, "venues/apply_venue.html", {"form": form, "email_verified": False})
 
-            # All good: save application
             venue_application = form.save()
-
             send_new_venue_application_email(venue_application)
-            messages.success(
-                request,
-                "Your venue application has been submitted. We will contact you shortly."
-            )
+            messages.success(request, "Your venue application has been submitted. We will contact you shortly.")
 
-            # Clear verification flags for privacy
+            # clear verification flags (optional)
             request.session.pop("venue_email_verified", None)
             request.session.pop("venue_verified_email", None)
 
             return redirect("venue_list")
 
-        # Fallback (unknown action)
-        else:
-            messages.error(request, "Invalid action.")
-            return render(
-                request,
-                "venues/apply_venue.html",
-                {
-                    "form":             form, 
-                    "email_verified":   email_verified
-                },
-            )
-    else:
-        # GET request
-        form = VenueApplicationForm()
-        return render(
-            request,
-            "venues/apply_venue.html",
-            {
-                "form":             form, 
-                "email_verified":   False},
-        )
-        
+        messages.error(request, "Invalid action.")
+        return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
+
+    # GET: keep verified if session exists (but needs admin_email match, which we don't have yet)
+    # So we only say "verified" if session_verified AND the form initial email matches session email.
+    form = VenueApplicationForm()
+    initial_email = (form.initial.get("admin_email") or "").strip().lower()
+    email_verified = bool(session_verified and session_email and initial_email and session_email == initial_email)
+
+    return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
+
 
 ###########################################################################################
 
@@ -1130,47 +1070,3 @@ def ajax_verify_venue_code(request):
 ###########################################################################################
 
 ###########################################################################################
-# See how to include it as a fallback if AJAX fails
-from django.utils.timezone  import now
-from django.shortcuts       import get_object_or_404
-
-def verify_venue_email(request):
-    """
-    View where anonymous user enters the 6-digit code for their venue admin_email.
-    Email is taken from session (set in apply_venue when "Verify Email" is clicked).
-    """
-    email = request.session.get("venue_verified_email")
-    if not email:
-        messages.error(request, "No email found to verify. Please start again.")
-        return redirect("apply_venue")
-
-    # For countdown, get latest code for that email
-    latest_code = VenueEmailVerificationCode.objects.filter(email=email).order_by("-created_at").first()
-    remaining_seconds = 0
-    if latest_code:
-        expiry_time = latest_code.created_at + timezone.timedelta(minutes=VenueEmailVerificationCode.VALID_MINUTES)
-        remaining_seconds = max(0, int((expiry_time - now()).total_seconds()))
-
-    if request.method == "POST":
-        code_entered = request.POST.get("code", "").strip()
-
-        try:
-            code_obj = VenueEmailVerificationCode.objects.get(email=email, code=code_entered)
-        except VenueEmailVerificationCode.DoesNotExist:
-            messages.error(request, "Invalid verification code.")
-            return redirect("verify_venue_email")
-
-        if code_obj.is_expired():
-            code_obj.delete()
-            messages.error(request, "Verification code expired. Please request a new one from the application form.")
-            return redirect("apply_venue")
-
-        # Valid code
-        code_obj.delete()
-        request.session["venue_email_verified"] = True
-
-        messages.success(request, "Your email has been verified. You can now submit your venue application.")
-        return redirect("apply_venue")
-
-    context = {"remaining_seconds": remaining_seconds, "email": email}
-    return render(request, "venues/verify_venue_email.html", context)

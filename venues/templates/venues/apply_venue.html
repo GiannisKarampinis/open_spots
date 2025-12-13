@@ -81,14 +81,15 @@
   </div>
 
   {% if form.non_field_errors %}
-    <ul class="errorlist">
+    <ul class="errorlist" style="visibility:hidden;">
       {% for error in form.non_field_errors %}
         <li>{{ error }}</li>
       {% endfor %}
     </ul>
   {% endif %}
 
-  <form method="post" novalidate>
+  <form method="post" novalidate> 
+    {% comment %} <form method="post" novalidate> {% endcomment %}
     {% csrf_token %}
 
     {% for field in form %}
@@ -102,8 +103,15 @@
 
         {% if field.name == 'admin_email' %}
           <div class="verify-row">
-            <button type="button" class="btn btn-secondary" id="openVerifyPopover">
-              {% trans "Verify Email" %}
+            <button type="button"
+                    class="btn btn-secondary {% if email_verified %}is-verified{% endif %}"
+                    id="openVerifyPopover"
+                    {% if email_verified %}disabled{% endif %}>
+              {% if email_verified %}
+                {% trans "Verified" %}
+              {% else %}
+                {% trans "Verify Email" %}
+              {% endif %}
             </button>
           </div>
 
@@ -143,13 +151,19 @@
           <div id="locationSuggestions" class="location-suggestions" style="display:none;"></div>        
         {% endif %}
 
-        {% if field.errors %}
-          <ul class="errorlist">
-            {% for error in field.errors %}
-              <li>{{ error }}</li>
-            {% endfor %}
+        <div class="field-error-slot" id="err-{{ field.id_for_label }}">
+          {% if field.errors %}
+            <ul class="errorlist">
+              {% for error in field.errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+          <ul class="errorlist" style="visibility:hidden;">
+            <li>&nbsp;</li>
           </ul>
-        {% endif %}
+          {% endif %}
+        </div>
       </div>
     {% endfor %}
 
@@ -217,9 +231,11 @@
   }
 
   function markVerified() {
-    if (!verifyButton) return;
-
-    verifiedEmail = adminEmailValue().toLowerCase();
+    // If server rendered it as verified, keep JS state in sync
+    if (verifyButton && verifyButton.classList.contains("is-verified")) {
+      const e = adminEmailValue();
+      if (e) verifiedEmail = e.toLowerCase();
+    }
 
     verifyButton.classList.add("is-verified");
     verifyButton.textContent = "{% trans 'Verified' %}";
@@ -332,7 +348,7 @@
     }
   });
 
-(() => {
+;(() => {
   const input = document.getElementById("id_location");
   if (!input) return;
 
@@ -417,6 +433,45 @@
   input.addEventListener("blur", () => {
     // small delay so clicks register
     setTimeout(hide, 150);
+  });
+})();
+</script>
+
+<script>
+(() => {
+  const form = document.querySelector(".apply-container form");
+  if (!form) return;
+
+  function hideErrorForField(fieldEl) {
+    const group = fieldEl.closest(".form-group");
+    if (!group) return;
+
+    // IMPORTANT: only the errorlist inside the reserved slot
+    const slot = group.querySelector(".field-error-slot");
+    if (!slot) return;
+
+    const list = slot.querySelector("ul.errorlist");
+    if (!list) return;
+
+    list.classList.add("is-hidden");
+
+    // remove red invalid styling (if you set it)
+    fieldEl.removeAttribute("aria-invalid");
+    fieldEl.classList.remove("is-invalid");
+  }
+
+  // For text-like inputs: hide on input
+  form.addEventListener("input", (e) => {
+    const el = e.target;
+    if (!el.matches("input, textarea")) return;
+    hideErrorForField(el);
+  });
+
+  // For selects: hide on change
+  form.addEventListener("change", (e) => {
+    const el = e.target;
+    if (!el.matches("select")) return;
+    hideErrorForField(el);
   });
 })();
 </script>
