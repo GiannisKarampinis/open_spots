@@ -8,7 +8,7 @@
 
 {% block content %}
 <div class="profile-container">
-    <h1>{% blocktrans trimmed %}Welcome, {{ user.username }}!{% endblocktrans %}</h1>
+    <h1>{% blocktrans trimmed with username=user.username %}Welcome, {{ username }}!{% endblocktrans %}</h1>
 
     {% if not user.email_verified %}
     <div class="alert alert-warning">

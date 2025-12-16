@@ -140,7 +140,9 @@ class CustomLoginView(LoginView):
         print('Login:', user.email_verified)
 
         # ✅ Block if email not verified
-        if not user.email_verified:
+        is_google_user = user.socialaccount_set.filter(provider='google').exists()
+
+        if not user.email_verified and not is_google_user:
             self.request.session['pending_user_id'] = user.id
             self.request.session['code_already_sent'] = False
             self.request.session['verification_reason'] = 'signup'

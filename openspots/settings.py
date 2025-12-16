@@ -114,7 +114,7 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_REQUIRED = False
 SOCIALACCOUNT_ADAPTER = 'accounts.adapters.CustomSocialAccountAdapter'
-ACCOUNT_USERNAME_GENERATOR = 'accounts.utils.generate_username'
+#ACCOUNT_USERNAME_GENERATOR = 'accounts.utils.generate_username'
 
 # Authentication
 ACCOUNT_LOGIN_METHODS = {'email'}
@@ -127,7 +127,7 @@ ACCOUNT_SIGNUP_FIELDS = [
 ]
 
 # Email handling
-ACCOUNT_EMAIL_REQUIRED = True
+#ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 # Disable username entirely
