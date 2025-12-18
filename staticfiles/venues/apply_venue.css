@@ -17,26 +17,25 @@
 
 /* Headings consistency */
 .apply-container h2 {
-    text-align:            center;                    /* Centered heading */
-    margin-bottom:         20px;                      /* Space below heading */
-    font-weight:           700;                       /* Bold font */
-    font-size:             2rem;                      /* Large font size */
-    color:                 var(--button-text);                    /* Light gray text */
+    text-align:            center;                   /* Centered heading */
+    margin-bottom:         20px;                     /* Space below heading */
+    font-weight:           700;                      /* Bold font */
+    font-size:             2rem;                     /* Large font size */
+    color:                 var(--button-text);       /* Light gray text */
 }
 
 /* Labels */
 .apply-container .form-group label {
-    display:               block;                     /* Full width */
-    color:                 var(--button-text);                   /* Keep white */
+    display:               block;                    /* Full width */
+    color:                 var(--button-text);       /* Keep white */
 }
 
 /* Form group spacing */
 .apply-container .form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;  /* consistent */
-    width: 100%;
-    gap: 6px;
+    display:                flex;
+    flex-direction:         column;
+    width:                  100%;
+    gap:                    6px;
 }
 
 /* Inputs consistent */
@@ -45,11 +44,11 @@
 .apply-container .form-group textarea {
     width:                 100%;
     padding:               12px 15px;
-    background-color:      var(--background-color);              /* Darker background */
+    background-color:      var(--background-color); /* Darker background */
     border:                1px solid #555;
     color:                 var(--text-color);
     border-radius:         6px;
-    margin-bottom:         15px;                     /* consistent spacing */
+    margin-bottom:         5px;                     /* consistent spacing */
     font-size:             1rem;
     outline:               none;
     transition:            border-color 0.3s ease, box-shadow 0.3s ease;
@@ -60,8 +59,8 @@
 .apply-container .form-group input:focus,
 .apply-container .form-group select:focus,
 .apply-container .form-group textarea:focus {
-    border-color:          var(--primary-color);                   /* Blue border on focus */
-    box-shadow:            0 0 6px var(--primary-hover);           /* Blue glow */
+    border-color:          var(--primary-color);         /* Blue border on focus */
+    box-shadow:            0 0 6px var(--primary-hover); /* Blue glow */
 }
 
 /* Email verify wrapper label */
@@ -74,7 +73,7 @@
 .apply-container .form-group ul.errorlist {
     list-style:            none;
     padding:               0;
-    margin:                -10px 0 10px;               /* consistent spacing */
+    margin:                -10px 0 10px;                 /* consistent spacing */
     color:                 #ff4d4f;
     font-size:             0.95rem;
     font-weight:           500;
@@ -150,59 +149,58 @@
 
 /* Verify button - polished, UI-compatible */
 .apply-container .btn.btn-secondary#openVerifyPopover {
-  height: 46px;
-  padding: 0 18px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 1rem;
+  height:                     46px;
+  padding:                    0 18px;
+  border-radius:              10px;
+  font-weight:                700;
+  font-size:                  1rem;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  display:                    inline-flex;
+  align-items:                center;
+  justify-content:            center;
+  gap:                        8px;
 
-  background:   linear-gradient(180deg, rgba(0, 123, 255, 0.22), rgba(0, 123, 255, 0.08));
-  border:       1px solid rgba(0, 123, 255, 0.55);
-  color:        var(--button-text);
-  width:        130px;
+  background:                 linear-gradient(180deg, rgba(0, 123, 255, 0.22), rgba(0, 123, 255, 0.08));
+  border:                     1px solid rgba(0, 123, 255, 0.55);
+  color:                      var(--button-text);
+  width:                      130px;
 
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
-  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  box-shadow:                 0 10px 18px rgba(0, 0, 0, 0.18);
+  transition:                 transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .apply-container .btn.btn-secondary#openVerifyPopover:hover {
-  transform: translateY(-1px);
-  background: linear-gradient(180deg, rgba(0, 123, 255, 0.28), rgba(0, 123, 255, 0.10));
-  border-color: rgba(0, 123, 255, 0.85);
-  box-shadow: 0 14px 22px rgba(0, 0, 0, 0.22);
+  transform:                  translateY(-1px);
+  background:                 linear-gradient(180deg, rgba(0, 123, 255, 0.28), rgba(0, 123, 255, 0.10));
+  border-color:               rgba(0, 123, 255, 0.85);
+  box-shadow:                 0 14px 22px rgba(0, 0, 0, 0.22);
 }
 
 .apply-container .btn.btn-secondary#openVerifyPopover:active {
-  transform: translateY(0);
-  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.18);
+  transform:                  translateY(0);
+  box-shadow:                 0 8px 14px rgba(0, 0, 0, 0.18);
 }
 
 .apply-container .btn.btn-secondary#openVerifyPopover:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.35), 0 10px 18px rgba(0, 0, 0, 0.18);
+  outline:                    none;
+  box-shadow:                 0 0 0 3px rgba(0, 123, 255, 0.35), 0 10px 18px rgba(0, 0, 0, 0.18);
 }
 
 /* Verified (success) state for Verify Email button */
 .apply-container .btn.btn-secondary#openVerifyPopover.is-verified {
-  background: linear-gradient(180deg, #6fe39a, #4fd080); /* light green */
-  border-color: #4fd080;
-  color: #ffffff;              /* white text */
-
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.22);
+  background:                 linear-gradient(180deg, #6fe39a, #4fd080); /* light green */
+  border-color:               #4fd080;
+  color:                      #ffffff; /* white text */
+  box-shadow:                 0 10px 18px rgba(0, 0, 0, 0.22);
 }
 
 /* No hover lift when already verified (feels "locked in") */
 .apply-container .btn.btn-secondary#openVerifyPopover.is-verified:hover {
   background: linear-gradient(180deg, #6fe39a, #4fd080);
-  border-color: #4fd080;
-  transform: none;
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.22);
-  cursor: default;
+  border-color:             #4fd080;
+  transform:                none;
+  box-shadow:               0 10px 18px rgba(0, 0, 0, 0.22);
+  cursor:                   default;
 }
 
 /* badge alignment */
@@ -226,86 +224,121 @@
    =============================== */
 
 .verify-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 12px;
+  display:                  flex;
+  gap:                      10px;
+  margin-top:               12px;
 }
 
 /* Shared base for both buttons */
 .verify-actions button {
-  height: 44px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.2s ease,
-              background-color 0.2s ease, border-color 0.2s ease;
+  height:                   44px;
+  border-radius:            8px;
+  font-weight:              700;
+  font-size:                0.95rem;
+  display:                  inline-flex;
+  align-items:              center;
+  justify-content:          center;
+  cursor:                   pointer;
+  transition:               transform 0.15s ease, box-shadow 0.2s ease,
+                            background-color 0.2s ease, border-color 0.2s ease;
 }
 
 /* ---- Send Code (secondary) ---- */
 .verify-actions .resend-button {
-  background: transparent;
-  border: 1px solid rgba(0, 123, 255, 0.55);
-  color: var(--primary-color);
+  background:               transparent;
+  border:                   1px solid rgba(0, 123, 255, 0.55);
+  color:                    var(--primary-color);
 }
 
 .verify-actions .resend-button:hover {
-  background-color: rgba(0, 123, 255, 0.08);
-  border-color: var(--primary-hover);
-  transform: translateY(-1px);
+  background-color:       rgba(0, 123, 255, 0.08);
+  border-color:           var(--primary-hover);
+  transform:              translateY(-1px);
 }
 
 /* ---- Verify (primary) ---- */
 .verify-actions #verifyCodeBtn {
-  background-color: var(--primary-color);
-  border: none;
-  color: var(--button-text);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.22);
+  background-color:       var(--primary-color);
+  border:                 none;
+  color:                  var(--button-text);
+  box-shadow:             0 8px 16px rgba(0, 0, 0, 0.22);
 }
 
 .verify-actions #verifyCodeBtn:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.28);
+  background-color:       var(--primary-hover);
+  transform:              translateY(-1px);
+  box-shadow:             0 12px 20px rgba(0, 0, 0, 0.28);
 }
 
 .verify-actions #verifyCodeBtn:active {
-  transform: translateY(0);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  transform:              translateY(0);
+  box-shadow:             0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Focus accessibility */
 .verify-actions button:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.35);
+  outline:                none;
+  box-shadow:             0 0 0 3px rgba(0, 123, 255, 0.35);
 }
 
 .location-suggestions {
-  position: absolute;
-  background: var(--surface-color);
-  border: 1px solid #555;
-  border-radius: 8px;
-  width: 100%;
-  max-height: 220px;
-  overflow: auto;
-  margin-top: 6px;
-  z-index: 9999;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  position:               absolute;
+  background:             var(--surface-color);
+  border:                 1px solid #555;
+  border-radius:          8px;
+  width:                  100%;
+  max-height:             220px;
+  overflow:               auto;
+  margin-top:             6px;
+  z-index:                9999;
+  box-shadow:             0 10px 30px rgba(0,0,0,0.25);
 }
 
 .location-suggestions button {
-  width: 100%;
-  text-align: left;
-  background: transparent;
-  border: 0;
-  padding: 10px 12px;
-  color: var(--button-text);
-  cursor: pointer;
+  width:                  100%;
+  text-align:             left;
+  background:             transparent;
+  border:                 0;
+  padding:                10px 12px;
+  color:                  var(--button-text);
+  cursor:                 pointer;
 }
 
 .location-suggestions button:hover {
-  background: rgba(255,255,255,0.06);
+  background:             rgba(255,255,255,0.06);
+}
+
+/* reserve space and prevent jumping */
+.apply-container .field-error-slot {
+  min-height:             22px; /* tweak if your font bigger */
+}
+
+/* hide text but keep space */
+.apply-container .field-error-slot .errorlist {
+  margin:                 6px 0 0;
+  padding:                0;
+  list-style:             none;
+  transition:             opacity 0.15s ease;
+}
+
+.apply-container .field-error-slot .errorlist.is-hidden {
+  visibility:             hidden;   /* keeps layout space */
+  opacity:                0;        /* smooth fade */
+}
+
+/* clickable overlay when submit is disabled */
+.submit-guard {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  background: transparent;
+}
+
+/* make sure the hint uses reserved-space hiding (no jump) */
+.apply-container .errorlist.is-hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+.apply-container .errorlist {
+  transition: opacity .15s ease;
 }
