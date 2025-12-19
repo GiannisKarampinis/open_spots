@@ -36,10 +36,10 @@ User = get_user_model()
 ###########################################################################################
 def apply_venue(request):
     """
-    View for venue application form (no login required).
-    Email verification is stored in session:
-      - venue_email_verified: True/False
-      - venue_verified_email: normalized email
+        View for venue application form (no login required).
+        Email verification is stored in session:
+        - venue_email_verified: True/False
+        - venue_verified_email: normalized email
     """
     session_verified = bool(request.session.get("venue_email_verified", False))
     session_email    = (request.session.get("venue_verified_email") or "").strip().lower()

@@ -1,0 +1,361 @@
+{% load static %}
+{% load i18n %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'venues/apply_venue.css' %}">
+  <link rel="stylesheet" href="{% static 'accounts/verify_code.css' %}">
+  
+  <style>
+    /* Small popover modal anchored near the button */
+    .email-verify-wrapper { position: relative; }
+
+    .verify-popover {
+        position:   absolute;
+        z-index:    9999;
+        top:        calc(100% + 8px);
+        right:      0;
+        width:      320px;
+        max-width:  90vw;
+        display:    none;
+    }
+
+    /* Make it feel like your verification page but compact */
+    .verify-popover  .verification-container {
+      padding:       16px;
+      border-radius: 12px;
+      box-shadow:    0 10px 30px rgba(0,0,0,0.15);
+      background:    #fff;
+    }
+
+    .verify-popover .verification-form input { 
+        width:      100%; 
+    }
+
+    .verify-row {
+      display:      flex;
+      align-items:  center;
+      gap:          10px;
+      margin-top:   8px;
+    }
+
+    .verify-actions {
+      display:      flex;
+      gap:          10px;
+      margin-top:   10px;
+    }
+
+    .verify-actions button { 
+        flex:       1; 
+    }
+
+    .verify-close-x {
+      position:     absolute;
+      top:          10px;
+      right:        12px;
+      border:       none;
+      background:   transparent;
+      font-size:    18px;
+      line-height:  1;
+      cursor:       pointer;
+    }
+
+    .verify-msg {
+      margin-top:   8px;
+      font-size:    0.95rem;
+      font-weight:  600;
+    }
+    
+    .verify-msg.is-error { 
+        color:      #d93025; 
+    }   /* red */
+    
+    .verify-msg.is-success { 
+        color:      #188038; 
+    } /* green */
+
+  </style>
+{% endblock %}
+
+<div class="apply-container">
+    
+    {% if form.non_field_errors %}
+        <ul class = "errorlist" style = "visibility:hidden;">
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="form-group">
+        {% with field = form.admin_username %}
+            <label for = "{{ field.id_for_label }}">
+                {% trans field.label %}
+                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+            </label>
+
+            {{ field }}
+
+            <div class="field-error-slot" id="err-{{ field.id_for_label }}">
+                {% if field.errors %}
+                    <ul class="errorlist">
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <ul class="errorlist" style="visibility:hidden;">
+                        <li>&nbsp;</li>
+                    </ul>
+                {% endif %}
+            </div>
+        {% endwith %}
+    </div>
+
+
+    <div class="form-group email-verify-wrapper">
+    
+        {% with field=form.admin_email %}
+            <label for="{{ field.id_for_label }}">
+                {% trans field.label %}
+                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+            </label>
+
+        {{ field }}
+
+        <div class="verify-row">
+            <button type    =   "button"
+                    class   =   "btn btn-secondary {% if email_verified %}is-verified{% endif %}"
+                    id      =   "openVerifyPopover"
+                    
+                    {% if email_verified %}disabled{% endif %}>
+
+            {% if email_verified %}
+                {% trans "Verified" %}
+            {% else %}
+                {% trans "Verify Email" %}
+            {% endif %}
+            </button>
+        </div>
+
+        <div id = "verifyPopover" class = "verify-popover" aria-hidden = "true">
+            <div class="verification-container">
+                <button type   = "button"
+                        class  = "verify-close-x"
+                        id     = "closeVerifyPopover"
+                    aria-label = "{% trans 'Close' %}">×</button>
+
+                <h2 style = "font-size:1.15rem; margin-bottom:6px;">{% trans "Verify Your Email" %}</h2>
+                <p style  = "margin:0 0 10px 0;">{% trans "Enter the 6-digit code sent to your email." %}</p>
+
+                <div id="verifyMsg" class="verify-msg" role="status" aria-live="polite"></div>
+
+                {# IMPORTANT: no nested <form> inside the main form #}
+                <div class = "verification-form">
+                    <input
+                        type         = "text"
+                        id           = "codeInput"
+                        name         = "code"
+                        maxlength    = "6"
+                        inputmode    = "numeric"
+                        autocomplete = "one-time-code"
+                        placeholder  = "{% trans 'Enter 6-digit code' %}">
+                </div>
+
+                <div class = "verify-actions">
+                    <button type = "button" class = "resend-button" id = "sendCodeBtn">
+                        {% trans "Send Code" %}
+                    </button>
+                    <button type = "button" id = "verifyCodeBtn">
+                        {% trans "Verify" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class = "field-error-slot" id = "err-{{ field.id_for_label }}">
+            {% if field.errors %}
+                <ul class = "errorlist">
+                    {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <ul class = "errorlist" style = "visibility:hidden;">
+                    <li>&nbsp;</li>
+                </ul>
+            {% endif %}
+        </div>
+        
+        {% endwith %}
+    </div>
+</div>
+
+<script>
+  const popover      = document.getElementById("verifyPopover");
+  const msgEl        = document.getElementById("verifyMsg");
+  const codeInput    = document.getElementById("codeInput");
+
+  const openBtn      = document.getElementById("openVerifyPopover");
+  const closeBtn     = document.getElementById("closeVerifyPopover");
+
+  const sendBtn      = document.getElementById("sendCodeBtn");
+  const verifyBtn    = document.getElementById("verifyCodeBtn");
+
+  const verifyButton = document.getElementById("openVerifyPopover");
+  const submitBtn    = document.getElementById("submitApplicationBtn");
+  const emailInput   = document.getElementById("id_admin_email");
+
+  const VERIFY_DEFAULT_TEXT = verifyButton
+    ? verifyButton.textContent.trim()
+    : "{% trans 'Verify Email' %}";
+
+  let verifiedEmail = null;
+
+  function getCSRFToken() {
+    const name  = "csrftoken=";
+    const parts = document.cookie.split(";").map(s => s.trim());
+    for (const p of parts) if (p.startsWith(name)) return p.substring(name.length);
+    return "";
+  }
+
+  function adminEmailValue() {
+    return emailInput ? emailInput.value.trim() : "";
+  }
+
+  function showMsg(text, ok=true) {
+    msgEl.textContent = text;
+    msgEl.classList.remove("is-error", "is-success");
+    msgEl.classList.add(ok ? "is-success" : "is-error");
+  }
+
+  function openPopover() {
+    popover.style.display = "block";
+    popover.setAttribute("aria-hidden", "false");
+    showMsg("", true);
+    codeInput.value = "";
+    codeInput.focus();
+  }
+
+  function closePopover() {
+    popover.style.display = "none";
+    popover.setAttribute("aria-hidden", "true");
+  }
+
+  function markVerified() {
+    // If server rendered it as verified, keep JS state in sync
+    if (verifyButton && verifyButton.classList.contains("is-verified")) {
+      const e = adminEmailValue();
+      if (e) verifiedEmail = e.toLowerCase();
+    }
+
+    verifyButton.classList.add("is-verified");
+    verifyButton.textContent = "{% trans 'Verified' %}";
+    verifyButton.disabled = true;
+    verifyButton.style.cursor = "default";
+
+    if (submitBtn) submitBtn.disabled = false;
+  }
+
+  function resetVerificationUI() {
+    if (!verifyButton) return;
+
+    verifyButton.classList.remove("is-verified");
+    verifyButton.textContent = VERIFY_DEFAULT_TEXT;
+    verifyButton.disabled = false;
+    verifyButton.style.cursor = "";
+
+    if (submitBtn) submitBtn.disabled = true;
+  }
+
+  // ---------------------------
+  // Open / close popover
+  // ---------------------------
+  openBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    openPopover();
+  });
+
+  closeBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    closePopover();
+  });
+
+  // Close when clicking outside wrapper
+  document.addEventListener("click", (e) => {
+    if (!popover) return;
+    const wrapper = popover.closest(".email-verify-wrapper");
+    if (!wrapper) return;
+    if (!wrapper.contains(e.target)) closePopover();
+  });
+
+  // ---------------------------
+  // Send verification code
+  // ---------------------------
+  sendBtn?.addEventListener("click", async () => {
+    const email = adminEmailValue();
+    if (!email) {
+      showMsg("{% trans 'Enter admin email first.' %}", false);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("email", email);
+
+    const res = await fetch("{% url 'ajax_send_venue_code' %}", {
+      method: "POST",
+      headers: { "X-CSRFToken": getCSRFToken() },
+      body: formData
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      showMsg(data.error || "{% trans 'Failed to send code.' %}", false);
+      return;
+    }
+
+    showMsg("{% trans 'Code sent. Check your inbox.' %}", true);
+  });
+
+  // ---------------------------
+  // Verify code
+  // ---------------------------
+  verifyBtn?.addEventListener("click", async () => {
+    const code = (codeInput.value || "").trim();
+    if (!/^\d{6}$/.test(code)) {
+      showMsg("{% trans 'Enter a valid 6-digit code.' %}", false);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("code", code);
+
+    const res = await fetch("{% url 'ajax_verify_venue_code' %}", {
+      method: "POST",
+      headers: { "X-CSRFToken": getCSRFToken() },
+      body: formData
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      showMsg(data.error || "{% trans 'Verification failed.' %}", false);
+      return;
+    }
+
+    showMsg("{% trans 'Email verified ✅' %}", true);
+    markVerified();
+
+    setTimeout(() => closePopover(), 400);
+  });
+
+  // ---------------------------
+  // Reset verification ONLY if email changes AFTER being verified
+  // ---------------------------
+  emailInput?.addEventListener("input", () => {
+    if (!verifiedEmail) return;
+
+    if (adminEmailValue().toLowerCase() !== verifiedEmail) {
+      resetVerificationUI();
+      verifiedEmail = null;
+    }
+  });
+</script>

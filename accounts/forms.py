@@ -11,11 +11,11 @@ class CustomUserCreationForm(UserCreationForm):
         model = CustomUser
         fields = ('username', 'email', 'phone_number', 'password1', 'password2')
         labels = {
-            'username': _("Username"),
-            'email': _("Email"),
+            'username':     _("Username"),
+            'email':        _("Email"),
             'phone_number': _("Phone number"),
-            'password1': _("Password"),
-            'password2': _("Confirm password"),
+            'password1':    _("Password"),
+            'password2':    _("Confirm password"),
         }
 
     def save(self, commit=True):
@@ -39,12 +39,12 @@ class AdminUserCreationForm(UserCreationForm):
         model = CustomUser
         fields = ('username', 'email', 'phone_number', 'user_type', 'password1', 'password2')
         labels = {
-            'username': _("Username"),
-            'email': _("Email"),
+            'username':     _("Username"),
+            'email':        _("Email"),
             'phone_number': _("Phone number"),
-            'user_type': _("User type"),
-            'password1': _("Password"),
-            'password2': _("Confirm password"),
+            'user_type':    _("User type"),
+            'password1':    _("Password"),
+            'password2':    _("Confirm password"),
         }
 
     def save(self, commit=True):
