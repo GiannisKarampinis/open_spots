@@ -1,9 +1,9 @@
 import re
-from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.utils.translation import gettext_lazy as _
-from .models import CustomUser
-from django.contrib.auth import password_validation
+from django                     import forms
+from django.contrib.auth.forms  import UserCreationForm
+from django.utils.translation   import gettext_lazy as _
+from .models                    import CustomUser
+from django.contrib.auth        import password_validation
 
 
 class CustomUserCreationForm(UserCreationForm):
