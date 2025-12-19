@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('location', models.CharField(max_length=255)),
                 ('description', models.TextField(blank=True)),
                 ('capacity', models.PositiveIntegerField()),
-                ('admin_name', models.CharField(max_length=100)),
+                ('admin_username', models.CharField(max_length=100)),
                 ('admin_email', models.EmailField(max_length=254)),
                 ('phone', models.CharField(blank=True, max_length=20)),
                 ('submitted_at', models.DateTimeField(auto_now_add=True)),

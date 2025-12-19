@@ -69,20 +69,42 @@ class ReservationForm(forms.ModelForm):
 
 
 class VenueApplicationForm(forms.ModelForm):
+    password1 = forms.CharField(
+        label=_("Password"),
+        widget=forms.PasswordInput,
+        strip=False,
+        required=True)
+    
+    password2 = forms.CharField(
+        label=_("Confirm Password"),
+        widget=forms.PasswordInput,
+        strip=False,
+        required=True)
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get("password1")
+        p2 = cleaned_data.get("password2")
+        if p1 and p2 and p1 != p2:
+            self.add_error("password2", _("Passwords do not match."))
+        return cleaned_data
+        
     class Meta:
         model = VenueApplication
         fields = [
-            'venue_name', 'venue_type', 'location', 'description',
-            'admin_name', 'admin_email', 'phone'
+            'venue_name', 'venue_type', 'location', 'description', 'phone',
+            'admin_username', 'admin_email', 'admin_fullname',
+            'admin_phone' 
         ]
         labels = {
-            'venue_name': _("Venue name"),
-            'venue_type': _("Venue type"),
-            'location': _("Location"),
-            'description': _("Description"),
-            'admin_name': _("Admin name"),
-            'admin_email': _("Admin email"),
-            'phone': _("Phone"),
+            'admin_username':   _("Admin Username"),
+            'admin_email':      _("Admin email"),
+            'admin_fullname':   _("Admin full name"),
+            'venue_name':       _("Venue name"),
+            'venue_type':       _("Venue type"),
+            'location':         _("Location"),
+            'description':      _("Description"),
+            'phone':            _("Venue phone"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -93,13 +115,15 @@ class VenueApplicationForm(forms.ModelForm):
             'venue_name', 
             'venue_type', 
             'location', 
-            'admin_name', 
-            'admin_email', 
-            'phone'
+            'phone',
+            'admin_username', 
+            'admin_email',
+            'admin_phone',
         ]
 
         for field_name in required_fields:
             self.fields[field_name].required = True
+        
         self.fields["description"].required = False # Explicitly mark description as optional for future clarity
 
 

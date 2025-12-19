@@ -34,57 +34,102 @@ User = get_user_model()
 ###########################################################################################
 
 ###########################################################################################
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.shortcuts import render, redirect
+from django.utils.translation import gettext as _
+
+User = get_user_model()
+
+
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.shortcuts import render, redirect
+from django.utils.translation import gettext as _
+
+User = get_user_model()
+
 def apply_venue(request):
-    """
-        View for venue application form (no login required).
-        Email verification is stored in session:
-        - venue_email_verified: True/False
-        - venue_verified_email: normalized email
-    """
     session_verified = bool(request.session.get("venue_email_verified", False))
-    session_email    = (request.session.get("venue_verified_email") or "").strip().lower()
+    session_email = (request.session.get("venue_verified_email") or "").strip().lower()
 
     if request.method == "POST":
-        action = request.POST.get("action")  # should be "submit_application"
-        form   = VenueApplicationForm(request.POST)
+        action = request.POST.get("action")
+        form = VenueApplicationForm(request.POST)
 
-        # compute posted email (even if form invalid)
         posted_admin_email = (request.POST.get("admin_email") or "").strip().lower()
 
-        # verified ONLY if session says verified AND email matches current input
-        email_verified = bool(session_verified and session_email and posted_admin_email and session_email == posted_admin_email)
+        email_verified = bool(
+            session_verified and session_email and posted_admin_email and session_email == posted_admin_email
+        )
 
-        # if invalid form -> re-render but KEEP email_verified
         if not form.is_valid():
             return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
 
-        # Submit application only
         if action == "submit_application":
             if not email_verified:
-                form.add_error("admin_email", "You must verify this email before submitting the application.")
+                form.add_error("admin_email", _("You must verify this email before submitting the application."))
                 return render(request, "venues/apply_venue.html", {"form": form, "email_verified": False})
 
-            venue_application = form.save()
-            send_new_venue_application_email(venue_application)
-            messages.success(request, "Your venue application has been submitted. We will contact you shortly.")
+            admin_email = form.cleaned_data["admin_email"].strip().lower()
+            username = (form.cleaned_data.get("admin_username") or "").strip()
+            owner_phone = (form.cleaned_data.get("admin_phone") or "").strip()
+            full_name = (form.cleaned_data.get("admin_fullname") or "").strip()
 
-            # clear verification flags (optional)
+            password = form.cleaned_data.get("password1") or ""
+
+            with transaction.atomic():
+                if User.objects.filter(email__iexact=admin_email).exists():
+                    form.add_error("admin_email", _("An account with this email already exists."))
+                    return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
+
+                if User.objects.filter(username__iexact=username).exists():
+                    form.add_error("admin_username", _("This username is already taken."))
+                    return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
+
+                user = User(
+                    username=username,
+                    email=admin_email,
+                    user_type="venue_admin",
+                    phone_number=owner_phone or None,
+                    is_active=False,
+                    email_verified=True,
+                    unverified_email=None,
+                )
+
+                if full_name:
+                    parts = full_name.split()
+                    user.first_name = parts[0]
+                    user.last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
+
+                user.set_password(password)
+                user.save()
+
+                venue_application = form.save(commit=False)
+                venue_application.owner_user = user
+                # keep status pending
+                venue_application.status = "pending"
+                venue_application.save()
+
+            send_new_venue_application_email(venue_application)
+
+            messages.success(request, _("Your venue application has been submitted. We will contact you shortly."))
+
             request.session.pop("venue_email_verified", None)
             request.session.pop("venue_verified_email", None)
 
             return redirect("venue_list")
 
-        messages.error(request, "Invalid action.")
+        messages.error(request, _("Invalid action."))
         return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
 
-    # GET: keep verified if session exists (but needs admin_email match, which we don't have yet)
-    # So we only say "verified" if session_verified AND the form initial email matches session email.
     form = VenueApplicationForm()
     initial_email = (form.initial.get("admin_email") or "").strip().lower()
     email_verified = bool(session_verified and session_email and initial_email and session_email == initial_email)
 
     return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
-
 
 ###########################################################################################
 

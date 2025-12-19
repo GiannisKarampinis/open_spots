@@ -20,9 +20,9 @@ User = get_user_model()
 
 @admin.register(VenueApplication)
 class VenueApplicationAdmin(admin.ModelAdmin):
-    list_display  = ("venue_name", "admin_email", "submitted_at", "reviewed", "accepted")
-    list_filter   = ("reviewed", "accepted")
-    search_fields = ("venue_name", "admin_email")
+    list_display  = ("venue_name", "admin_email", "submitted_at", "status", "owner_user" )
+    list_filter   = ("status", "submitted_at", "venue_type")
+    search_fields = ("venue_name", "admin_email", "admin_username", "location")
     ordering      = ("-submitted_at",)
     actions       = ["mark_as_accepted"]
 

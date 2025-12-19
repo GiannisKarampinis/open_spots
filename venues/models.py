@@ -296,12 +296,30 @@ class VenueApplication(models.Model):
     venue_type      = models.CharField(max_length=20, choices=VENUE_TYPES, default='other')
     location        = models.CharField(max_length=255)
     description     = models.TextField(blank=True)
-    admin_name      = models.CharField(max_length=100)
-    admin_email     = models.EmailField()
     phone           = models.CharField(max_length=20, blank=True)
     submitted_at    = models.DateTimeField(auto_now_add=True)
-    reviewed        = models.BooleanField(default=False)
-    accepted        = models.BooleanField(null=True, blank=True)  # None = pending
+    
+    # Venue owner/admin details
+    admin_username  = models.CharField(max_length=100)
+    admin_email     = models.EmailField()
+    admin_fullname  = models.CharField(max_length=150, blank=True)
+    admin_phone     = models.CharField(max_length=20, blank=True)
+
+    owner_user = models.ForeignKey(
+            settings.AUTH_USER_MODEL,
+            on_delete=models.SET_NULL,
+            null=True,
+            blank=True,
+            related_name="venue_applications",
+    )
+    
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
 
     def __str__(self):
         return f"{self.venue_name} ({self.admin_email})"
