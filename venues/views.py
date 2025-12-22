@@ -498,15 +498,25 @@ def venue_visits_analytics_api(request, venue_id):
 @venue_admin_required
 @require_POST
 def toggle_venue_full(request, venue_id):
-    venue = get_object_or_404(Venue, id=venue_id)
+    # transaction.atomic() + select_for_update() locks 
+    # that venue row for the duration of the transaction.
+    # So Request B will wait until Request A commits, then 
+    # it will read the new value and toggle from there.
+    with transaction.atomic():
+        venue = (
+            Venue.objects
+            .select_for_update()
+            .filter(id=venue_id, owner=request.user)
+            .first()
+        )
+        if not venue:
+            # 404 behavior without leaking existence
+            raise Http404
 
-    if venue.owner != request.user:
-        raise PermissionDenied
+        venue.is_full = not venue.is_full
+        venue.save(update_fields=["is_full"])
 
-    venue.is_full = not venue.is_full
-    venue.save(update_fields = ['is_full'])
-
-    return redirect('venue_dashboard', venue_id = venue.id)
+    return redirect("venue_dashboard", venue_id=venue.id)
 
 ###########################################################################################
 
