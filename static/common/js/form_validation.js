@@ -8,17 +8,30 @@
     const canonicalName = (name) => fieldNameMap[name] || name;
 
     function setFieldErrors(fieldName, messages) {
-      const errorList = document.getElementById(fieldName + '-errors');
-      if (!errorList) return;
-      errorList.innerHTML = '';
-      if (messages.length > 0) {
-        messages.forEach(msg => {
-          const li = document.createElement('li');
-          li.textContent = msg;
-          errorList.appendChild(li);
-        });
-      }
+    const fieldEl = form.querySelector(`[name="${CSS.escape(fieldName)}"]`);
+    const list = fieldEl?.closest(".form-group")?.querySelector(".field-error-slot ul.errorlist");
+    if (!list) return;
+
+    list.innerHTML = "";
+
+    if (messages.length) {
+      list.style.visibility = "visible";
+      list.classList.remove("is-hidden");
+      messages.forEach(msg => {
+        const li = document.createElement("li");
+        li.textContent = msg;
+        list.appendChild(li);
+      });
+    } else {
+      // keep layout stable
+      list.classList.add("is-hidden");
+      list.style.visibility = "hidden";
+      const li = document.createElement("li");
+      li.innerHTML = "&nbsp;";
+      list.appendChild(li);
     }
+  }
+
 
     function validateField(field) {
       /*
@@ -107,15 +120,16 @@
     /*
       * On page load, if server returned any field errors, focus and scroll to the first one.
      */
-    const firstServerError = form.querySelector('.errorlist li');
-    if (firstServerError) {
-      const errorList = firstServerError.closest('.errorlist');
-      const fieldInput = errorList?.previousElementSibling;
-      if (fieldInput && fieldInput.focus) {
+    const firstServerErrorLi = form.querySelector('.field-error-slot .errorlist li');
+    if (firstServerErrorLi && firstServerErrorLi.textContent.trim() !== "\u00a0") {
+      const group = firstServerErrorLi.closest(".form-group");
+      const fieldInput = group?.querySelector("input, select, textarea");
+      if (fieldInput?.focus) {
         fieldInput.focus();
-        errorList.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        group.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
+
   }
 
   // expose globally so templates can call it with different forms

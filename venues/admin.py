@@ -24,11 +24,11 @@ class VenueApplicationAdmin(admin.ModelAdmin):
     list_filter   = ("status", "submitted_at", "venue_type")
     search_fields = ("venue_name", "admin_email", "admin_username", "location")
     ordering      = ("-submitted_at",)
-    actions       = ["mark_as_accepted"]
+    actions       = ["mark_as_approved"]  # , "mark_as_rejected"]
 
-    @admin.action(description="Accept applications (create owner + venue)")
-    def mark_as_accepted(self, request, queryset):
-        accepted = 0
+    @admin.action(description="Approve applications (create owner + venue)")
+    def mark_as_approved(self, request, queryset):
+        approved = 0
         skipped  = 0
         failed   = 0
 
@@ -37,13 +37,10 @@ class VenueApplicationAdmin(admin.ModelAdmin):
             try:
                 with transaction.atomic():
                     # Lock the row inside a transaction (prevents double-accept in concurrent admins)
-                    app = (
-                        VenueApplication.objects.select_for_update()
-                        .get(pk=app.pk)
-                    )
+                    app = VenueApplication.objects.select_for_update().get(pk=app.pk)
 
-                    # Skip already processed
-                    if app.accepted is True:
+                    # Skip already processed (approved or rejected)
+                    if app.status != "pending":
                         skipped += 1
                         continue
 
@@ -55,15 +52,13 @@ class VenueApplicationAdmin(admin.ModelAdmin):
 
                     # Optional: prevent duplicate venue creation
                     if Venue.objects.filter(email__iexact=email, name=app.venue_name).exists():
-                        app.reviewed = True
-                        app.accepted = True
-                        app.save(update_fields=["reviewed", "accepted"])
+                        # Mark as approved anyway, because venue already exists
+                        app.status = "approved"
+                        app.save(update_fields=["status"])
                         skipped += 1
                         continue
 
-                    # -----------------------------
                     # 1) Create or reuse user
-                    # -----------------------------
                     user = User.objects.filter(email__iexact=email).first()
                     created_user = False
 
@@ -89,6 +84,7 @@ class VenueApplicationAdmin(admin.ModelAdmin):
                     # Ensure user is venue admin + staff
                     # (Only set fields if they exist on your custom model)
                     updates = []
+
                     if getattr(user, "user_type", None) != "venue_admin":
                         user.user_type = "venue_admin"
                         updates.append("user_type")
@@ -97,41 +93,41 @@ class VenueApplicationAdmin(admin.ModelAdmin):
                         user.is_staff = True
                         updates.append("is_staff")
 
-                    # If you trust the verified-email flow, set it here
+                    # ✅ Activate account on approval
+                    if not user.is_active:
+                        user.is_active = True
+                        updates.append("is_active")
+
+                    # Trust your email verification flow
                     if hasattr(user, "email_verified") and not user.email_verified:
                         user.email_verified = True
                         updates.append("email_verified")
 
                     if updates:
                         user.save(update_fields=updates)
-
                     assign_venue_permissions(user)
 
                     # Send password setup email ONLY for brand new users
                     if created_user:
                         self._send_password_setup_email(request, user)
 
-                    # -----------------------------
                     # 2) Create venue
-                    # -----------------------------
                     Venue.objects.create(
                         name        = app.venue_name,
                         kind        = app.venue_type,
                         location    = app.location,
-                        description = app.description,
+                        description = app.description, # FIXME: This should be removed?
                         email       = email,
                         phone       = app.phone,
                         owner       = user,
                     )
 
-                    # -----------------------------
                     # 3) Mark application accepted
-                    # -----------------------------
-                    app.reviewed = True
-                    app.accepted = True
-                    app.save(update_fields=["reviewed", "accepted"])
+                    app.status = "approved"
+                    app.owner_user = user
+                    app.save(update_fields=["status", "owner_user"] if hasattr(app, "owner_user") else ["status"])
 
-                    accepted += 1
+                    approved += 1
 
             except Exception as e:
                 failed += 1
@@ -139,7 +135,7 @@ class VenueApplicationAdmin(admin.ModelAdmin):
 
         self.message_user(
             request,
-            f"Accepted: {accepted}, skipped: {skipped}, failed: {failed}",
+            f"Approved: {approved}, skipped: {skipped}, failed: {failed}",
             level=messages.SUCCESS if failed == 0 else messages.WARNING
         )
 
@@ -157,6 +153,7 @@ class VenueApplicationAdmin(admin.ModelAdmin):
             subject="Your OpenSpots venue account",
             message=(
                 "Your venue has been approved 🎉\n\n"
+                "Your account is now active.\n"
                 "Set your password using the link below:\n\n"
                 f"{reset_url}\n"
             ),
@@ -168,7 +165,49 @@ class VenueApplicationAdmin(admin.ModelAdmin):
     def get_model_perms(self, request):
         return super().get_model_perms(request) if request.user.is_superuser else {}
 
+    
+    # @admin.action(description="Reject applications (set status=rejected)")
+    # def mark_as_rejected(self, request, queryset):
+    #     rejected = 0
+    #     skipped  = 0
+    #     failed   = 0
 
+    #     for app in queryset:
+    #         try:
+    #             with transaction.atomic():
+    #                 app = VenueApplication.objects.select_for_update().get(pk=app.pk)
+
+    #                 # Skip already processed
+    #                 if app.status != "pending":
+    #                     skipped += 1
+    #                     continue
+
+    #                 app.status = "rejected"
+
+    #                 # OPTIONAL: if your model has a rejection_reason field
+    #                 # reason = "Rejected by admin"
+    #                 # if hasattr(app, "rejection_reason"):
+    #                 #     app.rejection_reason = reason
+    #                 #     app.save(update_fields=["status", "rejection_reason"])
+    #                 # else:
+    #                 #     app.save(update_fields=["status"])
+
+    #                 app.save(update_fields=["status"])
+    #                 rejected += 1
+
+    #         except Exception as e:
+    #             failed += 1
+    #             self.message_user(
+    #                 request,
+    #                 f"Failed to reject {getattr(app, 'venue_name', 'unknown')}: {e}",
+    #                 level=messages.ERROR
+    #             )
+
+    #     self.message_user(
+    #         request,
+    #         f"Rejected: {rejected}, skipped: {skipped}, failed: {failed}",
+    #         level=messages.SUCCESS if failed == 0 else messages.WARNING
+    #     )
 
 
 

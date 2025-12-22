@@ -5,14 +5,15 @@
 {% block title %}{% trans "Apply to Register a Venue" %}{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'venues/apply_venue.css' %}">
-  <link rel="stylesheet" href="{% static 'accounts/verify_code.css' %}">
-  <link rel="stylesheet" href="{% static 'accounts/partial_signup.css' %}">
+    <link rel="stylesheet" href="{% static 'venues/apply_venue.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/verify_code.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/partial_signup.css' %}">
 {% endblock %}
 
 {% block content %}
 
 <div class="apply-container">
+
 
   <div class="form-header">
     <h2>{% trans "Apply to Register Your Venue" %}</h2>
@@ -22,6 +23,8 @@
     </p>
   </div>
 
+
+  {% comment %} 1.Errors not binded to a particular field {% endcomment %}
   {% if form.non_field_errors %}
     <ul class="errorlist" style="visibility:hidden;">
       {% for error in form.non_field_errors %}
@@ -30,21 +33,24 @@
     </ul>
   {% endif %}
 
-  <form method="post" novalidate> 
+
+
+  <form id="apply-venue-form" method="post" novalidate> 
+  
     {% csrf_token %}
 
-    
     <div class="form-section">
-      <div class="section-header">
-        <h3 class="section-title">{% trans "Venue Owner" %}</h3>
-        <p class="section-subtitle">{% trans "Owner account details and email verification." %}</p>
-      </div>
-
+  
+      {% comment %} 2. User data that will used while creating the venue owner {% endcomment %}
       <div class="section-body">
         {% include "accounts/partial_signup.html" with form=form email_verified=email_verified %}
-
+      </div>
+  
+    </div>
+    
     {% for field in form %}
-      {% if field.name != 'admin_username' and field.name != 'admin_email' and field.name != 'password1' and field.name != 'password2' %}
+      {% comment %} The following line is maintenance heavy! {% endcomment %}
+      {% if field.name != 'admin_username' and field.name != 'admin_email' and field.name != 'password1' and field.name != 'password2' and field.name != 'admin_firstname' and field.name != 'admin_lastname' and field.name != 'admin_phone' %}
         <div class="form-group">
           <label for="{{ field.id_for_label }}">
             {% trans field.label %}
@@ -180,95 +186,83 @@
   });
 })();
 </script>
+{% endblock %}
 
-<script>
-(() => {
-  const form = document.querySelector(".apply-container form");
-  if (!form) return;
 
-  function hideErrorForField(fieldEl) {
-    const group = fieldEl.closest(".form-group");
-    if (!group) return;
 
-    // IMPORTANT: only the errorlist inside the reserved slot
-    const slot = group.querySelector(".field-error-slot");
-    if (!slot) return;
+{% block extra_js %}
+  {% comment %} 
+    
+    This bock bridges Django (server-side) with the email verifier JS (client-side)
+    by injecting config data like URLs and translated strings.
+    Our accounts/js/venue_email_verify.js cannot use Django template tags directly
+    like {% url %} or {% trans %} because it is a static file served as-is. The 
+    following script block is a workaround to pass the required data from Django 
+    to the JS code.
 
-    const list = slot.querySelector("ul.errorlist");
-    if (!list) return;
-
-    list.classList.add("is-hidden");
-
-    // remove red invalid styling (if you set it)
-    fieldEl.removeAttribute("aria-invalid");
-    fieldEl.classList.remove("is-invalid");
-  }
-
-  // For text-like inputs: hide on input
-  form.addEventListener("input", (e) => {
-    const el = e.target;
-    if (!el.matches("input, textarea")) return;
-    hideErrorForField(el);
-  });
-
-  // For selects: hide on change
-  form.addEventListener("change", (e) => {
-    const el = e.target;
-    if (!el.matches("select")) return;
-    hideErrorForField(el);
-  });
-})();
-</script>
-
-<script>
-(() => {
-  const submitBtn = document.getElementById("submitApplicationBtn");
-  const wrap = document.getElementById("submitGuardWrap");
-  const hint = document.getElementById("submitHint");
-
-  // reuse your existing verify popover function if it exists
-  // openPopover() is already defined in your big script
-  function showSubmitHint(msg) {
-    if (!hint) return;
-    hint.innerHTML = `<li>${msg}</li>`;
-    hint.classList.remove("is-hidden");
-  }
-
-  function hideSubmitHint() {
-    if (!hint) return;
-    hint.classList.add("is-hidden");
-  }
-
-  function ensureGuard() {
-    if (!submitBtn || !wrap) return;
-
-    // remove existing guard if any
-    const existing = wrap.querySelector(".submit-guard");
-    if (existing) existing.remove();
-
-    if (submitBtn.disabled) {
-      const guard = document.createElement("div");
-      guard.className = "submit-guard";
-      guard.addEventListener("click", () => {
-        showSubmitHint("{% trans 'Please verify your admin email before submitting.' %}");
-        // optional: open verify popover for convenience
-        if (typeof openPopover === "function") openPopover();
-      });
-      wrap.appendChild(guard);
-    } else {
-      hideSubmitHint();
+  {% endcomment %}
+  <script>
+    window.venueVerifyConfig = {
+      sendUrl:    "{% url 'ajax_send_venue_code' %}",
+      verifyUrl:  "{% url 'ajax_verify_venue_code' %}",
+      i18n: {
+        verifyEmail:    "{% trans 'Verify Email' %}",
+        verified:       "{% trans 'Verified' %}",
+        enterEmailFirst: "{% trans 'Enter admin email first.' %}",
+        failedSend:     "{% trans 'Failed to send code.' %}",
+        codeSent:       "{% trans 'Code sent. Check your inbox.' %}",
+        enterValidCode: "{% trans 'Enter a valid 6-digit code.' %}",
+        verifyFailed:   "{% trans 'Verification failed.' %}",
+        verifiedOk:     "{% trans 'Email verified ✅' %}"
+      }
+    };
+  </script>
+  
+  {% comment %} Email Verifier JS script: {% endcomment %}
+  <script src="{% static 'accounts/js/venue_email_verify.js' %}"></script> 
+  
+  {% comment %} Form Validation common code with signup.html {% endcomment %}
+  <script src="{% static 'common/js/form_validation.js' %}"></script>
+  
+  <script>
+  {% comment %} 
+    attachSignupLikeValidation() runs the same checks with signup.html
+    to keep validation fully consistent accross the different signup 
+    workflows of openspots. The validator (common/js/form_validation.js)
+    only knows about generic field types (like "username", "email", etc)
+    so we need to map our venue application form fields to these types.
+    So the JS expects:
+      <input name="admin_username" ...>
+      <input name="admin_email" ...>
+    If our inputs use any other name, validation will silently not run. 
+  {% endcomment %}
+    document.addEventListener("DOMContentLoaded", () => {
+      if (typeof attachSignupLikeValidation === "function") {// JS function exists and it is properly exposed  
+        attachSignupLikeValidation("apply-venue-form", {
+          admin_username:   "username",
+          admin_email:      "email",
+      }); 
     }
-  }
+    });
+  </script>
 
-  // initial
-  ensureGuard();
+  {% comment %}
+    Submit Guard config:
+    This script places an invisible clickable overlay on top of a 
+    disabled submit button, so when the user clicks it, they get a 
+    clear message + shortcut to email verification, instead of 
+    “nothing happens”.
+  {% endcomment %}
+  <script src="{% static 'venues/js/ApplyVenue_submitGuard.js' %}"></script>
+  <script>
+    window.submitGuardConfig = {
+      submitBtnId:  "submitApplicationBtn",
+      wrapId:       "submitGuardWrap",
+      hintId:       "submitHint",
+      openVerifyBtnId: "openVerifyPopover",
+      message:      "{% trans 'Please verify your admin email before submitting.' %}"
+    };
+  </script>
 
-  // if you enable/disable submit in JS (after verification), call ensureGuard again.
-  // easiest: observe changes to disabled attribute
-  const obs = new MutationObserver(ensureGuard);
-  obs.observe(submitBtn, { attributes: true, attributeFilter: ["disabled"] });
-
-})();
-</script>
 
 {% endblock %}

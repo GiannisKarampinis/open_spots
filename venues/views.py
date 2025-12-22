@@ -52,19 +52,18 @@ from django.utils.translation import gettext as _
 User = get_user_model()
 
 def apply_venue(request):
+    verified_email = (request.session.get("venue_verified_email") or "").strip().lower()
     session_verified = bool(request.session.get("venue_email_verified", False))
-    session_email = (request.session.get("venue_verified_email") or "").strip().lower()
+
 
     if request.method == "POST":
         action = request.POST.get("action")
         form = VenueApplicationForm(request.POST)
 
         posted_admin_email = (request.POST.get("admin_email") or "").strip().lower()
-
-        email_verified = bool(
-            session_verified and session_email and posted_admin_email and session_email == posted_admin_email
-        )
-
+        
+        email_verified = bool(session_verified and verified_email and posted_admin_email and verified_email == posted_admin_email)
+        
         if not form.is_valid():
             return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
 
@@ -76,12 +75,14 @@ def apply_venue(request):
             admin_email = form.cleaned_data["admin_email"].strip().lower()
             username = (form.cleaned_data.get("admin_username") or "").strip()
             owner_phone = (form.cleaned_data.get("admin_phone") or "").strip()
-            full_name = (form.cleaned_data.get("admin_fullname") or "").strip()
+            first_name = (form.cleaned_data.get("admin_firstname") or "").strip()
+            last_name = (form.cleaned_data.get("admin_lastname") or "").strip()
 
             password = form.cleaned_data.get("password1") or ""
 
             with transaction.atomic():
-                if User.objects.filter(email__iexact=admin_email).exists():
+                # FIXME: Consider this logic! No duplicate email for venue_admins
+                if User.objects.filter(email__iexact=admin_email, user_type="venue_admin").exists():
                     form.add_error("admin_email", _("An account with this email already exists."))
                     return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
 
@@ -99,11 +100,6 @@ def apply_venue(request):
                     unverified_email=None,
                 )
 
-                if full_name:
-                    parts = full_name.split()
-                    user.first_name = parts[0]
-                    user.last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
-
                 user.set_password(password)
                 user.save()
 
@@ -119,6 +115,7 @@ def apply_venue(request):
 
             request.session.pop("venue_email_verified", None)
             request.session.pop("venue_verified_email", None)
+            request.session.pop("venue_pending_email", None)
 
             return redirect("venue_list")
 
@@ -127,7 +124,7 @@ def apply_venue(request):
 
     form = VenueApplicationForm()
     initial_email = (form.initial.get("admin_email") or "").strip().lower()
-    email_verified = bool(session_verified and session_email and initial_email and session_email == initial_email)
+    email_verified = bool(session_verified and verified_email and initial_email and verified_email == initial_email)
 
     return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
 
@@ -1074,7 +1071,8 @@ def ajax_send_venue_code(request):
 
     # reset session state
     request.session["venue_email_verified"] = False
-    request.session["venue_verified_email"] = email
+    request.session["venue_pending_email"] = email
+    request.session.pop("venue_verified_email", None)
 
     # rotate code
     VenueEmailVerificationCode.objects.filter(email=email).delete()
@@ -1090,7 +1088,7 @@ def ajax_send_venue_code(request):
 @require_POST
 @csrf_protect
 def ajax_verify_venue_code(request):
-    email = request.session.get("venue_verified_email")
+    email = request.session.get("venue_pending_email")
     if not email:
         return JsonResponse({"ok": False, "error": "No email in session. Send code first."}, status=400)
 
@@ -1110,6 +1108,8 @@ def ajax_verify_venue_code(request):
     # success
     code_obj.delete()
     request.session["venue_email_verified"] = True
+    request.session["venue_verified_email"] = email
+    request.session.pop("venue_pending_email", None)
     return JsonResponse({"ok": True, "message": "Email verified."})
 
 ###########################################################################################

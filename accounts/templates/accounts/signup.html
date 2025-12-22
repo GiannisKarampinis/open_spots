@@ -43,7 +43,8 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'common/js/form_validation.js' %}" onload="attachSignupLikeValidation('signup-form')"></script>
+    <script src="{% static 'common/js/form_validation.js' %}"></script>
+    {% comment %} <script src="{% static 'common/js/form_validation.js' %}" onload="attachSignupLikeValidation('signup-form')"></script> {% endcomment %}
 
     <script defer>
         attachSignupLikeValidation('signup-form');

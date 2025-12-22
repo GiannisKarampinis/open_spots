@@ -1,16 +1,46 @@
 {% load i18n %}
 
 <div class="section-card">
+
   <div class="form-section">  
+  
     <div class="section-header">
         <h3 class="section-title">{% trans "Venue Owner" %}</h3>
         <p class="section-subtitle">{% trans "Owner account details (used to create your venue admin account)." %}</p>
     </div>
 
-    {# --- Admin Username --- #}
     <div class="section-body">
+        
+        
+        {# --- 1. Admin Username --- #}
         <div class="form-group">
             {% with field=form.admin_username %}
+            <label for="{{ field.id_for_label }}">
+                {% trans field.label %}
+                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+            </label>
+
+            {{ field }}
+
+            <div class="field-error-slot" id="err-{{ field.id_for_label }}">
+                {% if field.errors %}
+                  <ul class="errorlist">
+                      {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                      {% endfor %}
+                  </ul>
+                {% else %}
+                  <ul class="errorlist" style="visibility:hidden;">
+                      <li>&nbsp;</li>
+                  </ul>
+                {% endif %}
+            </div>
+            {% endwith %}
+        </div>
+
+        {# --- 2. Admin First Name --- #}
+        <div class="form-group">
+            {% with field=form.admin_firstname %}
             <label for="{{ field.id_for_label }}">
                 {% trans field.label %}
                 {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
@@ -34,9 +64,10 @@
             {% endwith %}
         </div>
 
-        {# --- Admin Full Name --- #}
+        
+        {# --- 2. Admin Last Name --- #}
         <div class="form-group">
-            {% with field=form.admin_fullname %}
+            {% with field=form.admin_lastname %}
             <label for="{{ field.id_for_label }}">
                 {% trans field.label %}
                 {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
@@ -212,158 +243,3 @@
     </div>
   </div>
 </div>
-
-<script>
-(() => {
-  const popover      = document.getElementById("verifyPopover");
-  const msgEl        = document.getElementById("verifyMsg");
-  const codeInput    = document.getElementById("codeInput");
-
-  const openBtn      = document.getElementById("openVerifyPopover");
-  const closeBtn     = document.getElementById("closeVerifyPopover");
-
-  const sendBtn      = document.getElementById("sendCodeBtn");
-  const verifyBtn    = document.getElementById("verifyCodeBtn");
-
-  const verifyButton = document.getElementById("openVerifyPopover");
-
-  // If partial rendered without these (or included twice), bail out safely
-  if (!popover || !msgEl || !codeInput || !openBtn || !sendBtn || !verifyBtn) return;
-
-  const submitBtn    = document.getElementById("submitApplicationBtn");
-  const emailInput   = document.getElementById("id_admin_email");
-
-  const VERIFY_DEFAULT_TEXT = verifyButton
-    ? verifyButton.textContent.trim()
-    : "{% trans 'Verify Email' %}";
-
-  let verifiedEmail = null;
-
-  function getCSRFToken() {
-    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || "";
-  }
-
-  function adminEmailValue() {
-    return emailInput ? emailInput.value.trim() : "";
-  }
-
-  function showMsg(text, ok=true) {
-    msgEl.textContent = text;
-    msgEl.classList.remove("is-error", "is-success");
-    msgEl.classList.add(ok ? "is-success" : "is-error");
-  }
-
-  function openPopover() {
-    popover.style.display = "block";
-    popover.setAttribute("aria-hidden", "false");
-    showMsg("", true);
-    codeInput.value = "";
-    codeInput.focus();
-  }
-
-  function closePopover() {
-    popover.style.display = "none";
-    popover.setAttribute("aria-hidden", "true");
-  }
-
-  function markVerified() {
-    const e = adminEmailValue();
-    if (e) verifiedEmail = e.toLowerCase();
-
-    verifyButton.classList.add("is-verified");
-    verifyButton.textContent = "{% trans 'Verified' %}";
-    verifyButton.disabled = true;
-
-    if (submitBtn) submitBtn.disabled = false;
-  }
-
-  function resetVerificationUI() {
-    if (!verifyButton) return;
-
-    verifyButton.classList.remove("is-verified");
-    verifyButton.textContent = VERIFY_DEFAULT_TEXT;
-    verifyButton.disabled = false;
-    verifyButton.style.cursor = "";
-
-    if (submitBtn) submitBtn.disabled = true;
-  }
-
-  openBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    openPopover();
-  });
-
-  closeBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    closePopover();
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!popover) return;
-    const wrapper = popover.closest(".email-verify-wrapper");
-    if (!wrapper) return;
-    if (!wrapper.contains(e.target)) closePopover();
-  });
-
-  sendBtn?.addEventListener("click", async () => {
-    const email = adminEmailValue();
-    if (!email) {
-      showMsg("{% trans 'Enter admin email first.' %}", false);
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("email", email);
-
-    const res = await fetch("{% url 'ajax_send_venue_code' %}", {
-      method: "POST",
-      headers: { "X-CSRFToken": getCSRFToken() },
-      body: formData
-    });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) {
-      showMsg(data.error || "{% trans 'Failed to send code.' %}", false);
-      return;
-    }
-
-    showMsg("{% trans 'Code sent. Check your inbox.' %}", true);
-  });
-
-  verifyBtn?.addEventListener("click", async () => {
-    const code = (codeInput.value || "").trim();
-    if (!/^\d{6}$/.test(code)) {
-      showMsg("{% trans 'Enter a valid 6-digit code.' %}", false);
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("code", code);
-
-    const res = await fetch("{% url 'ajax_verify_venue_code' %}", {
-      method: "POST",
-      headers: { "X-CSRFToken": getCSRFToken() },
-      body: formData
-    });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) {
-      showMsg(data.error || "{% trans 'Verification failed.' %}", false);
-      return;
-    }
-
-    showMsg("{% trans 'Email verified ✅' %}", true);
-    markVerified();
-    setTimeout(() => closePopover(), 400);
-  });
-
-  emailInput?.addEventListener("input", () => {
-    if (!verifiedEmail) return;
-
-    if (adminEmailValue().toLowerCase() !== verifiedEmail) {
-      resetVerificationUI();
-      verifiedEmail = null;
-    }
-  });
-})();
-</script>

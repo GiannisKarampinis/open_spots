@@ -302,7 +302,8 @@ class VenueApplication(models.Model):
     # Venue owner/admin details
     admin_username  = models.CharField(max_length=100)
     admin_email     = models.EmailField()
-    admin_fullname  = models.CharField(max_length=150, blank=True)
+    admin_firstname = models.CharField(max_length=150, blank=True)
+    admin_lastname  = models.CharField(max_length=150, blank=True)
     admin_phone     = models.CharField(max_length=20, blank=True)
 
     owner_user = models.ForeignKey(
@@ -384,7 +385,9 @@ class VenueUpdateRequest(models.Model):
         return f"Venue Update Request for {self.venue.name} (status: {self.approval_status})"
 
     def get_changes(self):
-        """Return a dict of changed fields {field: (old, new)}"""
+        """
+            Return a dict of changed fields {field: (old, new)}
+        """
         venue   = self.venue
         changes = {}
 

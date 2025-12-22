@@ -92,18 +92,18 @@ class VenueApplicationForm(forms.ModelForm):
     class Meta:
         model = VenueApplication
         fields = [
-            'venue_name', 'venue_type', 'location', 'description', 'phone',
-            'admin_username', 'admin_email', 'admin_fullname',
+            'venue_name', 'venue_type', 'location', 'phone',
+            'admin_username', 'admin_email', 'admin_firstname', 'admin_lastname',
             'admin_phone' 
         ]
         labels = {
             'admin_username':   _("Admin Username"),
             'admin_email':      _("Admin email"),
-            'admin_fullname':   _("Admin full name"),
+            'admin_firstname':  _("Admin First Name"),
+            'admin_lastname':   _("Admin Last Name"),
             'venue_name':       _("Venue name"),
             'venue_type':       _("Venue type"),
             'location':         _("Location"),
-            'description':      _("Description"),
             'phone':            _("Venue phone"),
         }
 
@@ -119,12 +119,14 @@ class VenueApplicationForm(forms.ModelForm):
             'admin_username', 
             'admin_email',
             'admin_phone',
+            'admin_firstname',
+            'admin_lastname'
         ]
 
         for field_name in required_fields:
             self.fields[field_name].required = True
         
-        self.fields["description"].required = False # Explicitly mark description as optional for future clarity
+        #self.fields["description"].required = False # Explicitly mark description as optional for future clarity
 
 
 class VenueSignupForm(forms.ModelForm):
