@@ -34,7 +34,6 @@ class Venue(models.Model):
     kind                = models.CharField(max_length=20, choices=VENUE_TYPES, default='other')
     location            = models.CharField(max_length=255)
     description         = models.TextField(blank=True)
-    image               = models.ImageField(upload_to='venues/', blank=True, null=True)
     average_rating      = models.FloatField(default=0.0)
     is_full             = models.BooleanField(default=False)
     latitude            = models.DecimalField(max_digits=18, decimal_places=12, blank=True, null=True)
@@ -43,10 +42,10 @@ class Venue(models.Model):
     phone               = models.CharField(max_length=20, blank=True)
     owner               = models.ForeignKey(
                                                 settings.AUTH_USER_MODEL,
-                                                on_delete=models.SET_NULL,
-                                                null=True,
-                                                blank=True,
-                                                related_name='owned_venues'
+                                                on_delete       = models.SET_NULL,
+                                                null            = True,
+                                                blank           = True,
+                                                related_name    = 'owned_venues'
                                             )
     
     created_at          = models.DateTimeField(auto_now_add=True)
@@ -70,8 +69,8 @@ class Venue(models.Model):
 
     def get_first_image(self):
         return self.images.filter(
-            approved=True,
-            marked_for_deletion=False
+            approved            = True,
+            marked_for_deletion = False
         ).order_by("order").first()
     
     def get_available_time_slots(self, date):

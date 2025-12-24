@@ -369,3 +369,24 @@ def is_throttled(user, key, limit=5, period=60):
     cache.set(cache_key, window, timeout=period)
     return False
 
+###########################################################################################
+
+###########################################################################################
+def user_can_manage_venue(user, venue):
+    if not user.is_authenticated:
+        return False
+
+    if user.is_superuser:
+        return True
+
+    if user.user_type != 'admin':
+        return False
+    
+    if venue.owner == user:
+        return True
+    
+    return False
+
+###########################################################################################
+
+###########################################################################################

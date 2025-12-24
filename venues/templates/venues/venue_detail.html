@@ -14,13 +14,16 @@
 {% block content %}
 
 <!-- HERO SECTION -->
-<div class="hero-section" style="background-image:url('{% if venue.image %}{{ venue.image.url }}{% endif %}')">
-  <div class="hero-overlay"></div>
-  <div class="hero-title">
-    <h1>{{ venue.name }}</h1>
-    <p>{{ venue.location }}</p>
+{% with hero_img=venue.get_first_image %}
+  <div class="hero-section"
+      style="background-image: url('{% if hero_img %}{{ hero_img.image.url }}{% else %}{% static 'images/venue-placeholder.png' %}{% endif %}');">
+    <div class="hero-overlay"></div>
+    <div class="hero-title">
+      <h1>{{ venue.name }}</h1>
+      <p>{{ venue.location }}</p>
+    </div>
   </div>
-</div>
+{% endwith %}
 
 <div class="page-container">
 
@@ -44,15 +47,25 @@
     <!-- MENU SECTION -->
     <div class="tab-content" id="menu">
       <h3>{% trans "Menu" %}</h3>
-      <p>{% trans "This venue has not added a menu yet." %}</p>
+      <div class="gallery">
+          {% for image in venue.menu_images.all %}
+            {% if image.approved and not image.marked_for_deletion %}
+              <img src="{{ image.image.url }}" alt="Photo">
+            {% endif %}
+          {% empty %}
+            <p>{% trans "This venue has not added a menu yet." %}</p>
+          {% endfor %}
+      </div>
     </div>
 
     <!-- PHOTOS SECTION -->
     <div class="tab-content" id="photos">
       <h3>{% trans "Photos" %}</h3>
       <div class="gallery">
-        {% for image in venue.gallery_images.all %}
-          <img src="{{ image.image.url }}" alt="Photo">
+        {% for image in venue.images.all %}
+          {% if image.approved and not image.marked_for_deletion %}
+            <img src="{{ image.image.url }}" alt="Photo">
+          {% endif %}
         {% empty %}
           <p>{% trans "No photos available." %}</p>
         {% endfor %}

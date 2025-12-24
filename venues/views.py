@@ -6,12 +6,12 @@ from django.views.decorators.http    import require_POST
 from django.db.models                import Count
 from django.db.models.functions      import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.utils.timezone           import now
-from datetime                        import timedelta
+from datetime                        import timedelta, datetime
 from django.utils                    import timezone
 from django.core.serializers.json    import DjangoJSONEncoder
 from django.utils.safestring         import mark_safe
 from django.core.exceptions          import PermissionDenied
-from django.http                     import HttpResponse, Http404, JsonResponse
+from django.http                     import HttpResponse, Http404, JsonResponse, HttpResponseForbidden
 from django.template.loader          import render_to_string
 from django.db                       import transaction, models
 from django.urls                     import reverse
@@ -208,15 +208,25 @@ def venue_list(request):
 
 ###########################################################################################
 def venue_detail(request, pk):
+        
     venue = get_object_or_404(Venue, pk=pk)
-
-    # Log visit
-    log_venue_visit(venue, request)
+    
+    # --- Log visit ---
+    log_venue_visit(venue, request) 
 
     # --- Description split ---
-    words = venue.description.split()
-    preview_text = " ".join(words[:20])
-    remaining_text = " ".join(words[20:]) if len(words) > 20 else ""
+    DESC_PREVIEW_CHARS = 180
+    desc = venue.description or ""
+
+    if len(desc) <= DESC_PREVIEW_CHARS:
+        preview_text, remaining_text = desc, ""
+    else:
+        cut = desc.rfind(" ", 0, DESC_PREVIEW_CHARS)
+        if cut == -1:
+            cut = DESC_PREVIEW_CHARS
+        preview_text = desc[:cut]
+        remaining_text = desc[cut:].lstrip()
+
 
     # --- Determine selected date (POST or default today) ---
     selected_date = request.POST.get("date") if request.method == "POST" else None
@@ -235,9 +245,6 @@ def venue_detail(request, pk):
     form = ReservationForm()
     form.fields["time"].choices = time_choices
     review_form = ReviewForm()
-
-    #--- Gather existing reviews ---
-    reviews = venue.reviews.select_related('user').order_by('-created_at')
 
     # --- Reservation logic ---
     if request.method == "POST":
@@ -275,20 +282,17 @@ def venue_detail(request, pk):
                 review.save()
                 messages.success(request, "Your review has been submitted.")
                 return redirect("venue_detail", pk=pk)
-            else:
-                print("FORM ERRORS:", form.errors)
-    print(venue.reviews.all().order_by('-created_at'))
     return render(
         request,
         "venues/venue_detail.html",
         {
-            "venue": venue,
-            "form": form,
-            "review_form": review_form,
-            "preview_text": preview_text,
-            "remaining_text": remaining_text,
-            "time_choices": time_choices,
-            "reviews": venue.reviews.all().order_by('-created_at'),
+            "venue":            venue,
+            "form":             form,
+            "review_form":      review_form,
+            "preview_text":     preview_text,
+            "remaining_text":   remaining_text,
+            "time_choices":     time_choices,
+            "reviews":          venue.reviews.all().order_by('-created_at'),
         },
     )
 
@@ -914,11 +918,17 @@ def partial_arrival_row(request, pk: int):
 
 ###########################################################################################
 @login_required
+@transaction.atomic
 def submit_venue_update(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
 
-    if request.method == "POST":
-        update_request = VenueUpdateRequest.objects.create(
+    if not user_can_manage_venue(request.user, venue):
+        return HttpResponseForbidden("You do not have permission to manage this venue.")
+
+    if request.method != "POST":
+        return render(request, "venues/_manage_venue.html", {"venue": venue})
+
+    VenueUpdateRequest.objects.create(
             venue        = venue,
             submitted_by = request.user,
             name         = request.POST.get("name"),
@@ -929,89 +939,51 @@ def submit_venue_update(request, venue_id):
             description  = request.POST.get("description"),
         )
 
-        # ========== 1. Venue Images ==========
-        venue_files = request.FILES.getlist("venue_images")
-        venue_file_map = {f"new-{i}": file for i, file in enumerate(venue_files)}
+    def handle_image_group(model, files_field, visible_field):
+        visible_ids = request.POST.get(visible_field, None)
 
-        visible_venue_ids = request.POST.get("visible_venue_image_ids[]", "")
-        venue_sequence = visible_venue_ids.split(",") if visible_venue_ids else []
+        files = request.FILES.getlist(files_field)
+        file_map = {f"new-{i}": f for i, f in enumerate(files)}
 
-        updated_venue_images = []
-        for order_index, img_id in enumerate(venue_sequence):
-            if img_id.startswith("new-"):
-                # New upload → create VenueImage
-                file = venue_file_map.get(img_id)
-                if file:
-                    new_img = VenueImage.objects.create(
-                        venue=venue,
-                        image=file,
-                        approved=False,
-                        marked_for_deletion=False,
-                        order=order_index
-                    )
-                    updated_venue_images.append(new_img)
+        # If front-end didn't submit sequence, you can still accept uploads but avoid touching existing
+        if visible_ids is None:
+            for f in files:
+                model.objects.create(venue=venue, image=f, approved=False, marked_for_deletion=False)
+            return
+
+        sequence = [x for x in visible_ids.split(",") if x]
+
+        updated = []
+        for order_index, token in enumerate(sequence):
+            if token.startswith("new-"):
+                f = file_map.get(token)
+                if f:
+                    updated.append(model.objects.create(
+                        venue=venue, image=f, approved=False, marked_for_deletion=False, order=order_index
+                    ))
             else:
                 try:
-                    existing_img = VenueImage.objects.get(
-                        pk=int(img_id), venue=venue, approved=True
-                    )
-                    existing_img.order = order_index
-                    existing_img.marked_for_deletion = False
-                    existing_img.save(update_fields=["order", "marked_for_deletion"])
-                    updated_venue_images.append(existing_img)
-                except VenueImage.DoesNotExist:
+                    img = model.objects.get(pk=int(token), venue=venue)
+                except (ValueError, model.DoesNotExist):
                     continue
+                img.order = order_index
+                img.marked_for_deletion = False
+                img.save(update_fields=["order", "marked_for_deletion"])
+                updated.append(img)
 
-        # Mark any other approved images as deleted
-        VenueImage.objects.filter(
-            venue=venue, approved=True
-        ).exclude(id__in=[img.id for img in updated_venue_images]).update(marked_for_deletion=True)
+        model.objects.filter(venue=venue, approved=True).exclude(id__in=[i.id for i in updated]) \
+            .update(marked_for_deletion=True)
 
-        # ========== 2. Menu Images ==========
-        menu_files = request.FILES.getlist("menu_images")
-        menu_file_map = {f"new-{i}": file for i, file in enumerate(menu_files)}
 
-        visible_menu_ids = request.POST.get("visible_menu_image_ids[]", "")
-        menu_sequence = visible_menu_ids.split(",") if visible_menu_ids else []
+    handle_image_group(VenueImage, "venue_images", "visible_venue_image_ids[]")
+    handle_image_group(VenueMenuImage, "menu_images", "visible_menu_image_ids[]")
 
-        updated_menu_images = []
-        for order_index, img_id in enumerate(menu_sequence):
-            if img_id.startswith("new-"):
-                file = menu_file_map.get(img_id)
-                if file:
-                    new_img = VenueMenuImage.objects.create(
-                        venue=venue,
-                        image=file,
-                        approved=False,
-                        marked_for_deletion=False,
-                        order=order_index
-                    )
-                    updated_menu_images.append(new_img)
-            else:
-                try:
-                    existing_img = VenueMenuImage.objects.get(
-                        pk=int(img_id), venue=venue, approved=True
-                    )
-                    existing_img.order = order_index
-                    existing_img.marked_for_deletion = False
-                    existing_img.save(update_fields=["order", "marked_for_deletion"])
-                    updated_menu_images.append(existing_img)
-                except VenueMenuImage.DoesNotExist:
-                    continue
-
-        VenueMenuImage.objects.filter(
-            venue=venue, approved=True
-        ).exclude(id__in=[img.id for img in updated_menu_images]).update(marked_for_deletion=True)
-
-        return render(request, "venues/_update_venue_success.html")
-
-    return render(request, "venues/_manage_venue.html", {"venue": venue})
+    return render(request, "venues/_update_venue_success.html")
 
 ###########################################################################################
 
 ###########################################################################################
 def reorder_images(request, venue_id, model_cls):
-    print("1 >>>>>>>>>>>>>>>")
     if request.method != "POST":
         return JsonResponse({"status": "invalid request"}, status=400)
 

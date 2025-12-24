@@ -53,12 +53,13 @@
             {% trans "Table" %}: {{ upcoming_reservation.table_number }}
         {% endif %}
     </div>
-    <img
-        class="venue-image"
-        src="{% if upcoming_reservation.venue.image %}{{ upcoming_reservation.venue.image.url }}{% else %}{% static 'images/venue-placeholder.png' %}{% endif %}"
-        alt="{{ upcoming_reservation.venue.name }}"
-        onerror="this.style.display='none'">
-
+    {% with first_img=upcoming_reservation.venue.get_first_image %}
+        <img
+            class="venue-image"
+            src="{% if first_img %}{{ first_img.image.url }}{% else %}{% static 'images/venue-placeholder.png' %}{% endif %}"
+            alt="{{ upcoming_reservation.venue.name }}"
+            onerror="this.style.display='none'">
+    {% endwith %}
     <div class="reservation-actions">
         <a href="{% url 'edit_reservation' upcoming_reservation.id %}" class="edit-btn">
             <i class="fa-solid fa-pen-to-square"></i> {% trans "Edit" %}
