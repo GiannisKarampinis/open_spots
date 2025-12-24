@@ -376,7 +376,7 @@ def user_can_manage_venue(user, venue):
     if not user.is_authenticated:
         return False
 
-    if user.is_superuser:
+    if user.is_superuser: # superuser has superpower
         return True
 
     if user.user_type != 'admin':

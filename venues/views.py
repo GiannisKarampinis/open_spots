@@ -918,16 +918,13 @@ def partial_arrival_row(request, pk: int):
 
 ###########################################################################################
 @login_required
-@require_POST
 @transaction.atomic
+@require_POST       # practically if someone trys to access via GET (using the link directly), just block it
 def submit_venue_update(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
 
     if not user_can_manage_venue(request.user, venue):
         return HttpResponseForbidden("You do not have permission to manage this venue.")
-
-    # if request.method != "POST":
-    #     return render(request, "venues/_manage_venue.html", {"venue": venue})
 
     VenueUpdateRequest.objects.create(
             venue        = venue,
@@ -942,9 +939,8 @@ def submit_venue_update(request, venue_id):
 
     def handle_image_group(model, files_field, visible_field):
         visible_ids = request.POST.get(visible_field, None)
-
-        files = request.FILES.getlist(files_field)
-        file_map = {f"new-{i}": f for i, f in enumerate(files)}
+        files       = request.FILES.getlist(files_field)
+        file_map    = {f"new-{i}": f for i, f in enumerate(files)}
 
         # If front-end didn't submit sequence, you can still accept uploads but avoid touching existing
         if visible_ids is None:

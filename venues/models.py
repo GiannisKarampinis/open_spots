@@ -357,6 +357,7 @@ logger = logging.getLogger(__name__)
 
 ###########################################################################################
 class VenueUpdateRequest(models.Model):
+# Reviewd at 24-12-2025 - OK
     venue               = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='update_requests')
     submitted_by        = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     name                = models.CharField(max_length=255)
@@ -379,9 +380,26 @@ class VenueUpdateRequest(models.Model):
         
     # Backup snapshot to allow rollback. Requires migration.
     backup_data         = JSONField(null=True, blank=True)    
-        
+
+    class Meta:
+        ordering = ['-submitted_at']
+        indexes = [
+            models.Index(fields=['venue', 'approval_status']),
+        ]
+    
     def __str__(self):
         return f"Venue Update Request for {self.venue.name} (status: {self.approval_status})"
+
+    def mark_reviewed(self, *, user, status: str):
+        """
+            Call this from your admin approval/reject action.
+        """
+        if status not in {"approved", "rejected"}:
+            raise ValueError("status must be 'approved' or 'rejected'")
+        self.approval_status = status
+        self.reviewed_by = user
+        self.reviewed_at = timezone.now()
+        self.save(update_fields=["approval_status", "reviewed_by", "reviewed_at"])
 
     def get_changes(self):
         """
@@ -392,41 +410,26 @@ class VenueUpdateRequest(models.Model):
 
         # List fields you want to track
         fields_to_check = [ "name", "kind", "location", "email", "phone", "description" ]
-
         for field in fields_to_check:
             old_value = getattr(venue, field)
             new_value = getattr(self, field)
             if old_value != new_value:
                 changes[field] = (old_value, new_value)
 
-
-        existing_images = venue.images.filter(approved=True, marked_for_deletion=False)
-        new_images      = venue.images.filter(approved=False)   # Newly uploaded
-        deleted_images  = venue.images.filter(marked_for_deletion=True)
-        
         # Only report changes if sets differ
-        if new_images.exists():
-            changes["new_images"] = [img.image.url for img in new_images]
-
-        if deleted_images.exists():
-            changes["deleted_images"] = [img.image.url for img in deleted_images]
+        if hasattr(venue, "images"):
+            new_images = venue.images.filter(update_request=self, approved=False)
+            if new_images.exists():
+                changes["new_images"] = [img.image.url for img in new_images]
 
         # Menu images
-        existing_menu = venue.menu_images.filter(approved=True, marked_for_deletion=False)
-        new_menu      = venue.menu_images.filter(approved=False)
-        deleted_menu  = venue.menu_images.filter(marked_for_deletion=True)
-
-        if new_menu.exists():
-            changes["new_menu_images"] = [img.image.url for img in new_menu]
-
-        if deleted_menu.exists():
-            changes["deleted_menu_images"] = [img.image.url for img in deleted_menu]
+        if hasattr(venue, "menu_images"):
+            new_menu = venue.menu_images.filter(update_request=self, approved=False)
+            if new_menu.exists():
+                changes["new_menu_images"] = [img.image.url for img in new_menu]
 
         return changes
-    
-    #class Meta:
-        #unique_together = ("venue", "approval_status")
-    
+
 ###########################################################################################
 
 ###########################################################################################
