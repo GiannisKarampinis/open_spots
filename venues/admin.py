@@ -484,10 +484,7 @@ class VenueUpdateRequestAdmin(admin.ModelAdmin):
             # ====================================================
             # 4) MARK REQUEST APPROVED
             # ====================================================
-            update.approval_status = "approved"
-            update.reviewed_by = request.user
-            update.reviewed_at = timezone.now()
-            update.save()
+            update.mark_reviewed(user=request.user, status="approved")
 
             approved_count += 1
 
