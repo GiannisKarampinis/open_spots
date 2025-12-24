@@ -918,6 +918,7 @@ def partial_arrival_row(request, pk: int):
 
 ###########################################################################################
 @login_required
+@require_POST
 @transaction.atomic
 def submit_venue_update(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
@@ -925,8 +926,8 @@ def submit_venue_update(request, venue_id):
     if not user_can_manage_venue(request.user, venue):
         return HttpResponseForbidden("You do not have permission to manage this venue.")
 
-    if request.method != "POST":
-        return render(request, "venues/_manage_venue.html", {"venue": venue})
+    # if request.method != "POST":
+    #     return render(request, "venues/_manage_venue.html", {"venue": venue})
 
     VenueUpdateRequest.objects.create(
             venue        = venue,

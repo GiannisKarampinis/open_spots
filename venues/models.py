@@ -481,13 +481,15 @@ class BaseWebpImageModel(models.Model):
         return True
 
     def convert_and_save_webp(self):
-        uploaded_name = os.path.basename(self.image.name)
-        base_name = os.path.splitext(uploaded_name)[0]
+        # Keep original directory (relative path)
+        original_path = self.image.name  # e.g. "venues/2/abc.jpg"
+        dir_name = os.path.dirname(original_path)
+        base_name = os.path.splitext(os.path.basename(original_path))[0]
 
         webp_file = convert_image_to_webp(self.image)
+        new_name = os.path.join(dir_name, f"{base_name}.webp") if dir_name else f"{base_name}.webp"
 
-        # Save using cleaned filename (no directories!)
-        self.image.save(f"{base_name}.webp", webp_file, save=False)
+        self.image.save(new_name, webp_file, save=False)
 
     def save(self, *args, **kwargs):
         if self.image_has_changed():
@@ -496,16 +498,42 @@ class BaseWebpImageModel(models.Model):
         # Update stored name so future saves behave correctly
         self._original_image_name = self.image.name
 
+
+###########################################################################################
+
+###########################################################################################
+from django.core.exceptions import ValidationError
+from PIL                    import Image
+
+MAX_IMAGE_MB            = 8
+ALLOWED_CONTENT_TYPES   = {"image/jpeg", "image/png", "image/webp"}
+
+def validate_image_upload(f):
+    if f.size > MAX_IMAGE_MB * 1024 * 1024:
+        raise ValidationError(f"Max file size is {MAX_IMAGE_MB}MB.")
+
+    ct = getattr(f, "content_type", None)
+    if ct and ct.lower() not in ALLOWED_CONTENT_TYPES:
+        raise ValidationError("Only JPG, PNG, or WEBP images are allowed.")
+
+    try:
+        img = Image.open(f)
+        img.verify()  # Verify that it's an image
+    except Exception:
+        raise ValidationError("Uploaded file is not a valid image.")
+    finally:
+        f.seek(0)  # Reset file pointer after verificatio
+
 ###########################################################################################
 
 ###########################################################################################
 class VenueImage(BaseWebpImageModel):
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to=venue_image_upload)
+    image = models.ImageField(upload_to=venue_image_upload, validators=[validate_image_upload])
     order = models.PositiveIntegerField(default=0)
 
     # NEW FIELDS
-    approved = models.BooleanField(default=True)
+    approved = models.BooleanField(default=False)
     marked_for_deletion = models.BooleanField(default=False)
 
     class Meta:
@@ -518,11 +546,11 @@ class VenueImage(BaseWebpImageModel):
 ###########################################################################################
 class VenueMenuImage(BaseWebpImageModel):
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='menu_images')
-    image = models.ImageField(upload_to=menu_image_upload)
+    image = models.ImageField(upload_to=menu_image_upload, validators=[validate_image_upload])
     order = models.PositiveIntegerField(default=0)
 
     # NEW FIELDS
-    approved = models.BooleanField(default=True)
+    approved = models.BooleanField(default=False)
     marked_for_deletion = models.BooleanField(default=False)
 
     class Meta:
