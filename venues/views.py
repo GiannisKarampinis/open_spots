@@ -58,7 +58,7 @@ def apply_venue(request):
 
             with transaction.atomic():
                 # FIXME: Consider this logic! No duplicate email for venue_admins
-                if User.objects.filter(email__iexact=admin_email, user_type="venue_admin").exists():
+                if User.objects.filter(email__iexact=admin_email).exists():
                     form.add_error("admin_email", _("An account with this email already exists."))
                     return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
 
@@ -74,6 +74,9 @@ def apply_venue(request):
                     is_active=False,
                     email_verified=True,
                     unverified_email=None,
+                    # FIXME: Are there those info while creating a new user?
+                    # first_name=first_name,
+                    # last_name=last_name,
                 )
 
                 user.set_password(password)

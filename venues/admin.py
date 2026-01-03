@@ -10,7 +10,7 @@ from django.urls                import reverse
 from django.conf                import settings
 from django.core.mail           import send_mail
 
-from .models                    import Venue, Table, Reservation, Review, VenueApplication, VenueUpdateRequest, VenueVisit, VenueImage, VenueMenuImage, VenueApplication
+from .models                    import Venue, Table, Reservation, Review, VenueApplication, VenueUpdateRequest, VenueVisit, VenueImage, VenueMenuImage
 from .models                    import assign_venue_permissions
 from django.utils.encoding      import force_bytes
 from django.utils.http          import urlsafe_base64_encode 
@@ -43,46 +43,37 @@ class VenueApplicationAdmin(admin.ModelAdmin):
                     if app.status != "pending":
                         skipped += 1
                         continue
+          
+                    # Use ONLY the pre-created owner_user
+                    user = app.owner_user
+                    if not user:
+                        self.message_user(
+                            request,
+                            f"{app.venue_name}: owner_user is empty. This application cannot be approved safely.",
+                            level=messages.ERROR
+                        )
+                        failed += 1
+                        continue
 
+                    # Avoid duplicate venues (same owner + name + location)
+                    if Venue.objects.filter(owner=user, name=app.venue_name, location=app.location).exists():
+                        self.message_user(
+                            request,
+                            f"{app.venue_name}: venue already exists for this owner. Marked application as approved.",
+                            level=messages.WARNING
+                        )
+                        app.status = "approved"
+                        app.save(update_fields=["status"])
+                        skipped += 1
+                        continue
+                     
                     email = (app.admin_email or "").strip().lower()
                     if not email:
                         self.message_user(request, f"{app.venue_name}: missing admin_email", level=messages.ERROR)
                         failed += 1
                         continue
 
-                    # Optional: prevent duplicate venue creation
-                    if Venue.objects.filter(email__iexact=email, name=app.venue_name).exists():
-                        # Mark as approved anyway, because venue already exists
-                        app.status = "approved"
-                        app.save(update_fields=["status"])
-                        skipped += 1
-                        continue
-
-                    # 1) Create or reuse user
-                    user = User.objects.filter(email__iexact=email).first()
-                    created_user = False
-
-                    if not user:
-                        created_user = True
-
-                        # Generate a safe unique username
-                        base = email.split("@")[0][:24] or "venueadmin"
-                        username = base
-                        i = 1
-                        while User.objects.filter(username=username).exists():
-                            i += 1
-                            username = f"{base}{i}"
-
-                        password = get_random_string(16)  # not emailed
-
-                        user = User.objects.create_user(
-                            username=username,
-                            email=email,
-                            password=password,
-                        )
-
-                    # Ensure user is venue admin + staff
-                    # (Only set fields if they exist on your custom model)
+                    # Ensure user flags/permissions
                     updates = []
 
                     if getattr(user, "user_type", None) != "venue_admin":
@@ -93,7 +84,7 @@ class VenueApplicationAdmin(admin.ModelAdmin):
                         user.is_staff = True
                         updates.append("is_staff")
 
-                    # ✅ Activate account on approval
+                    # Activate account on approval
                     if not user.is_active:
                         user.is_active = True
                         updates.append("is_active")
@@ -105,11 +96,11 @@ class VenueApplicationAdmin(admin.ModelAdmin):
 
                     if updates:
                         user.save(update_fields=updates)
+                    
                     assign_venue_permissions(user)
 
-                    # Send password setup email ONLY for brand new users
-                    if created_user:
-                        self._send_password_setup_email(request, user)
+                    # Send password setup email
+                    # self._send_password_setup_email(request, user)
 
                     # 2) Create venue
                     Venue.objects.create(
@@ -124,9 +115,7 @@ class VenueApplicationAdmin(admin.ModelAdmin):
 
                     # 3) Mark application accepted
                     app.status = "approved"
-                    app.owner_user = user
-                    app.save(update_fields=["status", "owner_user"] if hasattr(app, "owner_user") else ["status"])
-
+                    app.save(update_fields=["status"])
                     approved += 1
 
             except Exception as e:
