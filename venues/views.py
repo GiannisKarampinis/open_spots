@@ -8,12 +8,9 @@ from django.db.models.functions      import TruncDay, TruncWeek, TruncMonth, Tru
 from django.utils.timezone           import now
 from datetime                        import timedelta, datetime
 from django.utils                    import timezone
-from django.core.serializers.json    import DjangoJSONEncoder
-from django.utils.safestring         import mark_safe
-from django.core.exceptions          import PermissionDenied
 from django.http                     import HttpResponse, Http404, JsonResponse, HttpResponseForbidden
 from django.template.loader          import render_to_string
-from django.db                       import transaction, models
+from django.db                       import transaction
 from django.urls                     import reverse
 from .models                         import Venue, VenueUpdateRequest, VenueVisit, Reservation, VenueImage, VenueMenuImage
 from emails_manager.models           import VenueEmailVerificationCode
@@ -21,35 +18,14 @@ from .forms                          import ReservationForm, VenueApplicationFor
 from .utils                          import *
 from .decorators                     import venue_admin_required
 from venues.services.emails          import send_reservation_notification, send_new_venue_application_email, send_venue_verification_code
-from django.views.decorators.csrf    import csrf_exempt
 from django.http                     import JsonResponse
+from django.utils.translation        import gettext as _
 import  json
 import  plotly.graph_objs            as go
 
 
-
 User = get_user_model()
 
-
-###########################################################################################
-
-###########################################################################################
-from django.contrib import messages
-from django.contrib.auth import get_user_model
-from django.db import transaction
-from django.shortcuts import render, redirect
-from django.utils.translation import gettext as _
-
-User = get_user_model()
-
-
-from django.contrib import messages
-from django.contrib.auth import get_user_model
-from django.db import transaction
-from django.shortcuts import render, redirect
-from django.utils.translation import gettext as _
-
-User = get_user_model()
 
 def apply_venue(request):
     verified_email = (request.session.get("venue_verified_email") or "").strip().lower()
@@ -981,19 +957,31 @@ def submit_venue_update(request, venue_id):
 
 ###########################################################################################
 def reorder_images(request, venue_id, model_cls):
+    # Wrappers already enforce POST, but keeping this doesn't hurt if you ever reuse it elsewhere.
     if request.method != "POST":
         return JsonResponse({"status": "invalid request"}, status=400)
 
+    # Parse JSON
     try:
-        data = json.loads(request.body)
-        sequence = data.get("sequence", [])
+        data = json.loads(request.body or b"{}")
     except json.JSONDecodeError:
         return JsonResponse({"status": "invalid JSON"}, status=400)
 
-    # 🔒 Ownership Check
-    venue = model_cls._meta.model.objects.model._meta.get_field('venue').related_model.objects.get(id=venue_id)
-    if venue.owner != request.user:
-        return JsonResponse({"status": "forbidden"}, status=403)
+    sequence = data.get("sequence", None)
+    if not isinstance(sequence, list):
+        return JsonResponse({"status": "invalid payload", "message": "`sequence` must be a list"}, status=400)
+
+    # Normalize IDs (and dedupe while preserving order)
+    normalized = []
+    seen = set()
+    for x in sequence:
+        try:
+            i = int(x)
+        except (TypeError, ValueError):
+            continue
+        if i not in seen:
+            seen.add(i)
+            normalized.append(i)
 
     # 🚦 Throttle Check
     throttle_key = f"reorder:{model_cls.__name__}:{venue_id}"
@@ -1003,28 +991,48 @@ def reorder_images(request, venue_id, model_cls):
             "message": "Too many reorder attempts. Please try again in a minute."
         }, status=429)
 
-    updated = []
-    for index, img_id in enumerate(sequence):
-        try:
-            img = model_cls.objects.get(
-                id=img_id,
-                venue_id=venue_id,
-                approved=True,
-                marked_for_deletion=False
-            )
-            img.order = index
-            img.save(update_fields=["order"])
-            updated.append(img_id)
-        except model_cls.DoesNotExist:
-            continue
+    # 🔒 Ownership check in one go (no meta gymnastics):
+    # Ensure the venue exists and belongs to user (assuming Venue has owner)
+    Venue = model_cls._meta.get_field("venue").remote_field.model
+    get_object_or_404(Venue, id=venue_id, owner=request.user)
 
-    # 📝 Log
-    print(f"[ImageOrder] {request.user} reordered {model_cls.__name__} for venue {venue_id}: {updated}")
+    # Fetch all eligible images for these IDs in one query
+    qs = model_cls.objects.filter(
+        id__in=normalized,
+        venue_id=venue_id,
+        approved=True,
+        marked_for_deletion=False,
+    )
 
-    return JsonResponse({"status": "success", "updated_order": updated})
+    # Map by id for O(1) lookup
+    imgs_by_id = {img.id: img for img in qs}
+
+    updated_ids = []
+    to_update = []
+
+    with transaction.atomic():
+        for index, img_id in enumerate(normalized):
+            img = imgs_by_id.get(img_id)
+            if not img:
+                continue
+            img.order = index  # or index + 1 if you want 1-based ordering
+            to_update.append(img)
+            updated_ids.append(img_id)
+
+        if to_update:
+            model_cls.objects.bulk_update(to_update, ["order"])
+
+    logger.info(
+        "[ImageOrder] user=%s model=%s venue=%s updated=%s",
+        request.user.pk,
+        model_cls.__name__,
+        venue_id,
+        updated_ids,
+    )
+
+    return JsonResponse({"status": "success", "updated_order": updated_ids})
 
 
-@csrf_exempt
 @require_POST
 @login_required
 @venue_admin_required
@@ -1032,7 +1040,6 @@ def update_image_order(request, venue_id):
     return reorder_images(request, venue_id, VenueImage)
 
 
-@csrf_exempt
 @require_POST
 @login_required
 @venue_admin_required
