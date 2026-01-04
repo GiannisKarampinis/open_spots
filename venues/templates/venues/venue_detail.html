@@ -162,10 +162,10 @@
                     <button type="button" class="res-tab active" data-step="1">
                     <i class="fa fa-user"></i>
                     </button>
-                    <button type="button" class="res-tab disabled" data-step="2">
+                    <button type="button" class="res-tab disabled" data-step="2" name="date and time" aria-label="Date and time">
                     <i class="fa fa-clock"></i>
                     </button>
-                    <button type="button" class="res-tab disabled" data-step="3">
+                    <button type="button" class="res-tab disabled" data-step="3" name="additional notes" aria-label="Additional Notes">
                     <i class="fa fa-comment"></i>
                     </button>
                 </div>
@@ -223,7 +223,7 @@
                 {{ form.comments }}
 
                 <!--<button type="button" class="res-prev-btn" data-prev="2">Back</button>-->
-                <button type="submit" class="res-submit-btn" name="submit_reservation">Submit Reservation</button>
+                <button type="submit" class="res-submit-btn" data-testid="submit-reservation" name="submit_reservation">Submit Reservation</button>
             </div>
 
             </div>

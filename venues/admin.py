@@ -217,9 +217,14 @@ class VenueImageInline(admin.TabularInline):
     extra = 0
 
     def image_tag(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" style="height: 50px; margin:2px;" />', obj.image.url)
+        image = getattr(obj, "image", None)
+        if image:
+            return format_html(
+                '<img src="{}" style="height: 50px; margin:2px;" />',
+                image.url
+            )
         return "No Image"
+
     image_tag.short_description = "Image Preview"
 
 # Inline for Venue Menu Images
@@ -236,16 +241,16 @@ class VenueMenuImageInline(admin.TabularInline):
 
 @admin.register(Venue)
 class VenueAdmin(admin.ModelAdmin):
-    readonly_fields     = ['image_tag']
+    #readonly_fields     = ['image_tag']
     inlines             = [TableInline, VenueImageInline, VenueMenuImageInline]
-
-    list_display = ('name', 'kind', 'location', 'average_rating', 'image_tag', 'owner')
+    list_display = ('name', 'kind', 'location', 'average_rating', 'owner')
+    #list_display = ('name', 'kind', 'location', 'average_rating', 'image_tag', 'owner')
     
-    def image_tag(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" style="height: 50px;" />', obj.image.url)
-        return "No Image"
-    image_tag.short_description = 'Image'
+    # def image_tag(self, obj):
+    #     if obj.image:
+    #         return format_html('<img src="{}" style="height: 50px;" />', obj.image.url)
+    #     return "No Image"
+    # image_tag.short_description = 'Image'
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
