@@ -54,18 +54,24 @@ class Venue(models.Model):
     def __str__(self):
         return self.name
     
-    def has_overlapping_reservation(self, date, start_time, duration_hours=1):
+    def has_overlapping_reservation(self, date, start_time, duration_hours=1, user=None):
+        """
+        Checks if there is an overlapping reservation for the same user on the same venue.
+        If `user` is None, ignores user filter.
+        """
         start_dt = datetime.combine(date, start_time)
         end_dt = start_dt + timedelta(hours=duration_hours)
 
-        overlap_start = start_dt - timedelta(hours=2) #FIXME
-        overlap_end = end_dt
+        qs = self.reservations.filter(
+        date=date,
+        time__gte=start_dt.time(),
+        time__lt=end_dt.time(),
+    )
 
-        return self.reservations.filter(
-            date=date,
-            time__gte=overlap_start.time(),
-            time__lt=overlap_end.time()
-        ).exists()
+        if user:
+            qs = qs.filter(user=user)
+
+        return qs.exists()
 
     def get_first_image(self):
         return self.images.filter(
@@ -94,13 +100,8 @@ class Venue(models.Model):
             slots.append(current.time())
             current += timedelta(minutes=30)
 
-        # Fetch booked times for this date
-        booked = set(
-            self.reservations.filter(date=date).values_list("time", flat=True)
-        )
-
         # Remove booked slots
-        available = [t for t in slots if t not in booked]
+        available = [t for t in slots]
 
         return available
 
@@ -278,6 +279,12 @@ class Reservation(models.Model):
 
     class Meta:
         ordering = ['-updated_at', '-created_at', 'time']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['venue', 'user', 'date', 'time'],
+                name='unique_user_reservation_per_slot'
+            )
+        ]
 
 ###########################################################################################
 

@@ -241,12 +241,12 @@ def venue_detail(request, pk):
                 reservation.status = "pending"
                 reservation.user = request.user
 
-                #if venue.has_overlapping_reservation(reservation.date, reservation.time):
-                    #messages.error(request, "Sorry, that time slot is already reserved.")
-                #else:
-                reservation.save(editor=request.user)
-                return render(
-                    request,
+                if venue.has_overlapping_reservation(reservation.date, reservation.time, user=request.user):
+                    messages.error(request, "You already have a reservation for this time.")
+                else:
+                    reservation.save(editor=request.user)
+                    return render(
+                        request,
                     "venues/reservation_pending.html",
                     {"venue": venue, "reservation": reservation},
                 )
