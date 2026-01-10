@@ -254,13 +254,19 @@ def venue_detail(request, pk):
                 print("FORM ERRORS:", form.errors)
         elif "submit_review" in request.POST:
             review_form = ReviewForm(request.POST)
+
             if review_form.is_valid():
                 review = review_form.save(commit=False)
                 review.user = request.user
                 review.venue = venue
-                review.save()
-                messages.success(request, "Your review has been submitted.")
-                return redirect("venue_detail", pk=pk)
+
+                try:
+                    review.save()
+                    messages.success(request, "Your review has been submitted.")
+                    return redirect("venue_detail", pk=pk)
+
+                except IntegrityError:
+                    messages.error(request, "You have already submitted a review for this venue.")
     return render(
         request,
         "venues/venue_detail.html",
