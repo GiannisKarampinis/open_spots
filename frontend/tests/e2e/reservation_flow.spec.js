@@ -38,7 +38,7 @@ test("user can make a reservation", async ({ page }) => {
   const reservationDate = getTomorrowDate();
   await page.fill('input[name="date"]', reservationDate);
 
-  await page.getByText('05:00 PM').click();
+  await page.getByText('07:00 PM').click();
   await page.getByRole('spinbutton', { name: 'Number of guests:' }).click();
   await page.fill('input[name="guests"]', "3");
 

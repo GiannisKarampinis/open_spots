@@ -1,15 +1,18 @@
 import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ request }) => {
-  await request.post("/venues/test-utils/delete-review/", {
+  const res = await request.post("/venues/test-utils/delete-review/", {
     form: {
       venue_id: "1",
       username: "test_user1",
     },
   });
+  expect(res.ok()).toBeTruthy();
 });
 
-test("user can make a reservation", async ({ page }) => {
+
+
+test("user can leave a review", async ({ page }) => {
   // Go to venue page and login
   await page.goto("/venues/venue/1");
   await page.getByRole('link', { name: 'Log in to reserve' }).click();
@@ -41,6 +44,9 @@ test("user can make a reservation", async ({ page }) => {
   // Submit the review and verify IntegrityError appears
   await page.getByRole('button', { name: 'Submit Review' }).click();
 
-  await expect(page.locator('text=IntegrityError at /venues/')).toBeVisible();
+  await expect(
+    page.locator('text=You have already submitted a review')
+  ).toBeVisible();
+
 
 });
