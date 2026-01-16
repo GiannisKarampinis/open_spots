@@ -10,8 +10,6 @@ test.beforeEach(async ({ request }) => {
   expect(res.ok()).toBeTruthy();
 });
 
-
-
 test("user can leave a review", async ({ page }) => {
   // Go to venue page and login
   await page.goto("/venues/venue/1");

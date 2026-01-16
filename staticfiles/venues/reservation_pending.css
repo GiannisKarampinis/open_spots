@@ -261,6 +261,14 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+
 /* Glass overlay on bottom half */
 /* Changed white to semi-transparent to avoid blocking sand on edges */
 .glass {
