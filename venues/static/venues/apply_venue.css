@@ -1,15 +1,16 @@
 .apply-container {
-    background-color:      var(--surface-color);     /* Dark gray background */
-    padding:               40px;                     /* Padding inside container */
-    border-radius:         10px;                     /* Rounded corners */
-    box-shadow:            0 0 25px rgba(255,255,255,0.1); /* Soft white glow */
-    margin:                60px auto;                /* Center horizontally, top/bottom margin */
-    color:                 var(--button-text);       /* Text color */
-    font-family:           'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean readable font */
-    max-width:             700px;                    /* Limit max width */
-    width:                 55%;                      /* Make width flexible */
-    box-sizing:            border-box;               /* Include padding in width */
+    background-color: var(--surface-color);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(255,255,255,0.1);
+    margin: 60px auto;
+    color: var(--button-text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    width: 100%;
+    max-width: none;               /* Full width for better use of space */
+    box-sizing: border-box;
 }
+
 
 .apply-container .form-header {
     margin-bottom:         30px;                     /* Space below header */
@@ -341,4 +342,19 @@
 }
 .apply-container .errorlist {
   transition: opacity .15s ease;
+}
+
+@media (min-width: 700px) {
+  .apply-container {
+    max-width: 700px;
+  }
+}
+
+@media (max-width: 700px) {
+  .apply-container {
+    padding-left: 0;
+    padding-right: 0;
+    border-radius: 0;   /* optional but usually looks better edge-to-edge */
+    margin: 0;          /* optional: truly full-bleed */
+  }
 }
