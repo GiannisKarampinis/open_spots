@@ -132,7 +132,7 @@
 
 /* force the admin_email input to leave space on the right for button+badge */
 .apply-container .form-group.email-verify-wrapper input#id_admin_email {
-  padding-right:            200px;              /* room for button + badge */
+  padding-right:            100px;              /* room for button + badge */
   width:                    calc(100% - 145px); /* shrink input to fit */
 }
 
