@@ -426,20 +426,6 @@ body {
     border-color: var(--primary-hover);
 }
 
-@media (max-width: 480px) {
-    #time-slot-container {
-        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-        gap: 8px;
-    }
-    .time-slot {
-        font-size: 13px;
-        padding: 10px 0;
-    }
-}
-
-
-
-
 
 @keyframes fadeIn {
   from {opacity: 0; transform: translateY(4px);}
@@ -474,10 +460,12 @@ body {
 }
 
 @media (max-width: 480px) {
-  .hero-section {
-    height: 240px;
-  }
-  .hero-title h1 {
-    font-size: 26px;
-  }
+    #time-slot-container {
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+        gap: 8px;
+    }
+    .time-slot {
+        font-size: 13px;
+        padding: 10px 0;
+    }
 }
