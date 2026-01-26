@@ -271,6 +271,23 @@ h2 {
     transform: translateY(-2px);
 }
 
+.quick-reservation-card .edit-btn {
+    color: var(--primary-color);
+}
+
+.quick-reservation-card .edit-btn:hover {
+    color: var(--primary-hover);
+}
+
+.quick-reservation-card .cancel-btn {
+    color: #f44336;
+    margin-left: 1em;
+}
+
+.quick-reservation-card .cancel-btn:hover {
+    color: #c4352b;
+}
+
 @media (max-width: 600px) {
     .quick-reservation-card {
         padding-right: 110px;
