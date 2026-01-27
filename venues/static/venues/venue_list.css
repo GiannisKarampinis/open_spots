@@ -272,20 +272,28 @@ h2 {
 }
 
 .quick-reservation-card .edit-btn {
-    color: var(--primary-color);
+    background-color: var(--primary-color);
+    color: var(--button-text);
+    border-radius: 4px;
+    padding: 0.2em;
 }
 
 .quick-reservation-card .edit-btn:hover {
-    color: var(--primary-hover);
+    background-color: var(--primary-hover);
+    color: var(--button-text);
 }
 
 .quick-reservation-card .cancel-btn {
-    color: #f44336;
-    margin-left: 1em;
+    background-color: #f44336;
+    color: var(--button-text);
+    margin-left: 0.6em;
+    border-radius: 4px;
+    padding: 0.2em;
 }
 
 .quick-reservation-card .cancel-btn:hover {
-    color: #c4352b;
+    background-color: #c4352b;
+    color: var(--button-text)   ;
 }
 
 @media (max-width: 600px) {
