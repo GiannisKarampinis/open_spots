@@ -35,6 +35,8 @@ test("user can make a reservation", async ({ page }) => {
   await page.fill('input[name="password"]', "pass_word1!");
   await page.getByRole("button", { name: "Login" }).click();
 
+  await expect(page.getByRole("link", { name: "Apply to Register a Venue" })).toBeHidden({ timeout: 15000 });
+
   // Reload venue page after login
   await page.goto("/venues/venue/1");
 
