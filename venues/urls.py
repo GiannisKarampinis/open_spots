@@ -1,6 +1,6 @@
 from django.urls    import path
 from .              import views
-from .views_test_utils import delete_test_review
+from .views_test_utils import delete_reservation, delete_test_review
 
 
 urlpatterns = [
@@ -44,5 +44,6 @@ urlpatterns = [
 
 urlpatterns += [
     path("test-utils/delete-review/", delete_test_review),
+    path("test-utils/delete-reservation/", delete_reservation),
 ]
 

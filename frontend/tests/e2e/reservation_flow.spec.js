@@ -10,6 +10,23 @@ test.use({
   reducedMotion: 'reduce',
 });
 
+test.beforeEach(async ({ request }) => {
+  const res = await request.post("/venues/test-utils/delete-reservation/", {
+    form: {
+      user: "test_user1",
+      name: "Jim Booki",
+      date: getTomorrowDate(),
+      time: "19:00",
+      venue_id: "1",
+    },
+  });
+
+  const data = await res.json();
+  expect(res.ok()).toBeTruthy();
+  // Optional but very helpful:
+  console.log("deleted:", data.deleted);
+});
+
 test("user can make a reservation", async ({ page }) => {
   // Go to venue page and login
   await page.goto("/venues/venue/1");
