@@ -373,17 +373,20 @@ def is_throttled(user, key, limit=5, period=60):
 
 ###########################################################################################
 def user_can_manage_venue(user, venue):
+    print(user.is_authenticated, user.user_type, venue.owner_id, user.id)
+    
     if not user.is_authenticated:
         return False
 
     if user.is_superuser: # superuser has superpower
         return True
 
-    if user.user_type != 'admin':
+    if user.user_type != 'venue_admin':
         return False
     
     if venue.owner == user:
         return True
+    
     
     return False
 

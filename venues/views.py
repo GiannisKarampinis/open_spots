@@ -22,42 +22,63 @@ from django.http                     import JsonResponse
 from django.utils.translation        import gettext as _
 import  json
 import  plotly.graph_objs            as go
+from django.conf                     import settings
+
 
 
 User = get_user_model()
 
+###########################################################################################
 
+###########################################################################################
 def apply_venue(request):
-    verified_email = (request.session.get("venue_verified_email") or "").strip().lower()
+    verified_email   = (request.session.get("venue_verified_email") or "").strip().lower()
     session_verified = bool(request.session.get("venue_email_verified", False))
 
-
-    if request.method == "POST":
-        action = request.POST.get("action")
-        form = VenueApplicationForm(request.POST)
-
-        posted_admin_email = (request.POST.get("admin_email") or "").strip().lower()
+    def clear_verification_session():
+        request.session.pop("venue_email_verified", None)
+        request.session.pop("venue_verified_email", None)
+        request.session.pop("venue_pending_email", None)
         
-        email_verified = bool(session_verified and verified_email and posted_admin_email and verified_email == posted_admin_email)
+        
+    if request.method == "POST":
+        action = (request.POST.get("action") or "").strip()
+        form   = VenueApplicationForm(request.POST)
+
         
         if not form.is_valid():
+            # Email verified status should be based on posted + normalized email if possible
+            posted_admin_email = (request.POST.get("admin_email") or "").strip().lower()
+            email_verified = bool(session_verified and verified_email and posted_admin_email and verified_email == posted_admin_email)
             return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
 
-        if action == "submit_application":
-            if not email_verified:
-                form.add_error("admin_email", _("You must verify this email before submitting the application."))
-                return render(request, "venues/apply_venue.html", {"form": form, "email_verified": False})
+        if action != "submit_application":
+            messages.error(request, _("Invalid action."))
+            # compute verified against validated email
+            admin_email_clean   = form.cleaned_data.get("admin_email", "").strip().lower()
+            email_verified      = bool(session_verified and verified_email and admin_email_clean and verified_email == admin_email_clean)
+            return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
+            
+        admin_email     = form.cleaned_data["admin_email"].strip().lower()
+        username        = (form.cleaned_data.get("admin_username") or "").strip()
+        owner_phone     = (form.cleaned_data.get("admin_phone") or "").strip()
+        first_name      = (form.cleaned_data.get("admin_firstname") or "").strip()
+        last_name       = (form.cleaned_data.get("admin_lastname") or "").strip()
+        password        = form.cleaned_data.get("password1") or ""
+            
+        email_verified = bool(session_verified and verified_email and admin_email and verified_email == admin_email)
+        if not email_verified:
+            form.add_error("admin_email", _("You must verify this email before submitting the application."))
+            return render(request, "venues/apply_venue.html", {"form": form, "email_verified": False})
+        
+        # Optional (recommended): also ensure the session verified email isn't blank
+        if not admin_email:
+            form.add_error("admin_email", _("Admin email is required."))
+            return render(request, "venues/apply_venue.html", {"form": form, "email_verified": False})
 
-            admin_email = form.cleaned_data["admin_email"].strip().lower()
-            username = (form.cleaned_data.get("admin_username") or "").strip()
-            owner_phone = (form.cleaned_data.get("admin_phone") or "").strip()
-            first_name = (form.cleaned_data.get("admin_firstname") or "").strip()
-            last_name = (form.cleaned_data.get("admin_lastname") or "").strip()
-
-            password = form.cleaned_data.get("password1") or ""
-
+        try:
             with transaction.atomic():
-                # FIXME: Consider this logic! No duplicate email for venue_admins
+                # Prefer DB unique constraints; keep these checks as user-friendly pre-validation
                 if User.objects.filter(email__iexact=admin_email).exists():
                     form.add_error("admin_email", _("An account with this email already exists."))
                     return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
@@ -84,26 +105,27 @@ def apply_venue(request):
 
                 venue_application = form.save(commit=False)
                 venue_application.owner_user = user
-                # keep status pending
                 venue_application.status = "pending"
                 venue_application.save()
+                
+                transaction.on_commit(lambda: send_new_venue_application_email(venue_application))
 
-            send_new_venue_application_email(venue_application)
+        except IntegrityError:
+            # Handles race conditions if unique constraints are enforced at DB level
+            form.add_error(None, _("Something went wrong while creating your account. Please try again."))
+            return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
+            
+        messages.success(request, _("Your venue application has been submitted. We will contact you shortly."))
+        clear_verification_session()
+        return redirect("venue_list")
 
-            messages.success(request, _("Your venue application has been submitted. We will contact you shortly."))
+    # GET: prefill from session (helps UX and consistent email_verified logic)
+    initial = {}
+    if verified_email:
+        initial["admin_email"] = verified_email
 
-            request.session.pop("venue_email_verified", None)
-            request.session.pop("venue_verified_email", None)
-            request.session.pop("venue_pending_email", None)
-
-            return redirect("venue_list")
-
-        messages.error(request, _("Invalid action."))
-        return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
-
-    form = VenueApplicationForm()
-    initial_email = (form.initial.get("admin_email") or "").strip().lower()
-    email_verified = bool(session_verified and verified_email and initial_email and verified_email == initial_email)
+    form = VenueApplicationForm(initial=initial)
+    email_verified = bool(session_verified and verified_email)
 
     return render(request, "venues/apply_venue.html", {"form": form, "email_verified": email_verified})
 
@@ -911,18 +933,17 @@ def submit_venue_update(request, venue_id):
     if not user_can_manage_venue(request.user, venue):
         return HttpResponseForbidden("You do not have permission to manage this venue.")
 
-    VenueUpdateRequest.objects.create(
-            venue        = venue,
-            submitted_by = request.user,
-            name         = request.POST.get("name"),
-            kind         = request.POST.get("kind"),
-            location     = request.POST.get("location"),
-            email        = request.POST.get("email"),
-            phone        = request.POST.get("phone"),
-            description  = request.POST.get("description"),
-        )
+    # Collect changes once
+    venue_fields = {
+        "name": request.POST.get("name"),
+        "kind": request.POST.get("kind"),
+        "location": request.POST.get("location"),
+        "email": request.POST.get("email"),
+        "phone": request.POST.get("phone"),
+        "description": request.POST.get("description"),
+    }
 
-    def handle_image_group(model, files_field, visible_field):
+    def handle_image_group(model, files_field, visible_field, *, auto_approve:bool):
         visible_ids = request.POST.get(visible_field, None)
         files       = request.FILES.getlist(files_field)
         file_map    = {f"new-{i}": f for i, f in enumerate(files)}
@@ -930,19 +951,23 @@ def submit_venue_update(request, venue_id):
         # If front-end didn't submit sequence, you can still accept uploads but avoid touching existing
         if visible_ids is None:
             for f in files:
-                model.objects.create(venue=venue, image=f, approved=False, marked_for_deletion=False)
+                model.objects.create(venue=venue, image=f, approved=auto_approve, marked_for_deletion=False)
             return
 
         sequence = [x for x in visible_ids.split(",") if x]
-
+        updated_ids = []
         updated = []
+        
         for order_index, token in enumerate(sequence):
             if token.startswith("new-"):
                 f = file_map.get(token)
                 if f:
-                    updated.append(model.objects.create(
-                        venue=venue, image=f, approved=False, marked_for_deletion=False, order=order_index
-                    ))
+                    obj = model.objects.create(
+                        venue=venue, image=f, approved=auto_approve, marked_for_deletion=False, order=order_index
+                    )
+                    
+                    updated.append(obj)
+                    updated_ids.append(obj.id)
             else:
                 try:
                     img = model.objects.get(pk=int(token), venue=venue)
@@ -950,17 +975,40 @@ def submit_venue_update(request, venue_id):
                     continue
                 img.order = order_index
                 img.marked_for_deletion = False
-                img.save(update_fields=["order", "marked_for_deletion"])
+                if auto_approve:
+                    img.approved = True
+                img.save(update_fields=["order", "marked_for_deletion"] + (["approved"] if auto_approve else []))
                 updated.append(img)
+                updated_ids.append(img.id)
 
-        model.objects.filter(venue=venue, approved=True).exclude(id__in=[i.id for i in updated]) \
+        model.objects.filter(venue=venue, approved=True) \
+            .exclude(id__in=updated_ids) \
             .update(marked_for_deletion=True)
+    
+    require_approval = getattr(settings, "VENUE_UPDATES_REQUIRE_APPROVAL", True)
 
+    if require_approval:
+        # OLD BEHAVIOR: create update request only
+        VenueUpdateRequest.objects.create(
+            venue=venue,
+            submitted_by=request.user,
+            **venue_fields,
+        )
 
-    handle_image_group(VenueImage, "venue_images", "visible_venue_image_ids[]")
-    handle_image_group(VenueMenuImage, "menu_images", "visible_menu_image_ids[]")
+        # Images uploaded/ordered as unapproved (stays pending)
+        handle_image_group(VenueImage, "venue_images", "visible_venue_image_ids[]", auto_approve=False)
+        handle_image_group(VenueMenuImage, "menu_images", "visible_menu_image_ids[]", auto_approve=False)
 
-    return render(request, "venues/_update_venue_success.html")
+        return render(request, "venues/_update_venue_success.html")
+
+    for field, value in venue_fields.items():
+        setattr(venue, field, value)
+    venue.save(update_fields=list(venue_fields.keys()))
+
+    handle_image_group(VenueImage, "venue_images", "visible_venue_image_ids[]", auto_approve=True)
+    handle_image_group(VenueMenuImage, "menu_images", "visible_menu_image_ids[]", auto_approve=True)
+
+    return redirect('venue_dashboard', venue_id=venue.id)
 
 ###########################################################################################
 
@@ -1061,60 +1109,131 @@ def update_menu_image_order(request, venue_id):
 from django.http                    import JsonResponse
 from django.views.decorators.http   import require_POST
 from django.views.decorators.csrf   import csrf_protect
+from django.core.validators         import validate_email
+from django.core.exceptions         import ValidationError
 from django.utils                   import timezone
 from emails_manager.models          import VenueEmailVerificationCode
-from venues.services.emails                        import send_venue_verification_code
+from venues.services.emails         import send_venue_verification_code
+
+SEND_COOLDOWN_SECONDS = 45
 
 @require_POST
 @csrf_protect
 def ajax_send_venue_code(request):
-    email = (request.POST.get("email") or "").strip().lower()
+    raw     = request.POST.get("email") or ""
+    email   = raw.strip().lower() # consider using casefold()
+    
     if not email:
-        return JsonResponse({"ok": False, "error": "Email is required."}, status=400)
+        return JsonResponse({
+                                "ok":       False, 
+                                "error":    "Email is required."
+                            }, status=400)
+
+    try:
+        validate_email(email)
+    except ValidationError:
+        return JsonResponse({
+                                "ok":       False, 
+                                "error":    "Enter a valid email address."
+                            }, status=400)
+
+    # Session cooldown
+    last_sent_ts = request.session.get("venue_code_last_sent_at")
+    now          = timezone.now().timestamp()
+    if last_sent_ts and (now - float(last_sent_ts) < SEND_COOLDOWN_SECONDS):
+        return JsonResponse({
+                                "ok":       False, 
+                                "error":    f"Please wait before requesting another code."
+                            }, status=429)
 
     # reset session state
     request.session["venue_email_verified"] = False
-    request.session["venue_pending_email"] = email
+    request.session["venue_pending_email"]  = email
     request.session.pop("venue_verified_email", None)
 
-    # rotate code
-    VenueEmailVerificationCode.objects.filter(email=email).delete()
     code_obj = VenueEmailVerificationCode.create_for_email(email)
 
-    send_venue_verification_code(email, code_obj.code)
-
-    return JsonResponse({"ok": True, "message": "Code sent."})
+    try:
+        # If you ever wrap DB writes in transactions, do:
+        # transaction.on_commit(lambda: send_venue_verification_code(email, code_obj.code))
+        send_venue_verification_code(email, code_obj.code)
+    except Exception:
+        # Best-effort cleanup so users aren't stuck with an unseen code
+        VenueEmailVerificationCode.objects.filter(id=code_obj.id).delete()
+        return JsonResponse({"ok": False, "error": "Could not send email right now. Try again."}, status=503)
+    
+    request.session["venue_code_last_sent_at"] = str(now)
+    return JsonResponse({
+                            "ok":       True, 
+                            "message":  "Code sent."
+                        })
 
 ###########################################################################################
 
 ###########################################################################################
+MAX_ATTEMPTS = 5
+LOCK_MINUTES = 10
+
 @require_POST
 @csrf_protect
 def ajax_verify_venue_code(request):
     email = request.session.get("venue_pending_email")
     if not email:
-        return JsonResponse({"ok": False, "error": "No email in session. Send code first."}, status=400)
+        return JsonResponse({
+                                "ok":       False, 
+                                "error":    "No email in session. Send code first."
+                            }, status=400)
+
+  # Lockout (session-based baseline)
+    locked_until = request.session.get("venue_code_locked_until")
+    if locked_until and timezone.now().timestamp() < float(locked_until):
+        return JsonResponse({
+                                "ok":       False, 
+                                "error":    "Too many attempts. Try again later."
+                            }, status=429)
 
     code = (request.POST.get("code") or "").strip()
-    if not code or len(code) != 6 or not code.isdigit():
-        return JsonResponse({"ok": False, "error": "Enter a valid 6-digit code."}, status=400)
+    if len(code) != 6 or not code.isdigit():
+        return JsonResponse({
+                                "ok":       False, 
+                                "error":    "Enter a valid 6-digit code."
+                            }, status=400)
 
     try:
         code_obj = VenueEmailVerificationCode.objects.get(email=email, code=code)
     except VenueEmailVerificationCode.DoesNotExist:
-        return JsonResponse({"ok": False, "error": "Invalid code."}, status=400)
+        attempts = int(request.session.get("venue_code_attempts", 0)) + 1
+        request.session["venue_code_attempts"] = attempts
+
+        if attempts >= MAX_ATTEMPTS:
+            lock_until = timezone.now() + timezone.timedelta(minutes=LOCK_MINUTES)
+            request.session["venue_code_locked_until"] = str(lock_until.timestamp())
+            return JsonResponse({
+                                    "ok":       False, 
+                                    "error":    "Too many attempts. Try again later."
+                                }, status=429)
+
+        return JsonResponse({   "ok":       False, 
+                                "error":    "Invalid code."
+                            }, status=400)
 
     if code_obj.is_expired():
         code_obj.delete()
-        return JsonResponse({"ok": False, "error": "Code expired. Please resend."}, status=400)
+        return JsonResponse({   "ok":       False, 
+                                "error":    "Code expired. Please resend."
+                            }, status=400)
 
     # success
     code_obj.delete()
     request.session["venue_email_verified"] = True
     request.session["venue_verified_email"] = email
     request.session.pop("venue_pending_email", None)
-    return JsonResponse({"ok": True, "message": "Email verified."})
+    request.session.pop("venue_code_attempts", None)
+    request.session.pop("venue_code_locked_until", None)
 
+    return JsonResponse({   "ok":       True, 
+                            "message":  "Email verified."
+                        })
 ###########################################################################################
 
 ###########################################################################################

@@ -3,11 +3,11 @@
 /* ============================ */
 
 body {
-  background: #f7f7f7;
+  background: var(--button-text);
   font-family: "Inter", sans-serif;
   margin: 0;
   padding: 0;
-  color: #333;
+  color: var(--text-color);
 }
 
 /* ============================ */
@@ -34,7 +34,7 @@ body {
   position: absolute;
   bottom: 30px;
   left: 40px;
-  color: white;
+  color: var(--button-text);
 }
 
 .hero-title h1 {
@@ -87,9 +87,9 @@ body {
 }
 
 .tab.active {
-  color: #222;
-  border-color: #32c36c;
-  background: white;
+  color: var(--text-color);
+  border-color: var(--surface-color);
+  background: var(--button-text);
 }
 
 .tab-content {
@@ -107,13 +107,131 @@ body {
 }
 
 /* ============================ */
+/* REVIEW SECTION */
+/* ============================ */
+
+.review-stars {
+    display: flex;
+    gap: 3px;
+}
+
+.star {
+    font-size: 22px;
+    color: #ccc;
+}
+
+.star.full::before {
+    content: "★";
+    color: #f5b301; /* gold */
+}
+
+.star.empty::before {
+    content: "★";
+    color: #ddd; /* light grey */
+}
+
+
+/* --- REVIEW FORM WRAPPER --- */
+.review-form-container {
+    background: var(--scroll-container-bg);
+    border: 1px solid #ddd;
+    padding: 18px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+/* Title */
+.review-form-container h4 {
+    margin-bottom: 12px;
+    font-size: 18px;
+}
+
+/* --- LABELS --- */
+.review-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.review-label span {
+    color: red;
+}
+
+/* --- STAR RATING --- */
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label.star {
+    font-size: 28px;
+    color: var(--background-color);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+/* Highlight on hover */
+.star-rating label.star:hover,
+.star-rating label.star:hover ~ label.star {
+    color: #f5b301;
+}
+
+/* When selected */
+.star-rating input:checked ~ label.star {
+    color: #f5b301;
+}
+
+/* --- TEXTAREA --- */
+.review-textarea {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    resize: vertical;
+    font-size: 14px;
+}
+
+/* --- SUBMIT BUTTON --- */
+.review-submit-btn {
+    width: 100%;
+    padding: 10px;
+    background: var(--primary-color);
+    color: var(--button-text);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 14px;
+    transition: background 0.2s ease;
+}
+
+.review-submit-btn:hover {
+    background: var(--primary-hover);
+}
+
+/* --- MOBILE FRIENDLY --- */
+@media (max-width: 480px) {
+    .star-rating label.star {
+        font-size: 24px;
+    }
+}
+
+
+/* ============================ */
 /* ABOUT SECTION */
 /* ============================ */
 
 .venue-description {
   font-size: 17px;
   line-height: 1.6;
-  color: #555;
+  color: var(--button-text);
   margin-bottom: 30px;
 }
 
@@ -134,12 +252,13 @@ body {
 /* ============================ */
 
 .reserve-card {
-  background: #fff;
+  background: var(--surface-color);
   padding: 25px;
   border-radius: 14px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
   position: sticky;
   top: 120px;
+  color: var(--button-text);
 }
 
 .reserve-card h3 {
@@ -164,27 +283,155 @@ body {
   height: 170px;
   object-fit: cover;
 }
-
 /* ============================ */
-/* REVIEWS */
+/* RESERVATION FORM STYLES */
 /* ============================ */
 
-.review-card {
-  background: #fff;
-  padding: 18px;
-  border-radius: 12px;
-  margin-bottom: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+/* Step Tabs */
+/* ============================ */
+/* MULTI-STEP RESERVATION FORM */
+/* ============================ */
+
+/* Step tabs (horizontal small circles) */
+.res-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
-.review-card strong {
-  font-size: 16px;
+.res-tab {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: none;
+  background: var(--background-color);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
-.stars {
-  color: #ffc107;
-  margin: 5px 0 10px;
+.res-tab.active {
+  background: var(--button-text);
+  color: var(--text-color);
 }
+
+.res-tab.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Step container */
+.res-step {
+  display: none;
+}
+
+.res-step.active {
+  display: block;
+}
+
+/* Form fields */
+.res-step input.form-control,
+.res-step select.form-control,
+.res-step textarea.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--button-text);
+  transition: all 0.2s ease;
+}
+
+.res-step input.form-control:focus,
+.res-step select.form-control:focus,
+.res-step textarea.form-control:focus {
+  border-color: var(--surface-color);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(50, 195, 108, 0.15);
+}
+
+/* Buttons */
+.res-step .res-next-btn,
+.res-step .res-prev-btn,
+.res-step .res-submit-btn {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  margin-top: 12px;
+}
+
+.res-step .res-next-btn {
+  background: var(--button-text);
+  color: var(--text-color);
+}
+
+.res-step .res-prev-btn {
+  background: #444;
+  color: #fff;
+}
+
+.res-step .res-submit-btn {
+  background: var(--primary-color);
+  color: var(--button-text);
+}
+
+.res-submit-btn:hover {
+  background: var(--primary-hover);
+}
+
+/* Highlight invalid fields */
+.input-error {
+  border-color: #d9534f !important;
+}
+
+/* Container grid */
+#time-slot-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.time-slot {
+    padding: 12px 0;
+    background: var(--background-color);
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    user-select: none;
+    border: 1px solid #ddd;
+    color: var(--text-color)
+}
+
+.time-slot:hover {
+    background: #e0e0e0;
+    border-color: #bbb;
+}
+
+.time-slot.active {
+    background: var(--primary-color);
+    color: var(--button-text);
+    font-weight: bold;
+    border-color: var(--primary-hover);
+}
+
+
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(4px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
 
 /* ============================ */
 /* RESPONSIVE */
@@ -213,10 +460,12 @@ body {
 }
 
 @media (max-width: 480px) {
-  .hero-section {
-    height: 240px;
-  }
-  .hero-title h1 {
-    font-size: 26px;
-  }
+    #time-slot-container {
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+        gap: 8px;
+    }
+    .time-slot {
+        font-size: 13px;
+        padding: 10px 0;
+    }
 }

@@ -49,6 +49,9 @@
           </div>
         </div>
 
+
+
+
         <div class="file-upload-group">
           <div  id              = "venue-preview" 
                 class           = "file-preview"
@@ -58,11 +61,11 @@
           {% for img in venue_images %}
             
             {% if img.approved and not img.marked_for_deletion %}
-              <div class="thumb-wrapper"
-                  data-existing="true"
-                  data-id="{{ img.id }}"
-                  data-approved="true"
-                  data-deleted="false">
+              <div class        = "thumb-wrapper"
+                  data-existing = "true"
+                  data-id       = "{{ img.id }}"
+                  data-approved = "true"
+                  data-deleted  = "false">
                   
                 <img src="{{ img.image.url }}" width="80" alt="{% trans 'Venue preview' %}">
                 <button type="button" class="remove-btn">&times;</button>
@@ -75,10 +78,15 @@
         </div>
 
           <label class="custom-file-btn">
-            {% trans "Select Venue Images" %}
+            {% trans "Upload Venue Images" %}
             <input type="file" name="venue_images" id="venue_images" multiple hidden>
           </label>
+
         </div>
+
+
+
+
 
         <div class="file-upload-group">
           <div  id                = "menu-preview" 
@@ -106,12 +114,19 @@
           </div>
 
           <label class="custom-file-btn">
-            {% trans "Select Menu Images" %}
+            {% trans "Upload Menu Images" %}
             <input type="file" name="menu_images" id="menu_images" multiple hidden>
           </label>
         </div>
 
-        <button type="submit" class="btn-edit-status">{% trans "Submit for Approval" %}</button>
+        {% comment %} <button type="submit" class="btn-edit-status">{% trans "Submit for Approval" %}</button> {% endcomment %}
+        <button type="submit" class="btn-edit-status">
+          {% if settings.VENUE_UPDATES_REQUIRE_APPROVAL %}
+              {% trans "Submit for Approval" %}
+          {% else %}
+              {% trans "Save" %}
+          {% endif %}
+      </button>
       </div>
     </div>
   </form>
