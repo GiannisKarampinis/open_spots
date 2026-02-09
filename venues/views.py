@@ -1013,14 +1013,16 @@ def submit_venue_update(request, venue_id):
 ###########################################################################################
 
 ###########################################################################################
-def reorder_images(request, venue_id, model_cls):
-    # Wrappers already enforce POST, but keeping this doesn't hurt if you ever reuse it elsewhere.
-    if request.method != "POST":
-        return JsonResponse({"status": "invalid request"}, status=400)
-
-    # Parse JSON
+def _reorder_images(request, venue_id, model_cls):
+    if request.resolver_match is not None:
+        raise RuntimeError("_reorder_images must not be used as a view")
+    if request.method != "POST": # Wrappers already enforce POST, but keeping this doesn't hurt if you ever reuse it elsewhere.
+        return JsonResponse({"status": "invalid request"}, status=405)
+    if request.content_type is None or not request.content_type.startswith("application/json"):
+        return JsonResponse({"status":"invalid request"}, status=400)
+    
     try:
-        data = json.loads(request.body or b"{}")
+        data = json.loads(request.body or b"{}") # Parse JSON
     except json.JSONDecodeError:
         return JsonResponse({"status": "invalid JSON"}, status=400)
 
@@ -1028,6 +1030,9 @@ def reorder_images(request, venue_id, model_cls):
     if not isinstance(sequence, list):
         return JsonResponse({"status": "invalid payload", "message": "`sequence` must be a list"}, status=400)
 
+    if len(sequence) > 500:
+        return JsonResponse({"status": "invalid payload", "message": "Too many ids in sequence"}, status=400)
+    
     # Normalize IDs (and dedupe while preserving order)
     normalized = []
     seen = set()
@@ -1041,67 +1046,54 @@ def reorder_images(request, venue_id, model_cls):
             normalized.append(i)
 
     # 🚦 Throttle Check
-    throttle_key = f"reorder:{model_cls.__name__}:{venue_id}"
-    if is_throttled(request.user, throttle_key, limit=5, period=60):
+    throttle_key = f"reorder:{request.user.pk}:{model_cls.__name__}:{venue_id}"
+    if is_throttled(request.user, throttle_key, limit=10, period=60):
         return JsonResponse({
             "status": "throttled",
             "message": "Too many reorder attempts. Please try again in a minute."
         }, status=429)
 
-    # 🔒 Ownership check in one go (no meta gymnastics):
     # Ensure the venue exists and belongs to user (assuming Venue has owner)
     Venue = model_cls._meta.get_field("venue").remote_field.model
-    get_object_or_404(Venue, id=venue_id, owner=request.user)
-
+    venue = get_object_or_404(Venue, id=venue_id)
+    if not user_can_manage_venue(request.user, venue):
+        return JsonResponse({"status": "permission denied"}, status=403)
+    
     # Fetch all eligible images for these IDs in one query
-    qs = model_cls.objects.filter(
-        id__in=normalized,
-        venue_id=venue_id,
-        approved=True,
-        marked_for_deletion=False,
-    )
-
-    # Map by id for O(1) lookup
-    imgs_by_id = {img.id: img for img in qs}
-
-    updated_ids = []
-    to_update = []
-
     with transaction.atomic():
+        qs          = model_cls.objects.select_for_update().filter(id__in=normalized, venue_id=venue_id, approved=True, marked_for_deletion=False)
+        imgs_by_id  = {img.id: img for img in qs} # Map by id for O(1) lookup
+
+        updated_ids = []
+        to_update   = []
+
         for index, img_id in enumerate(normalized):
             img = imgs_by_id.get(img_id)
             if not img:
                 continue
-            img.order = index  # or index + 1 if you want 1-based ordering
+            img.order = index
             to_update.append(img)
             updated_ids.append(img_id)
 
         if to_update:
             model_cls.objects.bulk_update(to_update, ["order"])
 
-    logger.info(
-        "[ImageOrder] user=%s model=%s venue=%s updated=%s",
-        request.user.pk,
-        model_cls.__name__,
-        venue_id,
-        updated_ids,
-    )
+    logger.info("[ImageOrder] user=%s model=%s venue=%s updated=%s", request.user.pk, model_cls.__name__, venue_id, updated_ids)
 
     return JsonResponse({"status": "success", "updated_order": updated_ids})
-
 
 @require_POST
 @login_required
 @venue_admin_required
 def update_image_order(request, venue_id):
-    return reorder_images(request, venue_id, VenueImage)
+    return _reorder_images(request, venue_id, VenueImage)
 
 
 @require_POST
 @login_required
 @venue_admin_required
 def update_menu_image_order(request, venue_id):
-    return reorder_images(request, venue_id, VenueMenuImage)
+    return _reorder_images(request, venue_id, VenueMenuImage)
 
 ###########################################################################################
 
