@@ -231,7 +231,7 @@ body {
 .venue-description {
   font-size: 17px;
   line-height: 1.6;
-  color: var(--button-text);
+  color: var(--text-color);
   margin-bottom: 30px;
 }
 
