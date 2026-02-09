@@ -106,10 +106,27 @@
     align-items: center;
     gap: 6px;
     min-width: 0;
-    flex: 1 1 auto;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.venue-info > :first-child {
+    flex: 1;
+    min-width: 0;  /* IMPORTANT */
+}
+
+.venue-info > :not(:first-child) {
+    flex-shrink: 0;
+}
+
+
+.chair-full {
+    color: var(--venue-full);
+}
+
+.chair-available {
+    color: var(--venue-available);
 }
 
 .venue-info-item svg {
@@ -127,7 +144,8 @@
 
 .venue-info-item + .venue-info-item {
     border-left: 1px solid #444;
-    padding-left: 10px;
+    padding-left: 4px;
+    padding-right: 4px;
 }
 
 .venue-info-item span {
@@ -237,13 +255,13 @@ h2 {
 
 /* --- Availability styling --- */
 .venue-card.available {
-    border: 2px solid #4caf50;
-    box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+    border: 2px solid var(--venue-available);
+    box-shadow: 0 0 15px var(--venue-available-shadow);
 }
 
 .venue-card.full {
-    border: 2px solid #f44336;
-    box-shadow: 0 0 15px rgba(244, 67, 54, 0.6);
+    border: 2px solid var(--venue-full);
+    box-shadow: 0 0 15px 0 var(--venue-full-shadow);
 }
 
 /* --- Upcoming reservation --- */
@@ -269,6 +287,31 @@ h2 {
 
 .quick-reservation-card:hover {
     transform: translateY(-2px);
+}
+
+.quick-reservation-card .edit-btn {
+    background-color: var(--primary-color);
+    color: var(--button-text);
+    border-radius: 4px;
+    padding: 0.2em;
+}
+
+.quick-reservation-card .edit-btn:hover {
+    background-color: var(--primary-hover);
+    color: var(--button-text);
+}
+
+.quick-reservation-card .cancel-btn {
+    background-color: #f44336;
+    color: var(--button-text);
+    margin-left: 0.6em;
+    border-radius: 4px;
+    padding: 0.2em;
+}
+
+.quick-reservation-card .cancel-btn:hover {
+    background-color: #c4352b;
+    color: var(--button-text)   ;
 }
 
 @media (max-width: 600px) {

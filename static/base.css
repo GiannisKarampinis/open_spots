@@ -19,7 +19,11 @@
     --card-bg-color: #0060c0;
     --button-text: #ffffff;            /* Button text color */
     --button-text-hover: #e6e6e6;      /* Button text hover color */
-    --scroll-container-bg: #edeef4;  /* Scroll container background */  
+    --scroll-container-bg: #edeef4;    /* Scroll container background */  
+    --venue-available: #4caf50;        /* Green for available venues */
+    --venue-available-shadow: rgba(76, 175, 80, 0.6); /* Shadow for available venues */
+    --venue-full: #f44336;             /* Red for full venues */
+    --venue-full-shadow: rgba(244, 67, 54, 0.6); /* Shadow for full venues */
 }
 
 /* Dark Theme Overrides */

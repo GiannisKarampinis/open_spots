@@ -16,14 +16,7 @@
         </div>
 
         <div class="venue-info-item">
-            <i class="fa-solid fa-chair"></i>
-            <span>
-                {% if venue.is_full %}
-                    Full
-                {% else %}
-                    Available tables
-                {% endif %}
-            </span>
+            <i class="fa-solid fa-chair {% if venue.is_full %}chair-full{% else %}chair-available{% endif %}"></i>
         </div>
 
         <div class="venue-info-item rating">
