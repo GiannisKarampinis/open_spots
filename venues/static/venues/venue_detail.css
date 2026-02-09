@@ -426,6 +426,51 @@ body {
     border-color: var(--primary-hover);
 }
 
+.image-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.85);
+  z-index: 9999;
+  padding: 24px;
+}
+
+.image-modal.open { display: flex; }
+
+.image-modal-img {
+  max-width: min(1100px, 92vw);
+  max-height: 88vh;
+  border-radius: 12px;
+}
+
+.image-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  font-size: 34px;
+  background: transparent;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+}
+
+.image-modal-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,.12);
+  border: 0;
+  color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.image-modal-nav.prev { left: 18px; }
+.image-modal-nav.next { right: 18px; }
 
 @keyframes fadeIn {
   from {opacity: 0; transform: translateY(4px);}

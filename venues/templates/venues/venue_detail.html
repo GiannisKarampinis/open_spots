@@ -47,10 +47,10 @@
     <!-- MENU SECTION -->
     <div class="tab-content" id="menu">
       <h3>{% trans "Menu" %}</h3>
-      <div class="gallery">
+      <div class="gallery" data-gallery="menu">
           {% for image in venue.menu_images.all %}
             {% if image.approved and not image.marked_for_deletion %}
-              <img src="{{ image.image.url }}" alt="Photo">
+              <img class="gallery-img" src="{{ image.image.url }}" alt="Photo">
             {% endif %}
           {% empty %}
             <p>{% trans "This venue has not added a menu yet." %}</p>
@@ -61,10 +61,10 @@
     <!-- PHOTOS SECTION -->
     <div class="tab-content" id="photos">
       <h3>{% trans "Photos" %}</h3>
-      <div class="gallery">
+      <div class="gallery" data-gallery="photos">
         {% for image in venue.images.all %}
           {% if image.approved and not image.marked_for_deletion %}
-            <img src="{{ image.image.url }}" alt="Photo">
+            <img class="gallery-img" src="{{ image.image.url }}" alt="Photo">
           {% endif %}
         {% empty %}
           <p>{% trans "No photos available." %}</p>
@@ -238,6 +238,21 @@
     </div>
 </div>
 
+<!-- IMAGE MODAL -->
+<div id="imageModal" class="image-modal" aria-hidden="true">
+  <button type="button" class="image-modal-close" aria-label="{% trans 'Close' %}">&times;</button>
+
+  <button type="button" class="image-modal-nav prev" aria-label="{% trans 'Previous' %}">
+    <i class="fa fa-chevron-left"></i>
+  </button>
+
+  <img class="image-modal-img" src="" alt="{% trans 'Venue photo' %}">
+
+  <button type="button" class="image-modal-nav next" aria-label="{% trans 'Next' %}">
+    <i class="fa fa-chevron-right"></i>
+  </button>
+</div>
+
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
@@ -400,6 +415,74 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+(function setupGalleryModal() {
+  const modal = document.getElementById("imageModal");
+  if (!modal) return;
+
+  const imgEl = modal.querySelector(".image-modal-img");
+  const closeBtn = modal.querySelector(".image-modal-close");
+  const prevBtn = modal.querySelector(".image-modal-nav.prev");
+  const nextBtn = modal.querySelector(".image-modal-nav.next");
+
+  let currentList = [];
+  let currentIndex = -1;
+
+  function openWith(list, index) {
+    currentList = list;
+    currentIndex = index;
+    imgEl.src = currentList[currentIndex].src;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function close() {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    imgEl.src = "";
+    document.body.style.overflow = "";
+    currentList = [];
+    currentIndex = -1;
+  }
+
+  function show(delta) {
+    if (!currentList.length) return;
+    currentIndex = (currentIndex + delta + currentList.length) % currentList.length;
+    imgEl.src = currentList[currentIndex].src;
+  }
+
+  // Click on any image in any gallery opens modal
+  document.addEventListener("click", (e) => {
+    const targetImg = e.target.closest("img.gallery-img");
+    if (!targetImg) return;
+
+    const gallery = targetImg.closest(".gallery");
+    if (!gallery) return;
+
+    const imgs = Array.from(gallery.querySelectorAll("img.gallery-img"));
+    const idx = imgs.indexOf(targetImg);
+    openWith(imgs, idx);
+  });
+
+  closeBtn.addEventListener("click", close);
+  prevBtn.addEventListener("click", () => show(-1));
+  nextBtn.addEventListener("click", () => show(1));
+
+  // Click outside the image closes
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) close();
+  });
+
+  // Keyboard
+  document.addEventListener("keydown", (e) => {
+    if (!modal.classList.contains("open")) return;
+    if (e.key === "Escape") close();
+    if (e.key === "ArrowLeft") show(-1);
+    if (e.key === "ArrowRight") show(1);
+  });
+})();
+
 </script>
 
 
