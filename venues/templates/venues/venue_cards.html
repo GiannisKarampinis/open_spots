@@ -19,10 +19,16 @@
             <i class="fa-solid fa-chair {% if venue.is_full %}chair-full{% else %}chair-available{% endif %}"></i>
         </div>
 
-        <div class="venue-info-item rating">
-            <i class="fa-solid fa-star"></i>
-            <span>{{ venue.average_rating|floatformat:1 }}</span>
-        </div>
+        {% if venue.average_rating > 0 %}
+            <div class="venue-info-item rating">
+                <i class="fa-solid fa-star"></i>
+                <span>{{ venue.average_rating|floatformat:1 }}</span>
+            </div>
+        {% else %}
+            <div class="venue-info-item rating muted">
+                New
+            </div>
+        {% endif %}
 
     </div>
 </div>
