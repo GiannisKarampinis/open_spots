@@ -72,12 +72,17 @@ a:hover {
    Header / Navbar
    ========================== */
 header {
-    background-color: var(--surface-color);
     padding: 2px 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     color: var(--text-color);
+    background:
+        linear-gradient(to right,
+            rgba(255,255,255,0),
+            rgba(255,255,255,0.17)
+        ),
+        var(--surface-color);
 }
 
 .main-nav {
