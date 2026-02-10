@@ -5,7 +5,7 @@
 /* Default (Light Theme) */
 :root {
     --background-color: #ffffff;      /* Page background */
-    --surface-color: #003366;         /* Navbar, footer, cards */
+    --surface-color:  rgb(8, 58, 90); /* ;#003366;          Navbar, footer, cards */
     --text-color: #222222;            /* Main text */
     --link-color: #ff7b00;            /* Links */
     --link-hover: #ff5e00;            /* Link hover */
@@ -77,12 +77,35 @@ header {
     justify-content: space-between;
     align-items: center;
     color: var(--text-color);
-    background:
-        linear-gradient(to right,
-            rgba(255,255,255,0),
-            rgba(255,255,255,0.17)
-        ),
-        var(--surface-color);
+background: linear-gradient(to right,
+  rgb(8, 62, 94) 0%,
+  rgb(10, 64, 96) 4%,
+  rgb(11, 66, 97) 8%,
+  rgb(12, 67, 98) 12%,
+  rgb(13, 68, 99) 16%,
+  rgb(14, 70,101) 20%,
+  rgb(15, 71,102) 24%,
+  rgb(17, 73,104) 28%,
+  rgb(18, 75,105) 32%,
+  rgb(20, 77,107) 36%,
+  rgb(22, 78,108) 40%,
+  rgb(24, 81,110) 44%,
+  rgb(27, 83,112) 48%,
+  rgb(30, 86,114) 52%,
+  rgb(33, 88,116) 56%,
+  rgb(35, 90,118) 60%,
+  rgb(37, 91,119) 64%,
+  rgb(39, 93,121) 68%,
+  rgb(41, 94,122) 72%,
+  rgb(44, 96,124) 76%,
+  rgb(46, 98,125) 80%,
+  rgb(48,100,127) 84%,
+  rgb(49,101,128) 88%,
+  rgb(51,103,130) 92%,
+  rgb(52,104,131) 96%,
+  rgb(53,105,132) 100%
+);
+
 }
 
 .main-nav {
@@ -244,7 +267,35 @@ main {
 }
 
 footer {
-    background-color: var(--surface-color);
+    /* background-color: var(--surface-color); */
+    background: linear-gradient(to right,
+  rgb(8, 62, 94) 0%,
+  rgb(10, 64, 96) 4%,
+  rgb(11, 66, 97) 8%,
+  rgb(12, 67, 98) 12%,
+  rgb(13, 68, 99) 16%,
+  rgb(14, 70,101) 20%,
+  rgb(15, 71,102) 24%,
+  rgb(17, 73,104) 28%,
+  rgb(18, 75,105) 32%,
+  rgb(20, 77,107) 36%,
+  rgb(22, 78,108) 40%,
+  rgb(24, 81,110) 44%,
+  rgb(27, 83,112) 48%,
+  rgb(30, 86,114) 52%,
+  rgb(33, 88,116) 56%,
+  rgb(35, 90,118) 60%,
+  rgb(37, 91,119) 64%,
+  rgb(39, 93,121) 68%,
+  rgb(41, 94,122) 72%,
+  rgb(44, 96,124) 76%,
+  rgb(46, 98,125) 80%,
+  rgb(48,100,127) 84%,
+  rgb(49,101,128) 88%,
+  rgb(51,103,130) 92%,
+  rgb(52,104,131) 96%,
+  rgb(53,105,132) 100%
+);
     text-align: center;
     padding: 20px 0;
     color: var(--button-text);
