@@ -185,7 +185,7 @@
                 {{ form.phone }}
                 {{ form.phone.errors }}
 
-                <!--<button type="button" class="res-next-btn" data-next="2">Next</button>-->
+                <button type="button" class="res-next-btn" data-next="2">Next</button>
             </div>
 
             <!-- STEP 2: Reservation Details -->
@@ -205,8 +205,8 @@
                 {{ form.guests }}
                 {{ form.guests.errors }}
 
-              <!--<button type="button" class="res-prev-btn" data-prev="1">Back</button>-->
-              <!--<button type="button" class="res-next-btn" data-next="3">Next</button>-->
+              <button type="button" class="res-prev-btn" data-prev="1">Back</button>
+              <button type="button" class="res-next-btn" data-next="3">Next</button>
           </div>
 
 
@@ -222,7 +222,7 @@
                 {{ form.comments.label_tag }}
                 {{ form.comments }}
 
-                <!--<button type="button" class="res-prev-btn" data-prev="2">Back</button>-->
+                <button type="button" class="res-prev-btn" data-prev="2">Back</button>
                 <button type="submit" class="res-submit-btn" data-testid="submit-reservation" name="submit_reservation">Submit Reservation</button>
             </div>
 
@@ -337,6 +337,10 @@ document.addEventListener("DOMContentLoaded", () => {
             validateStep(1);
             validateStep(2);
         });
+        input.addEventListener('change', () => {
+            validateStep(1);
+            validateStep(2);
+        });
     });
 
     // ---------------------------
@@ -348,6 +352,51 @@ document.addEventListener("DOMContentLoaded", () => {
             showStep(tab.dataset.step);
         });
     });
+
+    // ---------------------------
+    // NEXT / BACK BUTTONS
+    // ---------------------------
+    function canGoToStep(stepNumber) {
+        const step = document.querySelector(`.res-step[data-step="${stepNumber}"]`);
+        if (!step) return false;
+
+        // Validate required inputs in this step
+        const requiredInputs = step.querySelectorAll('input[required], select[required], textarea[required]');
+        for (const input of requiredInputs) {
+            if (!input.value || !input.value.trim()) return false;
+        }
+
+        // Extra rule for Step 2: require time selection (hidden input)
+        if (stepNumber == 2) {
+            const timeHidden = document.getElementById("selected-time");
+            if (!timeHidden || !timeHidden.value) return false;
+        }
+
+        return true;
+    }
+
+    document.querySelectorAll(".res-next-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const currentStep = parseInt(btn.closest(".res-step").dataset.step, 10);
+            const nextStep = parseInt(btn.dataset.next, 10);
+
+            if (!canGoToStep(currentStep)) {
+                // Trigger validation highlighting/unlocking logic
+                validateStep(currentStep);
+                return;
+            }
+
+            showStep(nextStep);
+        });
+    });
+
+    document.querySelectorAll(".res-prev-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const prevStep = parseInt(btn.dataset.prev, 10);
+            showStep(prevStep);
+        });
+    });
+
 
     // ---------------------------
     // INITIAL DISPLAY
@@ -405,6 +454,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 container.querySelectorAll(".time-slot").forEach(b => b.classList.remove("active"));
                 box.classList.add("active");
                 hiddenInput.value = slot.value;
+                hiddenInput.dispatchEvent(new Event('input'));
+                hiddenInput.dispatchEvent(new Event('change'));
+                validateStep(2);
 
                 // Trigger validation
                 const step2Inputs = document.querySelectorAll('.res-step[data-step="2"] input[required]');

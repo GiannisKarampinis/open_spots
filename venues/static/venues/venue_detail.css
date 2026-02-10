@@ -355,8 +355,8 @@ body {
 }
 
 /* Buttons */
-.res-step .res-next-btn,
-.res-step .res-prev-btn,
+.res-step,
+.res-step,
 .res-step .res-submit-btn {
   width: 100%;
   padding: 10px 12px;
@@ -385,6 +385,22 @@ body {
 
 .res-submit-btn:hover {
   background: var(--primary-hover);
+}
+
+.res-btn-row {
+  display:        flex;
+  gap:            10px;
+  margin-top:     14px;
+}
+
+.res-prev-btn,
+.res-next-btn{
+  flex:           1;
+  padding:        12px 14px;
+  border-radius:  10px;
+  border:         0;
+  cursor:         pointer;
+  margin-top:     12px;
 }
 
 /* Highlight invalid fields */

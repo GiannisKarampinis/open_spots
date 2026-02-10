@@ -264,64 +264,111 @@ h2 {
     box-shadow: 0 0 15px 0 var(--venue-full-shadow);
 }
 
+
 /* --- Upcoming reservation --- */
 .quick-reservation-card {
-    background: var(--scroll-container-bg);
-    position: relative;
-    border-radius: 16px;
-    padding: 16px;
-    margin: 20px auto;
-    max-width: 370px;
-    transition: transform 0.2s ease;
-}
+    background:         var(--scroll-container-bg);
+    border-radius:      16px;
+    padding:            16px;
+    margin:             20px auto;
+    max-width:          35%;
+    transition:         transform 0.2s ease;
 
-.quick-reservation-card .venue-image {
-    position: absolute;
-    right: 16px;
-    top: 24px;
-    bottom: 16px;
-    max-width: 132px;
-    object-fit: cover;
-    border-radius: 6px;
+    /* Layout: content left, image right */
+    display:            grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto auto;
+    column-gap:         16px;
+    row-gap:            10px;
+    align-items:        start;
 }
 
 .quick-reservation-card:hover {
-    transform: translateY(-2px);
+    transform:          translateY(-2px);
 }
 
+/* Keep your content blocks on the left column */
+.quick-reservation-card h3,
+.quick-reservation-card .reservation-info,
+.quick-reservation-card .reservation-actions {
+    grid-column:        1;
+}
+
+/* Image sits INSIDE card on the right, no absolute, no fixed width */
+.quick-reservation-card .venue-image {
+    grid-column:        2;
+    grid-row:           1 / -1;
+    height:             100%;
+    max-height:         140px;      /* prevents huge images making the card too tall */
+    width:              auto;       /* no fixed width */
+    aspect-ratio:       1 / 1;      /* stable thumbnail shape */
+    object-fit:         cover;
+    border-radius:      6px;        /* keep your original radius */
+    align-self:         stretch;
+    justify-self:       end;
+}
+
+/* Actions layout (safe default) */
+.quick-reservation-card .reservation-actions {
+    display:            flex;
+    gap:                0.6em;
+    flex-wrap:          wrap;
+    align-items:        center;
+}
+
+/* --- Buttons (carried over) --- */
 .quick-reservation-card .edit-btn {
-    background-color: var(--primary-color);
-    color: var(--button-text);
-    border-radius: 4px;
-    padding: 0.2em;
+    background-color:   var(--primary-color);
+    color:              var(--button-text);
+    border-radius:      4px;
+    padding:            0.2em 0.5em;
+    text-decoration:    none;
+    display:            inline-flex;
+    align-items:        center;
+    gap:                0.35em;
 }
 
 .quick-reservation-card .edit-btn:hover {
-    background-color: var(--primary-hover);
-    color: var(--button-text);
+    background-color:   var(--primary-hover);
+    color:              var(--button-text);
 }
 
 .quick-reservation-card .cancel-btn {
-    background-color: #f44336;
-    color: var(--button-text);
-    margin-left: 0.6em;
-    border-radius: 4px;
-    padding: 0.2em;
+    background-color:   #f44336;
+    color:              var(--button-text);
+    border-radius:      4px;
+    padding:            0.2em 0.5em;
+    text-decoration:    none;
+    display:            inline-flex;
+    align-items:        center;
+    gap:                0.35em;
 }
 
 .quick-reservation-card .cancel-btn:hover {
-    background-color: #c4352b;
-    color: var(--button-text)   ;
+    background-color:   #c4352b;
+    color:              var(--button-text);
 }
 
+/* --- Mobile --- */
 @media (max-width: 600px) {
+    /* No more padding-right hack needed (it was only for absolute image) */
     .quick-reservation-card {
-        padding-right: 110px;
+        max-width: 100%;
+        grid-template-columns: 1fr;  /* stack */
     }
 
     .quick-reservation-card .venue-image {
-        max-width: 96px;
+        grid-column: 1;
+        grid-row: auto;
+
+        width: 100%;
+        height: auto;
+        max-height: 220px;
+        aspect-ratio: 16 / 9; /* nicer wide preview on mobile */
+        justify-self: stretch;
     }
+
+    /* Your existing filter styling preserved */
     .filter-form {
         margin: 0.8em 0;
         padding: 0 8px;
