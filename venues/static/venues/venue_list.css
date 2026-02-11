@@ -230,7 +230,7 @@ h2 {
 }
 
 .filter-form select option {
-    background:     var(--surface-gradient);
+    background-color:     var(--surface-color);
     color:          var(--button-text);
 }
 
