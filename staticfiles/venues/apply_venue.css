@@ -1,5 +1,5 @@
 .apply-container {
-    background-color:   var(--surface-grdient);      /* Dark gray background */
+    background:         var(--surface-grdient);      /* Dark gray background */
     padding:            40px;
     border-radius:      10px;
     box-shadow:         0 0 25px rgba(255,255,255,0.1);
