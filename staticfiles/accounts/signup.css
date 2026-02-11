@@ -1,5 +1,5 @@
 .signup-container {
-    background-color:      var(--surface-color);                 /* Dark gray background */
+    background:            var(--surface-gradient);   /* Dark gray background */
     padding:               40px;                      /* Padding inside container */
     border-radius:         10px;                      /* Rounded corners */
     box-shadow:            0 0 25px rgba(255,255,255,0.1); /* Soft white glow */

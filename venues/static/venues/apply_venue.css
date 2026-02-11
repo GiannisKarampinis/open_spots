@@ -1,14 +1,14 @@
 .apply-container {
-    background-color: var(--surface-color);
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 0 25px rgba(255,255,255,0.1);
-    margin: 60px auto;
-    color: var(--button-text);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    width: 100%;
-    max-width: none;               /* Full width for better use of space */
-    box-sizing: border-box;
+    background-color:   var(--surface-grdient);      /* Dark gray background */
+    padding:            40px;
+    border-radius:      10px;
+    box-shadow:         0 0 25px rgba(255,255,255,0.1);
+    margin:             60px auto;
+    color:              var(--button-text);
+    font-family:        var(--global-font-family);
+    width:              100%;
+    max-width:          none;                        /* Full width for better use of space */
+    box-sizing:         border-box;
 }
 
 
@@ -284,7 +284,7 @@
 
 .location-suggestions {
   position:               absolute;
-  background:             var(--surface-color);
+  background:             var(--surface-gradient);
   border:                 1px solid #555;
   border-radius:          8px;
   width:                  100%;

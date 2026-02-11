@@ -27,7 +27,7 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   position: relative;
   color: #222;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--global-font-family);
   user-select: text;
 }
 

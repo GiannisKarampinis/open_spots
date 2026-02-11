@@ -10,6 +10,7 @@ h1.fw-bold {
     font-size:      2.2rem;
     margin-bottom:  0;
     color:          var(--text-color);
+    margin-top:     1.5rem;
 }
 
 .venue-status-toggle {
@@ -87,33 +88,33 @@ h1.fw-bold {
 
 /* === Tables === */
 .table-responsive {
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-    background-color: var(--surface-color);
-    overflow-x: auto;
+    border-radius:  6px;
+    box-shadow:     0 4px 12px rgba(0,0,0,0.7);
+    background:     var(--surface-gradient);
+    overflow-x:     auto;
 }
 
 .table {
-    font-size: 0.95rem;
-    width: 100%;
-    color: var(--button-text);
+    font-size:      0.95rem;
+    width:          100%;
+    color:          var(--button-text);
     border-collapse: collapse;
 }
 
 .table th,
 .table td {
     vertical-align: middle;
-    text-align: center;
-    border-bottom: 1px solid #444;
-    padding: 8px 12px;
-    line-height: 1.4;
+    text-align:     center;
+    border-bottom:  1px solid #444;
+    padding:        8px 12px;
+    line-height:    1.4;
 }
 
 .table thead th {
-    background-color: var(--surface-color);
-    color: var(--button-text); 
-    font-weight: 600;
-    letter-spacing: 0.03em;
+    background:         var(--surface-gradient);
+    color:              var(--button-text); 
+    font-weight:        600;
+    letter-spacing:     0.03em;
 }
 
 /* === DataTables Striping & Hover === */
@@ -157,14 +158,14 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 
 /* === Top Controls Wrapper (Search + Entries) === */
 .datatable-controls {
-    display: flex;
-    margin-bottom: 1rem;
-    padding: 0.75rem 1rem;
-    background-color: var(--surface-color);
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-    gap: 1rem;
-    height: auto;
+    display:            flex;
+    margin-bottom:      1rem;
+    padding:            0.75rem 1rem;
+    background:         var(--surface-gradient);
+    border-radius:      6px;
+    box-shadow:         0 4px 12px rgba(0,0,0,0.7);
+    gap:                1rem;
+    height:             auto;
 }
 
 .datatable-controls #upcoming-show-entries-wrapper,
@@ -212,23 +213,22 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 
 /* Dropdown (select) inside show-entries wrappers */
 .datatable-controls select {
-    background-color: var(--surface-color);
-    border: 1px solid #555;
-    color: var(--button-text);
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    box-shadow: inset 0 0 6px rgba(0,0,0,0.7);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-    /* min-width: 90px; */
+    background:     var(--surface-gradient);
+    border:         1px solid #555;
+    color:          var(--button-text);
+    padding:        8px 12px;
+    border-radius:  6px;
+    font-size:      0.95rem;
+    font-weight:    600;
+    box-shadow:     inset 0 0 6px rgba(0,0,0,0.7);
+    transition:     background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* On hover and focus for dropdown */
 .datatable-controls select:hover {
-    background-color: var(--surface-color);
-    border-color: #777;
-    cursor: pointer;
+    background-color:   var(--surface-color);
+    border-color:       #777;
+    cursor:             pointer;
 }
 
 .datatable-controls select:focus {
@@ -291,7 +291,7 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 /* === Alerts === */
 .alert-info {
     font-size: 0.95rem;
-    background-color: var(--surface-color);
+    background: var(--surface-gradient);
     border-color: #557799;
     color: var(--button-text);
     padding: 12px 20px;
@@ -302,13 +302,13 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 
 /* === Modal Card === */
 .modal-card {
-    background-color: var(--surface-color);
-    color: var(--button-text);
-    border-radius: 8px;
-    padding: 2rem;
-    max-width: 500px;
-    margin: 2rem auto;
-    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    background:     var(--surface-gradient);
+    color:          var(--button-text);
+    border-radius:  8px;
+    padding:        2rem;
+    max-width:      500px;
+    margin:         2rem auto;
+    box-shadow:     0 0 20px rgba(0,0,0,0.6);
 }
 .modal-card h3 {
     font-size: 1.5rem;
@@ -414,56 +414,55 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 
 /* Stat Card Style */
 #analytics-stats .stat-card {
-    background: var(--surface-color);
-    border: 1px solid #444;
-    border-radius: 10px;
-    padding: 1rem;
-    text-align: center;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background:     var(--surface-gradient);
+    border:         1px solid #444;
+    border-radius:  10px;
+    padding:        1rem;
+    text-align:     center;
+    box-shadow:     0 2px 6px rgba(0, 0, 0, 0.4);
+    transition:     transform 0.2s ease, box-shadow 0.2s ease;
 }
 #analytics-stats .stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transform:      translateY(-3px);
+    box-shadow:     0 4px 10px rgba(0, 0, 0, 0.5);
 }
 #analytics-stats .stat-value {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: #4cafef;
+    font-size:      1.8rem;
+    font-weight:    bold;
 }
 #analytics-stats .stat-label {
-    font-size: 0.95rem;
-    color: var(--button-text);
-    margin-top: 0.4rem;
+    font-size:      0.95rem;
+    color:          var(--button-text);
+    margin-top:     0.4rem;
 }
 
 /* Grouping Form */
 #analyticsForm {
-    display: flex;
-    align-items: center;
+    display:        flex;
+    align-items:    center;
     justify-content: center;
-    gap: 0.7rem;
-    margin: 1.5rem 0;
-    padding: 0.8rem 1rem;
-    background: var(--surface-color);
-    border-radius: 8px;
-    border: 1px solid #333;
-    box-shadow: 0 1px 4px rgba(224, 224, 224, 0.4);
+    gap:            0.7rem;
+    margin:         1.5rem 0;
+    padding:        0.8rem 1rem;
+    background:     var(--surface-gradient);
+    border-radius:  8px;
+    border:         1px solid #333;
+    box-shadow:     0 1px 4px rgba(224, 224, 224, 0.4);
 }
 #analyticsForm label {
-    font-weight: 500;
-    color: var(--background-color);
+    font-weight:    500;
+    color:          var(--background-color);
 }
 #analyticsForm select {
-    padding: 0.4rem 0.7rem;
-    border-radius: 5px;
-    border: 1px solid #555;
-    background: var(--surface-color);
-    color: var(--background-color);
+    padding:        0.4rem 0.7rem;
+    border-radius:  5px;
+    border:         1px solid #555;
+    background:     var(--surface-gradient);
+    color:          var(--background-color);
 }
 #analyticsForm select:focus {
-    outline: none;
-    border-color: #4cafef;
+    outline:        none;
+    border-color:   #4cafef;
 }
 
 /* Notifications Section */
@@ -522,13 +521,13 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 
 /* Form card */
 #manage-venue .venue-form-card {
-    background-color: var(--surface-color);
-    border-radius: 8px;
-    padding: 2rem;
-    box-shadow: 0 0 20px rgba(0,0,0,0.6);
-    max-width: 960px;
-    margin: 0 auto 2rem auto;
-    color: #000;
+    background:     var(--surface-gradient);
+    border-radius:  8px;
+    padding:        2rem;
+    box-shadow:     0 0 20px rgba(0,0,0,0.6);
+    max-width:      960px;
+    margin:         0 auto 2rem auto;
+    color:          #000;
 }
 
 /* Form headings */
@@ -823,14 +822,14 @@ button {
 
 /* Close button */
 .image-modal .close-btn {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    font-size: 2rem;
-    color: white;
-    cursor: pointer;
-    background: transparent;
-    border: none;
+    position:       absolute;
+    top:            20px;
+    right:          30px;
+    font-size:      2rem;
+    color:          white;
+    cursor:         pointer;
+    background:     transparent;
+    border:         none;
 }
 
 /* ==========================
@@ -849,7 +848,7 @@ button {
   display:          flex;
   justify-content:  center;
   align-items:      center;
-  background-color: var(--surface-color); /* optional light gray */
+  background:       var(--surface-gradient);
   border-radius:    6px;
   text-align:       right;
   font-family:      inherit;
@@ -860,19 +859,19 @@ button {
 
 /* Date range input styling */
 .daterange-input {
-  max-width: 320px;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  background-color: var(--surface-color);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--button-text);
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  max-width:        320px;
+  width:            100%;
+  padding:          0.75rem 1rem;
+  border-radius:    8px;
+  border:           1px solid #ddd;
+  background:       var(--surface-gradient);
+  box-shadow:       0 2px 6px rgba(0, 0, 0, 0.05);
+  font-size:        1rem;
+  font-weight:      500;
+  color:            var(--button-text);
+  text-align:       center;
+  cursor:           pointer;
+  transition:       all 0.2s ease;
 }
 
 /* Placeholder */

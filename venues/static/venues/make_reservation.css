@@ -7,7 +7,7 @@
     max-width: 500px;                        /* Max width */
     margin: 60px auto;                       /* Center horizontally with vertical margin */
     color: white;                           /* Text color */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font */
+    font-family: var(--global-font-family) /* Font */
 }
 
 /* Heading */

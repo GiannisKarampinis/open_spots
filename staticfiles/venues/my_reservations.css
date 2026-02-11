@@ -36,7 +36,7 @@
 }
 
 .tab-button.active {
-    background: var(--surface-color);
+    background: var(--surface-gradient);
     color: white;
 }
 
@@ -54,16 +54,16 @@
 }
 
 .reservation-card {
-    display: flex;
+    display:         flex;
     justify-content: space-between;
-    align-items: center;
-    background: var(--surface-color);
-    color: var(--button-text);
-    border: 1px solid #2a2a2a;
-    padding: 1rem;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-    transition: box-shadow 0.3s, transform 0.2s;
+    align-items:     center;
+    background:      var(--surface-gradient);
+    color:           var(--button-text);
+    border:          1px solid #2a2a2a;
+    padding:         1rem;
+    border-radius:   10px;
+    margin-bottom:   1rem;
+    transition:      box-shadow 0.3s, transform 0.2s;
 }
 
 .reservation-card:hover {
@@ -125,16 +125,16 @@
 
 /* Reservation Card Layout */
 .reservation-card {
-    background: var(--surface-color);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    display: flex;
+    background:     var(--surface-gradient);
+    border-radius:  12px;
+    padding:        20px;
+    margin-bottom:  15px;
+    box-shadow:     0 4px 12px rgba(0,0,0,0.4);
+    display:        flex;
     justify-content: space-between;
-    align-items: flex-start; /* align top */
-    color: var(--button-text);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    align-items:    flex-start; /* align top */
+    color:          var(--button-text);
+    transition:     transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .reservation-card:hover {

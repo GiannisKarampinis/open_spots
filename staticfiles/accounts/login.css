@@ -1,13 +1,13 @@
 /* Container for the entire login form area */
 .login-container {
-    background-color: var(--surface-color);        /* Dark gray background */
+    background: var(--surface-gradient);        /* Dark gray background */
     padding: 40px;        /* Padding inside the box, more at bottom */
     border-radius: 10px;                /* Rounded corners */
     box-shadow: 0 0 25px rgba(255, 255, 255, 0.12); /* Soft white glow */
     max-width: 500px;                   /* Max width of the container */
     margin: 60px auto;                  /* Center horizontally with top margin */
     color: white;                     /* Text color inside container */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean readable font */
+    font-family: var(--global-font-family) /* Clean readable font */
 }
 
 
@@ -74,9 +74,9 @@
 
 /* Styling the "or" text inside divider */
 .divider span {
-    background: var(--surface-color);                              /* Matches container background to cover line */
+    background: var(--surface-gradient);                /* Matches container background to cover line */
     padding: 0 15px;                                    /* Horizontal padding */
-    color: var(--button-text);                                      /* Gray color */
+    color: var(--button-text);                          /* Gray color */
     font-weight: 600;                                   /* Semi-bold */
     font-size: 0.9rem;                                  /* Slightly smaller text */
     position: relative;

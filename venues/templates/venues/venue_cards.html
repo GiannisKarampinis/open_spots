@@ -6,29 +6,29 @@
         {% endif %}
     {% endwith %}
 
-    <h3>{{ venue.name }}</h3>
+    <div class="venue-card-content">
+        <h3>{{ venue.name }}</h3>
 
-    <div class="venue-info">
-
-        <div class="venue-info-item">
-            <i class="fa-solid fa-location-dot"></i>
-            <span>{{ venue.location }}</span>
-        </div>
-
-        <div class="venue-info-item">
-            <i class="fa-solid fa-chair {% if venue.is_full %}chair-full{% else %}chair-available{% endif %}"></i>
-        </div>
-
-        {% if venue.average_rating > 0 %}
-            <div class="venue-info-item rating">
-                <i class="fa-solid fa-star"></i>
-                <span>{{ venue.average_rating|floatformat:1 }}</span>
+        <div class="venue-info">
+            <div class="venue-info-item">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>{{ venue.location }}</span>
             </div>
-        {% else %}
-            <div class="venue-info-item rating muted">
-                New
-            </div>
-        {% endif %}
 
+            <div class="venue-info-item">
+                <i class="fa-solid fa-chair {% if venue.is_full %}chair-full{% else %}chair-available{% endif %}"></i>
+            </div>
+
+            {% if venue.average_rating > 0 %}
+                <div class="venue-info-item rating">
+                    <i class="fa-solid fa-star"></i>
+                    <span>{{ venue.average_rating|floatformat:1 }}</span>
+                </div>
+            {% else %}
+                <div class="venue-info-item rating muted">
+                    New
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>

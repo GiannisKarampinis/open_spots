@@ -4,7 +4,7 @@
 
 body {
   background: var(--button-text);
-  font-family: "Inter", sans-serif;
+  font-family: var(--global-font-family);
   margin: 0;
   padding: 0;
   color: var(--text-color);
@@ -87,9 +87,9 @@ body {
 }
 
 .tab.active {
-  color: var(--text-color);
+  color:        var(--text-color);
   border-color: var(--surface-color);
-  background: var(--button-text);
+  background:   var(--button-text);
 }
 
 .tab-content {
@@ -252,19 +252,19 @@ body {
 /* ============================ */
 
 .reserve-card {
-  background: var(--surface-color);
-  padding: 25px;
-  border-radius: 14px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
-  position: sticky;
-  top: 120px;
-  color: var(--button-text);
+  background:     var(--surface-gradient);
+  padding:        25px;
+  border-radius:  14px;
+  box-shadow:     0 6px 20px rgba(0, 0, 0, 0.10);
+  position:       sticky;
+  top:            120px;
+  color:          var(--button-text);
 }
 
 .reserve-card h3 {
-  margin: 0 0 15px;
-  font-weight: 700;
-  font-size: 22px;
+  margin:         0 0 15px;
+  font-weight:    700;
+  font-size:      22px;
 }
 
 /* ============================ */
@@ -337,60 +337,60 @@ body {
 .res-step input.form-control,
 .res-step select.form-control,
 .res-step textarea.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1.5px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  background: var(--button-text);
-  transition: all 0.2s ease;
+  width:          100%;
+  padding:        10px 12px;
+  border:         1.5px solid #ddd;
+  border-radius:  8px;
+  font-size:      14px;
+  background:     var(--button-text);
+  transition:     all 0.2s ease;
 }
 
 .res-step input.form-control:focus,
 .res-step select.form-control:focus,
 .res-step textarea.form-control:focus {
-  border-color: var(--surface-color);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(50, 195, 108, 0.15);
+  border-color:   var(--surface-color);
+  outline:        none;
+  box-shadow:     0 0 0 3px rgba(50, 195, 108, 0.15);
 }
 
 /* Buttons */
 .res-step,
 .res-step,
 .res-step .res-submit-btn {
-  width: 100%;
-  padding: 10px 12px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  border: none;
-  margin-top: 12px;
+  width:          100%;
+  padding:        10px 12px;
+  font-size:      14px;
+  font-weight:    600;
+  border-radius:  6px;
+  cursor:         pointer;
+  border:         none;
+  margin-top:     12px;
 }
 
 .res-step .res-next-btn {
-  background: var(--button-text);
-  color: var(--text-color);
+  background:     var(--button-text);
+  color:          var(--text-color);
 }
 
 .res-step .res-prev-btn {
-  background: #444;
-  color: #fff;
+  background:   #444;
+  color:        #fff;
 }
 
 .res-step .res-submit-btn {
-  background: var(--primary-color);
-  color: var(--button-text);
+  background:   var(--primary-color);
+  color:        var(--button-text);
 }
 
 .res-submit-btn:hover {
-  background: var(--primary-hover);
+  background:   var(--primary-hover);
 }
 
 .res-btn-row {
-  display:        flex;
-  gap:            10px;
-  margin-top:     14px;
+  display:      flex;
+  gap:          10px;
+  margin-top:   14px;
 }
 
 .res-prev-btn,
@@ -405,15 +405,15 @@ body {
 
 /* Highlight invalid fields */
 .input-error {
-  border-color: #d9534f !important;
+  border-color:   #d9534f !important;
 }
 
 /* Container grid */
 #time-slot-container {
-    display: grid;
+    display:      grid;
     grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
-    gap: 10px;
-    margin-top: 10px;
+    gap:          10px;
+    margin-top:   10px;
 }
 
 .time-slot {

@@ -1,37 +1,37 @@
 /* reservation_success.css - styles for reservation success page */
 
 .success-message {
-    max-width: 600px;
-    margin: 80px auto;
-    padding: 40px;
-    background-color: var(--surface-color);
+    max-width:    600px;
+    margin:       80px auto;
+    padding:      40px;
+    background:   var(--surface-gradient);
     border-radius: 12px;
-    color: #ffffff;
-    text-align: center;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-    animation: fadeIn 0.6s ease-out;
+    color:        #ffffff;
+    text-align:   center;
+    box-shadow:   0 0 15px rgba(255, 255, 255, 0.1);
+    animation:    fadeIn 0.6s ease-out;
 }
 
 .success-message h2 {
-    font-size: 28px;
-    margin-bottom: 20px;
-    color: #00ffae;
+    font-size:      28px;
+    margin-bottom:  20px;
+    color:          #00ffae;
 }
 
 .success-message p {
-    font-size: 16px;
-    margin-bottom: 30px;
+    font-size:      16px;
+    margin-bottom:  30px;
 }
 
 .success-message a {
-    display: inline-block;
-    padding: 10px 20px;
+    display:          inline-block;
+    padding:          10px 20px;
     background-color: var(--primary-color);
-    color: #fff;
-    text-decoration: none;
-    border-radius: 6px;
-    transition: background-color 0.2s ease;
-    font-weight: bold;
+    color:            #fff;
+    text-decoration:  none;
+    border-radius:    6px;
+    transition:       background-color 0.2s ease;
+    font-weight:      bold;
 }
 
 .success-message a:hover {

@@ -52,21 +52,28 @@
 
 /* Venue card appearance */
 .venue-card {
-    background-color: var(--surface-color);
-    border-radius: 10px;
-    padding: 16px;
-    width: 100%;
-    height: 100%;
-    color: var(--button-text);
-    box-shadow: 0 0 10px rgba(255,255,255,0.1);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    max-width: 300px;
-    box-sizing: border-box;
+    background:     var(--surface-gradient);
+    border-radius:  10px;
+    width:          100%;
+    height:         100%;
+    color:          var(--button-text);
+    box-shadow:     0 0 10px rgba(255,255,255,0.1);
+    transition:     transform 0.2s ease, box-shadow 0.2s ease;
+    max-width:      300px;
+    box-sizing:     border-box;
 }
 
 .venue-card:hover {
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 0 15px rgba(255,255,255,0.2);
+}
+
+.venue-card-content {
+    padding: 16px;
+    color: var(--button-text);
+    /* display: flex; */
+    /* flex-direction: column; */
+    /* height: 100%; */
 }
 
 .venue-card img {
@@ -79,7 +86,7 @@
 }
 
 .venue-card h3 {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--global-font-family);
     font-weight: 700;
     font-size: clamp(1.1rem, 4vw, 1.4rem);
     margin: 6px 0 8px 0;
@@ -170,21 +177,20 @@
 
 /* --- Section headings --- */
 .section-title {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--global-font-family);
     font-weight: 600;
     font-size: clamp(1.1rem, 4vw, 1.6rem);
     color: var(--text-color);
     margin: 1.5rem 0 0.75rem 0;
     padding-left: 0.5rem;
     border-left: 4px solid var(--card-bg-color);
-    text-transform: uppercase;
     letter-spacing: 0.05em;
     user-select: none;
 }
 
 /* --- Main page heading --- */
 h2 {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--global-font-family);
     font-weight: 700;
     font-size: clamp(1.4rem, 5vw, 2rem);
     text-align: center;
@@ -202,14 +208,14 @@ h2 {
 }
 
 .filter-wrapper {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--surface-color);
-    border: 1px solid #444;
-    border-radius: 8px;
-    padding: 0.4em 0.8em;
-    gap: 0.6em;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    display:        inline-flex;
+    align-items:    center;
+    background:     var(--surface-gradient);
+    border:         1px solid #444;
+    border-radius:  8px;
+    padding:        0.4em 0.8em;
+    gap:            0.6em;
+    box-shadow:     0 2px 6px rgba(0,0,0,0.2);
 }
 
 .filter-form select {
@@ -224,8 +230,8 @@ h2 {
 }
 
 .filter-form select option {
-    background-color: var(--surface-color);
-    color: var(--button-text);
+    background:     var(--surface-gradient);
+    color:          var(--button-text);
 }
 
 .clear-filter-btn {
@@ -241,29 +247,30 @@ h2 {
 
 /* --- Sticky filter --- */
 .sticky-filter {
-    position: sticky;
-    top: 0;
-    z-index: 2000;
-    background-color: var(--surface-color);
-    padding: 0.6em 1em;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6em;
-    margin: 0 auto;
-    transition: box-shadow 0.3s ease;
+    position:       sticky;
+    top:            0;
+    z-index:        2000;
+    background:     var(--surface-gradient);
+    padding:        0.6em 1em;
+    display:        inline-flex;
+    align-items:    center;
+    gap:            0.6em;
+    margin:         0 auto;
+    transition:     box-shadow 0.3s ease;
+    color:          var(--button-text);
 }
 
 /* --- Availability styling --- */
-.venue-card.available {
-    border: 2px solid var(--venue-available);
+
+/* .venue-card.available {
+    border:     5px solid var(--venue-available);
     box-shadow: 0 0 15px var(--venue-available-shadow);
 }
 
 .venue-card.full {
-    border: 2px solid var(--venue-full);
+    border:     4px solid var(--venue-full);
     box-shadow: 0 0 15px 0 var(--venue-full-shadow);
-}
-
+} */
 
 /* --- Upcoming reservation --- */
 .quick-reservation-card {

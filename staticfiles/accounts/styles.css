@@ -1,6 +1,6 @@
 body {
     background-color: #1c1c1c;
-    font-family: Arial, sans-serif;
+    font-family: var(--global-font-family);
     color: #f1f1f1;
     margin: 0;
     padding: 0;

@@ -4,34 +4,45 @@
 
 /* Default (Light Theme) */
 :root {
-    --background-color: #ffffff;      /* Page background */
-    --surface-color:  rgb(8, 58, 90); /* ;#003366;          Navbar, footer, cards */
-    --text-color: #222222;            /* Main text */
-    --link-color: #ff7b00;            /* Links */
-    --link-hover: #ff5e00;            /* Link hover */
+    --background-color:     #ffffff;                  /* Page background */
+    --surface-color:        rgb(8, 58, 90);           /* #003366; Navbar, footer, cards */
+    --text-color:           #222222;                  /* Main text */
+    --link-color:           #ff7b00;                  /* Links */
+    --link-hover:           #ff5e00;                  /* Link hover */
 
-    --primary-color: #007bff;         /* Unified blue */
-    --primary-hover: #0056b3;         /* Darker blue hover */
-    --error-color: #ff4d4f;           /* Error red */
-    --success-color: #28a745;         /* Success green */
-    --warning-color: #ffc107;         /* Warning yellow */
-    --info-color: #17a2b8;            /* Info teal */
-    --card-bg-color: #0060c0;
-    --button-text: #ffffff;            /* Button text color */
-    --button-text-hover: #e6e6e6;      /* Button text hover color */
-    --scroll-container-bg: #edeef4;    /* Scroll container background */  
-    --venue-available: #4caf50;        /* Green for available venues */
+    --primary-color:        #007bff;                  /* Unified blue */
+    --primary-hover:        #0056b3;                  /* Darker blue hover */
+    --error-color:          #ff4d4f;                  /* Error red */
+    --success-color:        #28a745;                  /* Success green */
+    --warning-color:        #ffc107;                  /* Warning yellow */
+    --info-color:           #17a2b8;                  /* Info teal */
+    --card-bg-color:        #0060c0;
+    --button-text:          #ffffff;                  /* Button text color */
+    --button-text-hover:    #e6e6e6;                  /* Button text hover color */
+    --scroll-container-bg:  #edeef4;                  /* Scroll container background */  
+    --venue-available:      #4caf50;                  /* Green for available venues */
     --venue-available-shadow: rgba(76, 175, 80, 0.6); /* Shadow for available venues */
-    --venue-full: #f44336;             /* Red for full venues */
-    --venue-full-shadow: rgba(244, 67, 54, 0.6); /* Shadow for full venues */
+    --venue-full:           #f44336;                  /* Red for full venues */
+    --venue-full-shadow:    rgba(244, 67, 54, 0.6);   /* Shadow for full venues */
+    --global-font-family:   'Inter', sans-serif;        /* Global font */
+    --surface-gradient:     radial-gradient(circle at top,
+                                rgb(20, 77, 107) 0%,
+                                rgb(14, 70, 101) 30%,
+                                rgb(8, 58, 90) 100%
+                            );                          /* Gradient for surfaces */
 }
 
 /* Dark Theme Overrides */
 body.dark-theme {
-    --background-color: #232323;
-    --surface-color: #353535;
-    --text-color: #f1f1f1;
-    --scroll-container-bg: #353535;
+    --background-color:     #232323;
+    --surface-color:        #353535;
+    --text-color:           #f1f1f1;
+    --scroll-container-bg:  #353535;
+    --surface-gradient: radial-gradient(circle at top,
+        rgb(78, 78, 78) 0%,
+        rgb(62, 62, 62) 35%,
+        rgb(53, 53, 53) 100%
+    );
 }
 
 /* Reset & base */
@@ -42,7 +53,7 @@ body.dark-theme {
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: var(--global-font-family);
     background-color: var(--background-color);
     color: var(--text-color);
     line-height: 1.6;
@@ -77,35 +88,34 @@ header {
     justify-content: space-between;
     align-items: center;
     color: var(--text-color);
-background: linear-gradient(to right,
-  rgb(8, 62, 94) 0%,
-  rgb(10, 64, 96) 4%,
-  rgb(11, 66, 97) 8%,
-  rgb(12, 67, 98) 12%,
-  rgb(13, 68, 99) 16%,
-  rgb(14, 70,101) 20%,
-  rgb(15, 71,102) 24%,
-  rgb(17, 73,104) 28%,
-  rgb(18, 75,105) 32%,
-  rgb(20, 77,107) 36%,
-  rgb(22, 78,108) 40%,
-  rgb(24, 81,110) 44%,
-  rgb(27, 83,112) 48%,
-  rgb(30, 86,114) 52%,
-  rgb(33, 88,116) 56%,
-  rgb(35, 90,118) 60%,
-  rgb(37, 91,119) 64%,
-  rgb(39, 93,121) 68%,
-  rgb(41, 94,122) 72%,
-  rgb(44, 96,124) 76%,
-  rgb(46, 98,125) 80%,
-  rgb(48,100,127) 84%,
-  rgb(49,101,128) 88%,
-  rgb(51,103,130) 92%,
-  rgb(52,104,131) 96%,
-  rgb(53,105,132) 100%
-);
-
+    background: linear-gradient(to right,
+        rgb(8, 62, 94) 0%,
+        rgb(10, 64, 96) 4%,
+        rgb(11, 66, 97) 8%,
+        rgb(12, 67, 98) 12%,
+        rgb(13, 68, 99) 16%,
+        rgb(14, 70,101) 20%,
+        rgb(15, 71,102) 24%,
+        rgb(17, 73,104) 28%,
+        rgb(18, 75,105) 32%,
+        rgb(20, 77,107) 36%,
+        rgb(22, 78,108) 40%,
+        rgb(24, 81,110) 44%,
+        rgb(27, 83,112) 48%,
+        rgb(30, 86,114) 52%,
+        rgb(33, 88,116) 56%,
+        rgb(35, 90,118) 60%,
+        rgb(37, 91,119) 64%,
+        rgb(39, 93,121) 68%,
+        rgb(41, 94,122) 72%,
+        rgb(44, 96,124) 76%,
+        rgb(46, 98,125) 80%,
+        rgb(48,100,127) 84%,
+        rgb(49,101,128) 88%,
+        rgb(51,103,130) 92%,
+        rgb(52,104,131) 96%,
+        rgb(53,105,132) 100%
+    );
 }
 
 .main-nav {
@@ -156,7 +166,7 @@ body.dark-theme .main-nav a {
     position: absolute;
     right: 0;
     top: 100%;
-    background-color: var(--surface-color);
+    background: var(--surface-gradient);
     min-width: 80px;
     box-shadow: 0 8px 16px var(--text-color);
     border-radius: 5px;
@@ -175,7 +185,7 @@ body.dark-theme .main-nav a {
     align-items: center;            /* ✅ Vertically center them */
     gap: 3px;                       /* ✅ Add spacing between flag and text */
     width: 100%;
-    background: none;
+    background: var(--surface-gradient);
     border: none;
     color: var(--button-text);
     padding: 12px 16px;
@@ -222,7 +232,7 @@ body.dark-theme .main-nav a {
     position: absolute;
     right: 0;
     top: 100%;
-    background-color: var(--surface-color);
+    background: var(--surface-gradient);
     min-width: 180px;
     box-shadow: 0 8px 16px var(--text-color);
     border-radius: 5px;
@@ -267,54 +277,26 @@ main {
 }
 
 footer {
-    /* background-color: var(--surface-color); */
-    background: linear-gradient(to right,
-  rgb(8, 62, 94) 0%,
-  rgb(10, 64, 96) 4%,
-  rgb(11, 66, 97) 8%,
-  rgb(12, 67, 98) 12%,
-  rgb(13, 68, 99) 16%,
-  rgb(14, 70,101) 20%,
-  rgb(15, 71,102) 24%,
-  rgb(17, 73,104) 28%,
-  rgb(18, 75,105) 32%,
-  rgb(20, 77,107) 36%,
-  rgb(22, 78,108) 40%,
-  rgb(24, 81,110) 44%,
-  rgb(27, 83,112) 48%,
-  rgb(30, 86,114) 52%,
-  rgb(33, 88,116) 56%,
-  rgb(35, 90,118) 60%,
-  rgb(37, 91,119) 64%,
-  rgb(39, 93,121) 68%,
-  rgb(41, 94,122) 72%,
-  rgb(44, 96,124) 76%,
-  rgb(46, 98,125) 80%,
-  rgb(48,100,127) 84%,
-  rgb(49,101,128) 88%,
-  rgb(51,103,130) 92%,
-  rgb(52,104,131) 96%,
-  rgb(53,105,132) 100%
-);
-    text-align: center;
-    padding: 20px 0;
-    color: var(--button-text);
-    font-size: 0.9rem;
-    margin-top: 40px;
+    background:     var(--surface-gradient);
+    text-align:     center;
+    padding:        20px 0;
+    color:          var(--button-text);
+    font-size:      0.9rem;
+    margin-top:     40px;
 }
 
 /* ==========================
    Buttons
    ========================== */
 .dashboard-link {
-    margin-right: 15px;
-    font-weight: bold;
-    color: var(--primary-color);
+    margin-right:   15px;
+    font-weight:    bold;
+    color:          var(--primary-color);
 }
 
 .dashboard-link:hover {
     text-decoration: underline;
-    color: var(--primary-hover);
+    color:           var(--primary-hover);
 }
 
 .apply-venue-btn {
@@ -416,12 +398,15 @@ ul.errorlist {
     align-items: center;
 }
 
-.submenu-btn:hover { background-color: var(--surface-color); color: var(--button-text); }
+.submenu-btn:hover { 
+    background-color: var(--surface-color); 
+    color: var(--button-text); 
+}
 
 .submenu-content {
     display: none;
     flex-direction: column;
-    background-color: var(--surface-color);
+    background: var(--surface-gradient);
     border-top: 1px solid var(--surface-color);
 }
 

@@ -1,19 +1,19 @@
 /* profile.css */
 .profile-container {
     max-width: 800px;
-    margin: 60px auto;                          /* Match login spacing */
-    padding: 40px;                              /* Match login padding */
-    background-color: var(--surface-color);                  /* Dark gray background */
-    border-radius: 10px;                        /* Match login rounded corners */
-    box-shadow: 0 0 25px rgba(255, 255, 255, 0.12); /* Soft white glow */
-    color: var(--button-text);                               /* White text like login */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 60px auto;                                 /* Match login spacing */
+    padding: 40px;                                     /* Match login padding */
+    background: var(--surface-gradient);            /* Dark gray background */
+    border-radius: 10px;                               /* Match login rounded corners */
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.12);  /* Soft white glow */
+    color: var(--button-text);                         /* White text like login */
+    font-family: var(--global-font-family);
 }
 
 .profile-container h1 {
     text-align: center;                  /* Center the heading text */
     margin-bottom: 30px;                 /* Space below heading */
-    color: #eee;                      /* Dark gray text color */
+    color: #eee;                       /* Dark gray text color */
     font-weight: 700;
 }
 
@@ -104,7 +104,7 @@
     font-size: 0.95rem;                  /* Comfortable font size */
     border: 1px solid #555;            /* Light gray border */
     border-radius: 6px;                  /* Rounded corners */
-    background-color: var(--surface-color);
+    background: var(--surface-gradient);
     color: var(--button-text);
 }
 
