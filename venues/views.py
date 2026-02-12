@@ -31,6 +31,9 @@ User = get_user_model()
 ###########################################################################################
 
 ###########################################################################################
+def about(request):
+    return render(request, "venues/about.html")
+
 def apply_venue(request):
     verified_email   = (request.session.get("venue_verified_email") or "").strip().lower()
     session_verified = bool(request.session.get("venue_email_verified", False))

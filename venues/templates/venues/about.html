@@ -1,0 +1,76 @@
+{% extends "includes/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'venues/about.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+    {% comment %} <script src="https://cdn.jsdelivr.net/npm/lucide@0.257.0/dist/umd/lucide.min.js"></script> {% endcomment %}
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+        });
+    </script>
+{% endblock %}
+
+
+
+{% block title %}{% trans "Who We Are" %}{% endblock %}
+
+{% block content %}
+<section class="about">
+
+    <h2>About Us</h2>
+
+    <p>
+        By developing real-time booking technology, we redefine reservations for hospitality venues.
+        Our mission is simple: make bookings seamless for customers, while structured, reliable,
+        and measurable for businesses.
+    </p>
+
+    <p>
+        OpenSpots is designed to manage reservations for on-site experiences — giving businesses
+        full visibility over availability, demand, and customer flow, while offering customers a
+        smooth way to secure their spot.
+    </p>
+
+    <h3>Our Core Principles</h3>
+
+    <ul>
+        <li>
+            <!-- Real-time -->
+            <i data-lucide = "activity-square"></i>
+            <h4>Real-time availability <br> management</h4> Booking slots reflect actual capacity at any given moment, reducing double bookings, manual updates, and operational friction.
+        </li>
+
+        <li>
+            <!-- Structured control -->
+            <i data-lucide = "layout-list"></i>
+            <h4>Structured <br> operational control</h4> Scheduling centralizing bookings in one system that supports daily scheduling, capacity planning, and coordination across teams.
+        </li>
+
+        <li>
+            <!-- Data insights -->
+            <i data-lucide = "bar-chart-2"></i>
+            <h4>Data-driven <br> insight</h4> Converting booking activity into clear, usable information that supports forecasting, performance analysis, and smarter business decisions.
+        </li>
+
+    </ul>
+
+    <p>
+        At OpenSpots, we see bookings not simply as confirmations, but as a critical layer of business
+        infrastructure — connecting physical spaces with digital access in a controlled and
+        measurable way.
+    </p>
+
+    <p>
+        Our objective is to provide a stable, adaptable, and modern system that supports growth
+        while maintaining operational clarity.
+    </p>
+
+</section>
+{% endblock %}
