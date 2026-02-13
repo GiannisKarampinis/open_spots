@@ -1,57 +1,100 @@
 /* venue_list.css - styles for venue list page */
 
 /* --- Venue scroll container --- */
+/* Base horizontal row mode (unchanged) */
 .venue-scroll-container {
     display: flex;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 12px;
+
+    /* Responsive padding ONLY */
+    padding: clamp(8px, 2.5vw, 12px);
+
     gap: 16px;
     scroll-snap-type: x proximity;
     scroll-behavior: smooth;
     border-radius: 10px;
     background-color: var(--scroll-container-bg);
+
     width: 100%;
     margin: 0 auto;
     -webkit-overflow-scrolling: touch;
 }
 
 /* ===========================
-   GRID MODE (filtered kind)
+   GRID MODE (filtered)
+   =========================== */
+
+/* ===========================
+   GRID MODE (filtered)
+   Fixed container at 4 / 2 / 1 columns
+   Gap stays 16px
+   =========================== */
+
+/* ===========================
+   GRID MODE: fixed container width
+   4 cols: 1264px
+   2 cols: 632px
+   1 col : 316px
    =========================== */
 
 .venue-scroll-container.grid-mode {
-    /* Turn the horizontal strip into a responsive grid */
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+
+    /* fixed spacing + padding */
     gap: 16px;
+    padding: 8px;              /* 8px on each side -> matches your widths */
 
-    overflow: visible;          /* important: no horizontal scroll */
-    overflow-x: visible;
-    overflow-y: visible;
+    /* fixed background look */
+    background-color: var(--scroll-container-bg);
+    border-radius: 10px;
 
+    /* center the fixed-width container on the page */
+    margin: 0 auto;
+
+    /* no scrollbars in grid */
+    overflow: visible;
     scroll-snap-type: none;
     scroll-behavior: auto;
 
-    width: 100%;
-    margin: 0 auto;
+    justify-content: start;    /* columns start at left inside fixed container */
 }
 
-/* In grid mode, the anchor should fill its grid cell */
+/* fixed card size in grid mode */
 .venue-scroll-container.grid-mode .venue-link {
-    width: 100%;
-    max-width: none;
+    width: 300px;
+    max-width: 300px;
+    flex: initial;             /* cancels flex: 0 0 auto from base .venue-link */
+    scroll-snap-align: unset;
 }
 
-/* Allow the card to use full width inside the grid cell */
 .venue-scroll-container.grid-mode .venue-card {
-    max-width: none;
+    width: 100%;
+    max-width: 300px;
 }
 
-/* Optional: slightly larger tiles on wider screens */
-@media (min-width: 900px) {
+/* Desktop: 4 columns -> container width 1264px */
+@media (min-width: 1350px) {
     .venue-scroll-container.grid-mode {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        width: 1264px;
+        grid-template-columns: repeat(4, 300px);
+    }
+}
+
+/* Tablet: 2 columns -> container width 632px */
+@media (min-width: 700px) and (max-width: 1349px) {
+    .venue-scroll-container.grid-mode {
+        width: 632px;
+        grid-template-columns: repeat(2, 300px);
+    }
+}
+
+/* Mobile: 1 column -> container width 316px */
+@media (max-width: 699px) {
+    .venue-scroll-container.grid-mode {
+        width: 316px;
+        grid-template-columns: 300px; /* fixed column */
+        justify-content: center;
     }
 }
 
@@ -472,5 +515,68 @@ h2 {
     .venue-card:hover {
         transform: none;
         box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+}
+
+/* ===========================
+   PAGINATION
+   =========================== */
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 24px 0 10px 0;
+    padding: 10px;
+}
+
+.page-btn,
+.page-number {
+    background: var(--surface-gradient);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: var(--button-text);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: transform 0.15s ease;
+}
+
+.page-btn:hover,
+.page-number:hover {
+    transform: translateY(-1px);
+    color: var(--button-text-hover);
+}
+
+.page-number.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--button-text);
+    font-weight: 700;
+}
+
+.page-btn.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+
+.page-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 12px;
+}
+
+@media (max-width: 1024px) {
+    .page-container {
+        padding: 0 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .page-container {
+        padding: 0 12px;
     }
 }

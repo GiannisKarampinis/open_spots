@@ -6,6 +6,7 @@ from django.views.decorators.http    import require_POST
 from django.db.models                import Count
 from django.db.models.functions      import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.utils.timezone           import now
+from django.core.paginator           import Paginator
 from datetime                        import timedelta, datetime
 from django.utils                    import timezone
 from django.http                     import HttpResponse, Http404, JsonResponse, HttpResponseForbidden
@@ -23,8 +24,6 @@ from django.utils.translation        import gettext as _
 import  json
 import  plotly.graph_objs            as go
 from django.conf                     import settings
-
-
 
 User = get_user_model()
 
@@ -136,10 +135,10 @@ def apply_venue(request):
 
 ###########################################################################################
 def venue_list(request):
-    VALID_KINDS         = [k[0] for k in Venue.VENUE_TYPES]
-    VALID_AVAILABILITY  = ['available', 'full']
-    
-    kind = request.GET.get("kind")    
+    VALID_KINDS = [k[0] for k in Venue.VENUE_TYPES]
+    VALID_AVAILABILITY = ["available", "full"]
+
+    kind = request.GET.get("kind")
     if kind not in VALID_KINDS:
         kind = None
 
@@ -147,40 +146,44 @@ def venue_list(request):
     if availability not in VALID_AVAILABILITY:
         availability = None
 
-    venues = Venue.objects.all()
+    venues_qs = Venue.objects.all()
 
-    # Kind filtering (support cafes+bars grouping)
+    # Kind filter (cafe means cafe + bar)
     if kind:
         if kind == "cafe":
-            venues = venues.filter(kind__in=["cafe", "bar"])
+            venues_qs = venues_qs.filter(kind__in=["cafe", "bar"])
         else:
-            venues = venues.filter(kind=kind)
+            venues_qs = venues_qs.filter(kind=kind)
 
-    # Availability filtering
+    # Availability filter
     if availability == "available":
-        venues = venues.filter(is_full=False)
+        venues_qs = venues_qs.filter(is_full=False)
     elif availability == "full":
-        venues = venues.filter(is_full=True)
+        venues_qs = venues_qs.filter(is_full=True)
 
-    # Ordering (optional but recommended)
-    venues = venues.order_by("name")
+    venues_qs = venues_qs.order_by("name")
 
-    # If a kind is selected, show more items (grid mode)
-    GRID_LIMIT = 20
-    DEFAULT_LIMIT = 200  # you can keep high since default layout is grouped anyway
-    if kind:
-        venues = venues[:GRID_LIMIT]
-    else:
-        venues = venues[:DEFAULT_LIMIT]
+    # Grid mode if ANY filter is active (kind or availability)
+    grid_mode = bool(kind or availability)
 
-    # Prepare data for map
+    # Pagination: always 20 per page (as requested)
+    paginator = Paginator(venues_qs, 20)
+    page_number = request.GET.get("page") or 1
+    page_obj = paginator.get_page(page_number)
+
+    # For map: use the venues on the current page only
     venue_data = [
         {"name": v.name, "lat": v.latitude, "lng": v.longitude, "id": v.id}
-        for v in venues
+        for v in page_obj.object_list
         if v.latitude and v.longitude
     ]
 
-    # Default: no venue_id
+    # Preserve filters when changing pages (drop existing page param)
+    qs_params = request.GET.copy()
+    qs_params.pop("page", None)
+    base_qs = qs_params.urlencode()  # e.g. "kind=cafe&availability=available"
+
+    # Venue admin redirect id (unchanged)
     venue_id = None
     if request.user.is_authenticated and request.user.user_type == "venue_admin":
         venue = Venue.objects.filter(owner=request.user).first()
@@ -200,10 +203,17 @@ def venue_list(request):
         )
 
     return render(request, "venues/venue_list.html", {
-        "venues": venues,
+        "venues": page_obj.object_list,     # keep your template loops working
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "is_paginated": page_obj.has_other_pages(),
+        "base_qs": base_qs,
+
         "venue_data": venue_data,
         "selected_kind": kind,
         "selected_availability": availability,
+        "grid_mode": grid_mode,
+
         "venue_id": venue_id,
         "upcoming_reservation": upcoming_reservation,
     })

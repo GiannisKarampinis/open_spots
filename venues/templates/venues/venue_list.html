@@ -11,6 +11,7 @@
 {% block title %}{% trans "Browse Venues" %}{% endblock %}
 
 {% block content %}
+<div class="page-container">
 <h2>{% trans "Explore & Reserve Your Perfect Spot" %}</h2>
 
 <form method="get" class="filter-form">
@@ -21,26 +22,36 @@
             <!-- Kind filter -->
             <select name="kind" id="venue_type" onchange="this.form.submit()">
                 <option value="">{% trans "All Venues" %}</option>
-                <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>{% trans "Restaurants" %}</option>
+                <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>
+                    {% trans "Restaurants" %}
+                </option>
 
                 <!-- NOTE: selecting cafe represents cafes+bars -->
                 <option value="cafe" {% if selected_kind == "cafe" or selected_kind == "bar" %}selected{% endif %}>
                     {% trans "Cafes & Bars" %}
                 </option>
 
-                <option value="beach_bar" {% if selected_kind == "beach_bar" %}selected{% endif %}>{% trans "Beach Bars" %}</option>
-                <option value="other" {% if selected_kind == "other" %}selected{% endif %}>{% trans "Other" %}</option>
+                <option value="beach_bar" {% if selected_kind == "beach_bar" %}selected{% endif %}>
+                    {% trans "Beach Bars" %}
+                </option>
+                <option value="other" {% if selected_kind == "other" %}selected{% endif %}>
+                    {% trans "Other" %}
+                </option>
             </select>
 
             <!-- Availability filter -->
             <select name="availability" id="venue_availability" onchange="this.form.submit()">
                 <option value="">{% trans "All" %}</option>
-                <option value="available" {% if selected_availability == "available" %}selected{% endif %}>{% trans "Available" %}</option>
-                <option value="full" {% if selected_availability == "full" %}selected{% endif %}>{% trans "Full" %}</option>
+                <option value="available" {% if selected_availability == "available" %}selected{% endif %}>
+                    {% trans "Available" %}
+                </option>
+                <option value="full" {% if selected_availability == "full" %}selected{% endif %}>
+                    {% trans "Full" %}
+                </option>
             </select>
 
             {% if selected_kind or selected_availability %}
-            <a href="{% url 'venue_list' %}" class="clear-filter-btn">{% trans "Clear" %}</a>
+                <a href="{% url 'venue_list' %}" class="clear-filter-btn">{% trans "Clear" %}</a>
             {% endif %}
         </div>
     </div>
@@ -78,41 +89,66 @@
 {% endif %}
 
 <!-- Venue sections -->
-{% if selected_kind %}
+{% if selected_kind or selected_availability %}
+    {# FILTERED MODE -> GRID + PAGINATION #}
     <h3 class="section-title">
-        {% if selected_kind == "cafe" or selected_kind == "bar" %}
-            {% trans "Cafes & Bars" %}
+        {% if selected_kind %}
+            {% if selected_kind == "cafe" or selected_kind == "bar" %}
+                {% trans "Cafes & Bars" %}
+            {% else %}
+                {{ selected_kind|title }} {% trans "Venues" %}
+            {% endif %}
         {% else %}
-            {{ selected_kind|title }} {% trans "Venues" %}
+            {% trans "Venues" %}
         {% endif %}
         {% if selected_availability %} - {{ selected_availability|title }}{% endif %}
     </h3>
 
-    <!-- GRID MODE: expands vertically -->
     <div class="venue-scroll-container grid-mode">
         {% for venue in venues %}
-        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-            {% include "venues/venue_cards.html" with venue=venue %}
-        </a>
+            <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
+                {% include "venues/venue_cards.html" with venue=venue %}
+            </a>
         {% empty %}
-        <p>{% trans "No venues available." %}</p>
+            <p>{% trans "No venues available." %}</p>
         {% endfor %}
     </div>
 
-{% elif selected_availability == "full" %}
-    <h3 class="section-title">{% trans "Full Venues" %}</h3>
-    <div class="venue-scroll-container">
-        {% for venue in venues %}
-        <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
-            {% include "venues/venue_cards.html" with venue=venue %}
-        </a>
-        {% empty %}
-        <p>{% trans "No full venues available." %}</p>
+    {% if is_paginated %}
+    <nav class="pagination">
+        {% if page_obj.has_previous %}
+            <a class="page-btn"
+               href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                ‹ {% trans "Prev" %}
+            </a>
+        {% else %}
+            <span class="page-btn disabled">‹ {% trans "Prev" %}</span>
+        {% endif %}
+
+        {% for num in paginator.page_range %}
+            {% if num == page_obj.number %}
+                <span class="page-number active">{{ num }}</span>
+            {% else %}
+                <a class="page-number"
+                   href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ num }}">
+                    {{ num }}
+                </a>
+            {% endif %}
         {% endfor %}
-    </div>
+
+        {% if page_obj.has_next %}
+            <a class="page-btn"
+               href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ page_obj.next_page_number }}">
+                {% trans "Next" %} ›
+            </a>
+        {% else %}
+            <span class="page-btn disabled">{% trans "Next" %} ›</span>
+        {% endif %}
+    </nav>
+    {% endif %}
 
 {% else %}
-    <!-- Default grouped layout (All OR Available filter) -->
+    {# DEFAULT MODE -> CATEGORY ROWS #}
 
     <h3 class="section-title">{% trans "Cafes & Bars" %}</h3>
     <div class="venue-scroll-container">
@@ -123,7 +159,7 @@
                 </a>
             {% endif %}
         {% empty %}
-        <p>{% trans "No cafes or bars available." %}</p>
+            <p>{% trans "No cafes or bars available." %}</p>
         {% endfor %}
     </div>
 
@@ -136,7 +172,7 @@
                 </a>
             {% endif %}
         {% empty %}
-        <p>{% trans "No restaurants available." %}</p>
+            <p>{% trans "No restaurants available." %}</p>
         {% endfor %}
     </div>
 
@@ -149,7 +185,7 @@
                 </a>
             {% endif %}
         {% empty %}
-        <p>{% trans "No beach bars available." %}</p>
+            <p>{% trans "No beach bars available." %}</p>
         {% endfor %}
     </div>
 
@@ -162,7 +198,7 @@
                 </a>
             {% endif %}
         {% empty %}
-        <p>{% trans "No other venues available." %}</p>
+            <p>{% trans "No other venues available." %}</p>
         {% endfor %}
     </div>
 {% endif %}
@@ -191,4 +227,5 @@ document.addEventListener('DOMContentLoaded', function () {
     observer.observe(stickyWrapper);
 });
 </script>
+<div class="page-container">
 {% endblock %}
