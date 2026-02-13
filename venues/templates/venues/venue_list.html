@@ -22,8 +22,7 @@
             <select name="kind" id="venue_type" onchange="this.form.submit()">
                 <option value="">{% trans "All Venues" %}</option>
                 <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>{% trans "Restaurants" %}</option>
-                <option value="cafe" {% if selected_kind == "cafe" %}selected{% endif %}>{% trans "Cafes" %}</option>
-                <option value="bar" {% if selected_kind == "bar" %}selected{% endif %}>{% trans "Bars" %}</option>
+                <option value="cafe" {% if selected_kind == "cafe" or selected_kind == "bar" %}selected{% endif %}>{% trans "Cafes & Bars" %}</option>
                 <option value="beach_bar" {% if selected_kind == "beach_bar" %}selected{% endif %}>{% trans "Beach Bars" %}</option>
                 <option value="other" {% if selected_kind == "other" %}selected{% endif %}>{% trans "Other" %}</option>
             </select>
