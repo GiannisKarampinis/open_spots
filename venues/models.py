@@ -222,7 +222,8 @@ class Reservation(models.Model):
     
     user                = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reservations') # required by default
     venue               = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='reservations') # required by default
-    name                = models.CharField(max_length=100)          # required by default
+    firstname           = models.CharField(max_length=150)          # required by default
+    lastname            = models.CharField(max_length=150)          # required by default
     email               = models.EmailField()                       # required by default
     phone               = models.CharField(max_length=20)           # required by default
     date                = models.DateField()                        # required by default

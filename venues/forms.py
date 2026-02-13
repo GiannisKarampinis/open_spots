@@ -17,11 +17,12 @@ class ReservationForm(forms.ModelForm): # Our Reservation model sets some fields
     class Meta:
         model = Reservation
         fields = [
-            'name', 'email', 'phone', 'date', 'time',
+            'firstname', 'lastname', 'email', 'phone', 'date', 'time',
             'guests', 'special_requests', 'allergies', 'comments'
         ]
         labels = {
-            'name':             _("Name"),
+            'firstname':        _("First name"),
+            'lastname':         _("Last name"),
             'email':            _("Email"),
             'phone':            _("Phone"),
             'date':             _("Date"),
@@ -31,7 +32,8 @@ class ReservationForm(forms.ModelForm): # Our Reservation model sets some fields
             'comments':         _("Comments"),
         }
         widgets = {
-            'name':             forms.TextInput(attrs={'class': 'form-control'}),
+            'firstname':        forms.TextInput(attrs={'class': 'form-control'}),
+            'lastname':         forms.TextInput(attrs={'class': 'form-control'}),
             'email':            forms.EmailInput(attrs={'class': 'form-control'}),
             'phone':            forms.TextInput(attrs={'class': 'form-control'}),
             'date':             forms.DateInput(attrs={

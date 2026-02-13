@@ -173,8 +173,12 @@
             <!-- STEP 1: Personal Info -->
             <div class="res-step active" data-step="1">
                 <h3>Your Information</h3>
-                {{ form.name.label_tag }}  
-                {{ form.name }}
+                {{ form.firstname.label_tag }}  
+                {{ form.firstname }}
+                {{ form.firstname.errors }}
+
+                {{ form.lastname.label_tag }}
+                {{ form.lastname}}
                 {{ form.name.errors }}
 
                 {{ form.email.label_tag }}
