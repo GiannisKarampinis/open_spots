@@ -97,9 +97,8 @@ def apply_venue(request):
                     is_active=False,
                     email_verified=True,
                     unverified_email=None,
-                    # FIXME: Are there those info while creating a new user?
-                    # first_name=first_name,
-                    # last_name=last_name,
+                    firstname=first_name,
+                    lastname=last_name,
                 )
 
                 user.set_password(password)
