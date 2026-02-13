@@ -31,6 +31,8 @@ services:
       - DATABASE_HOST=db
       - PYTHONUNBUFFERED=1
       - DJANGO_RUNNING_IN_DOCKER=1
+    env_file:
+      - ./env
 
   redis:
     image: redis:7

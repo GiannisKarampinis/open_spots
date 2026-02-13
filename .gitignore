@@ -1,3 +1,4 @@
+*.yml
 *.pyc
 __pycache__/
 *.log
@@ -9,4 +10,7 @@ staticfiles/*
 node_modules
 *.patch
 media/
+env
+migrations/
+
 

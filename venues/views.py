@@ -215,8 +215,7 @@ def venue_detail(request, pk):
         
     venue = get_object_or_404(Venue, pk=pk)
     
-    # --- Log visit ---
-    log_venue_visit(venue, request) 
+    log_venue_visit(venue, request) #FIXME: If an owner accesses it's own venue, this shouldn't be counted!
 
     # --- Description split ---
     DESC_PREVIEW_CHARS = 180

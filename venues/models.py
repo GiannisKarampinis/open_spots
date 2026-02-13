@@ -220,23 +220,23 @@ class Reservation(models.Model):
         ('other',       'Other'),
     ]
     
-    user            = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
-    venue           = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='reservations')
-    name            = models.CharField(max_length=100)
-    email           = models.EmailField()
-    phone           = models.CharField(max_length=20)
-    date            = models.DateField()
-    time            = models.TimeField()
-    guests          = models.PositiveIntegerField()
-    status          = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    arrival_status  = models.CharField(max_length=20, choices=ARRIVAL_STATUS_CHOICES, default='pending')
-    table           = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True)
-    updated_at      = models.DateTimeField(auto_now=True)
-    created_at      = models.DateTimeField(auto_now_add=True)
-    comments        = models.TextField(blank=True, null=True)
-    special_requests = models.CharField(max_length=20, choices=SPECIAL_REQUESTS_CHOICES, default='none')
-    allergies       = models.TextField(blank=True, null=True)
-    objects         = ReservationManager()
+    user                = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reservations') # required by default
+    venue               = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='reservations') # required by default
+    name                = models.CharField(max_length=100)          # required by default
+    email               = models.EmailField()                       # required by default
+    phone               = models.CharField(max_length=20)           # required by default
+    date                = models.DateField()                        # required by default
+    time                = models.TimeField()                        # required by default
+    guests              = models.PositiveIntegerField()             # required by default
+    status              = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    arrival_status      = models.CharField(max_length=20, choices=ARRIVAL_STATUS_CHOICES, default='pending')
+    table               = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True)
+    updated_at          = models.DateTimeField(auto_now=True)
+    created_at          = models.DateTimeField(auto_now_add=True)
+    comments            = models.TextField(blank=True, null=True)   # optional
+    special_requests    = models.CharField(max_length=20, choices=SPECIAL_REQUESTS_CHOICES, default='none') 
+    allergies           = models.TextField(blank=True, null=True)   # optional
+    objects             = ReservationManager() 
 
     def __str__(self):
         return f"{self.full_name} - {self.date} at {self.time} ({self.venue.name})"

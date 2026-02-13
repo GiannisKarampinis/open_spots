@@ -8,13 +8,11 @@ from .models import Review
 
 
 
-class ReservationForm(forms.ModelForm):
+class ReservationForm(forms.ModelForm): # Our Reservation model sets some fields required (no blank=True for name, email, phone, date, time, guests, venue)
+                                        # ReservationForm is a ModelForm and we include those fields in Meta fields, Django will set them as required=True.
 
-    time = forms.ChoiceField(
-        choices=generate_time_choices(),
-        widget=forms.Select(),
-        label=_("Time")
-    )
+    # FIXME: We want an argument for how dense will be the splitting and more for ending and starting time of the day(s) or globally
+    time = forms.ChoiceField(choices=generate_time_choices(), widget=forms.Select(), label=_("Time"))
 
     class Meta:
         model = Reservation
@@ -23,14 +21,14 @@ class ReservationForm(forms.ModelForm):
             'guests', 'special_requests', 'allergies', 'comments'
         ]
         labels = {
-            'name': _("Name"),
-            'email': _("Email"),
-            'phone': _("Phone"),
-            'date': _("Date"),
-            'guests': _("Number of guests"),
+            'name':             _("Name"),
+            'email':            _("Email"),
+            'phone':            _("Phone"),
+            'date':             _("Date"),
+            'guests':           _("Number of guests"),
             'special_requests': _("Special requests"),
-            'allergies': _("Allergies"),
-            'comments': _("Comments"),
+            'allergies':        _("Allergies"),
+            'comments':         _("Comments"),
         }
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
