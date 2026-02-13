@@ -7,6 +7,8 @@ class CustomUser(AbstractUser):
         ('venue_admin', 'Venue Admin'),
     )
 
+    firstname          = models.CharField(max_length=30, blank=True)
+    lastname           = models.CharField(max_length=30, blank=True)
     user_type           = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='customer')
     phone_number        = models.CharField(max_length=20, blank=True, null=True)
     email_verified      = models.BooleanField(default=False)

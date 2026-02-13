@@ -32,7 +32,7 @@ services:
       - PYTHONUNBUFFERED=1
       - DJANGO_RUNNING_IN_DOCKER=1
     env_file:
-      - ./env
+      - ./.env
 
   redis:
     image: redis:7

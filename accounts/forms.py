@@ -9,8 +9,10 @@ from django.contrib.auth        import password_validation
 class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'phone_number', 'password1', 'password2')
+        fields = ('firstname', 'lastname', 'username', 'email', 'phone_number', 'password1', 'password2')
         labels = {
+            'firstname':    _("First name"),
+            'lastname':     _("Last name"),
             'username':     _("Username"),
             'email':        _("Email"),
             'phone_number': _("Phone number"),
