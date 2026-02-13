@@ -136,51 +136,53 @@ def apply_venue(request):
 
 ###########################################################################################
 def venue_list(request):
-    # FIXME: Risk of unapproved venues showing up?
-    # What happens in venues that are not approved yet?
-    # Every venue must have is_approved=True to be shown here.
-    # So no need to filter again.
-    
     VALID_KINDS         = [k[0] for k in Venue.VENUE_TYPES]
     VALID_AVAILABILITY  = ['available', 'full']
     
     kind = request.GET.get("kind")    
     if kind not in VALID_KINDS:
-        # avoids weird string showing up in headers
         kind = None
-    
+
     availability = request.GET.get("availability")
     if availability not in VALID_AVAILABILITY:
-        # avoids weird string showing up in headers
         availability = None
 
     venues = Venue.objects.all()
 
+    # Kind filtering (support cafes+bars grouping)
     if kind:
-        venues = venues.filter(kind = kind)
-        
+        if kind == "cafe":
+            venues = venues.filter(kind__in=["cafe", "bar"])
+        else:
+            venues = venues.filter(kind=kind)
+
+    # Availability filtering
     if availability == "available":
         venues = venues.filter(is_full=False)
     elif availability == "full":
         venues = venues.filter(is_full=True)
 
+    # Ordering (optional but recommended)
+    venues = venues.order_by("name")
+
+    # If a kind is selected, show more items (grid mode)
+    GRID_LIMIT = 20
+    DEFAULT_LIMIT = 200  # you can keep high since default layout is grouped anyway
+    if kind:
+        venues = venues[:GRID_LIMIT]
+    else:
+        venues = venues[:DEFAULT_LIMIT]
+
     # Prepare data for map
     venue_data = [
-        {
-            "name":     v.name,
-            "lat":      v.latitude,
-            "lng":      v.longitude,
-            "id":       v.id,
-        }
-        for v in venues if v.latitude and v.longitude
+        {"name": v.name, "lat": v.latitude, "lng": v.longitude, "id": v.id}
+        for v in venues
+        if v.latitude and v.longitude
     ]
 
     # Default: no venue_id
     venue_id = None
     if request.user.is_authenticated and request.user.user_type == "venue_admin":
-        # If each admin has only one venue:
-        # If an admin has multiple venues, you’re arbitrarily picking the first. Not a security vulnerability, but it can cause confusing behavior (“why am I redirected to the wrong venue?”).
-        # If you plan “one venue per admin”, enforce it in the model (UniqueConstraint) or at least handle multiple.
         venue = Venue.objects.filter(owner=request.user).first()
         if venue:
             venue_id = venue.id
@@ -190,23 +192,22 @@ def venue_list(request):
         upcoming_reservation = (
             Reservation.objects
             .filter(user=request.user)
-            .exclude(status='cancelled')
-            .select_related('venue')
-            .order_by('date', 'time')
-            .upcoming()   # <- DB-level filter using the new QuerySet method
+            .exclude(status="cancelled")
+            .select_related("venue")
+            .order_by("date", "time")
+            .upcoming()
             .first()
         )
 
     return render(request, "venues/venue_list.html", {
-        "venues":                   venues,
-        "venue_data":               venue_data,
-        # Those data are not needed right now, but could be useful later
-        # "venue_data_json":          mark_safe(json.dumps(venue_data, cls=DjangoJSONEncoder)),
-        "selected_kind":            kind,
-        "selected_availability":    availability,
-        "venue_id":                 venue_id,
-        "upcoming_reservation":     upcoming_reservation,
+        "venues": venues,
+        "venue_data": venue_data,
+        "selected_kind": kind,
+        "selected_availability": availability,
+        "venue_id": venue_id,
+        "upcoming_reservation": upcoming_reservation,
     })
+
 
 ###########################################################################################
 

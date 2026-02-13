@@ -16,6 +16,46 @@
     -webkit-overflow-scrolling: touch;
 }
 
+/* ===========================
+   GRID MODE (filtered kind)
+   =========================== */
+
+.venue-scroll-container.grid-mode {
+    /* Turn the horizontal strip into a responsive grid */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+
+    overflow: visible;          /* important: no horizontal scroll */
+    overflow-x: visible;
+    overflow-y: visible;
+
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* In grid mode, the anchor should fill its grid cell */
+.venue-scroll-container.grid-mode .venue-link {
+    width: 100%;
+    max-width: none;
+}
+
+/* Allow the card to use full width inside the grid cell */
+.venue-scroll-container.grid-mode .venue-card {
+    max-width: none;
+}
+
+/* Optional: slightly larger tiles on wider screens */
+@media (min-width: 900px) {
+    .venue-scroll-container.grid-mode {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+
 /* Custom scrollbar */
 .venue-scroll-container::-webkit-scrollbar {
     height: 8px;

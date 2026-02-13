@@ -22,7 +22,12 @@
             <select name="kind" id="venue_type" onchange="this.form.submit()">
                 <option value="">{% trans "All Venues" %}</option>
                 <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>{% trans "Restaurants" %}</option>
-                <option value="cafe" {% if selected_kind == "cafe" or selected_kind == "bar" %}selected{% endif %}>{% trans "Cafes & Bars" %}</option>
+
+                <!-- NOTE: selecting cafe represents cafes+bars -->
+                <option value="cafe" {% if selected_kind == "cafe" or selected_kind == "bar" %}selected{% endif %}>
+                    {% trans "Cafes & Bars" %}
+                </option>
+
                 <option value="beach_bar" {% if selected_kind == "beach_bar" %}selected{% endif %}>{% trans "Beach Bars" %}</option>
                 <option value="other" {% if selected_kind == "other" %}selected{% endif %}>{% trans "Other" %}</option>
             </select>
@@ -37,11 +42,11 @@
             {% if selected_kind or selected_availability %}
             <a href="{% url 'venue_list' %}" class="clear-filter-btn">{% trans "Clear" %}</a>
             {% endif %}
-        </div> 
+        </div>
     </div>
 </form>
 
-<!--Recent Reservation-->
+<!-- Recent Reservation -->
 {% if upcoming_reservation %}
 <div class="quick-reservation-card">
     <h3>{% trans "Your Next Reservation" %}</h3>
@@ -52,6 +57,7 @@
             {% trans "Table" %}: {{ upcoming_reservation.table_number }}
         {% endif %}
     </div>
+
     {% with first_img=upcoming_reservation.venue.get_first_image %}
         <img
             class="venue-image"
@@ -59,6 +65,7 @@
             alt="{{ upcoming_reservation.venue.name }}"
             onerror="this.style.display='none'">
     {% endwith %}
+
     <div class="reservation-actions">
         <a href="{% url 'edit_reservation' upcoming_reservation.id %}" class="edit-btn">
             <i class="fa-solid fa-pen-to-square"></i> {% trans "Edit" %}
@@ -73,10 +80,16 @@
 <!-- Venue sections -->
 {% if selected_kind %}
     <h3 class="section-title">
-        {{ selected_kind|title }} {% trans "Venues" %}
+        {% if selected_kind == "cafe" or selected_kind == "bar" %}
+            {% trans "Cafes & Bars" %}
+        {% else %}
+            {{ selected_kind|title }} {% trans "Venues" %}
+        {% endif %}
         {% if selected_availability %} - {{ selected_availability|title }}{% endif %}
     </h3>
-    <div class="venue-scroll-container">
+
+    <!-- GRID MODE: expands vertically -->
+    <div class="venue-scroll-container grid-mode">
         {% for venue in venues %}
         <a href="{% url 'venue_detail' venue.id %}" class="venue-link">
             {% include "venues/venue_cards.html" with venue=venue %}
@@ -157,13 +170,17 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const scrollContainers = document.querySelectorAll('.venue-scroll-container');
+
     scrollContainers.forEach(function(scrollContainer) {
-        scrollContainer.addEventListener('wheel', function (e) {
-            if (e.deltaY !== 0 && scrollContainer.scrollWidth > scrollContainer.clientWidth) {
-                e.preventDefault();
-                scrollContainer.scrollLeft += e.deltaY;
-            }
-        }, { passive: false });
+        // Only apply horizontal-wheel behavior to horizontal rows (NOT grid)
+        if (!scrollContainer.classList.contains('grid-mode')) {
+            scrollContainer.addEventListener('wheel', function (e) {
+                if (e.deltaY !== 0 && scrollContainer.scrollWidth > scrollContainer.clientWidth) {
+                    e.preventDefault();
+                    scrollContainer.scrollLeft += e.deltaY;
+                }
+            }, { passive: false });
+        }
     });
 
     const stickyWrapper = document.querySelector('.sticky-wrapper');
