@@ -276,7 +276,9 @@ class Reservation(models.Model):
         
     @property
     def full_name(self):
-        return f"{self.name}" 
+        first = self.firstname or ""
+        last  = self.lastname or ""
+        return f"{first} {last}".strip() or None 
 
     class Meta:
         ordering = ['-updated_at', '-created_at', 'time']
