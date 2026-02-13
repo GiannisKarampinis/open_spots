@@ -291,6 +291,18 @@ def venue_detail(request, pk):
 
                 except IntegrityError:
                     messages.error(request, "You have already submitted a review for this venue.")
+    else:
+        initial = {}
+        if request.user.is_authenticated:
+            initial = {
+                "name": request.user.get_full_name() or request.user.username,
+                "email": request.user.email,
+                "phone": getattr(request.user, "phone_number", ""),
+            }
+            form = ReservationForm(initial=initial)
+            form.fields["time"].choices = time_choices
+            review_form = ReviewForm()
+    
     return render(
         request,
         "venues/venue_detail.html",
