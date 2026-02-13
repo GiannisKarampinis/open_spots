@@ -85,9 +85,9 @@ def generate_time_choices():
         Returns list of tuples: (time_value, label)
     """
     
-    start               = time(hour=12, minute=0)      # use time directly
-    end                 = time(hour=23, minute=0)
-    delta               = timedelta(minutes=30)
+    start               = time(hour=12, minute=0)       # FIXME: This should be controllable/configurable
+    end                 = time(hour=23, minute=0)       # FIXME: This should be controllable/configurable
+    delta               = timedelta(minutes=30)         # FIXME: This should be controllable/configurable
     current_datetime    = datetime.combine(date.today(), start)
     end_datetime        = datetime.combine(date.today(), end)
     
@@ -326,23 +326,34 @@ def log_venue_visit(venue, request):
     from .models import VenueVisit
 
     """
-        Log a visit. This is small and safe but consider sampling or async insertion in high-traffic sites.
+        Log a visit.
+        Does NOT count visits when the venue owner views their own venue.
     """
+
     try:
         if not request.session.session_key:
             request.session.save()
-        VenueVisit.objects.create(
-            venue           =   venue,
-            user            =   request.user if request.user.is_authenticated else None,
-            session_key     =   request.session.session_key,
-            ip_address      =   get_client_ip(request),
-            timestamp       =   now()
-        )
-    except IntegrityError:
-        logger.exception("Database integrity error while logging visit for venue %s", getattr(venue, "id", None))
-    except Exception:
-        logger.exception("Failed to log venue visit for venue %s", getattr(venue, "id", None))
 
+        user = request.user if request.user.is_authenticated else None
+
+        # Skip owner viewing their own venue
+        if user and venue.owner_id and venue.owner_id == user.id:
+            return
+
+        VenueVisit.objects.create(venue=venue, user=user, session_key=request.session.session_key,
+                                  ip_address=get_client_ip(request), timestamp=now()
+        )
+
+    except IntegrityError:
+        logger.exception(
+            "Database integrity error while logging visit for venue %s",
+            getattr(venue, "id", None)
+        )
+    except Exception:
+        logger.exception(
+            "Failed to log venue visit for venue %s",
+            getattr(venue, "id", None)
+        )
     
 ###########################################################################################
 

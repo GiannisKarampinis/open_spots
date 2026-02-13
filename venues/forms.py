@@ -31,25 +31,18 @@ class ReservationForm(forms.ModelForm): # Our Reservation model sets some fields
             'comments':         _("Comments"),
         }
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'date': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date',
-                'min': now().date().isoformat()
+            'name':             forms.TextInput(attrs={'class': 'form-control'}),
+            'email':            forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone':            forms.TextInput(attrs={'class': 'form-control'}),
+            'date':             forms.DateInput(attrs={
+                'class':        'form-control',
+                'type':         'date',
+                'min':          now().date().isoformat()
             }),
-            'time': forms.TimeInput(attrs={
-                'class': 'form-control',
-                'type': 'time',
-                'step': '900',
-                'min': '06:00',
-                'max': '04:00'
-            }),
-            'guests': forms.NumberInput(attrs={'class': 'form-control'}),
+            'guests':           forms.NumberInput(attrs={'class': 'form-control'}),
             'special_requests': forms.Select(attrs={'class': 'form-control'}),
-            'allergies': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
-            'comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'allergies':        forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'comments':         forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
 
     def clean_time(self):
@@ -57,10 +50,13 @@ class ReservationForm(forms.ModelForm): # Our Reservation model sets some fields
 
         # Convert "23:00" → datetime.time(23, 0)
         if isinstance(selected_time, str):
-            selected_time = datetime.strptime(selected_time, "%H:%M").time()
+            try:
+                selected_time = datetime.strptime(selected_time, "%H:%M").time()
+            except ValueError:
+                raise forms.ValidationError(_("Invalid time format. Please use HH:MM."))
 
-        valid_times = dict(generate_time_choices())
-        if selected_time not in valid_times:
+        valid_times = {k for k, _ in self.fields["time"].choices}
+        if selected_time.strftime("%H:%M") not in valid_times:
             raise forms.ValidationError(_("Invalid reservation time selected."))
 
         return selected_time

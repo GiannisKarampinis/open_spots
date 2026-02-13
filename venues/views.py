@@ -10,7 +10,7 @@ from datetime                        import timedelta, datetime
 from django.utils                    import timezone
 from django.http                     import HttpResponse, Http404, JsonResponse, HttpResponseForbidden
 from django.template.loader          import render_to_string
-from django.db                       import transaction
+from django.db                       import transaction, IntegrityError
 from django.urls                     import reverse
 from .models                         import Venue, VenueUpdateRequest, VenueVisit, Reservation, VenueImage, VenueMenuImage
 from emails_manager.models           import VenueEmailVerificationCode
@@ -215,8 +215,8 @@ def venue_detail(request, pk):
         
     venue = get_object_or_404(Venue, pk=pk)
     
-    log_venue_visit(venue, request) #FIXME: If an owner accesses it's own venue, this shouldn't be counted!
-
+    log_venue_visit(venue, request)
+    
     # --- Description split ---
     DESC_PREVIEW_CHARS = 180
     desc = venue.description or ""
@@ -268,14 +268,15 @@ def venue_detail(request, pk):
                 if venue.has_overlapping_reservation(reservation.date, reservation.time, user=request.user):
                     messages.error(request, "You already have a reservation for this time.")
                 else:
-                    reservation.save(editor=request.user)
-                    return render(
-                        request,
-                    "venues/reservation_pending.html",
-                    {"venue": venue, "reservation": reservation},
-                )
-            else:
-                print("FORM ERRORS:", form.errors)
+                    try:
+                        with transaction.atomic():
+                            reservation.save(editor=request.user)
+                    except IntegrityError:
+                        messages.error(request, "You already have a reservation for this time.")
+                        return redirect("venue_detail", pk=pk)
+                            
+                    return render(request, "venues/reservation_pending.html", {"venue": venue, "reservation": reservation})
+
         elif "submit_review" in request.POST:
             review_form = ReviewForm(request.POST)
 
@@ -291,7 +292,14 @@ def venue_detail(request, pk):
 
                 except IntegrityError:
                     messages.error(request, "You have already submitted a review for this venue.")
+        else:
+            # Unknown POST: show page normally
+            form = ReservationForm()
+            form.fields["time"].choices = time_choices
     else:
+        # --------------------------------------
+        # Get prefill from user
+        # --------------------------------------
         initial = {}
         if request.user.is_authenticated:
             initial = {
