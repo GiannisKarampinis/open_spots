@@ -89,7 +89,7 @@
 {% endif %}
 
 <!-- Venue sections -->
-{% if selected_kind or selected_availability %}
+{% if selected_kind %}
     {# FILTERED MODE -> GRID + PAGINATION #}
     <h3 class="section-title">
         {% if selected_kind %}
@@ -101,7 +101,6 @@
         {% else %}
             {% trans "Venues" %}
         {% endif %}
-        {% if selected_availability %} - {{ selected_availability|title }}{% endif %}
     </h3>
 
     <div class="venue-scroll-container grid-mode">
@@ -149,7 +148,6 @@
 
 {% else %}
     {# DEFAULT MODE -> CATEGORY ROWS #}
-
     <h3 class="section-title">{% trans "Cafes & Bars" %}</h3>
     <div class="venue-scroll-container">
         {% for venue in venues %}

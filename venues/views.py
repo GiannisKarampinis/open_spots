@@ -163,7 +163,7 @@ def venue_list(request):
     venues_qs = venues_qs.order_by("name")
 
     # Grid mode if ANY filter is active (kind or availability)
-    grid_mode = bool(kind or availability)
+    grid_mode = bool(kind)
 
     # Pagination: always 20 per page (as requested)
     paginator = Paginator(venues_qs, 20)
