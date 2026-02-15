@@ -81,8 +81,16 @@
     }
 }
 
+/* Desktop: 3 columns -> container width 1264px */
+@media (min-width: 980px) and (max-width: 1349px) {
+    .venue-scroll-container.grid-mode {
+        width: 948px;
+        grid-template-columns: repeat(3, 300px);
+    }
+}
+
 /* Tablet: 2 columns -> container width 632px */
-@media (min-width: 700px) and (max-width: 1349px) {
+@media (min-width: 700px) and (max-width: 979px) {
     .venue-scroll-container.grid-mode {
         width: 632px;
         grid-template-columns: repeat(2, 300px);
