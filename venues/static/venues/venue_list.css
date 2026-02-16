@@ -279,6 +279,19 @@
     user-select: none;
 }
 
+.section-title.grid-mode {
+    font-family: var(--global-font-family);
+    font-weight: 600;
+    font-size: clamp(1.1rem, 4vw, 1.6rem);
+    color: var(--text-color);
+    text-align: center;
+    margin: 1.5rem 0 0.75rem 0;
+    padding-left: 0.5rem;
+    border-left: none;
+    letter-spacing: 0.05em;
+    user-select: none;
+}
+
 /* --- Main page heading --- */
 h2 {
     font-family: var(--global-font-family);
