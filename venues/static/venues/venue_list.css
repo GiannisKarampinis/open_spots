@@ -461,7 +461,7 @@ h2 {
 }
 
 /* --- Mobile --- */
-@media (max-width: 600px) {
+@media (max-width: 400px) {
     /* No more padding-right hack needed (it was only for absolute image) */
     .quick-reservation-card {
         max-width: 100%;
