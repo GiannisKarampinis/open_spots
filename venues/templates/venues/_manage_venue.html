@@ -5,7 +5,7 @@
     <form method="POST" enctype="multipart/form-data" class="venue-form-card" action="{% url 'submit_venue_update' venue.id %}">
         {% csrf_token %}
 
-      <div class="section-card mb-4">
+      <div class="section-card mb-4 sensitive-contact-section">
         <div class="section-header">
           <h5 class="mb-0">{% trans "Sensitive & Contact Information" %}</h5>
         </div>
@@ -118,17 +118,73 @@
             <input type="file" name="menu_images" id="menu_images" multiple hidden>
           </label>
         </div>
-
-        {% comment %} <button type="submit" class="btn-edit-status">{% trans "Submit for Approval" %}</button> {% endcomment %}
-        <button type="submit" class="btn-edit-status">
-          {% if settings.VENUE_UPDATES_REQUIRE_APPROVAL %}
-              {% trans "Submit for Approval" %}
-          {% else %}
-              {% trans "Save" %}
-          {% endif %}
-      </button>
       </div>
     </div>
+
+    <div class="section-card mb-4">
+      <div class="section-header">
+        <h5 class="mb-0">{% trans "Time Schedule Management" %}</h5>
+      </div>
+
+      <div class="section-body show">
+
+        {{ working_day_formset.management_form }}
+
+        {% if working_day_formset.non_form_errors %}
+          <div class="error">{{ working_day_formset.non_form_errors }}</div>
+        {% endif %}
+
+        <table class="working-hours-table">
+          <thead>
+            <tr>
+              <th>{% trans "Day" %}</th>
+              <th>{% trans "Closed" %}</th>
+              <th>{% trans "Opens" %}</th>
+              <th>{% trans "Closes" %}</th>
+              <th>{% trans "Next day" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for form in working_day_formset %}
+              <tr>
+                {{ form.id }}
+                {{ form.weekday }}
+
+                <td>{{ form.instance.get_weekday_display }}</td>
+
+                <td>{{ form.is_closed }}</td>
+
+                <td>
+                  {{ form.open_time }}
+                  {{ form.open_time.errors }}
+                </td>
+
+                <td>
+                  {{ form.close_time }}
+                  {{ form.close_time.errors }}
+                </td>
+
+                <td>{{ form.closes_next_day }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <small class="text-muted">
+          {% trans "Set weekly opening hours. Use 'Next day' for venues that close after midnight." %}
+        </small>
+
+      </div>
+    </div>
+
+    <button type="submit" class="btn-edit-status">
+        {% if settings.VENUE_UPDATES_REQUIRE_APPROVAL %}
+            {% trans "Submit for Approval" %}
+        {% else %}
+            {% trans "Save" %}
+        {% endif %}
+    </button>
+
   </form>
 </div>
 
@@ -294,4 +350,106 @@
     pointer-events: none;
 }
 
+.working-hours-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.working-hours-table th,
+.working-hours-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.working-hours-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+/* Ensure native time picker is visible and looks normal */
+.working-hours-table input[type="time"] {
+  appearance: auto;
+  -webkit-appearance: auto;
+  min-height: 36px;
+  background-color: #fff;
+}
+
+/* Re-enable the clock icon in Chromium/Safari if a reset hides it */
+.working-hours-table input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  display: block;
+  cursor: pointer;
+}
+
+/* Center Closed / Opens / Closes / Next Day columns */
+.working-hours-table th:nth-child(2),
+.working-hours-table th:nth-child(3),
+.working-hours-table th:nth-child(4),
+.working-hours-table th:nth-child(5),
+
+.working-hours-table td:nth-child(4),
+.working-hours-table td:nth-child(5),
+.working-hours-table td:nth-child(6),
+.working-hours-table td:nth-child(7) {
+  text-align: center;
+  vertical-align: middle;
+}
+
 </style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".working-hours-table tr").forEach(row => {
+    const closed = row.querySelector('input[type="checkbox"]');
+    if (!closed) return;
+
+    const times = row.querySelectorAll('input[type="time"]');
+
+    function toggle() {
+      times.forEach(t => t.disabled = closed.checked);
+    }
+
+    closed.addEventListener("change", toggle);
+    toggle();
+  });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  function snapTo30Minutes(input) {
+    if (!input.value) return;
+
+    const parts = input.value.split(":");
+    if (parts.length < 2) return;
+
+    const hh = parseInt(parts[0], 10);
+    const mm = parseInt(parts[1], 10);
+
+    if (Number.isNaN(hh) || Number.isNaN(mm)) return;
+
+    let total = hh * 60 + mm;
+
+    // snap to nearest 30 minutes
+    total = Math.round(total / 30) * 30;
+
+    // wrap within 0..1439
+    total = (total + 1440) % 1440;
+
+    const nh = String(Math.floor(total / 60)).padStart(2, "0");
+    const nm = String(total % 60).padStart(2, "0");
+
+    input.value = `${nh}:${nm}`;
+  }
+
+  // Ensure step attribute exists even if widget missed it
+  document.querySelectorAll(".working-hours-table input[type='time']").forEach(input => {
+    input.setAttribute("step", "1800");
+
+    // When user picks a value or types, snap it
+    input.addEventListener("change", () => snapTo30Minutes(input));
+    input.addEventListener("blur", () => snapTo30Minutes(input));
+  });
+});
+</script>

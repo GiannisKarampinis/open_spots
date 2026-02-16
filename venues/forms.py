@@ -5,6 +5,8 @@ from django.utils.timezone import now
 from datetime import datetime
 from django.utils.translation import gettext_lazy as _
 from .models import Review
+from .models import WorkingDay
+from django.forms import modelformset_factory
 
 
 
@@ -160,3 +162,20 @@ class ReviewForm(forms.ModelForm):
             "rating": forms.NumberInput(attrs={"min": 1, "max": 5}),
             "comment": forms.Textarea(attrs={"rows": 3, "placeholder": "Share your experience..."}),
         }
+
+class WorkingDayForm(forms.ModelForm):
+    class Meta:
+        model   = WorkingDay
+        fields  = ["weekday", "is_closed", "open_time", "close_time", "closes_next_day"]
+        widgets = {
+            "weekday":      forms.HiddenInput(),
+            "open_time":    forms.TimeInput(attrs={"type": "time", "step": 1800}),
+            "close_time":   forms.TimeInput(attrs={"type": "time", "step": 1800}),
+        }
+
+WorkingDayFormSet = modelformset_factory(
+    WorkingDay,
+    form=WorkingDayForm,
+    extra=0,
+    can_delete=False,
+)

@@ -539,9 +539,9 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 }
 
 /* Input fields, textarea, select */
-#manage-venue .venue-form-card input,
-#manage-venue .venue-form-card textarea,
-#manage-venue .venue-form-card select {
+#manage-venue .sensitive-contact-section input,
+#manage-venue .sensitive-contact-section textarea,
+#manage-venue .sensitive-contact-section select {
     width: 100%;
     padding: 10px 12px;
     border-radius: 6px;

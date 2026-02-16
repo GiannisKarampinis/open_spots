@@ -16,6 +16,7 @@ from django.contrib.contenttypes.models import ContentType
 #from emails_manager.utils               import send_verification_code
 from django.db.models                   import JSONField  # Django 3.1+ has models.JSONField; import whichever is appropriate
 from .utils                             import get_coords_nominatim, convert_image_to_webp
+from django.core.exceptions             import ValidationError
 
 
 ###########################################################################################
@@ -79,35 +80,184 @@ class Venue(models.Model):
             marked_for_deletion = False
         ).order_by("order").first()
     
+    @staticmethod
+    def _generate_slot_datetimes(date, open_time, close_time, closes_next_day: bool, step_minutes: int = 30):
+        """
+        Returns list of datetimes for each slot start.
+        If closes_next_day=True, end_dt is on the next calendar day.
+        """
+        start_dt = datetime.combine(date, open_time)
+        end_date = date + timedelta(days=1) if closes_next_day else date
+        end_dt   = datetime.combine(end_date, close_time)
+
+        slots = []
+        cur = start_dt
+        while cur < end_dt:
+            slots.append(cur)
+            cur += timedelta(minutes=step_minutes)
+        return slots
+
+    @staticmethod
+    def _offset_from_open(open_dt: datetime, slot_dt: datetime, step_minutes: int = 30):
+        """
+        Returns integer offset if slot_dt aligns with open_dt by step_minutes.
+        offset=0 -> open_dt, offset=1 -> open_dt+30min, etc.
+        Works across midnight because these are full datetimes.
+        """
+        delta = slot_dt - open_dt
+        minutes = int(delta.total_seconds() // 60)
+        if minutes < 0:
+            return None
+        if minutes % step_minutes != 0:
+            return None
+        return minutes // step_minutes    # In your Venue model
+
     def get_available_time_slots(self, date):
         """
-        Returns available 15-minute time slots for the selected date.
-        Removes slots already reserved for this venue on that date.
-        Covers 06:00 → 04:00 next day (22 hours total).
+        Returns computed 30-min slots for the selected *business date* (the day the user clicked).
+
+        Uses:
+        - WorkingDay baseline for that weekday (open/close/closed + closes_next_day)
+        - Exceptions stored as (date, time) on the *actual calendar date* of each slot
+        - Reservations stored as (date, time) on the *actual calendar date* of each slot
+
+        Returns a list of dicts:
+        [
+            {
+            "time": time_obj,
+            "slot_date": date_obj,          # actual calendar date of the slot
+            "is_next_day": bool,            # slot_date != business date
+            "offset": int,                  # 0-based from business opening
+            "is_blocked": bool,
+            "is_reserved": bool,
+            "is_available": bool,
+            },
+            ...
+        ]
         """
+        weekday = date.weekday()
 
-        # Define default operating hours
-        start_time = time(6, 0)   # 06:00
-        end_time   = time(4, 0)   # 04:00 (next day)
+        wd = self.working_days.filter(weekday=weekday).first()
+        if not wd or wd.is_closed:
+            return []
 
-        start_dt = datetime.combine(date, start_time)
-        end_dt   = datetime.combine(date + timedelta(days=1), end_time)
+        slot_dts = self._generate_slot_datetimes(
+            date=date,
+            open_time=wd.open_time,
+            close_time=wd.close_time,
+            closes_next_day=wd.closes_next_day,
+            step_minutes=30,
+        )
+        if not slot_dts:
+            return []
 
-        # Generate all 15-minute time slots
-        slots = []
-        current = start_dt
-        while current < end_dt:
-            slots.append(current.time())
-            current += timedelta(minutes=30)
+        open_dt = slot_dts[0]
 
-        # Remove booked slots
-        available = [t for t in slots]
+        # We only need to query reservations/exceptions for the dates that appear in slot_dts
+        relevant_dates = sorted({dt.date() for dt in slot_dts})
 
-        return available
+        # Reservations that collide with any candidate slot
+        reserved_pairs = set(
+            self.reservations
+                .filter(date__in=relevant_dates)
+                .values_list("date", "time")
+        )
+
+        # Exceptions: store as (date, time) — model should be like:
+        #   venue FK, date DateField, time TimeField, unique(venue,date,time)
+        blocked_pairs = set(
+            self.closed_times
+                .filter(date__in=relevant_dates)
+                .values_list("date", "time")
+        )
+
+        results = []
+        for dt in slot_dts:
+            key = (dt.date(), dt.time())
+
+            is_reserved = key in reserved_pairs
+            is_blocked  = key in blocked_pairs
+            is_available = (not is_reserved) and (not is_blocked)
+
+            results.append({
+                "time": dt.time(),
+                "slot_date": dt.date(),
+                "is_next_day": dt.date() != date,
+                "offset": self._offset_from_open(open_dt, dt, step_minutes=30),
+                "is_blocked": is_blocked,
+                "is_reserved": is_reserved,
+                "is_available": is_available,
+            })
+
+        return results
 
     class Meta:
         ordering = ['name']
         
+###########################################################################################
+
+###########################################################################################
+class WorkingDay(models.Model):
+    class Weekday(models.IntegerChoices):
+        MONDAY    = 0, "Monday"
+        TUESDAY   = 1, "Tuesday"
+        WEDNESDAY = 2, "Wednesday"
+        THURSDAY  = 3, "Thursday"
+        FRIDAY    = 4, "Friday"
+        SATURDAY  = 5, "Saturday"
+        SUNDAY    = 6, "Sunday"
+
+    venue           = models.ForeignKey("Venue", on_delete=models.CASCADE, related_name="working_days")
+    weekday         = models.PositiveSmallIntegerField(choices=Weekday.choices)
+    is_closed       = models.BooleanField(default=False)
+    open_time       = models.TimeField(null=True, blank=True)
+    close_time      = models.TimeField(null=True, blank=True)
+    closes_next_day = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["venue", "weekday"], name="uniq_venue_weekday_workingday"),
+        ]
+        ordering = ["weekday"]
+
+    def clean(self):
+        if self.is_closed:
+            if self.open_time or self.close_time:
+                raise ValidationError("If is_closed=True, open_time/close_time must be empty.")
+            return
+
+        if self.open_time is None or self.close_time is None:
+            raise ValidationError("Provide open_time and close_time when is_closed=False.")
+
+        # If not crossing midnight, enforce open < close
+        if not self.closes_next_day and self.open_time >= self.close_time:
+            raise ValidationError("close_time must be after open_time (or set closes_next_day=True).")
+
+        # Enforce 30-min alignment (recommended since your offsets assume 30 mins)
+        for t, label in [(self.open_time, "open_time"), (self.close_time, "close_time")]:
+            if t is not None and t.minute not in (0, 30):
+                raise ValidationError(f"{label} must be aligned to :00 or :30 for 30-min slots.")
+
+    def __str__(self):
+        day = self.get_weekday_display()
+        if self.is_closed:
+            return f"{self.venue.name} - {day}: Closed"
+        suffix = " (+1 day)" if self.closes_next_day else ""
+        return f"{self.venue.name} - {day}: {self.open_time}–{self.close_time}{suffix}"
+
+
+class VenueClosedTime(models.Model):
+    venue = models.ForeignKey("Venue", on_delete=models.CASCADE, related_name="closed_times")
+    date = models.DateField()
+    time = models.TimeField()
+    note = models.CharField(max_length=120, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["venue", "date", "time"], name="uniq_venue_date_time_closedtime")
+        ]
+        ordering = ["date", "time"]
+
 ###########################################################################################
 
 ###########################################################################################

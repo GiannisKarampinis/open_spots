@@ -24,6 +24,7 @@ from django.utils.translation        import gettext as _
 import  json
 import  plotly.graph_objs            as go
 from django.conf                     import settings
+from .forms                          import WorkingDayFormSet
 
 User = get_user_model()
 
@@ -461,8 +462,8 @@ def get_venue_visits_analytics_json(request, venue_id, grouping = 'daily'):
 @login_required
 @venue_admin_required
 def venue_dashboard(request, venue_id):
-    venue   = get_object_or_404(Venue, id=venue_id)
-    now     = timezone.now().date()
+    venue       = get_object_or_404(Venue, id=venue_id)
+    now         = timezone.now().date()
 
     reservations = venue.reservations.all()
     
@@ -487,8 +488,12 @@ def venue_dashboard(request, venue_id):
         # arrival_status='pending'
     ).order_by('date', 'time')
 
-    grouping        = request.GET.get('group', 'daily')
-    analytics_data  = get_venue_visits_analytics_json(request, venue_id = venue_id, grouping = grouping)
+    grouping            = request.GET.get('group', 'daily')
+    analytics_data      = get_venue_visits_analytics_json(request, venue_id = venue_id, grouping = grouping)
+
+    ensure_working_days_exist(venue)
+    working_days_qs     = venue.working_days.order_by("weekday")
+    working_day_formset = WorkingDayFormSet(queryset=working_days_qs)
 
     context = {
         'venue':                    venue,
@@ -497,6 +502,7 @@ def venue_dashboard(request, venue_id):
         'upcoming_reservations':    upcoming_reservations,
         'past_reservations':        past_reservations,
         'arrivals':                 arrivals,
+        'working_day_formset':      working_day_formset,
         **analytics_data,
     }
 
@@ -966,6 +972,47 @@ def submit_venue_update(request, venue_id):
     if not user_can_manage_venue(request.user, venue):
         return HttpResponseForbidden("You do not have permission to manage this venue.")
 
+    ensure_working_days_exist(venue)
+    wd_qs = venue.working_days.order_by("weekday")
+    working_day_formset = WorkingDayFormSet(request.POST, queryset=wd_qs)
+
+    if not working_day_formset.is_valid():
+        # Rebuild the full dashboard context (same as GET)
+        now = timezone.now().date()
+        reservations = venue.reservations.all()
+
+        upcoming_reservations = reservations.filter(
+            date__gte=now,
+            status="pending"
+        ).order_by("date", "time")
+
+        past_reservations = reservations.filter(
+            date__lt=now
+        ).order_by("-date", "-time")
+
+        arrivals = reservations.filter(
+            date__gte=now,
+            status__in=["accepted", "rejected", "cancelled"],
+        ).order_by("date", "time")
+
+        grouping = request.GET.get("group", "daily")
+        analytics_data = get_venue_visits_analytics_json(request, venue_id=venue_id, grouping=grouping)
+
+        context = {
+            "venue": venue,
+            "venue_images": venue.images.filter(approved=True, marked_for_deletion=False).order_by("order"),
+            "menu_images": venue.menu_images.filter(approved=True, marked_for_deletion=False).order_by("order"),
+            "upcoming_reservations": upcoming_reservations,
+            "past_reservations": past_reservations,
+            "arrivals": arrivals,
+            "working_day_formset": working_day_formset,
+            **analytics_data,
+        }
+        return render(request, "venues/venue_dashboard.html", context)
+
+    # Save working days immediately (recommended)
+    working_day_formset.save()
+
     # Collect changes once
     venue_fields = {
         "name": request.POST.get("name"),
@@ -1259,6 +1306,49 @@ def ajax_verify_venue_code(request):
     return JsonResponse({   "ok":       True, 
                             "message":  "Email verified."
                         })
+###########################################################################################
+
+###########################################################################################
+from .models import Venue, WorkingDay
+from .utils  import user_can_manage_venue  # your existing helper
+
+def ensure_working_days_exist(venue):
+    existing = set(venue.working_days.values_list("weekday", flat=True))
+    missing = [
+        WorkingDay(venue=venue, weekday=w, is_closed=True)
+        for w, _ in WorkingDay.Weekday.choices
+        if w not in existing
+    ]
+    if missing:
+        WorkingDay.objects.bulk_create(missing)
+
+
+@login_required
+@transaction.atomic
+@require_POST
+def submit_working_hours(request, venue_id):
+    venue = get_object_or_404(Venue, id=venue_id)
+    if not user_can_manage_venue(request.user, venue):
+        return HttpResponseForbidden("You do not have permission to manage this venue.")
+
+    ensure_working_days_exist(venue)
+
+    qs = venue.working_days.order_by("weekday")
+
+    formset = WorkingDayFormSet(request.POST, queryset=qs)
+    if formset.is_valid():
+        # Attach venue explicitly & enforce correct weekday rows
+        objs = formset.save(commit=False)
+        for obj in objs:
+            obj.venue = venue
+            obj.full_clean()
+            obj.save()
+        return redirect("venue_dashboard", venue_id=venue.id)  # or your manage venue page
+    # If invalid, you typically re-render the manage page.
+    # If your manage page is GET-only elsewhere, easiest is to store messages and redirect.
+    # For now: redirect back (you can enhance with messages framework).
+    return redirect("venue_dashboard", venue_id=venue.id)
+
 ###########################################################################################
 
 ###########################################################################################

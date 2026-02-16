@@ -14,6 +14,7 @@ from .models                    import Venue, Table, Reservation, Review, VenueA
 from .models                    import assign_venue_permissions
 from django.utils.encoding      import force_bytes
 from django.utils.http          import urlsafe_base64_encode 
+from .services.working_days     import ensure_working_days
 
 User = get_user_model()
 
@@ -112,6 +113,8 @@ class VenueApplicationAdmin(admin.ModelAdmin):
                         phone       = app.phone,
                         owner       = user,
                     )
+                    
+                    ensure_working_days(venue)
 
                     # 3) Mark application accepted
                     app.status = "approved"
