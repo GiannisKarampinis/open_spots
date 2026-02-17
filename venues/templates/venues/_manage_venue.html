@@ -141,7 +141,6 @@
               <th>{% trans "Closed" %}</th>
               <th>{% trans "Opens" %}</th>
               <th>{% trans "Closes" %}</th>
-              <th>{% trans "Next day" %}</th>
             </tr>
           </thead>
           <tbody>
@@ -159,20 +158,18 @@
                   {{ form.open_time.errors }}
                 </td>
 
-                <td>
+                <td class="close-cell">
                   {{ form.close_time }}
                   {{ form.close_time.errors }}
-                </td>
+                  <span class="next-day-label {% if not form.instance.closes_next_day %}is-hidden{% endif %}" data-next-day-label>
+                    (+1 day)
+                  </span>
 
-                <td>{{ form.closes_next_day }}</td>
+                </td>
               </tr>
             {% endfor %}
           </tbody>
         </table>
-
-        <small class="text-muted">
-          {% trans "Set weekly opening hours. Use 'Next day' for venues that close after midnight." %}
-        </small>
 
       </div>
     </div>
@@ -377,25 +374,41 @@
 }
 
 /* Re-enable the clock icon in Chromium/Safari if a reset hides it */
-.working-hours-table input[type="time"]::-webkit-calendar-picker-indicator {
-  opacity: 1;
-  display: block;
-  cursor: pointer;
+.working-hours-table input[type="time"] {
+  opacity:  1;
+  display:  inline-block;
+  cursor:   pointer;
 }
 
 /* Center Closed / Opens / Closes / Next Day columns */
 .working-hours-table th:nth-child(2),
 .working-hours-table th:nth-child(3),
 .working-hours-table th:nth-child(4),
-.working-hours-table th:nth-child(5),
 
 .working-hours-table td:nth-child(4),
 .working-hours-table td:nth-child(5),
-.working-hours-table td:nth-child(6),
-.working-hours-table td:nth-child(7) {
+.working-hours-table td:nth-child(6), {
   text-align: center;
   vertical-align: middle;
 }
+
+.close-cell {
+  white-space: nowrap;           /* keep input + label on one line */
+}
+
+.next-day-label {
+  display: inline-block;
+  min-width: 80px;                   /* reserve fixed space (tweak if needed) */
+  margin-left: 8px;
+  font-size: 0.9rem;
+  opacity: 0.75;
+  vertical-align: middle;
+}
+
+.next-day-label.is-hidden {
+  visibility: hidden;            /* takes space but not visible */
+}
+
 
 </style>
 
@@ -452,4 +465,34 @@ document.addEventListener("DOMContentLoaded", function () {
     input.addEventListener("blur", () => snapTo30Minutes(input));
   });
 });
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".working-hours-table tbody tr").forEach(row => {
+    const open = row.querySelector('input[type="time"][name$="open_time"]');
+    const close = row.querySelector('input[type="time"][name$="close_time"]');
+    const label = row.querySelector("[data-next-day-label]");
+
+    if (!open || !close || !label) return;
+
+    function update() {
+      if (!open.value || !close.value) {
+        label.textContent = "";
+        return;
+      }
+      // Compare HH:MM strings works lexicographically when zero-padded
+      if (close.value < open.value) {
+        label.classList.remove("is-hidden");
+      } else {
+        label.classList.add("is-hidden");
+      }
+    }
+
+    open.addEventListener("change", update);
+    close.addEventListener("change", update);
+    open.addEventListener("input", update);
+    close.addEventListener("input", update);
+
+    update();
+  });
+});
+
 </script>

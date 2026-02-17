@@ -56,24 +56,29 @@ class Venue(models.Model):
         return self.name
     
     def has_overlapping_reservation(self, date, start_time, duration_hours=1, user=None):
-        """
-        Checks if there is an overlapping reservation for the same user on the same venue.
-        If `user` is None, ignores user filter.
-        """
         start_dt = datetime.combine(date, start_time)
         end_dt = start_dt + timedelta(hours=duration_hours)
 
-        qs = self.reservations.filter(
-        date=date,
-        time__gte=start_dt.time(),
-        time__lt=end_dt.time(),
-    )
-
+        base = self.reservations.all()
         if user:
-            qs = qs.filter(user=user)
+            base = base.filter(user=user)
 
-        return qs.exists()
+        # same calendar day
+        if end_dt.date() == start_dt.date():
+            return base.filter(
+                date=date,
+                time__gte=start_dt.time(),
+                time__lt=end_dt.time(),
+            ).exists()
 
+        # crosses midnight -> check [start_time..23:59] on date AND [00:00..end_time) on next day
+        next_date = date + timedelta(days=1)
+
+        return (
+            base.filter(date=date, time__gte=start_dt.time()).exists()
+            or base.filter(date=next_date, time__lt=end_dt.time()).exists()
+        )    
+        
     def get_first_image(self):
         return self.images.filter(
             approved            = True,
@@ -82,13 +87,9 @@ class Venue(models.Model):
     
     @staticmethod
     def _generate_slot_datetimes(date, open_time, close_time, closes_next_day: bool, step_minutes: int = 30):
-        """
-        Returns list of datetimes for each slot start.
-        If closes_next_day=True, end_dt is on the next calendar day.
-        """
         start_dt = datetime.combine(date, open_time)
         end_date = date + timedelta(days=1) if closes_next_day else date
-        end_dt   = datetime.combine(end_date, close_time)
+        end_dt = datetime.combine(end_date, close_time)
 
         slots = []
         cur = start_dt
@@ -96,7 +97,7 @@ class Venue(models.Model):
             slots.append(cur)
             cur += timedelta(minutes=step_minutes)
         return slots
-
+        
     @staticmethod
     def _offset_from_open(open_dt: datetime, slot_dt: datetime, step_minutes: int = 30):
         """
@@ -142,11 +143,11 @@ class Venue(models.Model):
             return []
 
         slot_dts = self._generate_slot_datetimes(
-            date=date,
-            open_time=wd.open_time,
-            close_time=wd.close_time,
-            closes_next_day=wd.closes_next_day,
-            step_minutes=30,
+            date            = date,
+            open_time       = wd.open_time,
+            close_time      = wd.close_time,
+            closes_next_day = wd.closes_next_day_effective,
+            step_minutes    = 30,
         )
         if not slot_dts:
             return []
@@ -220,31 +221,61 @@ class WorkingDay(models.Model):
         ]
         ordering = ["weekday"]
 
+    @property
+    def closes_next_day_effective(self) -> bool:
+        if self.is_closed:
+            return False
+        if self.open_time is None or self.close_time is None:
+            return False
+        return self.closes_next_day
+
     def clean(self):
         if self.is_closed:
-            if self.open_time or self.close_time:
-                raise ValidationError("If is_closed=True, open_time/close_time must be empty.")
+            self.open_time = None
+            self.close_time = None
+            self.closes_next_day = False
             return
 
         if self.open_time is None or self.close_time is None:
             raise ValidationError("Provide open_time and close_time when is_closed=False.")
 
-        # If not crossing midnight, enforce open < close
-        if not self.closes_next_day and self.open_time >= self.close_time:
-            raise ValidationError("close_time must be after open_time (or set closes_next_day=True).")
+        if self.open_time == self.close_time:
+            raise ValidationError("open_time and close_time cannot be equal.")
 
-        # Enforce 30-min alignment (recommended since your offsets assume 30 mins)
+        # Infer crossing midnight
+        self.closes_next_day = self.close_time < self.open_time
+
+        # 30-min alignment
         for t, label in [(self.open_time, "open_time"), (self.close_time, "close_time")]:
-            if t is not None and t.minute not in (0, 30):
+            if t.minute not in (0, 30):
                 raise ValidationError(f"{label} must be aligned to :00 or :30 for 30-min slots.")
+
+    @property
+    def close_time_label(self) -> str:
+        """
+        Returns 'HH:MM' or 'HH:MM (+1 day)' when closes_next_day is True.
+        """
+        if self.is_closed or self.close_time is None:
+            return ""
+        suffix = " (+1 day)" if self.closes_next_day else ""
+        return f"{self.close_time.strftime('%H:%M')}{suffix}"
+
+    @property
+    def closes_next_day_label(self) -> str:
+        """
+        Useful for a column display (instead of boolean checkbox).
+        """
+        return "(+1 day)" if self.closes_next_day else ""
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Validate before saving
+        super().save(*args, **kwargs)
 
     def __str__(self):
         day = self.get_weekday_display()
         if self.is_closed:
             return f"{self.venue.name} - {day}: Closed"
-        suffix = " (+1 day)" if self.closes_next_day else ""
-        return f"{self.venue.name} - {day}: {self.open_time}–{self.close_time}{suffix}"
-
+        return f"{self.venue.name} - {day}: {self.open_time.strftime('%H:%M')}–{self.close_time_label}"
 
 class VenueClosedTime(models.Model):
     venue = models.ForeignKey("Venue", on_delete=models.CASCADE, related_name="closed_times")

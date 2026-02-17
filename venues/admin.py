@@ -242,10 +242,30 @@ class VenueMenuImageInline(admin.TabularInline):
         return "No Image"
     image_tag.short_description = "Menu Preview"
 
+from django.contrib import admin
+from .models import Venue, WorkingDay, VenueClosedTime
+
+
+class WorkingDayInline(admin.TabularInline):
+    model = WorkingDay
+    extra = 0
+    can_delete = False
+    ordering = ("weekday",)
+
+    # Show these columns in the inline grid
+    fields = ("weekday", "is_closed", "open_time", "close_time", "closes_next_day")
+    readonly_fields = ("weekday",)
+
+    def has_add_permission(self, request, obj=None):
+        # We always want exactly 7 rows created by your ensure_working_days_exist logic,
+        # and you don’t want manual extra rows in admin.
+        return False
+        
+
 @admin.register(Venue)
 class VenueAdmin(admin.ModelAdmin):
     #readonly_fields     = ['image_tag']
-    inlines             = [TableInline, VenueImageInline, VenueMenuImageInline]
+    inlines             = [TableInline, VenueImageInline, VenueMenuImageInline, WorkingDayInline]
     list_display = ('name', 'kind', 'location', 'average_rating', 'owner')
     #list_display = ('name', 'kind', 'location', 'average_rating', 'image_tag', 'owner')
     

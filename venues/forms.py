@@ -166,11 +166,11 @@ class ReviewForm(forms.ModelForm):
 class WorkingDayForm(forms.ModelForm):
     class Meta:
         model   = WorkingDay
-        fields  = ["weekday", "is_closed", "open_time", "close_time", "closes_next_day"]
+        fields  = ["weekday", "is_closed", "open_time", "close_time"]
         widgets = {
             "weekday":      forms.HiddenInput(),
-            "open_time":    forms.TimeInput(attrs={"type": "time", "step": 1800}),
-            "close_time":   forms.TimeInput(attrs={"type": "time", "step": 1800}),
+            "open_time":    forms.TimeInput(attrs={"type": "time", "step": "1800"}),
+            "close_time":   forms.TimeInput(attrs={"type": "time", "step": "1800"}),
         }
 
 WorkingDayFormSet = modelformset_factory(
