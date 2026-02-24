@@ -57,28 +57,26 @@ class AdminUserCreationForm(UserCreationForm):
         return user
 
 
-class ProfileEditForm(forms.ModelForm):
+class EmailEditForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ['email', 'phone_number']
-        labels = {
-            'email': _("Email"),
-            'phone_number': _("Phone number"),
-        }
-        widgets = {
-            'email': forms.EmailInput(attrs={'required': True}),
-            'phone_number': forms.TextInput(attrs={'required': False}),
-        }
+        fields = ["email"]
+        widgets = {"email": forms.EmailInput(attrs={"required": True})}
+
+class PhoneEditForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ["phone_number"]
+        widgets = {"phone_number": forms.TextInput(attrs={"required": False})}
 
     def clean_phone_number(self):
-        phone = self.cleaned_data.get('phone_number')
+        phone = self.cleaned_data.get("phone_number")
         if phone:
             phone = phone.replace(" ", "").replace("-", "")
-            if not re.match(r'^\+?\d{7,15}$', phone):
-                raise forms.ValidationError(
-                    _("Enter a valid phone number (7–15 digits, optional +).")
-                )
+            if not re.match(r"^\+?\d{7,15}$", phone):
+                raise forms.ValidationError(_("Enter a valid phone number (7–15 digits, optional +)."))
         return phone
+
 
 
 class PasswordResetRequestForm(forms.Form):

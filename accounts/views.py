@@ -10,8 +10,8 @@ from django.contrib.auth            import login, get_backends, get_user_model
 from django.contrib.auth.views      import LoginView
 from django.contrib.auth.decorators import login_required, user_passes_test
 
-from .forms                         import CustomUserCreationForm, ProfileEditForm
-from .forms                         import ProfileEditForm, PasswordChangeRequestForm
+from .forms                         import CustomUserCreationForm, EmailEditForm, PhoneEditForm
+from .forms                         import PasswordChangeRequestForm
 from .forms                         import PasswordResetRequestForm, PasswordResetForm
 from .services.emails               import send_verification_code
 from emails_manager.models          import EmailVerificationCode                        #FIXME: circular import
@@ -219,16 +219,17 @@ def signup_view(request):
 def profile_view(request):
     user = request.user
     old_email = user.email.strip().lower() if user.email else ''
-    profile_form = ProfileEditForm(instance=user)
+    email_form = EmailEditForm(instance=user)
+    phone_form = PhoneEditForm(instance=user)
     password_form = PasswordChangeRequestForm(user=user)
-
     if request.method == 'POST':
-        if 'email' in request.POST or 'phone_number' in request.POST:
-            profile_form  = ProfileEditForm(request.POST, instance=user)
-            if profile_form.is_valid():
-                updated_user = profile_form.save(commit=False)
+        if 'email' in request.POST:
+            print('lalalalalalallalalalala')
+            email_form  = EmailEditForm(request.POST, instance=user)
+            if email_form.is_valid():
+                updated_user = email_form.save(commit=False)
 
-                new_email = profile_form.cleaned_data['email'].strip().lower() if profile_form.cleaned_data.get('email') else ''
+                new_email = email_form.cleaned_data['email'].strip().lower() if email_form.cleaned_data.get('email') else ''
                 email_changed = False
 
                 if new_email != old_email:
@@ -248,6 +249,15 @@ def profile_view(request):
                     return redirect('confirm_code')
 
                 messages.success(request, "Profile updated successfully.")
+                return redirect('profile')
+            
+        elif 'phone_number' in request.POST:
+            phone_form  = PhoneEditForm(request.POST, instance=user)
+            print('Phone form:', phone_form)
+            print('Phone form errors:', phone_form.errors)
+            if phone_form.is_valid():
+                phone_form.save()
+                messages.success(request, "Phone number updated successfully.")
                 return redirect('profile')
             
         elif 'old_password' in request.POST:
@@ -272,7 +282,8 @@ def profile_view(request):
                 messages.error(request, "Invalid form: something went wrong, please try again")
 
     context = {
-        'profile_form': profile_form,
+        'email_form': email_form,
+        'phone_form': phone_form,
         'password_form': password_form,
     }
 
