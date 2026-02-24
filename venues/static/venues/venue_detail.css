@@ -88,7 +88,7 @@ body {
 
 .tab.active {
   color:        var(--text-color);
-  border-color: var(--surface-color);
+  border-color: var(--surface-gradient);
   background:   var(--button-text);
 }
 
@@ -349,7 +349,7 @@ body {
 .res-step input.form-control:focus,
 .res-step select.form-control:focus,
 .res-step textarea.form-control:focus {
-  border-color:   var(--surface-color);
+  border-color:   var(--surface-gradient);
   outline:        none;
   box-shadow:     0 0 0 3px rgba(50, 195, 108, 0.15);
 }

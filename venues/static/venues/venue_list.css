@@ -302,7 +302,7 @@ h2 {
     letter-spacing: 0.04em;
     user-select: none;
     color: var(--text-color);
-    text-shadow: 0 1px 3px var(--surface-color);
+    text-shadow: 0 1px 3px var(--surface-gradient);
 }
 
 /* --- Filter menu --- */
@@ -334,7 +334,7 @@ h2 {
 }
 
 .filter-form select option {
-    background-color:     var(--surface-color);
+    background-color:     var(--surface-gradient);
     color:          var(--button-text);
 }
 

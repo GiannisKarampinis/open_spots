@@ -38,11 +38,11 @@ body.dark-theme {
     --surface-color:        #353535;
     --text-color:           #f1f1f1;
     --scroll-container-bg:  #353535;
-    --surface-gradient: radial-gradient(circle at top,
-        rgb(78, 78, 78) 0%,
-        rgb(62, 62, 62) 35%,
-        rgb(53, 53, 53) 100%
-    );
+    --surface-gradient:     radial-gradient(circle at top,
+                                rgb(20, 77, 107) 0%,
+                                rgb(14, 70, 101) 30%,
+                                rgb(8, 58, 90) 100%
+                            );
 }
 
 /* Reset & base */
@@ -409,7 +409,7 @@ ul.errorlist {
 }
 
 .submenu-btn:hover { 
-    background-color: var(--surface-color); 
+    background-color: var(--surface-gradient); 
     color: var(--button-text); 
 }
 
@@ -417,7 +417,7 @@ ul.errorlist {
     display: none;
     flex-direction: column;
     background: var(--surface-gradient);
-    border-top: 1px solid var(--surface-color);
+    border-top: 1px solid var(--surface-gradient);
 }
 
 .submenu-item {
@@ -432,7 +432,7 @@ ul.errorlist {
     font: inherit;
 }
 
-.submenu-item:hover { background-color: var(--surface-color); color: var(--button-text); }
+.submenu-item:hover { background-color: var(--surface-gradient); color: var(--button-text); }
 
 .submenu.open .submenu-content { display: flex; }
 
@@ -520,7 +520,7 @@ ul.errorlist {
 
 /* Focus ring for accessibility */
 .switch input:focus + .slider {
-  box-shadow: 0 0 0 3px var(--surface-color);
+  box-shadow: 0 0 0 3px var(--surface-gradient);
 }
 
 /* Make the slider rounded variant (keeps compatibility) */

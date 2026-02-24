@@ -118,7 +118,7 @@ h1.fw-bold {
 }
 
 /* === DataTables Striping & Hover === */
-table.dataTable.stripe tbody tr.odd { background-color: var(--surface-color); }
+table.dataTable.stripe tbody tr.odd { background-color: var(--surface-gradient); }
 table.dataTable.stripe tbody tr.even { background-color: var(--primary-color); }
 table.dataTable tbody tr:hover { background-color: var(--primary-hover) !important; }
 
@@ -226,7 +226,7 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 
 /* On hover and focus for dropdown */
 .datatable-controls select:hover {
-    background-color:   var(--surface-color);
+    background-color:   var(--surface-gradient);
     border-color:       #777;
     cursor:             pointer;
 }
@@ -326,7 +326,7 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
     padding: 8px 12px;
     border-radius: 6px;
     border: 1px solid #555;
-    background-color: var(--surface-color);
+    background-color: var(--surface-gradient);
     color: var(--button-text);
     width: 100%;
 }
@@ -338,12 +338,12 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
     margin-top: 16px;
 }
 .modal-card .btn-cancel {
-    background-color: var(--surface-color);
+    background-color: var(--surface-gradient);
     color: var(--button-text);
     border: none;
 }
 .modal-card .btn-cancel:hover {
-    background-color: var(--surface-color);
+    background-color: var(--surface-gradient);
     color: var(--button-text);
 }
 .centered-modal-wrapper {
@@ -902,3 +902,5 @@ body.modal-open {
 html {
     overflow-y: scroll; /* prevent shifting when modal opens */
 }
+
+
