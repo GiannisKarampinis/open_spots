@@ -107,7 +107,6 @@ h1.fw-bold {
     text-align:     center;
     border-bottom:  1px solid #444;
     padding:        8px 12px;
-    line-height:    1.4;
 }
 
 .table thead th {
@@ -118,7 +117,7 @@ h1.fw-bold {
 }
 
 /* === DataTables Striping & Hover === */
-table.dataTable.stripe tbody tr.odd { background-color: var(--surface-gradient); }
+table.dataTable.stripe tbody tr.odd { background-color: var(--surface-color); }
 table.dataTable.stripe tbody tr.even { background-color: var(--primary-color); }
 table.dataTable tbody tr:hover { background-color: var(--primary-hover) !important; }
 

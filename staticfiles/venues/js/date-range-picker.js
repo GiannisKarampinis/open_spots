@@ -35,8 +35,12 @@ document.addEventListener('DOMContentLoaded', function () {
       maxDate:            maxDate,
 
       onChange: function (selectedDates) {
-        const start = selectedDates[0] || null;
-        const end   = selectedDates[1] || null;
+        // we want to pass ISO date strings so downstream consumers aren't
+        // forced to deal with Date objects directly
+        const startDate = selectedDates[0] || null;
+        const endDate   = selectedDates[1] || null;
+        const start = startDate ? startDate.toISOString() : null;
+        const end   = endDate ? endDate.toISOString() : null;
 
         console.log(`[FLATPICKR] selectedDates → start: ${start}, end: ${end}`);
 

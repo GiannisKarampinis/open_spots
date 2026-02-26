@@ -114,6 +114,12 @@ function filterTableByDateRange(tableSelector, start, end) {
     const dt = initializeDataTable(tableSelector);
     if (!start || !end) return;
 
+    // -------------------------------------------------------------
+    // support either ISO strings or actual Date objects
+    if (start instanceof Date) start = start.toISOString();
+    if (end instanceof Date) end = end.toISOString();
+    // -------------------------------------------------------------
+
     // Convert selected dates into sortable YYYY-MM-DD keys
     const startKey = start.slice(0, 10);
     const endKey   = end.slice(0, 10);
@@ -141,8 +147,14 @@ document.addEventListener('dateRangeSelected', function (e) {
     const { start, end, targetTab } = e.detail;
 
     if (targetTab === 'requestsTab') {
-        filterTableByDateRange('#upcomingTable', start, end);
-        filterTableByDateRange('#specialTable', start, end);
+        if (!start || !end) {
+            // empty range → show everything again
+            resetTableFilter('#upcomingTable');
+            resetTableFilter('#specialTable');
+        } else {
+            filterTableByDateRange('#upcomingTable', start, end);
+            filterTableByDateRange('#specialTable', start, end);
+        }
         return;
     }
 
