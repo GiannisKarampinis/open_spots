@@ -108,6 +108,28 @@ document.addEventListener('DOMContentLoaded', function () {
       dateRangePicker.close(); // resets isOpen
       console.log('[ACTION] Flatpickr calendar closed');
     });
+
+    // Wire up the clear button (now outside the modal, next to the input)
+    const clearBtn = document.querySelector(`.clear-range-btn[data-target-tab="${targetTab}"]`);
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log(`[ACTION] Clearing range for tab "${targetTab}"`);
+        
+        // Properly clear the picker
+        dateRangePicker.setDate(null, true);
+        dateInput.value = '';
+        
+        console.log('[DEBUG] Range cleared - dateInput.value:', dateInput.value);
+        console.log('[DEBUG] Flatpickr state:', dateRangePicker.selectedDates);
+        
+        // Dispatch event with null dates to trigger table reset
+        document.dispatchEvent(new CustomEvent('dateRangeSelected', {
+          detail: { start: null, end: null, targetTab }
+        }));
+      });
+    }
   });
 
 });
