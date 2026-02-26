@@ -408,26 +408,40 @@ body {
   border-color:   #d9534f !important;
 }
 
-/* Container grid */
-#time-slot-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
-    gap: 10px;
-    margin-top: 10px;
+/* Manual horizontal slider */
+.time-slider-wrapper {
+    position: relative;
+    margin: 10px 0 30px 0;
+    overflow: hidden;
+    /* shrink to content but limit to a reasonable width */
+    width: auto;
+    max-width: 320px;      /* constrain frame size */
 }
 
+#time-slot-container {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none; /* hide firefox scrollbar */
+    /* natural width; may exceed wrapper to allow scrolling */
+    flex: none;
+}
+#time-slot-container::-webkit-scrollbar { display: none; }
+
 .time-slot {
-    padding: 12px 0;
+    padding: 6px 3px;
     background: var(--background-color);
-    border-radius: 8px;
+    border-radius: 6px;
     text-align: center;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 11px;
     font-weight: 500;
     transition: all 0.2s ease;
     user-select: none;
     border: 1px solid #ddd;
     color: var(--text-color);
+    flex-shrink: 0;
+    width: 40px;
+    margin-right: 4px;  /* add spacing between slots */
 }
 
 .time-slot:hover {
@@ -441,6 +455,33 @@ body {
     font-weight: bold;
     border-color: var(--primary-hover);
 }
+
+/* navigation buttons for manual slider */
+.slot-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.9);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+    z-index: 5;
+}
+.slot-nav:hover {
+    background: rgba(255,255,255,1);
+    border-color: #333;
+}
+.slot-prev { left: 2px; }
+.slot-next { right: 2px; }
+
+
 .image-modal {
   position: fixed;
   inset: 0;
@@ -520,13 +561,10 @@ body {
 }
 
 @media (max-width: 480px) {
-    #time-slot-container {
-        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-        gap: 8px;
-    }
     .time-slot {
-        font-size: 13px;
-        padding: 10px 0;
+        font-size: 10px;
+        padding: 5px 2px;
+        width: 32px;
     }
 }
 

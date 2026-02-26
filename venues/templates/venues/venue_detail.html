@@ -7,7 +7,6 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'venues/venue_detail.css' %}">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 {% endblock %}
@@ -202,7 +201,11 @@
                 {{ form.date.errors }}
 
                 <label for="selected-time">Time</label>
-                <div id="time-slot-container" class="time-slot-container" data-slots-url="{% url 'venue_available_slots' venue.id %}"></div>
+                <div class="time-slider-wrapper">
+                  <button type="button" class="slot-nav slot-prev" aria-label="Previous">‹</button>
+                  <div id="time-slot-container" class="time-slot-container" data-slots-url="{% url 'venue_available_slots' venue.id %}"></div>
+                  <button type="button" class="slot-nav slot-next" aria-label="Next">›</button>
+                </div>
                 {{ form.time }}
                 <input type="hidden" name="slot_date" id="selected-slot-date">
                 {{ form.time.errors }}
@@ -260,7 +263,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 {{ venue.latitude|default:"null"|json_script:"venue_lat" }}
@@ -436,6 +438,31 @@ document.addEventListener("DOMContentLoaded", () => {
     // TIME SLOT PICKER
     // ---------------------------
 
+    // Helper: scroll container by a fixed offset
+    function scrollSlots(delta) {
+        const container = document.getElementById("time-slot-container");
+        if (!container) return;
+        container.scrollBy({ left: delta, behavior: 'smooth' });
+    }
+
+    // compute sensible scroll amount based on visible width
+    function scrollStep(amount) {
+        const container = document.getElementById("time-slot-container");
+        if (!container) return;
+        const step = amount || Math.max(container.clientWidth * 0.9, 100);
+        scrollSlots(step);
+    }
+
+    // wire navigation buttons
+    document.addEventListener('click', e => {
+        if (e.target.closest('.slot-prev')) {
+            scrollStep(-1 * Math.max(document.getElementById("time-slot-container").clientWidth * 0.9, 100));
+        }
+        if (e.target.closest('.slot-next')) {
+            scrollStep(document.getElementById("time-slot-container").clientWidth * 0.9 || 100);
+        }
+    });
+
     // Attach date change listener once during initialization
     let dateListenerAttached = false;
     let timeSlotsCalled = false;  // Track if we've called renderTimeSlots for initial load
@@ -463,6 +490,8 @@ document.addEventListener("DOMContentLoaded", () => {
         container.innerHTML = "<p class='text-muted'>Select a date to see available times.</p>";
         timeField.value = "";
         slotDateField.value = "";
+        // hide navigation until we actually have slots
+        document.querySelectorAll('.slot-nav').forEach(btn => btn.style.display = 'none');
         return;
       }
 
@@ -527,6 +556,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
           container.appendChild(box);
         });
+
+        // show/hide navigation buttons depending on whether scrolling is needed
+        const navButtons = document.querySelectorAll('.slot-nav');
+        if (container.scrollWidth > container.clientWidth) {
+          navButtons.forEach(b => b.style.display = 'flex');
+        } else {
+          navButtons.forEach(b => b.style.display = 'none');
+        }
+
+        // no external slider library – manual scrolling handled below
+        // (buttons are wired later outside render function)
 
       } catch (e) {
         console.error("Slot loading error:", e);
