@@ -13,8 +13,8 @@ from django.forms import modelformset_factory
 class ReservationForm(forms.ModelForm): # Our Reservation model sets some fields required (no blank=True for name, email, phone, date, time, guests, venue)
                                         # ReservationForm is a ModelForm and we include those fields in Meta fields, Django will set them as required=True.
 
-    # FIXME: We want an argument for how dense will be the splitting and more for ending and starting time of the day(s) or globally
-    time = forms.ChoiceField(choices=generate_time_choices(), widget=forms.Select(), label=_("Time"))
+    # Dynamic choices will be set by the view after instantiation
+    time = forms.CharField(widget=forms.HiddenInput(), label=_("Time"))
 
     class Meta:
         model = Reservation
@@ -41,7 +41,7 @@ class ReservationForm(forms.ModelForm): # Our Reservation model sets some fields
             'date':             forms.DateInput(attrs={
                 'class':        'form-control',
                 'type':         'date',
-                'min':          now().date().isoformat()
+                'min':          now().date().isoformat(),
             }),
             'guests':           forms.NumberInput(attrs={'class': 'form-control'}),
             'special_requests': forms.Select(attrs={'class': 'form-control'}),
@@ -59,10 +59,8 @@ class ReservationForm(forms.ModelForm): # Our Reservation model sets some fields
             except ValueError:
                 raise forms.ValidationError(_("Invalid time format. Please use HH:MM."))
 
-        valid_times = {k for k, _ in self.fields["time"].choices}
-        if selected_time.strftime("%H:%M") not in valid_times:
-            raise forms.ValidationError(_("Invalid reservation time selected."))
-
+        # Note: Backend will validate against available slots after form validation
+        # This prevents issues with dynamic time slot loading
         return selected_time
 
 

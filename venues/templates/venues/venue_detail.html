@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 {% endblock %}
 
 {% block content %}
@@ -153,7 +154,7 @@
 
         {% if user.is_authenticated %}
 
-        <form method="POST" id="reservationForm">
+        <form method="POST" id="reservationForm" lang="el-GR">
             {% csrf_token %}
             
             <div class="res-steps-container">
@@ -201,17 +202,18 @@
                 {{ form.date.errors }}
 
                 <label for="selected-time">Time</label>
-                <div id="time-slot-container" class="time-slot-container"></div>
-                <input type="hidden" name="time" id="selected-time">
+                <div id="time-slot-container" class="time-slot-container" data-slots-url="{% url 'venue_available_slots' venue.id %}"></div>
+                {{ form.time }}
+                <input type="hidden" name="slot_date" id="selected-slot-date">
                 {{ form.time.errors }}
 
-                {{ form.guests.label_tag }}
-                {{ form.guests }}
-                {{ form.guests.errors }}
+                    {{ form.guests.label_tag }}
+                    {{ form.guests }}
+                    {{ form.guests.errors }}
 
-              <button type="button" class="res-prev-btn" data-prev="1">Back</button>
-              <button type="button" class="res-next-btn" data-next="3">Next</button>
-          </div>
+                  <button type="button" class="res-prev-btn" data-prev="1">Back</button>
+                  <button type="button" class="res-next-btn" data-next="3">Next</button>
+              </div>
 
 
             <!-- STEP 3: Additional Notes -->
@@ -259,6 +261,7 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 {{ venue.latitude|default:"null"|json_script:"venue_lat" }}
 {{ venue.longitude|default:"null"|json_script:"venue_lng" }}
@@ -372,7 +375,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Extra rule for Step 2: require time selection (hidden input)
         if (stepNumber == 2) {
-            const timeHidden = document.getElementById("selected-time");
+            const timeHidden = document.querySelector('input[name="time"]');
             if (!timeHidden || !timeHidden.value) return false;
         }
 
@@ -405,71 +408,143 @@ document.addEventListener("DOMContentLoaded", () => {
     // ---------------------------
     // INITIAL DISPLAY
     // ---------------------------
+    // Pre-populate date input with today's date
+    const dateInputInit = document.querySelector('.res-step[data-step="2"] input[name="date"]');
+    if (dateInputInit && !dateInputInit.value) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        dateInputInit.value = `${year}-${month}-${day}`;  // Set as YYYY-MM-DD internally
+    }
+
+    // Initialize Flatpickr for Greek date format (dd/mm/yyyy)
+    flatpickr(dateInputInit, {
+        dateFormat: 'Y-m-d',  // Internal format stays YYYY-MM-DD (for form submission)
+        altFormat: 'd/m/Y',   // Display format: dd/mm/yyyy (what user sees)
+        altInput: true,       // Creates a separate visible input for display
+        altInputClass: 'form-control flatpickr-alt',  // Style the visible input
+        locale: 'el',         // Greek locale
+        minDate: new Date(),  // Can't select past dates
+        disableMobile: false, // Allow mobile date picker
+        defaultDate: new Date(),  // Default to today
+    });
+
     showStep(1);
 
     // ---------------------------
     // TIME SLOT PICKER
     // ---------------------------
-    function generateTimeSlots() {
-        const slots = [];
-        let hour = 12;
-        let minute = 0;
 
-        while (hour < 24 || (hour === 23 && minute === 30)) {
-            const hh = hour.toString().padStart(2, '0');
-            const mm = minute.toString().padStart(2, '0');
+    // Attach date change listener once during initialization
+    let dateListenerAttached = false;
+    let timeSlotsCalled = false;  // Track if we've called renderTimeSlots for initial load
 
-            const value = `${hh}:${mm}`;
-            const label = new Date(`2000-01-01T${value}:00`).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-            });
+    async function renderTimeSlots() {
+      const container = document.getElementById("time-slot-container");
+      if (!container) return;
 
-            slots.push({ value, label });
+      const dateInput = document.querySelector('.res-step[data-step="2"] input[name="date"]');
+      const timeField = document.querySelector('input[name="time"]');  // Django form's hidden time field
+      const slotDateField = document.getElementById("selected-slot-date");
 
-            minute += 30;
-            if (minute >= 60) {
-                minute = 0;
-                hour++;
-            }
+      // Attach listener only once
+      if (dateInput && !dateListenerAttached) {
+        dateListenerAttached = true;
+        dateInput.addEventListener("change", () => {
+          renderTimeSlots();
+          validateStep(2);
+        });
+      }
+
+      container.innerHTML = "";
+
+      if (!dateInput || !dateInput.value) {
+        container.innerHTML = "<p class='text-muted'>Select a date to see available times.</p>";
+        timeField.value = "";
+        slotDateField.value = "";
+        return;
+      }
+
+      const selectedDateStr = dateInput.value;  // YYYY-MM-DD format
+      const url = container.dataset.slotsUrl;
+      timeField.value = "";
+      slotDateField.value = "";
+
+      try {
+        const resp = await fetch(`${url}?date=${encodeURIComponent(selectedDateStr)}`);
+        if (!resp.ok) {
+          const error = await resp.json().catch(() => ({}));
+          throw new Error(error.error || "Failed to load slots");
+        }
+        const data = await resp.json();
+
+        // Get current time for filtering past slots on today
+        const now = new Date();
+        const todayStr = now.getFullYear() + '-' + 
+                        String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(now.getDate()).padStart(2, '0');
+        const currentHourMin = String(now.getHours()).padStart(2, '0') + ':' + 
+                               String(now.getMinutes()).padStart(2, '0');
+
+        // Filter available slots, excluding past times if date is today
+        let slots = (data.slots || []).filter(s => s.is_available);
+        
+        if (selectedDateStr === todayStr) {
+          // For today, filter out past times, BUT keep next-day slots (+1 day)
+          slots = slots.filter(slot => {
+            // Always include slots that span to the next day (they're future days anyway)
+            if (slot.is_next_day) return true;
+            // For same-day slots, only include if time >= current time
+            return slot.time >= currentHourMin;
+          });
         }
 
-        return slots;
-    }
-
-    function renderTimeSlots() {
-        const container = document.getElementById("time-slot-container");
-        if (!container) return;
-
-        const hiddenInput = document.getElementById("selected-time");
-        const slots = generateTimeSlots();
-
-        container.innerHTML = "";
+        if (!slots.length) {
+          container.innerHTML = "<p class='text-muted'>No available times for this date.</p>";
+          return;
+        }
 
         slots.forEach(slot => {
-            const box = document.createElement("div");
-            box.classList.add("time-slot");
-            box.textContent = slot.label;
-            box.dataset.value = slot.value;
+          const box = document.createElement("div");
+          box.className = "time-slot";
+          box.dataset.time = slot.time;
+          box.dataset.slotDate = slot.slot_date;
 
-            if (hiddenInput.value === slot.value) box.classList.add("active");
+          box.textContent = formatTime(slot.time) + (slot.is_next_day ? " (+1 day)" : "");
 
-            box.addEventListener("click", () => {
-                container.querySelectorAll(".time-slot").forEach(b => b.classList.remove("active"));
-                box.classList.add("active");
-                hiddenInput.value = slot.value;
-                hiddenInput.dispatchEvent(new Event('input'));
-                hiddenInput.dispatchEvent(new Event('change'));
-                validateStep(2);
+          box.addEventListener("click", () => {
+            container.querySelectorAll(".time-slot").forEach(b => b.classList.remove("active"));
+            box.classList.add("active");
 
-                // Trigger validation
-                const step2Inputs = document.querySelectorAll('.res-step[data-step="2"] input[required]');
-                step2Inputs.forEach(input => input.dispatchEvent(new Event('input')));
-            });
+            timeField.value = slot.time;
+            slotDateField.value = slot.slot_date;
 
-            container.appendChild(box);
+            timeField.dispatchEvent(new Event("input"));
+            timeField.dispatchEvent(new Event("change"));
+            validateStep(2);
+          });
+
+          container.appendChild(box);
         });
+
+      } catch (e) {
+        console.error("Slot loading error:", e);
+        container.innerHTML = `<p class='text-danger'>Could not load available times: ${e.message}</p>`;
+      }
     }
+
+    function formatTime(hhmm) {
+      try {
+        const [h, m] = hhmm.split(":").map(Number);
+        const d = new Date(2000, 0, 1, h, m);
+        return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+      } catch (e) {
+        console.error("Time formatting error:", e, hhmm);
+        return hhmm; // Fallback to raw time
+      }
+    }
+
 });
 
 (function setupGalleryModal() {

@@ -25,6 +25,7 @@ import  json
 import  plotly.graph_objs            as go
 from django.conf                     import settings
 from .forms                          import WorkingDayFormSet
+from django.views.decorators.http    import require_GET
 
 User = get_user_model()
 
@@ -251,7 +252,11 @@ def venue_detail(request, pk):
 
     # --- Fetch available time slots for that date ---
     available_slots = venue.get_available_time_slots(selected_date)
-    time_choices = [(t.strftime("%H:%M"), t.strftime("%H:%M")) for t in available_slots]
+    time_choices = [
+        (s["time"].strftime("%H:%M"), s["time"].strftime("%H:%M") + (" (+1 day)" if s["is_next_day"] else ""))
+        for s in available_slots
+        if s.get("is_available", True)
+    ]
 
     # ------------------------------------------------------
     # ALWAYS create both forms so template never breaks
@@ -267,8 +272,14 @@ def venue_detail(request, pk):
             return redirect("login")
 
         if "submit_reservation" in request.POST:
-            form = ReservationForm(request.POST)
-            form.fields["time"].choices = time_choices  # <-- override choices dynamically
+            # Use actual calendar date (handles +1 day slots)
+            post = request.POST.copy()
+            slot_date = post.get("slot_date")
+            if slot_date:
+                post["date"] = slot_date
+            
+            form = ReservationForm(post)
+            form.fields["time"].choices = time_choices  # Update choices BEFORE validation
 
             if form.is_valid():
                 reservation = form.save(commit=False)
@@ -276,17 +287,30 @@ def venue_detail(request, pk):
                 reservation.status = "pending"
                 reservation.user = request.user
 
+                # Validate chosen slot is available according to business-day schedule
+                business_date = datetime.strptime(request.POST.get("date"), "%Y-%m-%d").date()
+                chosen_slot_date = datetime.strptime(request.POST.get("slot_date") or request.POST.get("date"), "%Y-%m-%d").date()
+                chosen_time = reservation.time
+
+                slot_dicts = venue.get_available_time_slots(business_date)
+                allowed = {(s["slot_date"], s["time"]) for s in slot_dicts if s["is_available"]}
+
+                if (chosen_slot_date, chosen_time) not in allowed:
+                    messages.error(request, "Selected time is no longer available. Please choose another slot.")
+                    return redirect("venue_detail", pk=pk)
+
                 if venue.has_overlapping_reservation(reservation.date, reservation.time, user=request.user):
                     messages.error(request, "You already have a reservation for this time.")
-                else:
-                    try:
-                        with transaction.atomic():
-                            reservation.save(editor=request.user)
-                    except IntegrityError:
-                        messages.error(request, "You already have a reservation for this time.")
-                        return redirect("venue_detail", pk=pk)
-                            
-                    return render(request, "venues/reservation_pending.html", {"venue": venue, "reservation": reservation})
+                    return redirect("venue_detail", pk=pk)
+
+                try:
+                    with transaction.atomic():
+                        reservation.save(editor=request.user)
+                except IntegrityError:
+                    messages.error(request, "You already have a reservation for this time.")
+                    return redirect("venue_detail", pk=pk)
+
+                return render(request, "venues/reservation_pending.html", {"venue": venue, "reservation": reservation})
 
         elif "submit_review" in request.POST:
             review_form = ReviewForm(request.POST)
@@ -337,6 +361,36 @@ def venue_detail(request, pk):
         },
     )
 
+###########################################################################################
+
+###########################################################################################
+@require_GET
+def venue_available_slots(request, venue_id):
+    venue = get_object_or_404(Venue, id=venue_id)
+
+    date_str = request.GET.get("date")
+    if not date_str:
+        return JsonResponse({"error": "Missing date"}, status=400)
+
+    try:
+        selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"error": "Invalid date format"}, status=400)
+
+    slots = venue.get_available_time_slots(selected_date)
+
+    # JSON safe
+    payload = [{
+        "time": s["time"].strftime("%H:%M"),
+        "slot_date": s["slot_date"].isoformat(),
+        "is_next_day": bool(s["is_next_day"]),
+        "is_available": bool(s["is_available"]),
+        "is_reserved": bool(s["is_reserved"]),
+        "is_blocked": bool(s["is_blocked"]),
+        "offset": s["offset"],
+    } for s in slots]
+
+    return JsonResponse({"business_date": selected_date.isoformat(), "slots": payload})
 
 ###########################################################################################
 
