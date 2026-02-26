@@ -35,12 +35,16 @@ document.addEventListener('DOMContentLoaded', function () {
       maxDate:            maxDate,
 
       onChange: function (selectedDates) {
-        // we want to pass ISO date strings so downstream consumers aren't
-        // forced to deal with Date objects directly
+        // When Flatpickr gives us Date objects, they are in local time.
+        // Converting via `toISOString()` would shift the day if UTC offset
+        // moves it backwards (e.g. Greece is +2, so Feb 27 → Feb 26 UTC).
+        // We only care about the calendar date itself, not the instant, so
+        // format as YYYY-MM-DD according to the picker’s locale.
         const startDate = selectedDates[0] || null;
         const endDate   = selectedDates[1] || null;
-        const start = startDate ? startDate.toISOString() : null;
-        const end   = endDate ? endDate.toISOString() : null;
+
+        const start = startDate ? this.formatDate(startDate, 'Y-m-d') : null;
+        const end   = endDate   ? this.formatDate(endDate, 'Y-m-d')   : null;
 
         console.log(`[FLATPICKR] selectedDates → start: ${start}, end: ${end}`);
 

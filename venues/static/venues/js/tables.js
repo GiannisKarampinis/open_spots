@@ -84,6 +84,8 @@ function filterTableByDateRange(tableSelector, start, end) {
         const dateCell  = $(row).find('td').eq(1);           // jQuerty: get 2nd column (0-indexed)
         const rowKey    = dateCell.attr('data-order') || '';   // reads the data-order attribute which contains the date in canonical YYYY-MM-DD format
 
+        console.log(`[FILTER] Row date key: ${rowKey} | Range: ${startKey} to ${endKey}`);
+
         const isInRange = rowKey >= startKey && rowKey <= endKey;
         $(row).toggle(isInRange); // show if in range, hide if out of range
     });
