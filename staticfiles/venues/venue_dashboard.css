@@ -1,0 +1,926 @@
+/* === Container & Layout === */
+.container {
+    max-width:  1080px;
+    margin:     0 auto;
+    color:      var(--button-text);
+}
+
+/* === Page Title === */
+h1.fw-bold {
+    font-size:      2.2rem;
+    margin-bottom:  0;
+    color:          var(--text-color);
+    margin-top:     1.5rem;
+}
+
+.venue-status-toggle {
+    display:        flex;
+    align-items:    center;
+    gap:            12px;
+    margin-top:     12px;
+    margin-bottom:  12px;
+    padding:        6px 0;
+}
+
+/* Unified style for availability toggle buttons */
+.mark-availability {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    min-width: 160px;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Green version - Available */
+.btn-outline-success.mark-availability {
+    background-color: #28a745 !important;
+    color: #e0ffe0 !important;
+    border: none !important;
+    box-shadow: 0 0 8px #28a745cc;
+}
+.btn-outline-success.mark-availability:hover {
+    background-color: #3bda65 !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px #3bda65dd;
+}
+
+/* Red version - Full */
+.btn-outline-danger.mark-availability {
+    background-color: #dc3545 !important;
+    color: #ffe0e0 !important;
+    border: none !important;
+    box-shadow: 0 0 8px #dc3545cc;
+}
+.btn-outline-danger.mark-availability:hover {
+    background-color: #e96275 !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px #e96275dd;
+}
+
+/* === Status Badges === */
+.badge {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
+    white-space: nowrap;
+}
+.bg-success {
+    background-color: #28a745 !important;
+    color: #e0ffe0 !important;
+    box-shadow: 0 0 8px #28a745cc;
+}
+.bg-danger {
+    background-color: #dc3545 !important;
+    color: #ffe0e0 !important;
+    box-shadow: 0 0 8px #dc3545cc;
+}
+.bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+    box-shadow: 0 0 8px #ffc107cc;
+}
+
+/* === Tables === */
+.table-responsive {
+    border-radius:  6px;
+    box-shadow:     0 4px 12px rgba(0,0,0,0.7);
+    background:     var(--surface-gradient);
+    overflow-x:     auto;
+}
+
+.table {
+    font-size:      0.95rem;
+    width:          100%;
+    color:          var(--button-text);
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    vertical-align: middle;
+    text-align:     center;
+    border-bottom:  1px solid #444;
+    padding:        8px 12px;
+}
+
+.table thead th {
+    background:         var(--surface-gradient);
+    color:              var(--button-text); 
+    font-weight:        600;
+    letter-spacing:     0.03em;
+}
+
+/* === DataTables Striping & Hover === */
+table.dataTable.stripe tbody tr.odd { background-color: var(--surface-color); }
+table.dataTable.stripe tbody tr.even { background-color: var(--primary-color); }
+table.dataTable tbody tr:hover { background-color: var(--primary-hover) !important; }
+
+/* === Pagination Buttons === */
+.dataTables_wrapper .dataTables_paginate {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 1rem;
+}
+.dataTables_wrapper .paginate_button {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 0 2px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: var(--primary-color);
+    color: #f1f1f1 !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.dataTables_wrapper .paginate_button:hover {
+    background-color: var(--primary-hover);
+    color: #fff !important;
+}
+.dataTables_wrapper .paginate_button.current {
+    background-color: var(--primary-color);
+    color: #fff !important;
+    border-color: #4a90e2;
+}
+.dataTables_wrapper .paginate_button.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* === Top Controls Wrapper (Search + Entries) === */
+.datatable-controls {
+    display:            flex;
+    margin-bottom:      1rem;
+    padding:            0.75rem 1rem;
+    background:         var(--surface-gradient);
+    border-radius:      6px;
+    box-shadow:         0 4px 12px rgba(0,0,0,0.7);
+    gap:                1rem;
+    height:             auto;
+}
+
+.datatable-controls #upcoming-show-entries-wrapper,
+.datatable-controls #special-show-entries-wrapper,
+.datatable-controls #history-show-entries-wrapper {
+    flex: 2;
+}
+
+.datatable-controls #upcoming-search-wrapper,
+.datatable-controls #special-search-wrapper,
+.datatable-controls #history-search-wrapper {
+    flex: 8;
+}
+
+.datatable-controls #upcoming-search-wrapper input,
+.datatable-controls #special-search-wrapper input,
+.datatable-controls #history-search-wrapper input {
+    margin-left: 1rem;
+    width: 90%;
+}
+
+/* Search input fields inside datatable controls */
+.datatable-controls input[type="search"],
+.datatable-controls input[type="text"] {
+    background-color: var(--background-color);
+    border: 1px solid #555;
+    color: var(--text-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.7);
+    width: 100%;
+    /* max-width: 300px; prevent overly large search bars */
+}
+
+/* On focus: highlight border and background */
+.datatable-controls input[type="search"]:focus,
+.datatable-controls input[type="text"]:focus {
+    background-color: var(--button-text-hover);
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
+}
+
+/* Dropdown (select) inside show-entries wrappers */
+.datatable-controls select {
+    background:     var(--surface-gradient);
+    border:         1px solid #555;
+    color:          var(--button-text);
+    padding:        8px 12px;
+    border-radius:  6px;
+    font-size:      0.95rem;
+    font-weight:    600;
+    box-shadow:     inset 0 0 6px rgba(0,0,0,0.7);
+    transition:     background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* On hover and focus for dropdown */
+.datatable-controls select:hover {
+    background-color:   var(--surface-gradient);
+    border-color:       #777;
+    cursor:             pointer;
+}
+
+.datatable-controls select:focus {
+    background-color: var(--primary-hover);
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
+}
+
+/* === Buttons === */
+.table .btn-sm {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    margin: 4px 4px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    display: inline-block;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    box-shadow: 0 0 5px #28a745cc;
+}
+.btn-success:hover {
+    background-color: #3bda65;
+    box-shadow: 0 0 10px #3bda65dd;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    box-shadow: 0 0 5px #dc3545cc;
+}
+.btn-danger:hover {
+    background-color: #e96275;
+    box-shadow: 0 0 10px #e96275dd;
+}
+
+.btn-edit-status {
+    background-color: #f0ad4e;
+    color: #2a2a2a;
+    border: none;
+    box-shadow: 0 0 6px #f0ad4ecc;
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 4px 10px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.btn-edit-status:hover {
+    background-color: #ec9e2f;
+    box-shadow: 0 0 12px #ec9e2fdd;
+    color: #1b1b1b;
+    text-decoration: none;
+}
+
+/* === Alerts === */
+.alert-info {
+    font-size: 0.95rem;
+    background: var(--surface-gradient);
+    border-color: #557799;
+    color: var(--button-text);
+    padding: 12px 20px;
+    border-radius: 6px;
+    text-align: center;
+    box-shadow: inset 0 0 10px #2a3b4d;
+}
+
+/* === Modal Card === */
+.modal-card {
+    background:     var(--surface-gradient);
+    color:          var(--button-text);
+    border-radius:  8px;
+    padding:        2rem;
+    max-width:      500px;
+    margin:         2rem auto;
+    box-shadow:     0 0 20px rgba(0,0,0,0.6);
+}
+.modal-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #cacaca;
+}
+.modal-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.modal-card select,
+.modal-card button {
+    font-size: 1rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background-color: var(--surface-gradient);
+    color: var(--button-text);
+    width: 100%;
+}
+.modal-card .btn-group {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+.modal-card .btn-cancel {
+    background-color: var(--surface-gradient);
+    color: var(--button-text);
+    border: none;
+}
+.modal-card .btn-cancel:hover {
+    background-color: var(--surface-gradient);
+    color: var(--button-text);
+}
+.centered-modal-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+
+/* Manual tabs styles */
+.tabs {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    border-bottom: 2px solid #cacaca;
+}
+.tabs button {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-bottom: 5px solid transparent;
+    transition: border-color 0.3s;
+    color: var(--primary-color);
+}
+.tabs button.active {
+    border-color: var(--primary-hover);
+    color: var(--primary-hover);
+    font-weight: 600;
+}
+
+.tabs button[data-tab="requests"] {
+    position: relative;
+}
+
+.tab-content > div {
+    display: none;
+}
+.tab-content > div.active {
+    display: block;
+}
+
+.tab-content h2 {
+    margin-top: 1rem;
+    color: var(--primary-hover);
+}
+
+/* For fading/removal animation */
+.fade-out-slide {
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+/* ==========================================================================
+   Analytics: Quick Stats + Grouping (dark, horizontal boxes & polished select)
+   ========================================================================== */
+
+/* Quick Stats Layout */
+#analytics-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin-top: 20px;
+    margin-bottom: 20px;
+    gap: 1rem;
+}
+
+/* Stat Card Style */
+#analytics-stats .stat-card {
+    background:     var(--surface-gradient);
+    border:         1px solid #444;
+    border-radius:  10px;
+    padding:        1rem;
+    text-align:     center;
+    box-shadow:     0 2px 6px rgba(0, 0, 0, 0.4);
+    transition:     transform 0.2s ease, box-shadow 0.2s ease;
+}
+#analytics-stats .stat-card:hover {
+    transform:      translateY(-3px);
+    box-shadow:     0 4px 10px rgba(0, 0, 0, 0.5);
+}
+#analytics-stats .stat-value {
+    font-size:      1.8rem;
+    font-weight:    bold;
+}
+#analytics-stats .stat-label {
+    font-size:      0.95rem;
+    color:          var(--button-text);
+    margin-top:     0.4rem;
+}
+
+/* Grouping Form */
+#analyticsForm {
+    display:        flex;
+    align-items:    center;
+    justify-content: center;
+    gap:            0.7rem;
+    margin:         1.5rem 0;
+    padding:        0.8rem 1rem;
+    background:     var(--surface-gradient);
+    border-radius:  8px;
+    border:         1px solid #333;
+    box-shadow:     0 1px 4px rgba(224, 224, 224, 0.4);
+}
+#analyticsForm label {
+    font-weight:    500;
+    color:          var(--background-color);
+}
+#analyticsForm select {
+    padding:        0.4rem 0.7rem;
+    border-radius:  5px;
+    border:         1px solid #555;
+    background:     var(--surface-gradient);
+    color:          var(--background-color);
+}
+#analyticsForm select:focus {
+    outline:        none;
+    border-color:   #4cafef;
+}
+
+/* Notifications Section */
+/* ---------------- Subtle row highlight ---------------- */
+
+/* 
+@keyframes updateFade {
+  0%   { background-color: #fdd552; }
+  100% { background-color: transparent; }
+} */
+
+/* Initial flash (separate from the persistent highlight) */
+@keyframes rowFlash {
+  0%   { background-color: #5a5e37; }
+  100% { background-color: #616445; }
+}
+.flash-once { animation: rowFlash 2s ease-out; }
+
+/* PERSISTENT highlight — works with Bootstrap 5 & DataTables striping */
+.table tbody tr.new-reservation { 
+  /* Bootstrap 5 uses this var for striped backgrounds: override it */
+  --bs-table-accent-bg: #616445;
+}
+
+/* Fallback for older themes / ensure cells themselves stay yellow */
+.table tbody tr.new-reservation > * {
+  background-color: #616445 !important;
+}
+
+/* Optional: user acknowledgment (hover clears) */
+.table tbody tr.new-reservation:hover > * {
+  background-color: transparent !important;
+  transition: background-color .6s ease;
+}
+
+/* ---------------- Notification badge pop ---------------- */
+@keyframes badge-pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+#notification-badge.pop {
+  animation: badge-pop 0.3s ease;
+}
+
+
+
+
+
+
+/* ===================== Manage Venue Tab ===================== */
+#manage-venue {
+    padding: 1.5rem 0;
+}
+
+/* Form card */
+#manage-venue .venue-form-card {
+    background:     var(--surface-gradient);
+    border-radius:  8px;
+    padding:        2rem;
+    box-shadow:     0 0 20px rgba(0,0,0,0.6);
+    max-width:      960px;
+    margin:         0 auto 2rem auto;
+    color:          #000;
+}
+
+/* Form headings */
+#manage-venue .venue-form-card h3 {
+    font-size: 1.6rem;
+    color: #cacaca;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+/* Input fields, textarea, select */
+#manage-venue .sensitive-contact-section input,
+#manage-venue .sensitive-contact-section textarea,
+#manage-venue .sensitive-contact-section select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.7);
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+#manage-venue .venue-form-card input:focus,
+#manage-venue .venue-form-card textarea:focus,
+#manage-venue .venue-form-card select:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
+    background-color: var(--card-bg-color);
+}
+
+/* Textarea */
+#manage-venue .venue-form-card textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Image preview */
+#manage-venue .venue-form-card .venue-image-preview {
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #555;
+    margin-bottom: 8px;
+    margin-left: auto;
+}
+
+/* Checkbox wrapper */
+#manage-venue .venue-form-card .form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+#manage-venue .venue-form-card .form-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+/* Submit button */
+#manage-venue .venue-form-card .btn-edit-status {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background-color: #28a745;
+    color: #fff;
+    box-shadow: 0 0 8px #28a745cc;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+#manage-venue .venue-form-card .btn-edit-status:hover {
+    background-color: #3bda65;
+    box-shadow: 0 0 12px #3bda65dd;
+}
+
+/* Cancel button */
+#manage-venue .venue-form-card .btn-cancel {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background-color: #dc3545;
+    color: #ffe0e0;
+    box-shadow: 0 0 8px #dc3545cc;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    margin-left: 10px;
+}
+#manage-venue .venue-form-card .btn-cancel:hover {
+    background-color: #e96275;
+    box-shadow: 0 0 12px #e96275dd;
+}
+
+/* File upload input */
+#manage-venue .venue-form-card input[type="file"] {
+    padding: 6px 10px;
+    background-color: var(--background-color);
+    border: 1px solid #555;
+    color: #e0e0e0;
+}
+
+/* Small notes / hints */
+#manage-venue .venue-form-card small {
+    display: block;
+    color: #999;
+    margin-top: -8px;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+}
+
+/* Flex wrapper for buttons */
+#manage-venue .venue-form-card .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #manage-venue .venue-form-card {
+        padding: 1.5rem;
+    }
+
+    #manage-venue .venue-form-card .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #manage-venue .venue-form-card .btn-save,
+    #manage-venue .venue-form-card .btn-cancel {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+
+/* Ensure lucide icons align with text baseline */
+.tabs button svg {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 6px; /* space before text */
+    flex-shrink: 0;
+}
+
+/* Notification bell container */
+#notification-container {
+    position: relative;          /* anchor for badge */
+    display: inline-flex;
+    align-items: flex-start;
+    margin-left: 8px;            /* space from tab text */
+    line-height: 1;
+}
+
+/* Standardize bell size */
+#notification-container svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Badge anchored at top-right corner of bell */
+#notification-badge {
+    position: absolute;
+    top: -6px;                   /* move up */
+    right: -6px;                 /* move right */
+    background: #dc3545;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: bold;
+    border-radius: 999px;
+    padding: 2px 5px;
+    line-height: 1;
+    min-width: 16px;
+    text-align: center;
+}
+
+input,
+select,
+textarea,
+button {
+    font-family: inherit;  /* ✅ matches body font */
+    font-size: inherit;
+    color: inherit;
+}
+
+.file-upload-group {
+    display:        flex;
+    flex-direction: column;       /* stack button on top, banner below */
+    gap:            0.5rem;
+    width:          100%;
+    margin:         10px 0px;
+}
+
+/* Preview area on the left */
+.file-preview {
+    display:        flex;
+    flex-wrap:      wrap;            /* thumbnails wrap to new lines if needed */
+    align-items:    center;
+    gap:            0.5rem;
+    padding:        0.5rem;
+    border:         1px solid #ccc;
+    border-radius:  4px;
+    background:     #f9f9f9;
+    overflow-y:     auto;           /* enable vertical scrolling */
+    max-height:     150px;          /* fixed height banner */
+    min-height:     150px;
+}
+
+/* Upload button on the right */
+.custom-file-btn {
+    flex-shrink: 0;            /* prevent shrinking */
+    padding: 0.5rem 1rem;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+    white-space: nowrap;       /* avoid breaking into two lines */
+    width: 25%;
+    align-self: flex-end;
+    text-align: center;
+}
+.custom-file-btn:hover {
+    background-color: #45a049;
+}
+
+.thumb-wrapper {
+    position: relative;
+    display: inline-block;
+    flex: 0 0 auto;             /* don't shrink */
+}
+
+.thumb-wrapper img {
+    display: block;
+    height: 100px;              /* uniform thumbnail height */
+    width: auto;                /* maintain aspect ratio */
+    border-radius: 4px;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.remove-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(255,0,0,0.7);
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    line-height: 14px;
+    padding: 0;
+    cursor: pointer;
+    text-align: center;
+}
+
+/* Modal background */
+.image-modal {
+    display: none;                /* hidden by default */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/* Modal image */
+.image-modal img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 4px;
+    box-shadow: 0 0 10px #000;
+}
+
+/* Close button */
+.image-modal .close-btn {
+    position:       absolute;
+    top:            20px;
+    right:          30px;
+    font-size:      2rem;
+    color:          white;
+    cursor:         pointer;
+    background:     transparent;
+    border:         none;
+}
+
+/* ==========================
+   DATE RANGE PICKER MODAL
+   ========================== */
+
+/* Modal body centers input */
+[id^="dateRangeModal-"] .modal-body {
+  justify-content:  center;
+  align-items:      center;
+}
+
+/* Outer container alignment */
+.date-range-container {
+  position:         relative;
+  display:          flex;
+  justify-content:  center;
+  align-items:      center;
+  background:       var(--surface-gradient);
+  border-radius:    6px;
+  text-align:       right;
+  font-family:      inherit;
+  margin:           1.5rem 0;
+  padding:          0.8rem 1rem;
+
+}
+
+/* Date range input styling */
+.daterange-input {
+  max-width:        320px;
+  width:            100%;
+  padding:          0.75rem 1rem;
+  border-radius:    8px;
+  border:           1px solid #ddd;
+  background:       var(--surface-gradient);
+  box-shadow:       0 2px 6px rgba(0, 0, 0, 0.05);
+  font-size:        1rem;
+  font-weight:      500;
+  color:            var(--button-text);
+  text-align:       center;
+  cursor:           pointer;
+  transition:       all 0.2s ease;
+}
+
+/* Placeholder */
+.daterange-input::placeholder {
+  color: #ffffff;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Clear button styling */
+.clear-range-btn {
+  margin-left: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: var(--surface-gradient);
+  color: var(--button-text);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.clear-range-btn:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-color);
+}
+
+/* Prevent body shift when modal opens */
+body.modal-open {
+  padding-right: 0 !important;
+  overflow-y: scroll;
+}
+
+#daterange-input {
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+[id^="dateRangeModal-"] .modal-content {
+  border-radius: 10px;
+  padding:       0;
+  margin:        0; 
+}
+
+html {
+    overflow-y: scroll; /* prevent shifting when modal opens */
+}
+
+

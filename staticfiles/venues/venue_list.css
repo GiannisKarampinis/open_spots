@@ -1,0 +1,603 @@
+/* venue_list.css - styles for venue list page */
+
+/* --- Venue scroll container --- */
+/* Base horizontal row mode (unchanged) */
+.venue-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    /* Responsive padding ONLY */
+    padding: clamp(8px, 2.5vw, 12px);
+
+    gap: 16px;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    border-radius: 10px;
+    background-color: var(--scroll-container-bg);
+
+    width: 100%;
+    margin: 0 auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ===========================
+   GRID MODE (filtered)
+   =========================== */
+
+/* ===========================
+   GRID MODE (filtered)
+   Fixed container at 4 / 2 / 1 columns
+   Gap stays 16px
+   =========================== */
+
+/* ===========================
+   GRID MODE: fixed container width
+   4 cols: 1264px
+   2 cols: 632px
+   1 col : 316px
+   =========================== */
+
+.venue-scroll-container.grid-mode {
+    display: grid;
+
+    /* fixed spacing + padding */
+    gap: 16px;
+    padding: 8px;              /* 8px on each side -> matches your widths */
+
+    /* fixed background look */
+    background-color: var(--scroll-container-bg);
+    border-radius: 10px;
+
+    /* center the fixed-width container on the page */
+    margin: 0 auto;
+
+    /* no scrollbars in grid */
+    overflow: visible;
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+
+    justify-content: start;    /* columns start at left inside fixed container */
+}
+
+/* fixed card size in grid mode */
+.venue-scroll-container.grid-mode .venue-link {
+    width: 300px;
+    max-width: 300px;
+    flex: initial;             /* cancels flex: 0 0 auto from base .venue-link */
+    scroll-snap-align: unset;
+}
+
+.venue-scroll-container.grid-mode .venue-card {
+    width: 100%;
+    max-width: 300px;
+}
+
+/* Desktop: 4 columns -> container width 1264px */
+@media (min-width: 1350px) {
+    .venue-scroll-container.grid-mode {
+        width: 1264px;
+        grid-template-columns: repeat(4, 300px);
+    }
+}
+
+/* Desktop: 3 columns -> container width 1264px */
+@media (min-width: 980px) and (max-width: 1349px) {
+    .venue-scroll-container.grid-mode {
+        width: 948px;
+        grid-template-columns: repeat(3, 300px);
+    }
+}
+
+/* Tablet: 2 columns -> container width 632px */
+@media (min-width: 700px) and (max-width: 979px) {
+    .venue-scroll-container.grid-mode {
+        width: 632px;
+        grid-template-columns: repeat(2, 300px);
+    }
+}
+
+/* Mobile: 1 column -> container width 316px */
+@media (max-width: 699px) {
+    .venue-scroll-container.grid-mode {
+        width: 316px;
+        grid-template-columns: 300px; /* fixed column */
+        justify-content: center;
+    }
+}
+
+
+/* Custom scrollbar */
+.venue-scroll-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.venue-scroll-container::-webkit-scrollbar-track {
+    background: #1c1c1c;
+}
+
+.venue-scroll-container::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 4px;
+}
+
+.venue-scroll-container::-webkit-scrollbar-thumb:hover {
+    background-color: #777;
+}
+
+/* Venue card anchor */
+.venue-link {
+    flex: 0 0 auto;
+    width: clamp(240px, 80vw, 300px);
+    text-decoration: none;
+    color: inherit;
+    scroll-snap-align: start;
+}
+
+.venue-link,
+.venue-link:hover,
+.venue-link *:hover {
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+/* Venue card appearance */
+.venue-card {
+    background:     var(--surface-gradient);
+    border-radius:  10px;
+    width:          100%;
+    height:         100%;
+    color:          var(--button-text);
+    box-shadow:     0 0 10px rgba(255,255,255,0.1);
+    transition:     transform 0.2s ease, box-shadow 0.2s ease;
+    max-width:      300px;
+    box-sizing:     border-box;
+}
+
+.venue-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 0 15px rgba(255,255,255,0.2);
+}
+
+.venue-card-content {
+    padding: 16px;
+    color: var(--button-text);
+    /* display: flex; */
+    /* flex-direction: column; */
+    /* height: 100%; */
+}
+
+.venue-card img {
+    width: 100%;
+    height: clamp(140px, 30vw, 180px);
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.venue-card h3 {
+    font-family: var(--global-font-family);
+    font-weight: 700;
+    font-size: clamp(1.1rem, 4vw, 1.4rem);
+    margin: 6px 0 8px 0;
+    color: var(--button-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Venue info */
+.venue-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 6px 0;
+    font-size: 0.95rem;
+    color: var(--button-text);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.venue-info-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.venue-info > :first-child {
+    flex: 1;
+    min-width: 0;  /* IMPORTANT */
+}
+
+.venue-info > :not(:first-child) {
+    flex-shrink: 0;
+}
+
+
+.chair-full {
+    color: var(--venue-full);
+}
+
+.chair-available {
+    color: var(--venue-available);
+}
+
+.venue-info-item svg {
+    width: 16px;
+    height: 16px;
+    fill: var(--info-color);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.venue-info-item.rating {
+    color: #f1c40f;
+    font-weight: 600;
+}
+
+.venue-info-item + .venue-info-item {
+    border-left: 1px solid #444;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+.venue-info-item span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.venue-info-item.location span {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.3;
+}
+
+#venue-map {
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* --- Section headings --- */
+.section-title {
+    font-family: var(--global-font-family);
+    font-weight: 600;
+    font-size: clamp(1.1rem, 4vw, 1.6rem);
+    color: var(--text-color);
+    margin: 1.5rem 0 0.75rem 0;
+    padding-left: 0.5rem;
+    border-left: 4px solid var(--card-bg-color);
+    letter-spacing: 0.05em;
+    user-select: none;
+}
+
+.section-title.grid-mode {
+    font-family: var(--global-font-family);
+    font-weight: 600;
+    font-size: clamp(1.1rem, 4vw, 1.6rem);
+    color: var(--text-color);
+    text-align: center;
+    margin: 1.5rem 0 0.75rem 0;
+    padding-left: 0.5rem;
+    border-left: none;
+    letter-spacing: 0.05em;
+    user-select: none;
+}
+
+/* --- Main page heading --- */
+h2 {
+    font-family: var(--global-font-family);
+    font-weight: 700;
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    text-align: center;
+    margin: 2rem 0 1rem 0;
+    letter-spacing: 0.04em;
+    user-select: none;
+    color: var(--text-color);
+    text-shadow: 0 1px 3px var(--surface-gradient);
+}
+
+/* --- Filter menu --- */
+.filter-form {
+    text-align: center;
+    margin: 1.5em 0;
+}
+
+.filter-wrapper {
+    display:        inline-flex;
+    align-items:    center;
+    background:     var(--surface-gradient);
+    border:         1px solid #444;
+    border-radius:  8px;
+    padding:        0.4em 0.8em;
+    gap:            0.6em;
+    box-shadow:     0 2px 6px rgba(0,0,0,0.2);
+}
+
+.filter-form select {
+    background: transparent;
+    border: none;
+    color: var(--button-text);
+    font-size: 0.95rem;
+    padding: 0.3em 0.6em;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+}
+
+.filter-form select option {
+    background-color:     var(--surface-gradient);
+    color:          var(--button-text);
+}
+
+.clear-filter-btn {
+    margin-left: 0.8em;
+    padding: 0.4em 0.8em;
+    background-color: var(--primary-color);
+    color: var(--button-text);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* --- Sticky filter --- */
+.sticky-filter {
+    position:       sticky;
+    top:            0;
+    z-index:        2000;
+    background:     var(--surface-gradient);
+    padding:        0.6em 1em;
+    display:        inline-flex;
+    align-items:    center;
+    gap:            0.6em;
+    margin:         0 auto;
+    transition:     box-shadow 0.3s ease;
+    color:          var(--button-text);
+}
+
+/* --- Availability styling --- */
+
+/* .venue-card.available {
+    border:     5px solid var(--venue-available);
+    box-shadow: 0 0 15px var(--venue-available-shadow);
+}
+
+.venue-card.full {
+    border:     4px solid var(--venue-full);
+    box-shadow: 0 0 15px 0 var(--venue-full-shadow);
+} */
+
+/* --- Upcoming reservation --- */
+.quick-reservation-card {
+    background:         var(--scroll-container-bg);
+    border-radius:      16px;
+    padding:            16px;
+    margin:             20px auto;
+    max-width:          35%;
+    transition:         transform 0.2s ease;
+
+    /* Layout: content left, image right */
+    display:            grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto auto;
+    column-gap:         16px;
+    row-gap:            10px;
+    align-items:        start;
+}
+
+.quick-reservation-card:hover {
+    transform:          translateY(-2px);
+}
+
+/* Keep your content blocks on the left column */
+.quick-reservation-card h3,
+.quick-reservation-card .reservation-info,
+.quick-reservation-card .reservation-actions {
+    grid-column:        1;
+}
+
+/* Image sits INSIDE card on the right, no absolute, no fixed width */
+.quick-reservation-card .venue-image {
+    grid-column:        2;
+    grid-row:           1 / -1;
+    height:             100%;
+    max-height:         140px;      /* prevents huge images making the card too tall */
+    width:              auto;       /* no fixed width */
+    aspect-ratio:       1 / 1;      /* stable thumbnail shape */
+    object-fit:         cover;
+    border-radius:      6px;        /* keep your original radius */
+    align-self:         stretch;
+    justify-self:       end;
+}
+
+/* Actions layout (safe default) */
+.quick-reservation-card .reservation-actions {
+    display:            flex;
+    gap:                0.6em;
+    flex-wrap:          wrap;
+    align-items:        center;
+}
+
+/* --- Buttons (carried over) --- */
+.quick-reservation-card .edit-btn {
+    background-color:   var(--primary-color);
+    color:              var(--button-text);
+    border-radius:      4px;
+    padding:            0.2em 0.5em;
+    text-decoration:    none;
+    display:            inline-flex;
+    align-items:        center;
+    gap:                0.35em;
+}
+
+.quick-reservation-card .edit-btn:hover {
+    background-color:   var(--primary-hover);
+    color:              var(--button-text);
+}
+
+.quick-reservation-card .cancel-btn {
+    background-color:   #f44336;
+    color:              var(--button-text);
+    border-radius:      4px;
+    padding:            0.2em 0.5em;
+    text-decoration:    none;
+    display:            inline-flex;
+    align-items:        center;
+    gap:                0.35em;
+}
+
+.quick-reservation-card .cancel-btn:hover {
+    background-color:   #c4352b;
+    color:              var(--button-text);
+}
+
+/* --- Mobile --- */
+@media (max-width: 400px) {
+    /* No more padding-right hack needed (it was only for absolute image) */
+    .quick-reservation-card {
+        max-width: 100%;
+        grid-template-columns: 1fr;  /* stack */
+    }
+
+    .quick-reservation-card .venue-image {
+        grid-column: 1;
+        grid-row: auto;
+
+        width: 100%;
+        height: auto;
+        max-height: 220px;
+        aspect-ratio: 16 / 9; /* nicer wide preview on mobile */
+        justify-self: stretch;
+    }
+
+    /* Your existing filter styling preserved */
+    .filter-form {
+        margin: 0.8em 0;
+        padding: 0 8px;
+        width: 50%;
+    }
+
+    .filter-wrapper {
+        width: 50%;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 6px 8px;
+        gap: 6px;
+        border-radius: 6px;
+    }
+
+    .filter-form select {
+        flex: 1 1 auto;
+        min-width: 100px;
+        font-size: 0.5rem;
+        padding: 4px 6px;
+    }
+
+    .clear-filter-btn {
+        margin-left: 0;
+        padding: 4px 8px;
+        font-size: 0.5rem;
+        white-space: nowrap;
+    }
+
+    .sticky-filter {
+        width: 50%;
+        padding: 6px 8px;
+        border-radius: 0;
+        justify-content: center;
+    }
+}
+
+/* Stack venue info on small screens */
+@media (max-width: 480px) {
+    .venue-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .venue-info-item + .venue-info-item {
+        border-left: none;
+        padding-left: 0;
+    }
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) {
+    .venue-card:hover {
+        transform: none;
+        box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+}
+
+/* ===========================
+   PAGINATION
+   =========================== */
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 24px 0 10px 0;
+    padding: 10px;
+}
+
+.page-btn,
+.page-number {
+    background: var(--surface-gradient);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: var(--button-text);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: transform 0.15s ease;
+}
+
+.page-btn:hover,
+.page-number:hover {
+    transform: translateY(-1px);
+    color: var(--button-text-hover);
+}
+
+.page-number.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--button-text);
+    font-weight: 700;
+}
+
+.page-btn.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+
+.page-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 12px;
+}
+
+@media (max-width: 1024px) {
+    .page-container {
+        padding: 0 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .page-container {
+        padding: 0 12px;
+    }
+}
