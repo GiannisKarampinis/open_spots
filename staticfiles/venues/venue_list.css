@@ -314,7 +314,7 @@ h2 {
 .filter-wrapper {
     display:        inline-flex;
     align-items:    center;
-    background:     var(--surface-gradient);
+    background-color: var(--surface-color);
     border:         1px solid #444;
     border-radius:  8px;
     padding:        0.4em 0.8em;
@@ -322,20 +322,15 @@ h2 {
     box-shadow:     0 2px 6px rgba(0,0,0,0.2);
 }
 
-.filter-form select {
-    background: transparent;
+.filter-menu {
     border: none;
     color: var(--button-text);
+    background-color: var(--surface-color);
     font-size: 0.95rem;
     padding: 0.3em 0.6em;
     border-radius: 4px;
     outline: none;
     cursor: pointer;
-}
-
-.filter-form select option {
-    background-color:     var(--surface-gradient);
-    color:          var(--button-text);
 }
 
 .clear-filter-btn {
@@ -354,7 +349,7 @@ h2 {
     position:       sticky;
     top:            0;
     z-index:        2000;
-    background:     var(--surface-gradient);
+    background-color: var(--surface-color);
     padding:        0.6em 1em;
     display:        inline-flex;
     align-items:    center;

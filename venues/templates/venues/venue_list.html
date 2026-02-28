@@ -20,7 +20,7 @@
             <i class="fa-solid fa-filter filter-icon"></i>
 
             <!-- Kind filter -->
-            <select name="kind" id="venue_type" onchange="this.form.submit()">
+            <select class="filter-menu"name="kind" id="venue_type" onchange="this.form.submit()">
                 <option value="">{% trans "All Venues" %}</option>
                 <option value="restaurant" {% if selected_kind == "restaurant" %}selected{% endif %}>
                     {% trans "Restaurants" %}
@@ -40,7 +40,7 @@
             </select>
 
             <!-- Availability filter -->
-            <select name="availability" id="venue_availability" onchange="this.form.submit()">
+            <select class="filter-menu" name="availability" id="venue_availability" onchange="this.form.submit()">
                 <option value="">{% trans "All" %}</option>
                 <option value="available" {% if selected_availability == "available" %}selected{% endif %}>
                     {% trans "Available" %}
