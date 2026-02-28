@@ -1,7 +1,10 @@
 {% load i18n %}
 {% load date_filters %}
 
-<tr id="reservation-row-{{ r.id }}" data-reservation-id="{{ r.id }}">
+<tr id="reservation-row-{{ r.id }}"
+  data-reservation-id="{{ r.id }}"
+  data-seen="{% if r.seen %}true{% else %}false{% endif %}"
+  {% if not r.seen %}class="unseen-reservation"{% endif %}>
   <td>{{ r.full_name }}</td>
 
   <!-- Date -->
@@ -11,6 +14,20 @@
   <td data-order="{{ r.time|time:'H:i' }}">{{ r.time|format_time_display }}</td>
 
   <td>{{ r.guests }}</td>
+
+  <td>
+    {% if r.seen %}
+      <a href="{% url 'update_reservation_seen' r.id 'unseen' %}"
+         class="btn btn-sm btn-toggle-seen"
+         data-seen="true"
+         title="{% trans 'Mark as Unseen' %}">👁️ {% trans "Seen" %}</a>
+    {% else %}
+      <a href="{% url 'update_reservation_seen' r.id 'seen' %}"
+         class="btn btn-sm btn-toggle-seen"
+         data-seen="false"
+         title="{% trans 'Mark as Seen' %}">🙈 {% trans "Unseen" %}</a>
+    {% endif %}
+  </td>
 
   <td>
     <span class="badge 

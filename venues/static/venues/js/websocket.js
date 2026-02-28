@@ -1,8 +1,6 @@
 function initWebSocket(venueId){
     if (!venueId) return console.error('No venueId for WS');
 
-    const notificationBadge = document.getElementById('notification-badge');
-    let unreadCount =   0;
     const wsScheme  =   window.location.protocol==='https:'?'wss':'ws';
     const socket    =   new WebSocket(`${wsScheme}://${window.location.host}/ws/notifications/${venueId}/`);
 
@@ -23,15 +21,6 @@ function initWebSocket(venueId){
                 return;
             }
 
-            unreadCount++;
-            if(notificationBadge){
-                notificationBadge.textContent=unreadCount;
-                notificationBadge.style.display='inline-block';
-                notificationBadge.classList.remove('pop');
-                void notificationBadge.offsetWidth;
-                notificationBadge.classList.add('pop');
-            }
-
             if(!shouldApplyUpdate(reservation)){
                 console.debug(`Dropping stale WS update for ${reservation.id}`);
                 return;
@@ -39,7 +28,11 @@ function initWebSocket(venueId){
 
             if(reservation.status==='pending' || reservation.status==='confirmed' || reservation.status==='cancelled') {
                 upsertReservationRow(reservation);
-                markReservationUnseen(reservation.id);
+                if ((reservation.status || '').toLowerCase() === 'pending') {
+                    markReservationUnseen(reservation.id);
+                } else {
+                    markReservationSeen(reservation.id);
+                }
             }
         });
     };

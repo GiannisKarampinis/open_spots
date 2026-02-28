@@ -352,6 +352,109 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
     min-height: 80vh;
 }
 
+/* Reservation details modal (dashboard) */
+
+#reservationDetailsModal {
+    position: fixed;
+    inset: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 20000;
+}
+
+#reservationDetailsModal:not(.show) {
+    display: none;
+}
+
+#reservationDetailsModal.show {
+    display: block;
+}
+
+#reservationDetailsModal .modal-dialog {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 3.5rem);
+    margin: 1.75rem auto;
+    max-width: 640px;
+}
+
+#reservationDetailsModal .modal-content {
+    width: 100%;
+    background: var(--surface-gradient);
+    color: var(--button-text);
+    border: 1px solid var(--primary-hover);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: #000;
+}
+
+#reservationDetailsModal .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 0.9rem 1rem;
+}
+
+#reservationDetailsModal .modal-title {
+    color: var(--button-text);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+#reservationDetailsModal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(180%);
+    opacity: 0.8;
+}
+
+#reservationDetailsModal .btn-close:hover {
+    opacity: 1;
+}
+
+#reservationDetailsModal .modal-body {
+    padding: 1rem;
+}
+
+#reservationDetailsModal .modal-body p {
+    margin-bottom: 0.65rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+#reservationDetailsModal .modal-body strong {
+    color: var(--button-text-hover);
+    font-weight: 600;
+}
+
+#reservationDetailsModal .modal-body span {
+    color: var(--button-text);
+    word-break: break-word;
+}
+
+.modal-backdrop.show {
+    opacity: 0.6;
+    z-index: 19990;
+}
+
+@media (max-width: 576px) {
+    #reservationDetailsModal .modal-dialog {
+        margin: 0.75rem;
+    }
+
+    #reservationDetailsModal .modal-body {
+        padding: 0.85rem;
+    }
+
+    #reservationDetailsModal .modal-body p {
+        margin-bottom: 0.55rem;
+        padding: 0.4rem 0.5rem;
+    }
+}
+
 /* Manual tabs styles */
 .tabs {
     display: flex;
@@ -495,6 +598,15 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 .table tbody tr.new-reservation:hover > * {
   background-color: transparent !important;
   transition: background-color .6s ease;
+}
+
+/* Unseen pending reservation rows */
+.table tbody tr.unseen-reservation {
+    --bs-table-accent-bg: #52553a;
+}
+
+.table tbody tr.unseen-reservation > * {
+    background-color: #52553a !important;
 }
 
 /* ---------------- Notification badge pop ---------------- */

@@ -127,16 +127,6 @@ function addRowToTable(tableSelector, rowHtml, isExistingRow = false) {
     table.columns.adjust().draw(false);
     table.order([[1, 'asc'], [2, 'asc']]).draw(false);
 
-    // Highlight only for new rows in upcoming table. If the row was added to 
-    // #upcomingTable and it wasn’t an update of an existing entry, we flash 
-    // a yellow background briefly so the admin notices new requests.
-    if (tableSelector === '#upcomingTable' && !isExistingRow) {
-        const $new = $(newRowNode);
-        $new.addClass('new-reservation flash-once');
-        setTimeout(() => $new.removeClass('flash-once'), 2000);
-        $new.on('mouseenter', () => $new.removeClass('new-reservation'));
-    }
-
     return newRowNode;
 }
 

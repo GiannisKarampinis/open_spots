@@ -56,6 +56,12 @@ function formatTimeDisplay(timeStr) {
 function renderRowFromData(data) {
     if (!data || !data.id) return '';
 
+    const venueDashboard = document.getElementById('venue-dashboard');
+    const venuesBase = venueDashboard && venueDashboard.dataset && venueDashboard.dataset.venuesBase
+        ? venueDashboard.dataset.venuesBase
+        : '/venues/';
+    const normalizedBase = venuesBase.endsWith('/') ? venuesBase : `${venuesBase}/`;
+
     const id                = data.id;
     const customer          = data.customer_name || '—';
     const dateISO           = data.date || '';
@@ -89,6 +95,8 @@ function renderRowFromData(data) {
     const moveUrl   = urls.move   || `/reservation/${id}/move-to-requests/`;
     const checkInUrl= urls.checkin|| `/reservation/${id}/update-arrival/checked_in/`;
     const noShowUrl = urls.no_show || urls.noshow || `/reservation/${id}/update-arrival/no_show/`;
+    const seenUrl   = urls.seen   || `${normalizedBase}reservation/${id}/seen/seen/`;
+    const unseenUrl = urls.unseen || `${normalizedBase}reservation/${id}/seen/unseen/`;
     const editHref  = urls.edit   || `/reservation/${id}/edit-status/`;
 
     let actionsHtml = '';
@@ -110,12 +118,26 @@ function renderRowFromData(data) {
         actionsHtml = btns;
     }
 
+    const showSeenColumn = (status === 'pending');
+    const seen = !!data.seen;
+    const seenHtml = seen
+        ? `<a href="${escapeHtml(unseenUrl)}" class="btn btn-sm btn-toggle-seen" data-seen="true" title="Mark as Unseen">👁️ Seen</a>`
+        : `<a href="${escapeHtml(seenUrl)}" class="btn btn-sm btn-toggle-seen" data-seen="false" title="Mark as Seen">🙈 Unseen</a>`;
+    const seenCellHtml = showSeenColumn ? `<td>${seenHtml}</td>` : '';
+
+    const rowSeenAttr = showSeenColumn ? `data-seen="${seen ? 'true' : 'false'}"` : '';
+    const rowClassAttr = (showSeenColumn && !seen) ? 'class="unseen-reservation"' : '';
+
     return `
-        <tr id="reservation-row-${id}" data-reservation-id="${id}">
+        <tr id="reservation-row-${id}"
+            data-reservation-id="${id}"
+            ${rowSeenAttr}
+            ${rowClassAttr}>
             <td>${escapeHtml(customer)}</td>
             <td data-order="${escapeHtml(dateDataOrder)}">${escapeHtml(dateDisplay)}</td>
             <td data-order="${escapeHtml(timeDataOrder)}">${escapeHtml(timeDisplay)}</td>
             <td>${escapeHtml(String(party))}</td>
+            ${seenCellHtml}
             <td><span class="${badgeClasses}">${escapeHtml(capitalize(statusLabel))}</span></td>
             <td>${actionsHtml}</td>
         </tr>

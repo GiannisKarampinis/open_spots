@@ -658,6 +658,7 @@ def update_reservation_status(request, reservation_id, status):
         "date":             reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
         "time":             reservation.time.strftime("%H:%M") if reservation.time else None,
         "guests":           getattr(reservation, 'guests', None),
+        "seen":             bool(reservation.seen),
         "status":           reservation.status,
         "arrival_status":   reservation.arrival_status,
         "urls": {
@@ -666,6 +667,8 @@ def update_reservation_status(request, reservation_id, status):
             "no_show":      reverse('update_arrival_status', args=[reservation.id, 'no_show']),
             "accept":       reverse('update_reservation_status', args=[reservation.id, 'accepted']),
             "reject":       reverse('update_reservation_status', args=[reservation.id, 'rejected']),
+            "seen":         reverse('update_reservation_seen', args=[reservation.id, 'seen']),
+            "unseen":       reverse('update_reservation_seen', args=[reservation.id, 'unseen']),
         },
         "updated_at":       timezone.now().isoformat(),
     }
@@ -706,6 +709,7 @@ def update_arrival_status(request, reservation_id, arrival_status):
         "date":             reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
         "time":             reservation.time.strftime("%H:%M") if reservation.time else None,
         "guests":           getattr(reservation, 'guests', None),
+        "seen":             bool(reservation.seen),
         "status":           reservation.status,
         "arrival_status":   reservation.arrival_status,
         "urls": {
@@ -714,6 +718,8 @@ def update_arrival_status(request, reservation_id, arrival_status):
             "no_show":  reverse('update_arrival_status',                args=[reservation.id, 'no_show']),
             "accept":   reverse('update_reservation_status',            args=[reservation.id, 'accepted']),
             "reject":   reverse('update_reservation_status',            args=[reservation.id, 'rejected']),
+            "seen":     reverse('update_reservation_seen',              args=[reservation.id, 'seen']),
+            "unseen":   reverse('update_reservation_seen',              args=[reservation.id, 'unseen']),
         },
         "updated_at": timezone.now().isoformat(),
     }
@@ -759,6 +765,7 @@ def move_reservation_to_requests_ajax(request, reservation_id):
         "date":             reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
         "time":             reservation.time.strftime("%H:%M") if reservation.time else None,
         "guests":           getattr(reservation, 'guests', None),
+        "seen":             bool(reservation.seen),
         "status":           reservation.status,
         "arrival_status":   reservation.arrival_status,
         # Optional: include action URLs (recommended)
@@ -768,6 +775,8 @@ def move_reservation_to_requests_ajax(request, reservation_id):
             "move":         reverse('move_reservation_to_requests_ajax',    args = [reservation.id]),
             "checkin":      reverse('update_arrival_status',                args = [reservation.id, 'checked_in']),
             "no_show":      reverse('update_arrival_status',                args = [reservation.id, 'no_show']),
+            "seen":         reverse('update_reservation_seen',              args = [reservation.id, 'seen']),
+            "unseen":       reverse('update_reservation_seen',              args = [reservation.id, 'unseen']),
         },
         "updated_at": timezone.now().isoformat(),
     }
@@ -779,6 +788,81 @@ def move_reservation_to_requests_ajax(request, reservation_id):
         'moved':        moved,
         'reservation':  reservation_data
     })
+
+###########################################################################################
+
+###########################################################################################
+@login_required
+@venue_admin_required
+@require_POST
+def update_reservation_seen(request, reservation_id, seen_state):
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+
+    if reservation.venue.owner != request.user:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if reservation.status != 'pending':
+        return JsonResponse({'error': 'Seen flag is only editable for pending reservations'}, status=400)
+
+    if seen_state not in ('seen', 'unseen'):
+        return JsonResponse({'error': 'Invalid seen state'}, status=400)
+
+    target_seen = (seen_state == 'seen')
+
+    if reservation.seen != target_seen:
+        reservation.seen = target_seen
+        reservation.save(update_fields=['seen'])
+
+    return JsonResponse({
+        'updated': True,
+        'reservation': {
+            'id': reservation.id,
+            'seen': bool(reservation.seen),
+            'urls': {
+                'seen': reverse('update_reservation_seen', args=[reservation.id, 'seen']),
+                'unseen': reverse('update_reservation_seen', args=[reservation.id, 'unseen']),
+            }
+        }
+    }, status=200)
+
+###########################################################################################
+
+###########################################################################################
+@login_required
+@venue_admin_required
+@require_GET
+def reservation_details_api(request, reservation_id):
+# REVIEWED - OK
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+
+    if reservation.venue.owner != request.user:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if not reservation.seen:
+        reservation.seen = True
+        reservation.save(update_fields=['seen'])
+
+    payload = {
+        'id':               reservation.id,
+        'customer_name':    reservation.full_name,
+        'date':             reservation.date.strftime('%b %d, %Y') if reservation.date else '',
+        'time':             reservation.time.strftime('%I:%M %p').lstrip('0') if reservation.time else '',
+        'guests':           reservation.guests,
+        'seen':             bool(reservation.seen),
+        'status':           reservation.status,
+        'arrival_status':   reservation.arrival_status,
+        'email':            reservation.email or '',
+        'phone':            reservation.phone or '',
+        'special_requests': reservation.get_special_requests_display() if reservation.special_requests else '',
+        'allergies':        reservation.allergies or '',
+        'comments':         reservation.comments or '',
+        'urls': {
+            'seen':         reverse('update_reservation_seen', args=[reservation.id, 'seen']),
+            'unseen':       reverse('update_reservation_seen', args=[reservation.id, 'unseen']),
+        },
+    }
+
+    return JsonResponse({'reservation': payload}, status=200)
 
 ###########################################################################################
 

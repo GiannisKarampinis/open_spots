@@ -1,6 +1,8 @@
 {% load i18n %}
+{% load date_filters %}
 
-<tr id="reservation-row-{{ r.id }}" data-reservation-id="{{ r.id }}">
+<tr id="reservation-row-{{ r.id }}"
+    data-reservation-id="{{ r.id }}">
   <td>{{ r.full_name }}</td>
 
   <!-- Date -->

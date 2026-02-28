@@ -419,6 +419,7 @@ class Reservation(models.Model):
     special_requests    = models.CharField(max_length=20, choices=SPECIAL_REQUESTS_CHOICES, default='none') 
     allergies           = models.TextField(blank=True, null=True)   # optional
     objects             = ReservationManager() 
+    seen                = models.BooleanField(default=False) # For owner dashboard: has the owner seen this reservation in their dashboard yet?
 
     def __str__(self):
         return f"{self.full_name} - {self.date} at {self.time} ({self.venue.name})"
