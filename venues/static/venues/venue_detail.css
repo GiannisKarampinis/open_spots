@@ -442,6 +442,8 @@ body {
     flex-shrink: 0;
     width: 40px;
     margin-right: 4px;  /* add spacing between slots */
+    scroll-snap-align: center;
+    touch-action: pan-x;
 }
 
 .time-slot:hover {
@@ -474,12 +476,12 @@ body {
     cursor: pointer;
     z-index: 5;
 }
-.slot-nav:hover {
+ slot-nav:hover {
     background: rgba(255,255,255,1);
     border-color: #333;
 }
-.slot-prev { left: 2px; }
-.slot-next { right: 2px; }
+ slot-prev { left: 2px; }
+ slot-next { right: 2px; }
 
 
 .image-modal {
@@ -594,4 +596,25 @@ body {
 /* Hide the original date input */
 .res-step input[name="date"] {
     display: none;
+}
+
+/* enable smooth snapping and nicer touch behavior */
+#time-slot-container {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  gap: 4px;
+  padding: 8px;
+}
+
+/* simulate hover style for touch: apply same rules as :hover */
+.time-slot.touch-hover,
+.time-slot.touch-hover:hover {
+  background: #e0e0e0;
+  border-color: #bbb;
+}
+
+/* hide prev/next arrows on small screens (mobile/tablet) */
+@media (max-width: 900px) {
+  .slot-nav { display: none; }
+  .time-slider-wrapper { max-width: 100%; }
 }

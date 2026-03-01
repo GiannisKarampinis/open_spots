@@ -585,6 +585,94 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // ---------------------------
+    // TOUCH / DRAG SCROLL HELPERS
+    // Enables drag/swipe to scroll the time slot container, keeps nearest
+    // slot marked `.active`, and provides a short touch 'hover' visual.
+    // These are intentionally safe/no-op if the container is not present.
+    // ---------------------------
+    (function enableSlotTouchScroll() {
+      const container = document.getElementById('time-slot-container');
+      if (!container) return;
+
+      // Pointer drag-to-scroll (works for mouse + touch via pointer events)
+      let isDown = false, startX = 0, scrollLeft = 0, moved = false;
+      container.addEventListener('pointerdown', (e) => {
+        isDown = true;
+        moved = false;
+        try { container.setPointerCapture(e.pointerId); } catch (err) {}
+        startX = e.clientX;
+        scrollLeft = container.scrollLeft;
+        container.classList.add('dragging');
+      });
+
+      container.addEventListener('pointermove', (e) => {
+        if (!isDown) return;
+        const dx = e.clientX - startX;
+        if (Math.abs(dx) > 5) moved = true; // treat small jitter as tap
+        container.scrollLeft = scrollLeft - dx;
+      });
+
+      const stopPointer = (e) => {
+        // If pointerup and there was negligible movement, treat as a tap
+        if (!moved && e) {
+          const upTarget = document.elementFromPoint(e.clientX, e.clientY);
+          const slot = upTarget ? upTarget.closest('.time-slot') : null;
+          if (slot) {
+            // emulate selection (mirror container click behavior)
+            container.querySelectorAll('.time-slot').forEach(s => s.classList.remove('active'));
+            slot.classList.add('active');
+            const timeField = document.querySelector('input[name="time"]');
+            const slotDateField = document.getElementById('selected-slot-date');
+            if (timeField) {
+              timeField.value = slot.dataset.time || '';
+              if (slotDateField) slotDateField.value = slot.dataset.slotDate || '';
+              timeField.dispatchEvent(new Event('input'));
+              timeField.dispatchEvent(new Event('change'));
+              try { validateStep(2); } catch (err) {}
+            }
+          }
+        }
+        isDown = false;
+        moved = false;
+        try { if (e && e.pointerId) container.releasePointerCapture(e.pointerId); } catch (err) {}
+        container.classList.remove('dragging');
+      };
+
+      container.addEventListener('pointerup', stopPointer);
+      container.addEventListener('pointercancel', stopPointer);
+      container.addEventListener('pointerleave', stopPointer);
+
+      // Short touch 'hover' visual
+      container.addEventListener('touchstart', (e) => {
+        const target = e.target.closest('.time-slot');
+        if (!target) return;
+        target.classList.add('touch-hover');
+        setTimeout(() => target.classList.remove('touch-hover'), 600);
+      }, { passive: true });
+
+      // Clicking a slot should still select it (some slots already wire click),
+      // but keep a container-level fallback to ensure hidden inputs update.
+      container.addEventListener('click', (e) => {
+        const target = e.target.closest('.time-slot');
+        if (!target) return;
+        container.querySelectorAll('.time-slot').forEach(s => s.classList.remove('active'));
+        target.classList.add('active');
+
+        const timeField = document.querySelector('input[name="time"]');
+        const slotDateField = document.getElementById('selected-slot-date');
+        if (timeField) {
+          timeField.value = target.dataset.time || '';
+          if (slotDateField) slotDateField.value = target.dataset.slotDate || '';
+          timeField.dispatchEvent(new Event('input'));
+          timeField.dispatchEvent(new Event('change'));
+          try { validateStep(2); } catch (err) {}
+        }
+      });
+
+      // no automatic activation or centering on scroll — selection only via click
+    })();
+
 });
 
 (function setupGalleryModal() {
