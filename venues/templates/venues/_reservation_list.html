@@ -6,7 +6,7 @@
     <li class="reservation-card">
         <div class="reservation-info">
             <strong>{% trans "Reservation at:" %} {{ r.venue.name }}</strong><br>
-            <i class="fa-solid fa-calendar"></i> {% trans "Date:" %} {{ r.date }} {% trans "at" %} {{ r.time }}<br>
+            <i class="fa-solid fa-calendar"></i> {% trans "Date:" %} {{ r.date|date:"M d, Y" }} {{ r.time|time:"H:i" }}<br>
             <i class="fa-solid fa-users"></i> {% trans "Guests:" %} {{ r.guests }}<br>
             <span class="status-badge {{ r.status }}">{% trans "Status:" %} {{ r.status|capfirst }}</span>
         </div>
