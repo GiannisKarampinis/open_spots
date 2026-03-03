@@ -9,6 +9,7 @@ media_backup/
 staticfiles/*
 node_modules
 *.patch
+celerybeat-schedule
 media/
 env
 migrations/

@@ -34,6 +34,50 @@ services:
     env_file:
       - ./.env
 
+  worker:
+    build: .
+    command: celery -A openspots worker -l info
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=openspots.settings
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_NAME=openspots_db
+      - DATABASE_USER=openspots_user
+      - DATABASE_PASSWORD=supersecret123
+      - DATABASE_HOST=db
+      - PYTHONUNBUFFERED=1
+      - DJANGO_RUNNING_IN_DOCKER=1
+    env_file:
+      - ./.env
+
+  beat:
+    build: .
+    command: celery -A openspots beat -l info
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=openspots.settings
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_NAME=openspots_db
+      - DATABASE_USER=openspots_user
+      - DATABASE_PASSWORD=supersecret123
+      - DATABASE_HOST=db
+      - PYTHONUNBUFFERED=1
+      - DJANGO_RUNNING_IN_DOCKER=1
+    env_file:
+      - ./.env
+
   redis:
     image: redis:7
     container_name: redis_server

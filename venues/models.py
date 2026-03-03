@@ -471,6 +471,59 @@ class Reservation(models.Model):
             )
         ]
 
+
+class ReservationOutboxEvent(models.Model):
+    CHANNEL_WEBSOCKET = 'websocket'
+    CHANNEL_EMAIL = 'email'
+    CHANNEL_BOTH = 'both'
+
+    CHANNEL_CHOICES = [
+        (CHANNEL_WEBSOCKET, 'WebSocket'),
+        (CHANNEL_EMAIL, 'Email'),
+        (CHANNEL_BOTH, 'Both'),
+    ]
+
+    STATUS_PENDING      = 'pending'     # queued, waiting to be processed
+    STATUS_PROCESSING   = 'processing'  # worker currntly processing this event
+    STATUS_SENT         = 'sent'        # delivered successfully
+    STATUS_FAILED       = 'failed'      # last attempt failed, will retry based on next_retry_at
+
+    STATUS_CHOICES = [
+        (STATUS_PENDING,    'Pending'),
+        (STATUS_PROCESSING, 'Processing'),
+        (STATUS_SENT,       'Sent'),
+        (STATUS_FAILED,     'Failed'),
+    ]
+
+    reservation = models.ForeignKey(
+        'Reservation',
+        on_delete=models.CASCADE,
+        related_name='outbox_events',
+    )
+    venue = models.ForeignKey(
+        'Venue',
+        on_delete=models.CASCADE,
+        related_name='outbox_events',
+    )
+    event_type      = models.CharField(max_length=64)
+    channel         = models.CharField(max_length=16, choices=CHANNEL_CHOICES, default=CHANNEL_BOTH)
+    payload         = models.JSONField(default=dict)
+    idempotency_key = models.CharField(max_length=255, unique=True)
+    status          = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    attempts        = models.PositiveIntegerField(default=0)
+    next_retry_at   = models.DateTimeField(default=timezone.now)
+    last_error      = models.TextField(blank=True, default='')
+    sent_at         = models.DateTimeField(null=True, blank=True)
+    created_at      = models.DateTimeField(auto_now_add=True)
+    updated_at      = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['status', 'next_retry_at']),
+            models.Index(fields=['venue', 'created_at']),
+        ]
+
 ###########################################################################################
 
 ###########################################################################################

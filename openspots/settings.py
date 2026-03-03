@@ -34,6 +34,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "testserver",
+    "web"
 ]
 
 
@@ -78,6 +79,27 @@ CHANNEL_LAYERS = {
         "CONFIG": {
             "hosts": [os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")],
         },
+    },
+}
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0"))
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = int(os.getenv("CELERY_WORKER_PREFETCH_MULTIPLIER", "1"))
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT", "120"))
+CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv("CELERY_TASK_SOFT_TIME_LIMIT", "90"))
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE if 'TIME_ZONE' in globals() else 'UTC'
+OUTBOX_SWEEP_INTERVAL_SECONDS = float(os.getenv("OUTBOX_SWEEP_INTERVAL_SECONDS", "30"))
+CELERY_BEAT_SCHEDULE = {
+    "process-pending-outbox-events-every-30s": {
+        "task": "venues.tasks.process_pending_outbox_events",
+        "schedule": OUTBOX_SWEEP_INTERVAL_SECONDS,
     },
 }
 
