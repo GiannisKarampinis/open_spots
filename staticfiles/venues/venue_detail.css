@@ -408,22 +408,29 @@ body {
   border-color:   #d9534f !important;
 }
 
-/* Manual horizontal slider */
-.time-slider-wrapper {
-    position: relative;
-    margin: 10px 0 30px 0;
-    overflow: hidden;
-    /* shrink to content but limit to a reasonable width */
-    width: auto;
-    max-width: 320px;      /* constrain frame size */
+.time-slider-wrapper{
+  position: relative;
+  margin: 10px 0 30px 0;
+  overflow: hidden;
+  max-width: 320px;
+  padding: 0 34px;        /* reserve space for arrows */
+  box-sizing: border-box;
 }
 
+.time-slot-container,
 #time-slot-container {
-    display: flex;
-    overflow-x: auto;
-    scrollbar-width: none; /* hide firefox scrollbar */
-    /* natural width; may exceed wrapper to allow scrolling */
-    flex: none;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  gap: 4px;
+  padding: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 #time-slot-container::-webkit-scrollbar { display: none; }
 
@@ -444,6 +451,10 @@ body {
     margin-right: 4px;  /* add spacing between slots */
     scroll-snap-align: center;
     touch-action: pan-x;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
 }
 
 .time-slot:hover {
@@ -459,29 +470,32 @@ body {
 }
 
 /* navigation buttons for manual slider */
-.slot-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255,255,255,0.9);
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    color: #333;
-    cursor: pointer;
-    z-index: 5;
+.slot-nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  z-index: 5;
 }
- slot-nav:hover {
-    background: rgba(255,255,255,1);
-    border-color: #333;
+
+.slot-nav:hover{
+  background: rgba(255,255,255,1);
+  border-color: #333;
 }
- slot-prev { left: 2px; }
- slot-next { right: 2px; }
+
+/* IMPORTANT: dots */
+.slot-prev{ left: 2px; }
+.slot-next{ right: 2px; }
 
 
 .image-modal {
@@ -596,14 +610,6 @@ body {
 /* Hide the original date input */
 .res-step input[name="date"] {
     display: none;
-}
-
-/* enable smooth snapping and nicer touch behavior */
-#time-slot-container {
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  gap: 4px;
-  padding: 8px;
 }
 
 /* simulate hover style for touch: apply same rules as :hover */
