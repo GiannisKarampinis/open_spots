@@ -1490,3 +1490,18 @@ def submit_working_hours(request, venue_id):
 ###########################################################################################
 
 ###########################################################################################
+@login_required
+def reservation_details_modal_partial(request, pk):
+    reservation = get_object_or_404(Reservation, pk=pk)
+
+    return render(
+        request, 
+        'venues/partials/_reservation_details_modal_content.html', 
+        {
+            'reservation': reservation
+        },
+    )
+
+###########################################################################################
+
+###########################################################################################
