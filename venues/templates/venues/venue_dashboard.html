@@ -43,52 +43,139 @@
     <script src="{% static 'venues/js/image-preview.js' %}"></script>
     <script src="{% static 'venues/js/date-range-picker.js' %}"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const modalElement = document.getElementById('reservationDetailsModal');
-        if (!modalElement || !window.bootstrap) return;
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalElement = document.getElementById('reservationDetailsModal');
+            if (!modalElement || !window.bootstrap) return;
 
-        if (modalElement.parentElement !== document.body) {
-            document.body.appendChild(modalElement);
-        }
+            if (modalElement.parentElement !== document.body) {
+                document.body.appendChild(modalElement);
+            }
 
-        const reservationModal = new bootstrap.Modal(modalElement, {
-            backdrop: true,
-            keyboard: true
-        });
-        const modalBody = document.getElementById('reservation-details-modal-body');
-        const detailsTemplate = "{% url 'reservation_details_modal_partial' 0 %}";
+            const reservationModal = new bootstrap.Modal(modalElement);
+            const detailsApiTemplate = "{% url 'reservation_details_api' 0 %}";
 
-        document.addEventListener('click', function (event) {
-            const row = event.target.closest('#upcomingTable tbody tr, #specialTable tbody tr, #pastTable tbody tr');
-            if (!row) return;
+            modalElement.addEventListener('show.bs.modal', function () {
+                modalElement.setAttribute('aria-hidden', 'false');
+            });
 
-            if (event.target.closest('a, button, input, textarea, select, label')) return;
+            modalElement.addEventListener('shown.bs.modal', function () {
+                const closeBtn = modalElement.querySelector('.btn-close');
+                if (closeBtn) closeBtn.focus();
+            });
 
-            const reservationId = row.dataset.reservationId;
-            if (!reservationId) return;
+            modalElement.addEventListener('hide.bs.modal', function () {
+                if (document.activeElement && modalElement.contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
+            });
 
-            modalBody.innerHTML = '<div class="text-center py-3">Loading...</div>';
-            reservationModal.show();
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                modalElement.setAttribute('aria-hidden', 'true');
+            });
 
-            const detailsUrl = detailsTemplate.replace('/0/', '/' + reservationId + '/');
+            const fields = {
+                customer: document.getElementById('reservation-detail-customer'),
+                date: document.getElementById('reservation-detail-date'),
+                time: document.getElementById('reservation-detail-time'),
+                guests: document.getElementById('reservation-detail-guests'),
+                status: document.getElementById('reservation-detail-status'),
+                email: document.getElementById('reservation-detail-email'),
+                phone: document.getElementById('reservation-detail-phone'),
+                specialRequests: document.getElementById('reservation-detail-special-requests'),
+                allergies: document.getElementById('reservation-detail-allergies'),
+                comments: document.getElementById('reservation-detail-comments')
+            };
 
-            fetch(detailsUrl, {
-                method: 'GET',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin'
-            })
-            .then(function (response) {
-                if (!response.ok) throw new Error('Failed to load reservation details');
-                return response.text();
-            })
-            .then(function (html) {
-                modalBody.innerHTML = html;
-            })
-            .catch(function () {
-                modalBody.innerHTML = '<div class="text-danger py-3">Failed to load reservation details.</div>';
+            const fallback = '—';
+            const formatStatus = function (value) {
+                if (!value) return fallback;
+                return value
+                    .replace(/_/g, ' ')
+                    .split(' ')
+                    .map(function (word) {
+                        return word ? word.charAt(0).toUpperCase() + word.slice(1) : '';
+                    })
+                    .join(' ');
+            };
+
+            const valueOrFallback = function (value) {
+                if (value === null || value === undefined) return fallback;
+                const text = String(value).trim();
+                return text ? text : fallback;
+            };
+
+            const setLoadingState = function () {
+                Object.values(fields).forEach(function (field) {
+                    field.textContent = '...';
+                });
+            };
+
+            const applyDetails = function (reservation) {
+                const status = reservation.arrival_status && reservation.arrival_status !== 'pending'
+                    ? reservation.arrival_status
+                    : reservation.status;
+
+                fields.customer.textContent = valueOrFallback(reservation.customer_name);
+                fields.date.textContent = valueOrFallback(reservation.date);
+                fields.time.textContent = valueOrFallback(reservation.time);
+                fields.guests.textContent = valueOrFallback(reservation.guests);
+                fields.status.textContent = formatStatus(status);
+                fields.email.textContent = valueOrFallback(reservation.email);
+                fields.phone.textContent = valueOrFallback(reservation.phone);
+                fields.specialRequests.textContent = valueOrFallback(reservation.special_requests);
+                fields.allergies.textContent = valueOrFallback(reservation.allergies);
+                fields.comments.textContent = valueOrFallback(reservation.comments);
+            };
+
+            document.addEventListener('click', function (event) {
+                const row = event.target.closest('#upcomingTable tbody tr, #specialTable tbody tr, #pastTable tbody tr');
+                if (!row) return;
+
+                if (event.target.closest('a, button, input, textarea, select, label')) return;
+
+                const reservationId = row.dataset.reservationId;
+                if (!reservationId) return;
+
+                setLoadingState();
+                reservationModal.show();
+
+                const detailsUrl = detailsApiTemplate.replace('/0/', '/' + reservationId + '/');
+
+                fetch(detailsUrl, {
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Failed to load reservation details');
+                    return response.json();
+                })
+                .then(function (payload) {
+                    const reservation = payload.reservation || {};
+                    applyDetails(reservation);
+
+                    if (reservation.seen && row.closest('#upcomingTable')) {
+                        const seenCell = row.children[4];
+                        row.dataset.seen = 'true';
+                        row.classList.remove('unseen-reservation');
+                        if (seenCell) {
+                            const unseenUrl = (reservation.urls && reservation.urls.unseen) ? reservation.urls.unseen : '';
+                            if (unseenUrl) {
+                                seenCell.innerHTML = `<a href="${unseenUrl}" class="btn btn-sm btn-toggle-seen" data-seen="true" title="Mark as Unseen">👁️ Seen</a>`;
+                            }
+                        }
+                        if (typeof updateNotificationBadge === 'function') {
+                            updateNotificationBadge();
+                        }
+                    }
+                })
+                .catch(function () {
+                    Object.values(fields).forEach(function (field) {
+                        field.textContent = fallback;
+                    });
+                });
             });
         });
-    });
     </script>
 {% endblock %}
 
@@ -256,16 +343,19 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="reservationDetailsModalLabel">{% trans "Reservation Details" %}</h5>
-                    <button
-                        type="button"
-                        class="reservation-modal-close"
-                        data-bs-dismiss="modal"
-                        aria-label="{% trans 'Close' %}">
-                        &times;
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
                 </div>
-                <div class="modal-body" id="reservation-details-modal-body">
-                    <div class="text-center py-3">Loading...</div>
+                <div class="modal-body">
+                    <p><strong>{% trans "Customer" %}:</strong> <span id="reservation-detail-customer">—</span></p>
+                    <p><strong>{% trans "Date" %}:</strong> <span id="reservation-detail-date">—</span></p>
+                    <p><strong>{% trans "Time" %}:</strong> <span id="reservation-detail-time">—</span></p>
+                    <p><strong>{% trans "Guests" %}:</strong> <span id="reservation-detail-guests">—</span></p>
+                    <p><strong>{% trans "Status" %}:</strong> <span id="reservation-detail-status">—</span></p>
+                    <p><strong>{% trans "Email" %}:</strong> <span id="reservation-detail-email">—</span></p>
+                    <p><strong>{% trans "Phone" %}:</strong> <span id="reservation-detail-phone">—</span></p>
+                    <p><strong>{% trans "Special Requests" %}:</strong> <span id="reservation-detail-special-requests">—</span></p>
+                    <p><strong>{% trans "Allergies" %}:</strong> <span id="reservation-detail-allergies">—</span></p>
+                    <p class="mb-0"><strong>{% trans "Comments" %}:</strong> <span id="reservation-detail-comments">—</span></p>
                 </div>
             </div>
         </div>

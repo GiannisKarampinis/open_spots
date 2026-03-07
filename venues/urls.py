@@ -44,7 +44,6 @@ urlpatterns = [
     path("venue/<int:venue_id>/update-menu-order/",                                 views.update_menu_image_order,              name="update_menu_image_order"),
     path("venues/<int:venue_id>/available-slots/",                                  views.venue_available_slots,                name="venue_available_slots"),
     path("about/",                                                                  views.about,                                name="about"),
-    path("reservations/<int:pk>/details-modal/",                                    views.reservation_details_modal_partial,    name="reservation_details_modal_partial",)
 ]
 
 urlpatterns += [
