@@ -28,14 +28,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+#DEBUG = True
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "testserver",
-    "web"
-]
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
+
+allowed = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver,web").split(",")
+ALLOWED_HOSTS = [h.strip() for h in allowed if h.strip()]
 
 
 # Application definition
@@ -209,13 +207,13 @@ WSGI_APPLICATION = 'openspots.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'openspots_db',
-        'USER': 'openspots_user',
-        'PASSWORD': 'supersecret123',
-        'HOST': 'db',  # service name in docker-compose
-        'PORT': '5432',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB", "openspots"),
+        "USER": os.environ.get("POSTGRES_USER", "openspots"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
+        "HOST": os.environ.get("POSTGRES_HOST", "postgres"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
 }
 
@@ -258,7 +256,7 @@ LOCALE_PATHS = [
 
 USE_I18N = True
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "Europe/Athens"
 
 USE_I18N = True
 
@@ -310,5 +308,5 @@ LOGGING = {
     },
 }
 
-if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+if (not DEBUG) and (not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD):
     raise Exception("EMAIL credentials are missing. Check your environment variables.")

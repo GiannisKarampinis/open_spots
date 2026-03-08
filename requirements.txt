@@ -41,3 +41,4 @@ urllib3==2.4.0
 whitenoise==6.9.0
 zope.interface==7.2
 psycopg2-binary>=2.9
+flower==2.0.1

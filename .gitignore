@@ -1,17 +1,28 @@
-*.yml
+# Python
 *.pyc
 __pycache__/
 *.log
-*.pot
-*.env
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# DB / local
 *.sqlite3
-media_backup/
-staticfiles/*
-node_modules
-*.patch
-celerybeat-schedule
+
+# Django collected/static/media (depending on strategy)
+staticfiles/
 media/
-env
-migrations/
+media_backup/
+
+# Node
+node_modules/
+
+# Celery
+celerybeat-schedule
+
+# Misc
+*.patch
 
 
