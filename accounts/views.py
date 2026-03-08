@@ -224,7 +224,6 @@ def profile_view(request):
     password_form = PasswordChangeRequestForm(user=user)
     if request.method == 'POST':
         if 'email' in request.POST:
-            print('lalalalalalallalalalala')
             email_form  = EmailEditForm(request.POST, instance=user)
             if email_form.is_valid():
                 updated_user = email_form.save(commit=False)
