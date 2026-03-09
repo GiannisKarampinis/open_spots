@@ -2,7 +2,7 @@ name: openspots
 
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:15
     env_file: .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -96,6 +96,8 @@ networks:
 
 volumes:
   postgres_data:
+    external: true
+    name: open_spots_postgres_data
   redis_data:
   static_data:
   media_data:

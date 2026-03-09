@@ -1,10 +1,11 @@
 services:
   db:
     image: postgres:15
+    env_file: .env
     environment:
       POSTGRES_DB: openspots_db
       POSTGRES_USER: openspots_user
-      POSTGRES_PASSWORD: supersecret123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
