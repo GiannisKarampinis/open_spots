@@ -89,7 +89,11 @@ def password_reset(request):
             user.save()
 
             # Clear session
-            request.session.flush()
+            #request.session.flush()
+            request.session.pop('pending_user_id', None)
+            request.session.pop('verification_reason', None)
+            request.session.pop('code_already_sent', None)
+            request.session.pop('password_recovery_verified', None)
 
             messages.success(request, "Password reset successfully. You may now log in.")
             return redirect('login')
@@ -204,6 +208,7 @@ def signup_view(request):
             if user.id:
                 request.session['verification_reason'] = 'signup'
                 request.session['pending_user_id'] = user.id
+                request.session['code_already_sent'] = False
                 return redirect('confirm_code')
             else:
                 messages.error(request, "An unexpected error occurred during signup. Please try again.")
@@ -306,8 +311,8 @@ def confirm_code_view(request):
         if user.email_verified:
             messages.info(request, "Email already verified.")
             return redirect('login')
-        else:
-            messages.info(request, "Enter the verification code sent to your email.")
+        #else:
+            #messages.info(request, "Enter the verification code sent to your email.")
 
     # --- 3. Validate unverified email existence ---
     if verification_reason not in ['password_recovery', 'password_change'] and not user.unverified_email:
