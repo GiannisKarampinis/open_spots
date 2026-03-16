@@ -11,6 +11,10 @@
 
 }
 
+.form-group {
+    margin-bottom: 16px;
+}
+
 .signup-container h2 {
     text-align:            center;                    /* Centered heading */
     margin-bottom:         30px;                      /* Space below heading */
@@ -155,3 +159,5 @@
     from { opacity: 0; }                               /* Start invisible */
     to   { opacity: 1; }                               /* Fade to visible */
 }
+
+

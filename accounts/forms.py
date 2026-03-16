@@ -4,6 +4,9 @@ from django.contrib.auth.forms  import UserCreationForm
 from django.utils.translation   import gettext_lazy as _
 from .models                    import CustomUser
 from django.contrib.auth        import password_validation
+from django.utils.translation   import gettext_lazy as _
+from django.core.exceptions     import ValidationError
+import re
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -19,6 +22,92 @@ class CustomUserCreationForm(UserCreationForm):
             'password1':    _("Password"),
             'password2':    _("Confirm password"),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for name, field in self.fields.items():
+            css_class = "form-input"
+            if self.errors.get(name):
+                css_class += " is-invalid"
+
+            field.widget.attrs.update({
+                "class": css_class,
+                "aria-describedby": f"{name}-errors",
+                "aria-invalid": "true" if self.errors.get(name) else "false",
+            })
+
+        self.fields["firstname"].error_messages = {
+            "required": _("Please enter your first name."),
+        }
+        self.fields["lastname"].error_messages = {
+            "required": _("Please enter your last name."),
+        }
+        self.fields["username"].error_messages = {
+            "required": _("Please choose a username."),
+        }
+        self.fields["email"].error_messages = {
+            "required": _("Please enter your email address."),
+            "invalid": _("Enter a valid email address."),
+        }
+        self.fields["phone_number"].error_messages = {
+            "required": _("Please enter your phone number."),
+        }
+        self.fields["password1"].error_messages = {
+            "required": _("Please create a password."),
+        }
+        self.fields["password2"].error_messages = {
+            "required": _("Please confirm your password."),
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+
+        if email and CustomUser.objects.filter(email__iexact=email).exists():
+            raise ValidationError(_("An account with this email already exists."))
+
+        return email
+
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+
+        if username and CustomUser.objects.filter(username__iexact=username).exists():
+            raise ValidationError(_("This username is already taken."))
+
+        if username and len(username) < 4:
+            raise ValidationError(_("Username must contain at least 4 characters."))
+
+        return username
+
+    def clean_phone_number(self):
+        phone = self.cleaned_data.get("phone_number")
+
+        if phone:
+            phone = phone.strip()
+            phone_regex = r'^\+?[0-9]{8,15}$'
+            if not re.match(phone_regex, phone):
+                raise ValidationError(_("Enter a valid phone number (8–15 digits, optional +)."))
+
+        return phone
+
+    def clean_password1(self):
+        password = self.cleaned_data.get("password1")
+
+        if password and len(password) < 8:
+            raise ValidationError(_("Password must contain at least 8 characters."))
+
+        return password
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+
+        if password1 and password2 and password1 != password2:
+            self.add_error("password2", _("Passwords do not match."))
+
+        return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)

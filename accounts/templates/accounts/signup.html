@@ -24,13 +24,17 @@
         {% csrf_token %}
 
         {% for field in form %}
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        <ul class="errorlist" role="alert" id="{{ field.html_name }}-errors" aria-live="assertive">
-            {% for error in field.errors %}
-                <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <ul class="errorlist" role="alert" id="{{ field.html_name }}-errors" aria-live="assertive">
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>  
         {% endfor %}
 
         <input type="submit" value="{% trans "Create Account" %}" class="btn primary-btn" id="submit-btn">
@@ -44,9 +48,13 @@
 
 {% block extra_js %}
     <script src="{% static 'common/js/form_validation.js' %}"></script>
-    {% comment %} <script src="{% static 'common/js/form_validation.js' %}" onload="attachSignupLikeValidation('signup-form')"></script> {% endcomment %}
+    {% comment %} <script src="{% static 'common/js/form_validation.js' %}" onload="attachSignupLikeValidation('signup-form')"></script> 
 
-    <script defer>
-        attachSignupLikeValidation('signup-form');
-    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof attachSignupLikeValidation === 'function') {
+                attachSignupLikeValidation('signup-form');
+            }
+        });
+    </script>{% endcomment %}
 {% endblock %}
