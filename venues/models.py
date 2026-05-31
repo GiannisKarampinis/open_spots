@@ -418,6 +418,7 @@ class Reservation(models.Model):
     comments            = models.TextField(blank=True, null=True)   # optional
     special_requests    = models.CharField(max_length=20, choices=SPECIAL_REQUESTS_CHOICES, default='none') 
     allergies           = models.TextField(blank=True, null=True)   # optional
+    smoking             = models.CharField(max_length=20, choices=[('no_preference', 'No preference'), ('smoking', 'Smoking'), ('non_smoking', 'Non-smoking')], default='no_preference')
     objects             = ReservationManager() 
     seen                = models.BooleanField(default=False) # For owner dashboard: has the owner seen this reservation in their dashboard yet?
 

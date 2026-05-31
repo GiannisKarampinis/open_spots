@@ -85,3 +85,7 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
+
+networks:
+  appnet:
+    driver: bridge

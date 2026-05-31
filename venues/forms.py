@@ -20,7 +20,7 @@ class ReservationForm(forms.ModelForm): # Our Reservation model sets some fields
         model = Reservation
         fields = [
             'firstname', 'lastname', 'email', 'phone', 'date', 'time',
-            'guests', 'special_requests', 'allergies', 'comments'
+            'guests', 'special_requests', 'allergies', 'smoking', 'comments'
         ]
         labels = {
             'firstname':        _("First name"),
@@ -31,6 +31,7 @@ class ReservationForm(forms.ModelForm): # Our Reservation model sets some fields
             'guests':           _("Number of guests"),
             'special_requests': _("Special requests"),
             'allergies':        _("Allergies"),
+            'smoking':          _("Smoking preference"),
             'comments':         _("Comments"),
         }
         widgets = {
@@ -46,6 +47,7 @@ class ReservationForm(forms.ModelForm): # Our Reservation model sets some fields
             'guests':           forms.NumberInput(attrs={'class': 'form-control'}),
             'special_requests': forms.Select(attrs={'class': 'form-control'}),
             'allergies':        forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'smoking':          forms.Select(attrs={'class': 'form-control'}),
             'comments':         forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
 
