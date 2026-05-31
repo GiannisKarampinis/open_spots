@@ -1,103 +1,134 @@
-/* venues/static/venues/my_reservations.css */
-.edit-btn {
-    background-color: #007bff;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 4px;
-    text-decoration: none;
-    margin-left: 8px;
-}
-.edit-btn:hover {
-    background-color: #0056b3;
-}
+/* venues/static/venues/edit_reservation.css */
 
-/* Reservation Button */
-.col-md-4.text-end > button.btn.btn-primary {
-    background-color: #007bff;
-    border: none;
-    border-radius: 6px;
-    padding: 12px 25px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
-    color: white;
-}
-
-.col-md-4.text-end > button.btn.btn-primary:hover {
-    background-color: #0056b3;
-    box-shadow: 0 6px 15px rgba(0, 86, 179, 0.5);
-}
-
-/* Reservation Form Container */
-#reservationForm.collapse {
-    margin-top: 1rem;
-}
-
-/* Reservation Form Card */
-#reservationForm .card.card-body.shadow {
-    background-color: #3a3a3a;
+/* Main form container */
+#reservationForm {
+    background: var(--surface-gradient);
+    padding: 40px;
     border-radius: 10px;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-    padding: 25px 20px;
-}
-
-/* Reservation Form fields (matches your signup/login inputs) */
-#reservationForm form p {
-    margin-bottom: 15px;
-}
-
-#reservationForm form input,
-#reservationForm form select,
-#reservationForm form textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border-radius: 6px;
-    border: 1px solid #555;
-    background-color: #2a2a2a;
-    color: white;
-    font-size: 1rem;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    outline: none;
-}
-
-#reservationForm form input:focus,
-#reservationForm form select:focus,
-#reservationForm form textarea:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 6px #007bff;
-}
-
-/* Submit button inside reservation form */
-#reservationForm form button.btn.btn-success {
-    background-color: #28a745;
+    box-shadow: 0 0 25px rgba(255,255,255,0.1);
+    max-width: 500px;
+    margin: 0 auto;
     border: none;
-    border-radius: 6px;
+    color: var(--button-text);
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* Page title */
+h2 {
+    text-align: center;
+    margin-bottom: 30px;
     font-weight: 700;
-    font-size: 1.1rem;
-    padding: 14px;
+    font-size: 2rem;
+    color: var(--button-text);
+}
+
+/* Form groups */
+#reservationForm .mb-3 {
+    margin-bottom: 16px !important;
+}
+
+/* Labels */
+#reservationForm label {
+    display: block;
+    margin: 10px 0 5px;
+    color: var(--button-text);
+}
+
+/* Inputs */
+#reservationForm input,
+#reservationForm select,
+#reservationForm textarea {
     width: 100%;
+    box-sizing: border-box;
+    padding: 12px 15px;
+    background-color: var(--background-color);
+    border: 1px solid #555;
+    color: var(--text-color);
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Focus state */
+#reservationForm input:focus,
+#reservationForm select:focus,
+#reservationForm textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 6px var(--primary-color);
+}
+
+/* Help text */
+#reservationForm .form-text {
+    color: var(--muted-text-color, #aaa) !important;
+    font-size: 0.9rem;
+}
+
+/* Validation errors */
+#reservationForm .text-danger,
+#reservationForm ul.errorlist {
+    list-style: none;
+    padding: 0;
+    margin: -10px 0 10px;
+    color: var(--error-color);
+    font-size: 0.95rem;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+/* Submit button */
+#reservationForm .btn-success,
+#reservationForm button[type="submit"] {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    background-color: var(--primary-color);
+    color: var(--button-text);
+    border-radius: 6px;
+    border: none;
     cursor: pointer;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    color: white;
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: background-color 0.3s ease;
 }
 
-#reservationForm form button.btn.btn-success:hover {
-    background-color: #1e7e34;
-    box-shadow: 0 6px 18px rgba(30, 126, 52, 0.7);
+#reservationForm .btn-success:hover,
+#reservationForm button[type="submit"]:hover {
+    background-color: var(--primary-hover);
 }
 
-/* Responsive tweaks */
-@media (max-width: 767.98px) {
-    .col-md-8,
-    .col-md-4 {
-        text-align: left !important;
-        margin-bottom: 1.5rem;
+/* Invalid fields */
+#reservationForm input[aria-invalid="true"],
+#reservationForm select[aria-invalid="true"],
+#reservationForm textarea[aria-invalid="true"] {
+    border-color: var(--error-color) !important;
+    box-shadow: 0 0 6px var(--error-color);
+}
+
+/* Valid fields */
+#reservationForm input.valid,
+#reservationForm select.valid,
+#reservationForm textarea.valid {
+    border-color: var(--success-color);
+    box-shadow: 0 0 6px var(--success-color);
+}
+
+
+
+/* Fade animation */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+    #reservationForm {
+        padding: 24px;
     }
 
-    .col-md-4.text-end {
-        text-align: left !important;
+    h2 {
+        font-size: 1.6rem;
     }
 }

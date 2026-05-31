@@ -6,6 +6,8 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'venues/venue_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'venues/edit_reservation.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 {% endblock %}
 
 {% block content %}
@@ -16,8 +18,121 @@
             <h2 class="mb-4 text-center">{% trans "Edit Reservation for" %} {{ reservation.venue.name }}</h2>
 
             <!-- Edit Form styled like reservation form -->
-            {% include "venues/partials/_customer_reservation_form.html" with form=form submit_text="Save Changes" %}
+            {% include "venues/partials/_customer_reservation_form.html" with form=form reservation=reservation show_time_slots=True submit_text="Save Changes" %}
         </div>
     </div>
 </div>
 {% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const dateInput = document.querySelector('input[name="date"]');
+
+    if (dateInput) {
+        flatpickr(dateInput, {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            minDate: "today"
+        });
+
+        dateInput.addEventListener("change", renderTimeSlots);
+    }
+
+    async function renderTimeSlots() {
+
+        const container = document.getElementById("time-slot-container");
+
+        if (!container || !dateInput || !dateInput.value)
+            return;
+
+        const url = container.dataset.slotsUrl;
+
+        container.innerHTML = "";
+
+        try {
+
+            const response =
+                await fetch(
+                    `${url}?date=${encodeURIComponent(dateInput.value)}`
+                );
+
+            const data = await response.json();
+
+            const timeField =
+                document.querySelector('input[name="time"]');
+
+            const slotDateField =
+                document.getElementById("selected-slot-date");
+
+            (data.slots || [])
+                .filter(slot => slot.is_available)
+                .forEach(slot => {
+
+                    const box = document.createElement("div");
+
+                    box.className = "time-slot";
+
+                    box.dataset.time = slot.time;
+                    box.dataset.slotDate = slot.slot_date;
+
+                    box.textContent = slot.time;
+
+                    box.addEventListener("click", () => {
+
+                        container
+                            .querySelectorAll(".time-slot")
+                            .forEach(s =>
+                                s.classList.remove("active"));
+
+                        box.classList.add("active");
+
+                        timeField.value = slot.time;
+
+                        slotDateField.value =
+                            slot.slot_date;
+                    });
+
+                    container.appendChild(box);
+                });
+
+        } catch (err) {
+
+            console.error(err);
+
+            container.innerHTML =
+                "<p>Could not load available times.</p>";
+        }
+    }
+
+    document.addEventListener("click", e => {
+
+        const container =
+            document.getElementById("time-slot-container");
+
+        if (!container)
+            return;
+
+        if (e.target.closest(".slot-prev")) {
+
+            container.scrollBy({
+                left: -250,
+                behavior: "smooth"
+            });
+        }
+
+        if (e.target.closest(".slot-next")) {
+
+            container.scrollBy({
+                left: 250,
+                behavior: "smooth"
+            });
+        }
+    });
+
+    renderTimeSlots();
+});
+</script>
