@@ -1,86 +1,194 @@
-name: openspots
+
+# Docker Compose configuration for local development of the openSpots app.
+#
+# This file defines the main application stack used for local testing:
+# - Postgres (db)
+# - Redis (cache/broker)
+# - Django web (web)
+# - Celery workers (celery) and scheduler (celery-beat)
+# - Nginx reverse proxy (nginx)
+#
+# Comments below explain the purpose of each service and common local-developer
+# practices. This layout (using named volumes, healthchecks, and a separate
+# `release` one-off service) is a standard and convenient pattern for
+# local development and CI; production overlays are handled in separate files.
+
+name:                           openspots
 
 services:
   db:
-    image: postgres:15
-    env_file: .env
+    # Postgres container used by the Django app in development.
+    # Uses the official Postgres 15 image and loads any sensitive values
+    # from the repository `.env` file. The same POSTGRES_* vars are repeated
+    # in other services so containers can connect to the DB at runtime.
+    image:                      postgres:15
+    env_file:                   .env
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      TZ: ${TZ}
+      DJANGO_RUNNING_IN_DOCKER: "1"
+      POSTGRES_DB:              ${POSTGRES_DB:-openspots}
+      POSTGRES_USER:            ${POSTGRES_USER:-openspots}
+      POSTGRES_PASSWORD:        ${POSTGRES_PASSWORD:-openspots}
+      TZ:                       ${TZ:-UTC}
+    # Persist DB files in a named Docker volume for convenience.
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks: [appnet]
+    networks:                   [appnet]
+    # Healthcheck allows other services to wait until the DB is accepting
+    # connections before attempting to start.
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test:                     ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval:                 10s
+      timeout:                  5s
+      retries:                  5
+    restart:                    unless-stopped
 
   redis:
-    image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes"]
+    # Redis used as both cache and Celery broker in development.
+    # AOF persistence is enabled for safer local testing of data durability.
+    image:                      redis:7-alpine
+    command:                    ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
-    networks: [appnet]
+    networks:                   [appnet]
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
+      test:                     ["CMD", "redis-cli", "ping"]
+      interval:                 10s
+      timeout:                  3s
+      retries:                  10
+    restart:                    unless-stopped
 
-  web:
+  web: # frontend (Django ASGI via Daphne)
+    # Built from the repository `Dockerfile`. Exposes internal port 8000
+    # to the other services on the `appnet` network. Environment variables
+    # (DB/Redis/Celery connection info) are passed in so the app can connect
+    # to the services started by Compose.
     build: .
     env_file: .env
+    environment:
+      DJANGO_RUNNING_IN_DOCKER: "1"
+      POSTGRES_DB:              ${POSTGRES_DB:-openspots}
+      POSTGRES_USER:            ${POSTGRES_USER:-openspots}
+      POSTGRES_PASSWORD:        ${POSTGRES_PASSWORD:-openspots}
+      POSTGRES_HOST:            ${POSTGRES_HOST:-db}
+      POSTGRES_PORT:            ${POSTGRES_PORT:-5432}
+      REDIS_URL:                ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_BROKER_URL:        ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND:    ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
     depends_on:
       db:
-        condition: service_healthy
+        condition:              service_healthy
       redis:
-        condition: service_healthy
+        condition:              service_healthy
+    # Run the ASGI server (Daphne) in the container.
+    command:                    daphne -b 0.0.0.0 -p 8000 openspots.asgi:application
+    volumes:
+      # `static_data` and `media_data` are named volumes shared with `nginx`.
+      - static_data:/app/staticfiles
+      - media_data:/app/media
+      - ./locale:/app/locale
+    networks:                   [appnet]
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+    restart:                    unless-stopped
+
+  release:
+    # One-off maintenance/deploy task. Not started during normal
+    # `docker compose up` unless `--profile ops` is specified.
+    # Typical usage: run migrations and collect static assets before
+    # bringing the full stack into production or CI.
+    build: .
+    env_file: .env
+    environment:
+      DJANGO_RUNNING_IN_DOCKER: "1"
+      POSTGRES_DB:              ${POSTGRES_DB:-openspots}
+      POSTGRES_USER:            ${POSTGRES_USER:-openspots}
+      POSTGRES_PASSWORD:        ${POSTGRES_PASSWORD:-openspots}
+      POSTGRES_HOST:            ${POSTGRES_HOST:-db}
+      POSTGRES_PORT:            ${POSTGRES_PORT:-5432}
+      REDIS_URL:                ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_BROKER_URL:        ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND:    ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+    profiles:                   ["ops"]
+    depends_on:
+      db:
+        condition:              service_healthy
+      redis:
+        condition:              service_healthy
+    # This runs migrations and collectstatic, then exits. It is a
+    # maintenance step rather than a different build type.
     command: >
       sh -c "
       python manage.py migrate &&
-      python manage.py collectstatic --noinput &&
-      daphne -b 0.0.0.0 -p 8000 openspots.asgi:application
+      python manage.py collectstatic --noinput
       "
     volumes:
       - static_data:/app/staticfiles
       - media_data:/app/media
       - ./locale:/app/locale
-    networks: [appnet]
-    expose:
-      - "8000"
+    networks:                   [appnet]
 
   celery:
+    # Celery worker: processes asynchronous tasks enqueued by the app.
+    # Runs as an unprivileged user inside the container (uid/gid 65534)
+    # to avoid writing files as root on mounted volumes.
     build: .
     env_file: .env
+    environment:
+      DJANGO_RUNNING_IN_DOCKER: "1"
+      POSTGRES_DB:              ${POSTGRES_DB:-openspots}
+      POSTGRES_USER:            ${POSTGRES_USER:-openspots}
+      POSTGRES_PASSWORD:        ${POSTGRES_PASSWORD:-openspots}
+      POSTGRES_HOST:            ${POSTGRES_HOST:-db}
+      POSTGRES_PORT:            ${POSTGRES_PORT:-5432}
+      REDIS_URL:                ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_BROKER_URL:        ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND:    ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
     depends_on:
       db:
-        condition: service_healthy
+        condition:              service_healthy
       redis:
-        condition: service_healthy
-    command: celery -A openspots worker -l info
+        condition:              service_healthy
+    command:                    celery -A openspots worker -l info --uid=65534 --gid=65534
     volumes:
       - ./locale:/app/locale
-    networks: [appnet]
+    networks:                   [appnet]
+    restart:                    unless-stopped
 
   celery-beat:
+    # Celery Beat: the scheduler that enqueues periodic tasks into Redis.
+    # It stores its persistent schedule in `/app/celerybeat/celerybeat-schedule`.
+    # The startup command ensures the directory exists and is writable by
+    # the unprivileged user used inside the container.
     build: .
     env_file: .env
+    environment:
+      POSTGRES_DB:              ${POSTGRES_DB:-openspots}
+      POSTGRES_USER:            ${POSTGRES_USER:-openspots}
+      POSTGRES_PASSWORD:        ${POSTGRES_PASSWORD:-openspots}
+      POSTGRES_HOST:            ${POSTGRES_HOST:-db}
+      POSTGRES_PORT:            ${POSTGRES_PORT:-5432}
+      REDIS_URL:                ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_BROKER_URL:        ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND:    ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
     depends_on:
       db:
-        condition: service_healthy
+        condition:              service_healthy
       redis:
-        condition: service_healthy
-    command: celery -A openspots beat -l info --schedule=/app/celerybeat/celerybeat-schedule
+        condition:              service_healthy
+    command: >
+      sh -c "mkdir -p /app/celerybeat && chown -R 65534:65534 /app/celerybeat && celery -A openspots beat -l info --schedule=/app/celerybeat/celerybeat-schedule --uid=65534 --gid=65534"
     volumes:
       - celerybeat_data:/app/celerybeat
       - ./locale:/app/locale
-    networks: [appnet]
+    networks:                   [appnet]
+    restart:                    unless-stopped
 
   nginx:
-    image: nginx:1.27-alpine
+    # Lightweight reverse proxy that serves static/media from the
+    # shared named volumes and proxies requests to `web`.
+    image:                      nginx:1.27-alpine
     depends_on:
       - web
     ports:
@@ -89,16 +197,37 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - static_data:/static:ro
       - media_data:/media:ro
-    networks: [appnet]
+    networks:                   [appnet]
+    restart:                    unless-stopped
 
 networks:
+  # Declaring `appnet` creates a user-defined bridge network that all
+  # services attach to. Leaving it empty here uses Compose defaults.
   appnet:
 
 volumes:
+  # Named Docker volumes for persistent data. Empty definitions instruct
+  # Docker to create managed volumes. This is standard practice for local
+  # development because it avoids littering the repository with host files
+  # while still preserving state across container restarts.
   postgres_data:
-    external: true
-    name: open_spots_postgres_data
   redis_data:
   static_data:
   media_data:
   celerybeat_data:
+  # Recommendation:
+  # - Keep named volumes for databases and caches (`postgres_data`, `redis_data`)
+  #   because they are managed by Docker, are cross-platform, and avoid
+  #   host-permission/performance issues (especially on Windows/WSL).
+  # - For faster code iteration, consider using an overlay `compose.dev.yml`
+  #   that bind-mounts the source code into the `web` service (e.g.
+  #   `- ./:/app`) while leaving DB/Redis on named volumes. This gives
+  #   hot-reload without converting the DB to a host mount.
+  # Example overlay (compose.dev.yml):
+  #
+  # services:
+  #   web:
+  #     volumes:
+  #       - ./:/app:delegated
+  #
+  # Use `docker compose -f compose.yml -f compose.dev.yml up` to enable.

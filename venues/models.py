@@ -436,7 +436,6 @@ class Reservation(models.Model):
 
     def save(self, *args, editor=None, **kwargs):
         self._editor = editor  # Store editor for potential use in signals
-        print("Editor in save:", editor)
         # If status is accepted and arrival_status is not pending, reset arrival_status to pending
         if self.status == 'accepted' and self.arrival_status not in ['pending', 'checked_in', 'no_show']:
             self.arrival_status = 'pending'

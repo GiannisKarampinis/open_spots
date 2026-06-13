@@ -15,6 +15,7 @@ Django==5.2
 django-allauth==65.10.0
 djangorestframework==3.14.0
 djangorestframework_simplejwt>=5.3.1
+drf-spectacular>=0.27.2
 hyperlink==21.0.0
 idna==3.10
 incremental==24.7.2

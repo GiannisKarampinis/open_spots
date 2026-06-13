@@ -1,4 +1,21 @@
-# Use official Python image
+# Stage 1: Build frontend with Node.js
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+
+# Copy package files
+COPY frontend/package.json frontend/package-lock.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy frontend source
+COPY frontend .
+
+# Build with Vite
+RUN npm run build
+
+# Stage 2: Python app with collected static files
 FROM python:3.12-slim
 
 # Set working directory inside container
@@ -17,6 +34,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
 COPY . .
+
+COPY --from=frontend-builder /app/frontend/dist ./staticfiles/react-app
 
 # Expose Django port
 EXPOSE 8000

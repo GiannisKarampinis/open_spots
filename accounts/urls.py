@@ -15,7 +15,6 @@ urlpatterns = [
     path('reset-password/',         views.password_reset,                               name='password_reset'),
     
     # API endpoint
-    path("api/profile/",            api_views.profile_api,                              name="profile_api"),
     path('confirm-code/',           views.confirm_code_view,                            name='confirm_code'),
     
     # path('reservation/<int:reservation_id>/update-status/', views.update_reservation_status, name='update_reservation_status'),
