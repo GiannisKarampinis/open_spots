@@ -1,6 +1,6 @@
 from    django.contrib              import admin
 from    django.contrib.auth.admin   import UserAdmin
-from    .models                     import CustomUser
+from    .models                     import CustomUser, DeviceSession
 from    .forms                      import AdminUserCreationForm  # Form used by admin to create users with user_type role
 from    django.utils.translation    import gettext_lazy as _
 
@@ -41,6 +41,36 @@ class CustomUserAdmin(UserAdmin):
     
     def has_add_permission(self, request):
         return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+
+@admin.register(DeviceSession)
+class DeviceSessionAdmin(admin.ModelAdmin):
+    list_display = ("user", "device_name", "ip_address", "last_seen_at", "last_refresh_at", "revoked_at")
+    list_filter = ("revoked_at", "device_name")
+    search_fields = ("user__username", "user__email", "device_name", "ip_address", "user_agent")
+    readonly_fields = (
+        "id",
+        "user",
+        "device_name",
+        "user_agent",
+        "ip_address",
+        "first_seen_at",
+        "last_seen_at",
+        "last_refresh_at",
+        "revoked_at",
+    )
+
+    def has_add_permission(self, request):
+        return False
 
     def has_change_permission(self, request, obj=None):
         return request.user.is_superuser

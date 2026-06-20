@@ -4,6 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+from accounts.models import DeviceSession
 
 User = get_user_model()
 
@@ -95,6 +96,39 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def get_full_name(self, obj):
         return obj.full_name_or_username
+
+
+class DeviceSessionSerializer(serializers.ModelSerializer):
+    is_current = serializers.SerializerMethodField()
+    is_active = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = DeviceSession
+        fields = [
+            "id",
+            "device_name",
+            "ip_address",
+            "first_seen_at",
+            "last_seen_at",
+            "last_refresh_at",
+            "revoked_at",
+            "is_active",
+            "is_current",
+        ]
+        read_only_fields = fields
+
+    def get_is_current(self, obj):
+        return str(obj.id) == str(self.context.get("current_device_session_id") or "")
+
+
+class TwoFactorCodeSerializer(serializers.Serializer):
+    code = serializers.CharField(min_length=6, max_length=12, trim_whitespace=True)
+
+    def validate_code(self, value):
+        normalized = value.replace(" ", "")
+        if not normalized.isdigit():
+            raise serializers.ValidationError("Enter the numeric code from your authenticator app.")
+        return normalized
 
 
 class UserEmailUpdateSerializer(serializers.Serializer):

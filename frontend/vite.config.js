@@ -1,6 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
+
+const backendOrigin = process.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000'
+const backendProxy = {
+  target: backendOrigin,
+  changeOrigin: true,
+}
 
 export default defineConfig({
   plugins: [react()],
@@ -10,8 +15,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://127.0.0.1',
-      '/static': 'http://127.0.0.1',
+      '/api': backendProxy,
+      '/static': backendProxy,
+      '/media': backendProxy,
     },
   },
 })

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
+import { authHeaders } from "../utils/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChair,
@@ -21,11 +22,6 @@ const todayIso = () => {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-};
-
-const authHeaders = () => {
-  const token = localStorage.getItem("access") || localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 function Gallery({ images, emptyText, onOpen }) {

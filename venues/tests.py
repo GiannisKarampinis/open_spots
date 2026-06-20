@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from emails_manager.models import VenueEmailVerificationCode
 from venues.models import Reservation, Venue, WorkingDay
@@ -38,6 +39,35 @@ class VenuesAPITestCase(APITestCase):
         response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Test Venue")
+
+    def test_owned_venue_uses_jwt_user_when_session_cookie_is_stale(self):
+        stale_session_user = User.objects.create_user(
+            username="stale_session_user",
+            email="stale_session_user@example.com",
+            password="pass1234",
+        )
+        owner = User.objects.create_user(
+            username="venue_owner",
+            email="venue_owner@example.com",
+            password="pass1234",
+            user_type="customer",
+        )
+        owned_venue = Venue.objects.create(
+            name="Owned Venue",
+            kind="restaurant",
+            location="Owner Street",
+            description="Owned by JWT user",
+            owner=owner,
+        )
+
+        self.client.login(username=stale_session_user.username, password="pass1234")
+        access = RefreshToken.for_user(owner).access_token
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+
+        response = self.client.get("/api/v1/venues/owned/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], owned_venue.id)
 
     def test_venue_slots_endpoint_returns_slots(self):
         response = self.client.get(f"{self.detail_url}slots/?date=2030-01-01")
@@ -285,6 +315,110 @@ class VenuesAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         reservation.refresh_from_db()
         self.assertFalse(reservation.seen)
+
+    def test_venue_dashboard_bootstrap_is_compact(self):
+        owner = User.objects.create_user(
+            username="dashboardowner",
+            email="dashboardowner@example.com",
+            password="pass1234",
+            user_type="venue_admin",
+        )
+        self.venue.owner = owner
+        self.venue.save()
+        Reservation.objects.create(
+            user=self.user,
+            venue=self.venue,
+            firstname="Jane",
+            lastname="Doe",
+            email="jane.doe@example.com",
+            phone="+1234567890",
+            date="2030-01-01",
+            time="18:00",
+            guests=2,
+            status="pending",
+        )
+
+        self.client.login(username="dashboardowner", password="pass1234")
+        response = self.client.get(f"/api/v1/venues/{self.venue.id}/dashboard/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("venue", response.data)
+        self.assertIn("working_days", response.data)
+        self.assertIn("analytics", response.data)
+        self.assertIn("series", response.data["analytics"])
+        self.assertIn("reservation_counts", response.data)
+        self.assertNotIn("upcoming_reservations", response.data)
+        self.assertNotIn("past_reservations", response.data)
+        self.assertNotIn("reviews", response.data["venue"])
+
+    def test_dashboard_reservations_are_paginated_and_slim(self):
+        owner = User.objects.create_user(
+            username="dashboardowner2",
+            email="dashboardowner2@example.com",
+            password="pass1234",
+            user_type="venue_admin",
+        )
+        self.venue.owner = owner
+        self.venue.save()
+        for index in range(12):
+            Reservation.objects.create(
+                user=self.user,
+                venue=self.venue,
+                firstname=f"Jane{index}",
+                lastname="Doe",
+                email=f"jane{index}@example.com",
+                phone="+1234567890",
+                date="2030-01-01",
+                time="18:00",
+                guests=2,
+                status="pending",
+            )
+
+        self.client.login(username="dashboardowner2", password="pass1234")
+        response = self.client.get(
+            f"/api/v1/venues/{self.venue.id}/dashboard-reservations/",
+            {"bucket": "requests", "page": 1, "page_size": 10},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 12)
+        self.assertEqual(len(response.data["results"]), 10)
+        self.assertNotIn("email", response.data["results"][0])
+        self.assertNotIn("special_requests", response.data["results"][0])
+
+    def test_reservation_details_returns_sensitive_fields_on_demand(self):
+        owner = User.objects.create_user(
+            username="dashboardowner3",
+            email="dashboardowner3@example.com",
+            password="pass1234",
+            user_type="venue_admin",
+        )
+        self.venue.owner = owner
+        self.venue.save()
+        reservation = Reservation.objects.create(
+            user=self.user,
+            venue=self.venue,
+            firstname="Jane",
+            lastname="Doe",
+            email="jane.doe@example.com",
+            phone="+1234567890",
+            date="2030-01-01",
+            time="18:00",
+            guests=2,
+            special_requests="Window table",
+            allergies="Peanuts",
+            comments="Anniversary",
+        )
+
+        self.client.login(username="dashboardowner3", password="pass1234")
+        response = self.client.get(f"/api/v1/reservations/{reservation.id}/details/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["customer_name"], "Jane Doe")
+        self.assertEqual(response.data["email"], "jane.doe@example.com")
+        self.assertEqual(response.data["special_requests"], "Window table")
+        self.assertEqual(response.data["allergies"], "Peanuts")
+        self.assertEqual(response.data["comments"], "Anniversary")
 
     def test_venue_working_hours_endpoint_updates_hours(self):
         owner = User.objects.create_user(

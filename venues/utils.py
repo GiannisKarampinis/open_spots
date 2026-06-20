@@ -20,6 +20,12 @@ logger = logging.getLogger(__name__)
 ###########################################################################################
 
 ###########################################################################################
+def get_today():
+    return now().date()
+
+###########################################################################################
+
+###########################################################################################
 @lru_cache(maxsize = 1024)
 def _cached_nominatim(address: str) -> Optional[Tuple[float, float]]:
     """
@@ -384,8 +390,6 @@ def is_throttled(user, key, limit=5, period=60):
 
 ###########################################################################################
 def user_can_manage_venue(user, venue):
-    print(user.is_authenticated, user.user_type, venue.owner_id, user.id)
-    
     if not user.is_authenticated:
         return False
 

@@ -407,11 +407,11 @@ def get_venue_visits_analytics_json(request, venue_id, grouping = 'daily'):
     # Grouping selection
     if grouping == 'weekly':
         trunc_fn = TruncWeek
-        days_back = 60
+        days_back = 84
         date_fmt = "%Y-%m-%d"  # week start date
     elif grouping == 'monthly':
         trunc_fn = TruncMonth
-        days_back = 180
+        days_back = 365
         date_fmt = "%Y-%m"     # e.g. 2023-07
     elif grouping == 'yearly':
         trunc_fn = TruncYear

@@ -293,7 +293,7 @@
 }
 
 /* --- Main page heading --- */
-h2 {
+.page-container > h2 {
     font-family: var(--global-font-family);
     font-weight: 700;
     font-size: clamp(1.4rem, 5vw, 2rem);

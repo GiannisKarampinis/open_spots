@@ -66,6 +66,8 @@ services:
     env_file: .env
     environment:
       DJANGO_RUNNING_IN_DOCKER: "1"
+      DJANGO_DEBUG:             ${DJANGO_DEBUG:-1}
+      SECURE_SSL_REDIRECT:      ${SECURE_SSL_REDIRECT:-0}
       POSTGRES_DB:              ${POSTGRES_DB:-openspots}
       POSTGRES_USER:            ${POSTGRES_USER:-openspots}
       POSTGRES_PASSWORD:        ${POSTGRES_PASSWORD:-openspots}

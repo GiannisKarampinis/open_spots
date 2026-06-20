@@ -1,7 +1,7 @@
 import  React, { useEffect, useRef, useState } from "react";
 import  { Link, useNavigate } from "react-router-dom";
 import  { Outlet }  from "react-router-dom";
-import  axios       from "axios";
+import  { clearStoredAuth, getAccessToken, getWithAuth, logoutSession, readStoredUser } from "../utils/auth";
 import  "../styles/base.css";
 import  { useTranslation } from "react-i18next";
 import  i18n        from "../i18n.jsx";
@@ -62,54 +62,26 @@ export default function Layout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
 
-  const readStoredUser = () => {
-    try {
-      return JSON.parse(localStorage.getItem("user"));
-    } catch {
-      return null;
-    }
-  };
-
-  const getAccessToken = () => localStorage.getItem("access") || localStorage.getItem("access_token");
-
   useEffect(() => {
     const storedUser = readStoredUser();
     if (storedUser) {
       setUser(storedUser);
     }
 
-    const token = getAccessToken();
     let cancelled = false;
     const syncAuth = () => setUser(readStoredUser());
     window.addEventListener("auth:changed", syncAuth);
     window.addEventListener("storage", syncAuth);
 
-    if (!token) {
-      setUser(null);
-      return () => {
-        cancelled = true;
-        window.removeEventListener("auth:changed", syncAuth);
-        window.removeEventListener("storage", syncAuth);
-      };
-    }
-
-    axios
-      .get("/api/v1/accounts/profile/", {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
-      })
+    getWithAuth("/api/v1/accounts/profile/")
       .then((res) => {
-        if (cancelled) return;
+        if (cancelled || !res) return;
         setUser(res.data);
         localStorage.setItem("user", JSON.stringify(res.data));
       })
       .catch(() => {
         if (cancelled) return;
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        localStorage.removeItem("user");
+        clearStoredAuth();
         setUser(null);
       });
 
@@ -122,19 +94,15 @@ export default function Layout() {
 
   useEffect(() => {
     const token = getAccessToken();
-    if (!token || !user || user.user_type !== "venue_admin") {
+    if (!token || !user) {
       setOwnedVenue(null);
       return undefined;
     }
 
     let cancelled = false;
-    axios
-      .get("/api/v1/venues/owned/", {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
-      })
+    getWithAuth("/api/v1/venues/owned/")
       .then((res) => {
-        if (!cancelled) setOwnedVenue(res.data);
+        if (!cancelled && res) setOwnedVenue(res.data);
       })
       .catch(() => {
         if (!cancelled) setOwnedVenue(null);
@@ -168,17 +136,12 @@ export default function Layout() {
     localStorage.setItem("i18nextLng", lang);
   };
 
-  const logout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("user");
+  const logout = async () => {
+    await logoutSession();
     setUser(null);
     setOwnedVenue(null);
     setMenuOpen(false);
     setSettingsOpen(false);
-    window.dispatchEvent(new Event("auth:changed"));
     navigate("/accounts/login");
   };
 

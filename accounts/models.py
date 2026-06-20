@@ -1,3 +1,5 @@
+import uuid
+
 from django.db                  import models
 from django.contrib.auth.models import AbstractUser
 
@@ -30,3 +32,25 @@ class CustomUser(AbstractUser):
     #     message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
     # )
     # phone_number = models.CharField(validators=[phone_regex], max_length=17, blank=True, null=True)
+
+
+class DeviceSession(models.Model):
+    id              = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user            = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="device_sessions")
+    device_name     = models.CharField(max_length=255, blank=True)
+    user_agent      = models.TextField(blank=True)
+    ip_address      = models.GenericIPAddressField(blank=True, null=True)
+    first_seen_at   = models.DateTimeField(auto_now_add=True)
+    last_seen_at    = models.DateTimeField(auto_now=True)
+    last_refresh_at = models.DateTimeField(blank=True, null=True)
+    revoked_at      = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["-last_seen_at"]
+
+    def __str__(self):
+        return f"{self.user} - {self.device_name or 'Unknown device'}"
+
+    @property
+    def is_active(self):
+        return self.revoked_at is None

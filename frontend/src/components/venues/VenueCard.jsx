@@ -3,6 +3,8 @@ import { faLocationDot, faChair, faStar } from "@fortawesome/free-solid-svg-icon
 import { Link } from "react-router-dom";
 
 export default function VenueCard({ venue }) {
+  const rating = Number(venue.average_rating);
+
   return (
     <Link className="venue-link" to={`/venues/venue/${venue.id}`}>
       <div className={`venue-card ${venue.is_full ? "full" : "available"}`}>
@@ -26,10 +28,10 @@ export default function VenueCard({ venue }) {
               />
             </div>
 
-            {venue.average_rating > 0 ? (
+            {rating > 0 ? (
               <div className="venue-info-item rating">
                 <FontAwesomeIcon icon={faStar} />
-                <span>{venue.average_rating.toFixed(1)}</span>
+                <span>{rating.toFixed(1)}</span>
               </div>
             ) : (
               <div className="venue-info-item rating muted">New</div>

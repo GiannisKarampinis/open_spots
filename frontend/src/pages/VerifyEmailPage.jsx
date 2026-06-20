@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { storeAuthResponse } from "../utils/auth";
 import "../styles/auth.css";
 
 const CODE_LENGTH = 6;
@@ -13,15 +14,15 @@ function formatSeconds(totalSeconds) {
 
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
-  const [code, setCode] = useState("");
-  const [email, setEmail] = useState("");
-  const [remaining, setRemaining] = useState(0);
-  const [total, setTotal] = useState(600);
-  const [message, setMessage] = useState("");
+  const [code, setCode]             = useState("");
+  const [email, setEmail]           = useState("");
+  const [remaining, setRemaining]   = useState(0);
+  const [total, setTotal]           = useState(600);
+  const [message, setMessage]       = useState("");
   const [messageType, setMessageType] = useState("success");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]       = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [resending, setResending] = useState(false);
+  const [resending, setResending]   = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,14 +82,7 @@ export default function VerifyEmailPage() {
     setMessage("");
     try {
       const res = await axios.post("/api/v1/accounts/verification/confirm/", { code }, { withCredentials: true });
-      if (res.data.access && res.data.refresh) {
-        localStorage.setItem("access", res.data.access);
-        localStorage.setItem("refresh", res.data.refresh);
-      }
-      if (res.data.user) {
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-      }
-      window.dispatchEvent(new Event("auth:changed"));
+      storeAuthResponse(res.data);
       setMessageType("success");
       setMessage(res.data.detail || "Email verified successfully.");
       setTimeout(() => navigate(res.data.redirect_to || "/"), 700);

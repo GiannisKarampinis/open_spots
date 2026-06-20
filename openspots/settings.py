@@ -22,6 +22,14 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def env_bool(name, default=False):
+    return os.getenv(name, str(default)).lower() in {"1", "true", "yes", "on"}
+
+
+def env_csv(name, default=""):
+    return [x.strip() for x in os.getenv(name, default).split(",") if x.strip()]
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -31,24 +39,43 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 #DEBUG = True
 
-DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
+DEBUG = env_bool("DJANGO_DEBUG", False)
 
-allowed = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver,web").split(",")
-ALLOWED_HOSTS = [h.strip() for h in allowed if h.strip()]
+ALLOWED_HOSTS = env_csv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver,web")
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
-SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False") == "True"
-CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "False") == "True"
+SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", not DEBUG)
+SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", not DEBUG)
+CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", not DEBUG)
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
+CSRF_COOKIE_SAMESITE = os.getenv("CSRF_COOKIE_SAMESITE", "Lax")
+JWT_COOKIE_SECURE = env_bool("JWT_COOKIE_SECURE", not DEBUG)
+JWT_COOKIE_SAMESITE = os.getenv("JWT_COOKIE_SAMESITE", "Lax")
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
-SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "False") == "True"
-SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "False") == "True"
-CSRF_TRUSTED_ORIGINS = [x.strip() for x in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if x.strip()]
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
+SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", False)
+CSRF_TRUSTED_ORIGINS = env_csv("DJANGO_CSRF_TRUSTED_ORIGINS")
+
+SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")
+SECURITY_ALLOWED_CORS_ORIGINS = env_csv(
+    "SECURITY_ALLOWED_CORS_ORIGINS",
+    ",".join(
+        [
+            os.getenv("SITE_URL", "http://localhost:8000"),
+            "http://127.0.0.1:8000",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ]
+    ),
+)
+SECURITY_CSP_ENABLED = env_bool("SECURITY_CSP_ENABLED", not DEBUG)
+SECURITY_CSP_REPORT_ONLY = env_bool("SECURITY_CSP_REPORT_ONLY", True)
+SECURITY_CSP_REPORT_URI = os.getenv("SECURITY_CSP_REPORT_URI", "")
 
 # Application definition
 
@@ -68,6 +95,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -76,8 +105,8 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',  # web
         'rest_framework_simplejwt.authentication.JWTAuthentication',  # api
+        'rest_framework.authentication.SessionAuthentication',  # web
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -87,10 +116,18 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': os.getenv('API_THROTTLE_ANON', '100/minute'),
         'user': os.getenv('API_THROTTLE_USER', '500/minute'),
+        'auth_login': os.getenv('API_THROTTLE_AUTH_LOGIN', '10/minute'),
+        'auth_2fa': os.getenv('API_THROTTLE_AUTH_2FA', '10/minute'),
+        'auth_refresh': os.getenv('API_THROTTLE_AUTH_REFRESH', '30/minute'),
+        'auth_register': os.getenv('API_THROTTLE_AUTH_REGISTER', '10/hour'),
+        'auth_password': os.getenv('API_THROTTLE_AUTH_PASSWORD', '5/minute'),
+        'auth_verification': os.getenv('API_THROTTLE_AUTH_VERIFICATION', '10/minute'),
+        'auth_device': os.getenv('API_THROTTLE_AUTH_DEVICE', '30/minute'),
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
@@ -104,7 +141,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv('JWT_ACCESS_MINUTES', '30'))),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv('JWT_ACCESS_MINUTES', '15'))),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('JWT_REFRESH_DAYS', '14'))),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -200,7 +237,7 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 
 SITE_ID = 1
 
-SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")   # for local dev
+# SITE_URL is used for email links, CORS, and security headers.
 # For production, set SITE_URL=https://your-production-domain.com
 
 AUTHENTICATION_BACKENDS = (
@@ -214,11 +251,15 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'openspots.security.StrictCORSMiddleware',
+    'openspots.security.SecurityHeadersMiddleware',
+    'openspots.security.SecurityEventLoggingMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',  
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
@@ -359,6 +400,18 @@ LOGGING = {
     "root": {
         "handlers": ["console"],
         "level": "INFO",
+    },
+    "loggers": {
+        "security": {
+            "handlers": ["console"],
+            "level": os.getenv("SECURITY_LOG_LEVEL", "WARNING"),
+            "propagate": False,
+        },
+        "accounts.security": {
+            "handlers": ["console"],
+            "level": os.getenv("SECURITY_LOG_LEVEL", "WARNING"),
+            "propagate": False,
+        },
     },
 }
 

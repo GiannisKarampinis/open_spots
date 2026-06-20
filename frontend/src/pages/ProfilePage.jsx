@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { getWithAuth, patchWithAuth, postWithAuth, storeAuthResponse } from "../utils/auth";
 import "../styles/auth.css";
 
 const editableFields = [
@@ -9,11 +9,6 @@ const editableFields = [
   ["username", "Username", "text"],
   ["phone_number", "Phone number", "text"],
 ];
-
-function authHeaders() {
-  const token = localStorage.getItem("access") || localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -28,22 +23,15 @@ export default function ProfilePage() {
   const [messageType, setMessageType] = useState("success");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [twoFactor, setTwoFactor] = useState({ enabled: false, loading: true });
+  const [twoFactorSetup, setTwoFactorSetup] = useState(null);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
 
   useEffect(() => {
-    const token = authHeaders().Authorization;
-    if (!token) {
-      navigate("/accounts/login");
-      return;
-    }
-
     let cancelled = false;
-    axios
-      .get("/api/v1/accounts/profile/", {
-        headers: authHeaders(),
-        withCredentials: true,
-      })
+    getWithAuth("/api/v1/accounts/profile/", {}, { onUnauthenticated: () => navigate("/accounts/login") })
       .then((res) => {
-        if (cancelled) return;
+        if (cancelled || !res) return;
         setForm({
           firstname: res.data.firstname || "",
           lastname: res.data.lastname || "",
@@ -51,19 +39,29 @@ export default function ProfilePage() {
           phone_number: res.data.phone_number || "",
         });
         setEmail(res.data.email || "");
-        localStorage.setItem("user", JSON.stringify(res.data));
-        window.dispatchEvent(new Event("auth:changed"));
+        storeAuthResponse({ user: res.data });
       })
       .catch(() => {
         if (cancelled) return;
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        localStorage.removeItem("user");
-        window.dispatchEvent(new Event("auth:changed"));
         navigate("/accounts/login");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getWithAuth("/api/v1/accounts/2fa/status/", {}, { onUnauthenticated: () => navigate("/accounts/login") })
+      .then((res) => {
+        if (!cancelled && res) setTwoFactor({ ...res.data, loading: false });
+      })
+      .catch(() => {
+        if (!cancelled) setTwoFactor((current) => ({ ...current, loading: false }));
       });
 
     return () => {
@@ -83,12 +81,14 @@ export default function ProfilePage() {
     setMessage("");
 
     try {
-      const res = await axios.patch("/api/v1/accounts/profile/", form, {
-        headers: authHeaders(),
-        withCredentials: true,
-      });
-      localStorage.setItem("user", JSON.stringify(res.data));
-      window.dispatchEvent(new Event("auth:changed"));
+      const res = await patchWithAuth(
+        "/api/v1/accounts/profile/",
+        form,
+        {},
+        { onUnauthenticated: () => navigate("/accounts/login") },
+      );
+      if (!res) return;
+      storeAuthResponse({ user: res.data });
       setMessageType("success");
       setMessage("Profile updated.");
     } catch (err) {
@@ -96,6 +96,68 @@ export default function ProfilePage() {
       setMessage(err.response?.data?.detail || "Could not update your profile.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const startTwoFactorSetup = async () => {
+    setMessage("");
+    try {
+      const res = await postWithAuth(
+        "/api/v1/accounts/2fa/setup/",
+        {},
+        {},
+        { onUnauthenticated: () => navigate("/accounts/login") },
+      );
+      if (!res) return;
+      setTwoFactorSetup(res.data);
+      setTwoFactorCode("");
+      setMessageType("success");
+      setMessage("Add this key to your authenticator app, then enter the generated code.");
+    } catch (err) {
+      setMessageType("error");
+      setMessage(err.response?.data?.detail || "Could not start two-factor setup.");
+    }
+  };
+
+  const confirmTwoFactor = async () => {
+    setMessage("");
+    try {
+      const res = await postWithAuth(
+        "/api/v1/accounts/2fa/confirm/",
+        { code: twoFactorCode },
+        {},
+        { onUnauthenticated: () => navigate("/accounts/login") },
+      );
+      if (!res) return;
+      setTwoFactor({ enabled: true, loading: false });
+      setTwoFactorSetup(null);
+      setTwoFactorCode("");
+      setMessageType("success");
+      setMessage(res.data.detail || "Two-factor authentication enabled.");
+    } catch (err) {
+      setMessageType("error");
+      setMessage(err.response?.data?.detail || "Could not confirm two-factor authentication.");
+    }
+  };
+
+  const disableTwoFactor = async () => {
+    setMessage("");
+    try {
+      const res = await postWithAuth(
+        "/api/v1/accounts/2fa/disable/",
+        { code: twoFactorCode },
+        {},
+        { onUnauthenticated: () => navigate("/accounts/login") },
+      );
+      if (!res) return;
+      setTwoFactor({ enabled: false, loading: false });
+      setTwoFactorSetup(null);
+      setTwoFactorCode("");
+      setMessageType("success");
+      setMessage(res.data.detail || "Two-factor authentication disabled.");
+    } catch (err) {
+      setMessageType("error");
+      setMessage(err.response?.data?.detail || "Could not disable two-factor authentication.");
     }
   };
 
@@ -129,6 +191,51 @@ export default function ProfilePage() {
           {saving ? "Saving..." : "Save Profile"}
         </button>
       </form>
+
+      <section className="auth-form" aria-labelledby="two-factor-heading">
+        <h3 id="two-factor-heading">Two-Factor Authentication</h3>
+
+        <p>{twoFactor.enabled ? "Enabled" : "Disabled"}</p>
+
+        {twoFactorSetup && (
+          <div className="auth-field">
+            <label htmlFor="two-factor-key">Manual setup key</label>
+            <input id="two-factor-key" type="text" value={twoFactorSetup.manual_key || ""} readOnly />
+          </div>
+        )}
+
+        {(twoFactorSetup || twoFactor.enabled) && (
+          <div className="auth-field">
+            <label htmlFor="two-factor-code">Authenticator code</label>
+            <input
+              id="two-factor-code"
+              type="text"
+              inputMode="numeric"
+              value={twoFactorCode}
+              onChange={(event) => setTwoFactorCode(event.target.value)}
+              autoComplete="one-time-code"
+            />
+          </div>
+        )}
+
+        {!twoFactor.enabled && !twoFactorSetup && (
+          <button className="auth-submit" type="button" onClick={startTwoFactorSetup} disabled={twoFactor.loading}>
+            Enable 2FA
+          </button>
+        )}
+
+        {twoFactorSetup && (
+          <button className="auth-submit" type="button" onClick={confirmTwoFactor}>
+            Confirm 2FA
+          </button>
+        )}
+
+        {twoFactor.enabled && (
+          <button className="auth-submit" type="button" onClick={disableTwoFactor}>
+            Disable 2FA
+          </button>
+        )}
+      </section>
     </div>
   );
 }

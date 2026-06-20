@@ -392,13 +392,10 @@ class Reservation(models.Model):
         ('no_show',     'No-show'),
     ]
 
-    SPECIAL_REQUESTS_CHOICES = [
-        ('none',        'None'),
-        ('vegan',       'Vegan'),
-        ('vegetarian',  'Vegetarian'),
-        ('gluten_free', 'Gluten-free'),
-        ('wheelchair',  'Wheelchair accessible'),
-        ('other',       'Other'),
+    SEATING_PREFERENCE_CHOICES = [
+        ('none',     'No preference'),
+        ('indoor',   'Indoor'),
+        ('outdoor',  'Outdoor'),
     ]
     
     user                = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reservations') # required by default
@@ -416,9 +413,15 @@ class Reservation(models.Model):
     updated_at          = models.DateTimeField(auto_now=True)
     created_at          = models.DateTimeField(auto_now_add=True)
     comments            = models.TextField(blank=True, null=True)   # optional
-    special_requests    = models.CharField(max_length=20, choices=SPECIAL_REQUESTS_CHOICES, default='none') 
+    special_requests    = models.BooleanField(default=False)
+    seating_preference  = models.CharField(max_length=20, choices=SEATING_PREFERENCE_CHOICES, default='none')
+    has_allergies       = models.BooleanField(default=False)
     allergies           = models.TextField(blank=True, null=True)   # optional
-    smoking             = models.CharField(max_length=20, choices=[('no_preference', 'No preference'), ('smoking', 'Smoking'), ('non_smoking', 'Non-smoking')], default='no_preference')
+    vegan               = models.BooleanField(default=False)
+    vegetarian          = models.BooleanField(default=False)
+    gluten_free         = models.BooleanField(default=False)
+    wheelchair          = models.BooleanField(default=False)
+    smoking             = models.BooleanField(default=False)
     objects             = ReservationManager() 
     seen                = models.BooleanField(default=False) # For owner dashboard: has the owner seen this reservation in their dashboard yet?
 
@@ -439,8 +442,24 @@ class Reservation(models.Model):
         # If status is accepted and arrival_status is not pending, reset arrival_status to pending
         if self.status == 'accepted' and self.arrival_status not in ['pending', 'checked_in', 'no_show']:
             self.arrival_status = 'pending'
+
+        self.special_requests = self.has_any_special_request()
         
         super().save(*args, **kwargs)
+
+    def has_any_special_request(self):
+        return any(
+            [
+                self.seating_preference != 'none',
+                self.has_allergies,
+                bool((self.allergies or '').strip()),
+                self.vegan,
+                self.vegetarian,
+                self.gluten_free,
+                self.wheelchair,
+                self.smoking,
+            ]
+        )
 
     @property
     def editor(self):
