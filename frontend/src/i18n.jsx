@@ -6,6 +6,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 const resources = {
   en: {
     translation: {
+      "List your venue": "List your venue",
       "Personal info": "Personal info",
       "Permissions": "Permissions",
       "Important dates": "Important dates",
@@ -262,12 +263,35 @@ const resources = {
       "Date:": "Date:",
       "Customer:": "Customer:",
       "Party Size:": "Party Size:",
-      "Message": "Message"
+      "Message": "Message",
+      "About Us": "About Us",
+      "By developing real-time booking technology, we redefine reservations for hospitality venues. Our mission is simple: make bookings seamless for customers, while structured, reliable, and measurable for businesses.":
+        "By developing real-time booking technology, we redefine reservations for hospitality venues. Our mission is simple: make bookings seamless for customers, while structured, reliable, and measurable for businesses.",
+      "OpenSpots is designed to manage reservations for on-site experiences — giving businesses full visibility over availability, demand, and customer flow, while offering customers a smooth way to secure their spot.":
+        "OpenSpots is designed to manage reservations for on-site experiences — giving businesses full visibility over availability, demand, and customer flow, while offering customers a smooth way to secure their spot.",
+      "Our Core Principles": "Our Core Principles",
+      "Real-time availability": "Real-time availability",
+      "management": "management",
+      "Booking slots reflect actual capacity at any given moment, reducing double bookings, manual updates, and operational friction.":
+        "Booking slots reflect actual capacity at any given moment, reducing double bookings, manual updates, and operational friction.",
+      "Structured": "Structured",
+      "operational control": "operational control",
+      "Scheduling centralizing bookings in one system that supports daily scheduling, capacity planning, and coordination across teams.":
+        "Scheduling centralizing bookings in one system that supports daily scheduling, capacity planning, and coordination across teams.",
+      "Data-driven": "Data-driven",
+      "insight": "insight",
+      "Converting booking activity into clear, usable information that supports forecasting, performance analysis, and smarter business decisions.":
+        "Converting booking activity into clear, usable information that supports forecasting, performance analysis, and smarter business decisions.",
+      "At OpenSpots, we see bookings not simply as confirmations, but as a critical layer of business infrastructure — connecting physical spaces with digital access in a controlled and measurable way.":
+        "At OpenSpots, we see bookings not simply as confirmations, but as a critical layer of business infrastructure — connecting physical spaces with digital access in a controlled and measurable way.",
+      "Our objective is to provide a stable, adaptable, and modern system that supports growth while maintaining operational clarity.":
+        "Our objective is to provide a stable, adaptable, and modern system that supports growth while maintaining operational clarity.",
     }
   },
 
   el: {
     translation: {
+      "List your venue": "Καταχωρήστε την επιχείρησή σας",
       "Personal info": "Προσωπικά στοιχεία",
       "Permissions": "Δικαιώματα",
       "Important dates": "Σημαντικές ημερομηνίες",
@@ -524,7 +548,28 @@ const resources = {
       "Date:": "Ημερομηνία:",
       "Customer:": "Πελάτης:",
       "Party Size:": "Αριθμός ατόμων:",
-      "Message": "Μήνυμα"
+      "Message": "Μήνυμα",
+      "About Us": "Σχετικά με εμάς",
+      "By developing real-time booking technology, we redefine reservations for hospitality venues. Our mission is simple: make bookings seamless for customers, while structured, reliable, and measurable for businesses.":"Αναπτύσσοντας τεχνολογία κρατήσεων σε πραγματικό χρόνο, επαναπροσδιορίζουμε τις κρατήσεις για χώρους φιλοξενίας. Η αποστολή μας είναι απλή: να κάνουμε τις κρατήσεις εύκολες για τους πελάτες και ταυτόχρονα οργανωμένες, αξιόπιστες και μετρήσιμες για τις επιχειρήσεις.",
+      "OpenSpots is designed to manage reservations for on-site experiences — giving businesses full visibility over availability, demand, and customer flow, while offering customers a smooth way to secure their spot.":
+        "Το OpenSpots έχει σχεδιαστεί για τη διαχείριση κρατήσεων σε χώρους φυσικής παρουσίας, δίνοντας στις επιχειρήσεις πλήρη εικόνα της διαθεσιμότητας, της ζήτησης και της ροής πελατών, ενώ προσφέρει στους πελάτες έναν εύκολο τρόπο να εξασφαλίσουν τη θέση τους.",
+      "Our Core Principles": "Οι βασικές μας αρχές",
+      "Real-time availability": "Διαχείρηση διαθεσιμότητας",
+      "management": "σε πραγματικό χρόνο",
+      "Booking slots reflect actual capacity at any given moment, reducing double bookings, manual updates, and operational friction.":
+        "Οι διαθέσιμες θέσεις κράτησης αντικατοπτρίζουν την πραγματική χωρητικότητα κάθε στιγμή, μειώνοντας τις διπλές κρατήσεις, τις χειροκίνητες ενημερώσεις και τα λειτουργικά προβλήματα.",
+      "Structured": "Οργανωμένος",
+      "operational control": "λειτουργικός έλεγχος",
+      "Scheduling centralizing bookings in one system that supports daily scheduling, capacity planning, and coordination across teams.":
+        "Η κεντρική διαχείριση των κρατήσεων σε ένα σύστημα υποστηρίζει τον καθημερινό προγραμματισμό, τον σχεδιασμό χωρητικότητας και τον συντονισμό μεταξύ των ομάδων.",
+      "Data-driven": "Βασισμένη σε δεδομένα",
+      "insight": "πληροφόρηση",
+      "Converting booking activity into clear, usable information that supports forecasting, performance analysis, and smarter business decisions.":
+        "Μετατρέπουμε τη δραστηριότητα των κρατήσεων σε ξεκάθαρη και χρήσιμη πληροφορία που υποστηρίζει προβλέψεις, ανάλυση απόδοσης και πιο έξυπνες επιχειρηματικές αποφάσεις.",
+      "At OpenSpots, we see bookings not simply as confirmations, but as a critical layer of business infrastructure — connecting physical spaces with digital access in a controlled and measurable way.":
+        "Στο OpenSpots, βλέπουμε τις κρατήσεις όχι απλώς ως επιβεβαιώσεις, αλλά ως ένα κρίσιμο επίπεδο επιχειρηματικής υποδομής, συνδέοντας τους φυσικούς χώρους με την ψηφιακή πρόσβαση με ελεγχόμενο και μετρήσιμο τρόπο.",
+      "Our objective is to provide a stable, adaptable, and modern system that supports growth while maintaining operational clarity.":
+        "Στόχος μας είναι να προσφέρουμε ένα σταθερό, προσαρμόσιμο και σύγχρονο σύστημα που υποστηρίζει την ανάπτυξη, διατηρώντας παράλληλα λειτουργική σαφήνεια.",
     }
   }
 };

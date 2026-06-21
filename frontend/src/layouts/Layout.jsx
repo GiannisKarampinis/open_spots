@@ -156,6 +156,9 @@ export default function Layout() {
 
         <nav className="main-nav">
           
+          <Link to="/venues/about" className="nav-link">{t("About")}</Link>
+          <span className="separator">|</span>
+
           <select
             onChange  = {handleLanguageChange}
             value     = {i18n.language?.startsWith("el") ? "el" : "en"}
@@ -190,6 +193,9 @@ export default function Layout() {
               <div className={`user-dropdown ${menuOpen ? "show" : ""}`} role="menu">
                 <Link to="/accounts/profile" role="menuitem" onClick={() => setMenuOpen(false)}>
                   {t("Profile")}
+                </Link>
+                <Link to="/venues/my-reservations" role="menuitem" onClick={() => setMenuOpen(false)}>
+                  {t("My Reservations")}
                 </Link>
 
                 <div className={`submenu ${settingsOpen ? "open" : ""}`}>
@@ -230,6 +236,8 @@ export default function Layout() {
               <span className="separator">|</span>
 
               <Link to="/accounts/signup" className="nav-link">{t("Sign Up")}</Link>
+              <span className="separator">|</span>
+              <Link to="/venues/apply-venue" className="nav-link">{t("List your venue")}</Link>
             </>
           )}
         </nav>
