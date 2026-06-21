@@ -436,6 +436,10 @@ function ReservationRow({ reservation, kind, onDetails, onAction }) {
             <>
               <button type="button" className="btn btn-success btn-sm me-1 btn-accept-reservation" data-status="accepted" onClick={(event) => {
                 event.stopPropagation();
+                if (reservation.special_requests && !reservation.seen) {
+                  onDetails(reservation, { highlightSpecialRequests: true });
+                  return;
+                }
                 onAction("status", reservation, "accepted");
               }}>
                 {t("Accept")}
@@ -557,6 +561,10 @@ function ReservationsTable({
               <>
                 <button type="button" className="btn btn-success btn-sm me-1 btn-accept-reservation" data-status="accepted" onClick={(event) => {
                   event.stopPropagation();
+                  if (row.original.special_requests && !row.original.seen) {
+                    onDetails(row.original, { highlightSpecialRequests: true });
+                    return;
+                  }
                   onAction("status", row.original, "accepted");
                 }}>
                   {t("Accept")}
@@ -1052,50 +1060,176 @@ function ManageVenueTab({ venue, workingDays, onSubmit, saving }) {
 }
 
 
-function ReservationDetailsModal({ reservation, onClose }) {
+
+
+
+
+
+function ReservationDetailsModal({ reservation, sourceKind, highlightSpecialRequests, onAction, onClose }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
+
+  useEffect(() => {
+    if (!reservation) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [reservation, onClose]);
+
   if (!reservation) return null;
+
+  const nameParts = (reservation.customer_name || "").trim().split(/\s+/).filter(Boolean);
+  const fallbackFirstName = nameParts[0] || "";
+  const fallbackLastName = nameParts.slice(1).join(" ");
 
   const status = reservation.arrival_status && reservation.arrival_status !== "pending"
     ? reservation.arrival_status
     : reservation.status;
 
-  const detailRows = [
-    [t("Customer"), "reservation-detail-customer", reservation.customer_name],
+  const detailFields = [
+    [t("First Name"), "reservation-detail-first-name", reservation.firstname || fallbackFirstName],
+    [t("Last Name"), "reservation-detail-last-name", reservation.lastname || fallbackLastName],
+    [t("Email"), "reservation-detail-email", reservation.email],
+    [t("Phone"), "reservation-detail-phone", reservation.phone],
     [t("Date"), "reservation-detail-date", formatDate(reservation.date, locale)],
     [t("Time"), "reservation-detail-time", formatTime(reservation.time, locale)],
     [t("Guests"), "reservation-detail-guests", reservation.guests],
     [t("Status"), "reservation-detail-status", titleStatus(status, t)],
-    [t("Email"), "reservation-detail-email", reservation.email],
-    [t("Phone"), "reservation-detail-phone", reservation.phone],
-    [t("Special Requests"), "reservation-detail-special-requests", reservation.special_requests],
-    [t("Allergies"), "reservation-detail-allergies", reservation.allergies],
-    [t("Comments"), "reservation-detail-comments", reservation.comments],
   ];
+
+  const seatingPreference = reservation.seating_preference || "none";
+  const seatingPreferenceOptions = [
+    ["none", t("No seating preference")],
+    ["indoor", t("Indoor Seating")],
+    ["outdoor", t("Outdoor Seating")],
+  ];
+
+  const specialRequestOptions = [
+    [t("Vegan"), "vegan", Boolean(reservation.vegan)],
+    [t("Vegetarian"), "vegetarian", Boolean(reservation.vegetarian)],
+    [t("Gluten free"), "gluten-free", Boolean(reservation.gluten_free)],
+    [t("Wheelchair"), "wheelchair", Boolean(reservation.wheelchair)],
+    [t("Smoking"), "smoking", Boolean(reservation.smoking)],
+    [t("Allergies"), "allergies", Boolean(reservation.has_allergies)],
+  ];
+  const allergyComment = (reservation.allergies || "").trim();
+  const reservationComment = (reservation.comments || "").trim();
 
   return (
     <div className="modal-backdrop show" onClick={onClose}>
-      <div id="reservationDetailsModal" className="modal fade show" tabIndex="-1" aria-labelledby="reservationDetailsModalLabel" aria-hidden="false" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-dialog modal-dialog-centered">
+      <div id="reservationDetailsModal" className="modal show" tabIndex="-1" aria-labelledby="reservationDetailsModalLabel" aria-hidden="false" onClick={onClose}>
+        <div className="modal-dialog modal-dialog-centered" onClick={(event) => event.stopPropagation()}>
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title" id="reservationDetailsModalLabel">{t("Reservation Details")}</h5>
               <button type="button" className="btn-close" onClick={onClose} aria-label={t("Close")}></button>
             </div>
             <div className="modal-body">
-              {detailRows.map(([label, id, value], index) => (
-                <p key={label} className={index === detailRows.length - 1 ? "mb-0" : ""}>
-                  <strong>{label}:</strong> <span id={id}>{value || "-"}</span>
-                </p>
-              ))}
+              <div className="reservation-detail-grid">
+                {detailFields.map(([label, id, value]) => (
+                  <div className="reservation-detail-field" key={id}>
+                    <span className="reservation-detail-label">{label}</span>
+                    <span className="reservation-detail-value" id={id}>{value || "-"}</span>
+                  </div>
+                ))}
+              </div>
+
+              <section className={`reservation-special-section ${highlightSpecialRequests ? "is-highlighted" : ""}`} aria-labelledby="reservation-detail-special-requests-title">
+                <h6 id="reservation-detail-special-requests-title">{t("Special Requests")}</h6>
+                <div className="reservation-special-options" id="reservation-detail-special-requests">
+                  <select className={`reservation-seating-select ${seatingPreference === "none" ? "is-empty" : "is-selected"}`} id="reservation-detail-seating" value={seatingPreference} disabled aria-label={t("Seating")}>
+                    {seatingPreferenceOptions.map(([value, label]) => (
+                      <option value={value} key={value}>{label}</option>
+                    ))}
+                  </select>
+                  {specialRequestOptions.map(([label, key, checked]) => (
+                    <label className="reservation-special-option" key={key}>
+                      <input type="checkbox" checked={checked} readOnly aria-label={label} />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </div>
+                {allergyComment && (
+                  <div className="reservation-detail-note">
+                    <span className="reservation-detail-label">{t("Allergies")} {t("Comments")}</span>
+                    <p id="reservation-detail-allergies">{allergyComment}</p>
+                  </div>
+                )}
+                {reservationComment && (
+                  <div className="reservation-detail-note">
+                    <span className="reservation-detail-label">{t("Comments")}</span>
+                    <p id="reservation-detail-comments">{reservationComment}</p>
+                  </div>
+                )}
+              </section>
             </div>
+            {sourceKind !== "history" && (
+              <div className="modal-footer reservation-modal-actions">
+                {sourceKind === "requests" && reservation.status === "pending" && (
+                  <>
+                    <button type="button" className="btn btn-success btn-sm me-1 btn-accept-reservation" data-status="accepted" onClick={(event) => {
+                      event.stopPropagation();
+                      onAction("status", reservation, "accepted");
+                      onClose();
+                    }}>
+                      {t("Accept")}
+                    </button>
+                    <button type="button" className="btn btn-danger btn-sm btn-reject-reservation" data-status="rejected" onClick={(event) => {
+                      event.stopPropagation();
+                      onAction("status", reservation, "rejected");
+                      onClose();
+                    }}>
+                      {t("Reject")}
+                    </button>
+                  </>
+                )}
+
+                {sourceKind === "arrivals" && (
+                  <>
+                    {reservation.status === "accepted" && reservation.arrival_status === "pending" && (
+                      <>
+                        <button type="button" className="btn btn-success btn-sm me-1 btn-update-arrival" data-status="checked_in" onClick={(event) => {
+                          event.stopPropagation();
+                          onAction("arrival", reservation, "checked_in");
+                          onClose();
+                        }}>
+                          {t("Checked in")}
+                        </button>
+                        <button type="button" className="btn btn-danger btn-sm btn-update-arrival" data-status="no_show" onClick={(event) => {
+                          event.stopPropagation();
+                          onAction("arrival", reservation, "no_show");
+                          onClose();
+                        }}>
+                          {t("No show")}
+                        </button>
+                      </>
+                    )}
+                    <button type="button" className="btn btn-sm btn-edit-status" data-move-url={`/api/v1/reservations/${reservation.id}/move-to-requests/`} onClick={(event) => {
+                      event.stopPropagation();
+                      onAction("move", reservation);
+                      onClose();
+                    }}>
+                      {t("Move to Requests")}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+
+
 
 
 export default function VenueDashboardPage() {
@@ -1127,6 +1261,8 @@ export default function VenueDashboardPage() {
   const [message, setMessage]                         = useState("");
   const [saving, setSaving]                           = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
+  const [selectedReservationSource, setSelectedReservationSource] = useState(null);
+  const [highlightSpecialRequests, setHighlightSpecialRequests] = useState(false);
 
   const [dateRanges, setDateRanges] = useState({
     requests:   { start: "", end: "" },
@@ -1168,6 +1304,27 @@ export default function VenueDashboardPage() {
     
       setMessage(err.response?.data?.detail || "Could not load the venue dashboard.");
     
+    }
+  };
+
+  const fetchDashboardCounts = async () => {
+    try {
+      const res = await getWithAuth(`/api/v1/venues/${venueId}/dashboard-counts/`,
+                                    {},
+                                    { onUnauthenticated: redirectToLogin },
+      );
+
+      if (!res) {
+        return;
+      }
+
+      setDashboard((current) => ({
+        ...current,
+        reservation_counts: res.data,
+      }));
+
+    } catch (err) {
+      setMessage(err.response?.data?.detail || "Could not load dashboard counts.");
     }
   };
 
@@ -1320,7 +1477,6 @@ export default function VenueDashboardPage() {
     setReservationTable(key, { sorting, page: 1 });
   };
 
-
   /* OK - REVIEWED */
   const updateReservationInDashboard = (key, updatedReservation) => {
     /* NOTE: */
@@ -1347,23 +1503,38 @@ export default function VenueDashboardPage() {
     });
   };
 
-
-  const showReservationDetails = async (reservation) => {
-    setSelectedReservation(reservation);
+  /* OK - REVIEWED */
+  const showReservationDetails = async (reservation, sourceKind, options = {}) => {
+    /* NOTE: It wires a table row click to the reservation details modal. */
+    /* onClick function of a row enables the onDetails() function */
+    setSelectedReservationSource(sourceKind);
+    setHighlightSpecialRequests(Boolean(options.highlightSpecialRequests));
+    setSelectedReservation(reservation); 
+    /* Stores the clicked reservation in state. */
+    /* This triggers the ReservationDetailsModal to show up with the reservation details. */
+    
     try {
-      const res = await getWithAuth(
-        `/api/v1/reservations/${reservation.id}/details/`,
+      const res = await getWithAuth(`/api/v1/reservations/${reservation.id}/details/`,
         {},
         { onUnauthenticated: redirectToLogin },
       );
+    
       if (!res) return;
+      
       setSelectedReservation(res.data);
-      updateReservationInDashboard("requests", { id: res.data.id, seen: res.data.seen });
-      fetchDashboard(); /* To update the unseen reservation count in the dashboard */
+      /* Replaces the modal data with the full backend response */
+      /* So the modal first opens with basic row info, then updates with complete detais
+         once the request finishes. */
+      
+      updateReservationInDashboard("requests", { id: res.data.id, seen: res.data.seen }); /* updates seen */
+      
+      fetchDashboardCounts(); /* To update only the reservation counts in the dashboard */
+    
     } catch (err) {
       setMessage(err.response?.data?.detail || "Could not load reservation details.");
     }
   };
+
 
   const action = async (kind, reservation, value) => {
     
@@ -1548,7 +1719,7 @@ export default function VenueDashboardPage() {
             onPageChange={(page) => setReservationTable("requests", { page })}
             onPageSizeChange={(pageSize) => updateTablePageSize("requests", pageSize)}
             onSortingChange={(sorting) => updateTableSorting("requests", sorting)}
-            onDetails={showReservationDetails}
+            onDetails={(reservation, options) => showReservationDetails(reservation, "requests", options)}
             onAction={action}
           />
 
@@ -1564,7 +1735,7 @@ export default function VenueDashboardPage() {
             onPageChange={(page) => setReservationTable("arrivals", { page })}
             onPageSizeChange={(pageSize) => updateTablePageSize("arrivals", pageSize)}
             onSortingChange={(sorting) => updateTableSorting("arrivals", sorting)}
-            onDetails={showReservationDetails}
+            onDetails={(reservation, options) => showReservationDetails(reservation, "arrivals", options)}
             onAction={action}
           />
         </div>
@@ -1587,7 +1758,7 @@ export default function VenueDashboardPage() {
             onPageChange={(page) => setReservationTable("history", { page })}
             onPageSizeChange={(pageSize) => updateTablePageSize("history", pageSize)}
             onSortingChange={(sorting) => updateTableSorting("history", sorting)}
-            onDetails={showReservationDetails}
+            onDetails={(reservation, options) => showReservationDetails(reservation, "history", options)}
             onAction={action}
           />
         </div>
@@ -1614,7 +1785,17 @@ export default function VenueDashboardPage() {
         </div>
       </div>
 
-      <ReservationDetailsModal reservation={selectedReservation} onClose={() => setSelectedReservation(null)} />
+      <ReservationDetailsModal
+        reservation={selectedReservation}
+        sourceKind={selectedReservationSource}
+        highlightSpecialRequests={highlightSpecialRequests}
+        onAction={action}
+        onClose={() => {
+          setSelectedReservation(null);
+          setSelectedReservationSource(null);
+          setHighlightSpecialRequests(false);
+        }}
+      />
     </div>
   );
 }

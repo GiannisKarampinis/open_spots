@@ -355,6 +355,13 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 /* Reservation details modal (dashboard) */
 
 #reservationDetailsModal {
+    --reservation-modal-surface: rgba(255, 255, 255, 0.94);
+    --reservation-modal-field: rgba(255, 255, 255, 0.78);
+    --reservation-modal-field-muted: rgba(0, 123, 255, 0.08);
+    --reservation-modal-text: var(--primary-hover);
+    --reservation-modal-value-text: var(--text-color);
+    --reservation-modal-heading: var(--surface-color);
+    --reservation-modal-border: rgba(0, 86, 179, 0.2);
     position: fixed;
     inset: 0;
     overflow-x: hidden;
@@ -380,12 +387,13 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 }
 
 #reservationDetailsModal .modal-content {
+    position: relative;
     width: 100%;
-    background: var(--surface-gradient);
-    color: var(--button-text);
-    border: 1px solid var(--primary-hover);
+    background: var(--reservation-modal-surface);
+    color: var(--reservation-modal-text);
+    border: 1px solid var(--reservation-modal-border);
     border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 14px 34px rgba(0, 51, 102, 0.28);
 }
 
 .modal-backdrop {
@@ -395,19 +403,25 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 }
 
 #reservationDetailsModal .modal-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    padding: 0.9rem 1rem;
+    border-bottom: 1px solid var(--reservation-modal-border);
+    padding: 1.15rem 3.25rem 1rem 1.15rem;
 }
 
 #reservationDetailsModal .modal-title {
-    color: var(--button-text);
-    font-weight: 600;
+    color: var(--reservation-modal-heading);
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.2;
     letter-spacing: 0.02em;
 }
 
 #reservationDetailsModal .btn-close {
-    filter: invert(1) grayscale(100%) brightness(180%);
-    opacity: 0.8;
+    position: absolute;
+    top: 0.7rem;
+    right: 0.75rem;
+    filter: none;
+    opacity: 0.75;
+    z-index: 2;
 }
 
 #reservationDetailsModal .btn-close:hover {
@@ -418,25 +432,156 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
     padding: 1rem;
 }
 
-#reservationDetailsModal .modal-body p {
-    margin-bottom: 0.65rem;
-    padding: 0.45rem 0.55rem;
+#reservationDetailsModal .reservation-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    padding: 0.85rem 1rem 1rem;
+    border-top: 1px solid var(--reservation-modal-border);
+}
+
+#reservationDetailsModal .reservation-modal-actions .btn {
+    padding: 0.55rem 0.9rem;
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.06);
+    font-size: 0.95rem;
+}
+
+#reservationDetailsModal .reservation-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+#reservationDetailsModal .reservation-detail-field {
+    min-width: 0;
+}
+
+#reservationDetailsModal .reservation-detail-label {
+    display: block;
+    margin-bottom: 0.28rem;
+    color: var(--primary-hover);
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+#reservationDetailsModal .reservation-detail-value {
+    display: block;
+    min-height: 2.35rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 6px;
+    background: var(--reservation-modal-field);
+    border: 1px solid var(--reservation-modal-border);
+    color: var(--reservation-modal-value-text);
+    font-size: 0.9rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+#reservationDetailsModal .reservation-special-section {
+    margin-top: 0.9rem;
+}
+
+#reservationDetailsModal .reservation-special-section.is-highlighted {
+    padding: 0.65rem;
+    border: 1px solid rgba(218, 165, 32, 0.8);
+    border-radius: 8px;
+    background: rgba(255, 215, 0, 0.08);
+    box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.12);
+}
+
+#reservationDetailsModal .reservation-special-section h6 {
+    margin: 0 0 0.5rem;
+    color: var(--primary-hover);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+#reservationDetailsModal .reservation-special-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+#reservationDetailsModal .reservation-seating-select {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.25rem;
+    padding: 0.48rem 0.6rem;
+    border: 1px solid var(--reservation-modal-border);
+    border-radius: 6px;
+    background: var(--reservation-modal-field);
+    color: var(--reservation-modal-value-text);
+    font-size: 0.88rem;
+    font-weight: 400;
+    opacity: 1;
+}
+
+#reservationDetailsModal .reservation-seating-select.is-selected {
+    font-weight: 700;
+}
+
+#reservationDetailsModal .reservation-special-option {
+    display: flex;
+    align-items: center;
+    gap: 0.48rem;
+    min-width: 0;
+    min-height: 2.25rem;
+    margin: 0;
+    padding: 0.48rem 0.6rem;
+    border: 1px solid var(--reservation-modal-border);
+    border-radius: 6px;
+    background: var(--reservation-modal-field);
+    color: var(--reservation-modal-value-text);
+    cursor: default;
+}
+
+#reservationDetailsModal .reservation-special-option input[type="checkbox"] {
+    flex: 0 0 auto;
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--primary-color);
+}
+
+#reservationDetailsModal .reservation-special-option span {
+    min-width: 0;
+    color: var(--reservation-modal-value-text);
+    font-size: 0.88rem;
+    font-weight: 400;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+#reservationDetailsModal .reservation-special-option input[type="checkbox"]:checked + span {
+    font-weight: 700;
+}
+
+#reservationDetailsModal .reservation-detail-note {
+    margin-top: 0.65rem;
+    padding: 0.65rem 0.7rem;
+    border-left: 3px solid var(--primary-color);
+    border-radius: 6px;
+    background: var(--reservation-modal-field-muted);
+}
+
+#reservationDetailsModal .reservation-detail-note p {
+    margin: 0;
+    color: var(--reservation-modal-value-text);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
 }
 
 #reservationDetailsModal .modal-body strong {
-    color: var(--button-text-hover);
+    color: var(--reservation-modal-heading);
     font-weight: 600;
 }
 
 #reservationDetailsModal .modal-body span {
-    color: var(--button-text);
     word-break: break-word;
 }
 
 .modal-backdrop.show {
-    opacity: 0.6;
     z-index: 19990;
 }
 
@@ -449,9 +594,14 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
         padding: 0.85rem;
     }
 
-    #reservationDetailsModal .modal-body p {
-        margin-bottom: 0.55rem;
-        padding: 0.4rem 0.5rem;
+    #reservationDetailsModal .reservation-detail-grid {
+        gap: 0.55rem;
+    }
+
+    #reservationDetailsModal .reservation-detail-value,
+    #reservationDetailsModal .reservation-special-option {
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
     }
 }
 

@@ -27,11 +27,12 @@ from venues.services.emails import (
     send_venue_verification_code,
 )
 from venues.services.working_days import ensure_working_days
-from venues.utils import get_today, user_can_manage_venue
+from venues.utils import user_can_manage_venue
 
 from .dashboard_helpers import (
     DASHBOARD_GROUPINGS,
     _analytics_payload,
+    _dashboard_reservation_counts,
     _dashboard_reservations_queryset,
     _dashboard_venue_payload,
     _filter_dashboard_reservations,
@@ -328,24 +329,25 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        today = get_today()
-        upcoming = venue.reservations.filter(date__gte=today, status="pending")
-
         return Response(
             {
                 "venue": _dashboard_venue_payload(venue, request),
                 "working_days": [_working_day_payload(day) for day in venue.working_days.order_by("weekday")],
                 "analytics": _analytics_payload(venue, grouping),
-                "reservation_counts": {
-                    "unseen_requests": upcoming.filter(seen=False).count(),
-                    "requests": upcoming.count(),
-                    "arrivals": _dashboard_reservations_queryset(venue, "arrivals").count(),
-                    "history": _dashboard_reservations_queryset(venue, "history").count(),
-                },
+                "reservation_counts": _dashboard_reservation_counts(venue),
             }
         )
 
-    # OK - REVIEWD
+    @action(detail=True, methods=["get"], url_path="dashboard-counts", permission_classes=[permissions.IsAuthenticated])
+    def dashboard_counts(self, request, pk=None):
+        venue = self.get_object()
+
+        if not user_can_manage_venue(request.user, venue):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        return Response(_dashboard_reservation_counts(venue))
+
+    # OK - REVIEWED
     @action(detail=True, methods=["get"], url_path="dashboard-reservations", permission_classes=[permissions.IsAuthenticated])
     def dashboard_reservations(self, request, pk=None):
         

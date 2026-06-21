@@ -200,6 +200,19 @@ def _dashboard_reservations_queryset(venue, bucket):
 
 
 # OK - REVIEWED
+def _dashboard_reservation_counts(venue):
+    today = get_today()
+    upcoming = venue.reservations.filter(date__gte=today, status="pending")
+
+    return {
+        "unseen_requests": upcoming.filter(seen=False).count(),
+        "requests":       upcoming.count(),
+        "arrivals":       _dashboard_reservations_queryset(venue, "arrivals").count(),
+        "history":        _dashboard_reservations_queryset(venue, "history").count(),
+    }
+
+
+# OK - REVIEWED
 def _filter_dashboard_reservations(queryset, request):
     # THIS FUNCTION DOES NOT HIT THE DATABASE
 

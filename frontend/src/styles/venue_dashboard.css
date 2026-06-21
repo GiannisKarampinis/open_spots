@@ -287,11 +287,17 @@
 }
 
 .modal-backdrop.show {
+  background-color: transparent;
   display: block;
+  opacity: 1;
 }
 
 #reservationDetailsModal.show {
   display: block;
+}
+
+#reservationDetailsModal .modal-content {
+  opacity: 1;
 }
 
 #reservationDetailsModal .btn-close {
@@ -302,9 +308,13 @@
   cursor: pointer;
 }
 
+#reservationDetailsModal .btn-close:hover {
+  background: rgba(0, 123, 255, 0.1);
+}
+
 #reservationDetailsModal .btn-close::before {
   content: "x";
-  color: #111;
+  color: var(--reservation-modal-text, var(--primary-hover));
   font-weight: 800;
 }
 
