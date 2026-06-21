@@ -8,7 +8,7 @@ import  i18n        from "../i18n.jsx";
 
 // LOGO SVG COMPONENT
 
-const LogoIcon = ({ width = 200, height = 70, color = "#ffffff", className }) => {
+const LogoIcon = ({ width = 170, height = 44, color = "#ffffff", className }) => {
   return (
     <svg
       className={className}

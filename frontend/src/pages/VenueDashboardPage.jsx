@@ -475,7 +475,7 @@ function ReservationRow({ reservation, kind, onDetails, onAction }) {
                 event.stopPropagation();
                 onAction("move", reservation);
               }}>
-                {t("Move to Requests")}
+                {t("Move Back")}
               </button>
             </>
           )}
@@ -600,7 +600,7 @@ function ReservationsTable({
                   event.stopPropagation();
                   onAction("move", row.original);
                 }}>
-                  {t("Move to Requests")}
+                  {t("Move Back")}
                 </button>
               </>
             )}
@@ -1215,7 +1215,7 @@ function ReservationDetailsModal({ reservation, sourceKind, highlightSpecialRequ
                       onAction("move", reservation);
                       onClose();
                     }}>
-                      {t("Move to Requests")}
+                      {t("Move Back")}
                     </button>
                   </>
                 )}
