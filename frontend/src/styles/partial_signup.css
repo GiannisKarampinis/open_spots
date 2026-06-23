@@ -1,0 +1,141 @@
+/* Small popover modal anchored near the button */
+.email-verify-wrapper { position: relative; }
+
+.verify-popover {
+    position:   absolute;
+    z-index:    9999;
+    top:        calc(100% + 8px);
+    right:      0;
+    width:      320px;
+    max-width:  90vw;
+    display:    none;
+}
+
+/* Make it feel like your verification page but compact */
+.verify-popover  .verification-container {
+    padding:       16px;
+    border-radius: 12px;
+    box-shadow:    0 10px 30px rgba(0,0,0,0.15);
+    background:    #fff;
+}
+
+.verify-popover .verification-form input { 
+    width:      100%; 
+}
+
+.verify-row {
+    display:      flex;
+    align-items:  center;
+    gap:          10px;
+    margin-top:   8px;
+}
+
+.verify-actions {
+    display:      flex;
+    gap:          10px;
+    margin-top:   10px;
+}
+
+.verify-actions button { 
+    flex:       1; 
+}
+
+.verify-close-x {
+    position:     absolute;
+    top:          10px;
+    right:        12px;
+    border:       none;
+    background:   transparent;
+    font-size:    18px;
+    line-height:  1;
+    cursor:       pointer;
+}
+
+.verify-msg {
+    margin-top:   8px;
+    font-size:    0.95rem;
+    font-weight:  600;
+}
+
+.verify-msg.is-error { 
+    color:      #d93025; 
+}   /* red */
+
+.verify-msg.is-success { 
+    color:      #188038; 
+} /* green */
+
+/* ===============================
+   Section frame (Venue Owner)
+   =============================== */
+
+.section-card .form-section{
+  margin-top:       18px;
+  margin-bottom:    18px;
+  padding:          18px 18px 14px;
+
+  /* Lighter than container, not white */
+  background: rgba(255,255,255,0.04);
+
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+
+  /* Subtle lift + inner glow (nice on dark backgrounds) */
+  box-shadow:
+    0 10px 24px rgba(0,0,0,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* Header row */
+.section-card .section-header{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Title */
+.section-card .section-title{
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: var(--button-text);
+}
+
+/* Subtitle */
+.section-card .section-subtitle{
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.75);
+}
+
+/* Optional: tighten spacing inside section so it feels like a grouped card */
+.section-card .form-section .form-group{
+  margin-top: 10px;
+}
+
+/* Optional: small accent bar on the left for hierarchy */
+.section-card .form-section{
+  position: relative;
+}
+.section-card .form-section::before{
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  border-radius: 999px;
+  background: rgba(0,123,255,0.45); /* ties to your primary tone */
+  box-shadow: 0 0 10px rgba(0,123,255,0.18);
+}
+.section-card .form-section .section-header,
+.section-card .form-section .section-body{
+  padding-left: 22px; /* space from accent bar */
+}

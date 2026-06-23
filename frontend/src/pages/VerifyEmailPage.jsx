@@ -14,11 +14,12 @@ function formatSeconds(totalSeconds) {
 
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
-  const [code, setCode]             = useState("");
-  const [email, setEmail]           = useState("");
-  const [remaining, setRemaining]   = useState(0);
-  const [total, setTotal]           = useState(600);
-  const [message, setMessage]       = useState("");
+  const [code, setCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [reason, setReason] = useState("");
+  const [remaining, setRemaining] = useState(0);
+  const [total, setTotal] = useState(600);
+  const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("success");
   const [loading, setLoading]       = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -33,6 +34,7 @@ export default function VerifyEmailPage() {
         if (cancelled) return;
         const seconds = Number(res.data.remaining_seconds || 0);
         setEmail(res.data.email || "");
+        setReason(res.data.reason || "");
         setRemaining(seconds);
         setTotal(Math.max(seconds, 1));
       } catch (err) {
@@ -85,7 +87,7 @@ export default function VerifyEmailPage() {
       storeAuthResponse(res.data);
       setMessageType("success");
       setMessage(res.data.detail || "Email verified successfully.");
-      setTimeout(() => navigate(res.data.redirect_to || "/"), 700);
+      setTimeout(() => navigate(res.data.redirect_to || (reason === "password_recovery" ? "/accounts/reset-password" : "/")), 700);
     } catch (err) {
       setMessageType("error");
       setMessage(err.response?.data?.detail || "Verification failed. Please check the code.");

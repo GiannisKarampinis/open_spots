@@ -2,9 +2,6 @@ from django.urls import path
 
 from .views import (
     ConfirmVerificationAPIView,
-    DeviceSessionListAPIView,
-    DeviceSessionRevokeAPIView,
-    LogoutAPIView,
     EmailUpdateAPIView,
     LoginAPIView,
     PasswordChangeRequestAPIView,
@@ -13,26 +10,15 @@ from .views import (
     ProfileAPIView,
     RegisterAPIView,
     ResendVerificationAPIView,
-    TwoFactorConfirmAPIView,
-    TwoFactorDisableAPIView,
-    TwoFactorLoginVerifyAPIView,
-    TwoFactorSetupAPIView,
-    TwoFactorStatusAPIView,
     VerificationStatusAPIView,
+    SocialLoginSessionAPIView,
 )
 
 urlpatterns = [
     path("login/", LoginAPIView.as_view(), name="accounts-login"),
-    path("login/2fa/", TwoFactorLoginVerifyAPIView.as_view(), name="accounts-login-2fa"),
-    path("logout/", LogoutAPIView.as_view(), name="accounts-logout"),
     path("register/", RegisterAPIView.as_view(), name="accounts-register"),
+    path("social/session/", SocialLoginSessionAPIView.as_view(), name="accounts-social-session"),
     path("profile/", ProfileAPIView.as_view(), name="accounts-profile"),
-    path("devices/", DeviceSessionListAPIView.as_view(), name="accounts-devices"),
-    path("devices/<uuid:pk>/revoke/", DeviceSessionRevokeAPIView.as_view(), name="accounts-device-revoke"),
-    path("2fa/status/", TwoFactorStatusAPIView.as_view(), name="accounts-2fa-status"),
-    path("2fa/setup/", TwoFactorSetupAPIView.as_view(), name="accounts-2fa-setup"),
-    path("2fa/confirm/", TwoFactorConfirmAPIView.as_view(), name="accounts-2fa-confirm"),
-    path("2fa/disable/", TwoFactorDisableAPIView.as_view(), name="accounts-2fa-disable"),
     path("verification/resend/", ResendVerificationAPIView.as_view(), name="accounts-verification-resend"),
     path("verification/status/", VerificationStatusAPIView.as_view(), name="accounts-verification-status"),
     path("verification/confirm/", ConfirmVerificationAPIView.as_view(), name="accounts-verification-confirm"),

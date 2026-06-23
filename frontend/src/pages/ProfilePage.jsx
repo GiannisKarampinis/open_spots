@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getWithAuth, patchWithAuth, postWithAuth, storeAuthResponse } from "../utils/auth";
+import {
+  getWithAuth,
+  patchWithAuth,
+  postWithAuth,
+  storeAuthResponse,
+} from "../utils/auth";
 import "../styles/auth.css";
 
 const editableFields = [
@@ -12,38 +17,76 @@ const editableFields = [
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+
   const [form, setForm] = useState({
     firstname: "",
     lastname: "",
     username: "",
     phone_number: "",
   });
-  const [email, setEmail] = useState("");
+
+  const [userInfo, setUserInfo] = useState({
+    email: "",
+    unverified_email: "",
+    display_email: "",
+    email_verified: true,
+  });
+
+  const [emailForm, setEmailForm] = useState({
+    email: "",
+  });
+
+  const [passwordForm, setPasswordForm] = useState({
+    old_password: "",
+    new_password1: "",
+    new_password2: "",
+  });
+
+  const [editing, setEditing] = useState(null);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("success");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
   const [twoFactor, setTwoFactor] = useState({ enabled: false, loading: true });
   const [twoFactorSetup, setTwoFactorSetup] = useState(null);
   const [twoFactorCode, setTwoFactorCode] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    getWithAuth("/api/v1/accounts/profile/", {}, { onUnauthenticated: () => navigate("/accounts/login") })
+
+    getWithAuth(
+      "/api/v1/accounts/profile/",
+      {},
+      { onUnauthenticated: () => navigate("/accounts/login") }
+    )
       .then((res) => {
         if (cancelled || !res) return;
+
+        const profile = res.data;
+
         setForm({
-          firstname: res.data.firstname || "",
-          lastname: res.data.lastname || "",
-          username: res.data.username || "",
-          phone_number: res.data.phone_number || "",
+          firstname: profile.firstname || "",
+          lastname: profile.lastname || "",
+          username: profile.username || "",
+          phone_number: profile.phone_number || "",
         });
-        setEmail(res.data.email || "");
-        storeAuthResponse({ user: res.data });
+
+        setUserInfo({
+          email: profile.email || "",
+          unverified_email: profile.unverified_email || "",
+          display_email: profile.display_email || profile.email || "",
+          email_verified: profile.email_verified,
+        });
+
+        setEmailForm({
+          email: profile.display_email || profile.email || "",
+        });
+
+        storeAuthResponse({ user: profile });
       })
       .catch(() => {
-        if (cancelled) return;
-        navigate("/accounts/login");
+        if (!cancelled) navigate("/accounts/login");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -56,12 +99,21 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let cancelled = false;
-    getWithAuth("/api/v1/accounts/2fa/status/", {}, { onUnauthenticated: () => navigate("/accounts/login") })
+
+    getWithAuth(
+      "/api/v1/accounts/2fa/status/",
+      {},
+      { onUnauthenticated: () => navigate("/accounts/login") }
+    )
       .then((res) => {
-        if (!cancelled && res) setTwoFactor({ ...res.data, loading: false });
+        if (!cancelled && res) {
+          setTwoFactor({ ...res.data, loading: false });
+        }
       })
       .catch(() => {
-        if (!cancelled) setTwoFactor((current) => ({ ...current, loading: false }));
+        if (!cancelled) {
+          setTwoFactor((current) => ({ ...current, loading: false }));
+        }
       });
 
     return () => {
@@ -69,13 +121,47 @@ export default function ProfilePage() {
     };
   }, [navigate]);
 
+  const showSuccess = (text) => {
+    setMessageType("success");
+    setMessage(text);
+  };
+
+  const showError = (text) => {
+    setMessageType("error");
+    setMessage(text);
+  };
+
   const updateField = (event) => {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
     setMessage("");
   };
 
-  const submit = async (event) => {
+  const updateEmailField = (event) => {
+    setEmailForm({ email: event.target.value });
+    setMessage("");
+  };
+
+  const updatePasswordField = (event) => {
+    const { name, value } = event.target;
+    setPasswordForm((current) => ({ ...current, [name]: value }));
+    setMessage("");
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    setEmailForm({
+      email: userInfo.display_email || userInfo.email || "",
+    });
+    setPasswordForm({
+      old_password: "",
+      new_password1: "",
+      new_password2: "",
+    });
+    setMessage("");
+  };
+
+  const submitProfile = async (event) => {
     event.preventDefault();
     setSaving(true);
     setMessage("");
@@ -85,15 +171,89 @@ export default function ProfilePage() {
         "/api/v1/accounts/profile/",
         form,
         {},
-        { onUnauthenticated: () => navigate("/accounts/login") },
+        { onUnauthenticated: () => navigate("/accounts/login") }
       );
+
       if (!res) return;
+
       storeAuthResponse({ user: res.data });
-      setMessageType("success");
-      setMessage("Profile updated.");
+      showSuccess("Profile updated successfully.");
+      setEditing(null);
     } catch (err) {
-      setMessageType("error");
-      setMessage(err.response?.data?.detail || "Could not update your profile.");
+      showError(err.response?.data?.detail || "Could not update your profile.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const submitEmail = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setMessage("");
+
+    try {
+      const res = await postWithAuth(
+        "/api/v1/accounts/email/update/",
+        emailForm,
+        {},
+        { onUnauthenticated: () => navigate("/accounts/login") }
+      );
+
+      if (!res) return;
+
+      if (res.data.requires_verification) {
+        showSuccess(res.data.detail || "Verification code sent to your new email.");
+        navigate("/accounts/verify-email");
+        return;
+      }
+
+      showSuccess(res.data.detail || "Email updated.");
+      setEditing(null);
+    } catch (err) {
+      const data = err.response?.data;
+      showError(data?.email?.[0] || data?.detail || "Could not update your email.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const submitPassword = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setMessage("");
+
+    if (passwordForm.new_password1 !== passwordForm.new_password2) {
+      showError("The new passwords do not match.");
+      setSaving(false);
+      return;
+    }
+
+    try {
+      const res = await postWithAuth(
+        "/api/v1/accounts/password/change/",
+        passwordForm,
+        {},
+        { onUnauthenticated: () => navigate("/accounts/login") }
+      );
+
+      if (!res) return;
+
+      showSuccess(
+        res.data.detail ||
+          "Verification code sent. Confirm the code to complete the password change."
+      );
+
+      navigate("/accounts/verify-email");
+    } catch (err) {
+      const data = err.response?.data;
+
+      showError(
+        data?.old_password?.[0] ||
+          data?.new_password1?.[0] ||
+          data?.new_password2?.[0] ||
+          data?.detail ||
+          "Could not change your password."
+      );
     } finally {
       setSaving(false);
     }
@@ -101,96 +261,216 @@ export default function ProfilePage() {
 
   const startTwoFactorSetup = async () => {
     setMessage("");
+
     try {
       const res = await postWithAuth(
         "/api/v1/accounts/2fa/setup/",
         {},
         {},
-        { onUnauthenticated: () => navigate("/accounts/login") },
+        { onUnauthenticated: () => navigate("/accounts/login") }
       );
+
       if (!res) return;
+
       setTwoFactorSetup(res.data);
       setTwoFactorCode("");
-      setMessageType("success");
-      setMessage("Add this key to your authenticator app, then enter the generated code.");
+      showSuccess("Add this key to your authenticator app, then enter the generated code.");
     } catch (err) {
-      setMessageType("error");
-      setMessage(err.response?.data?.detail || "Could not start two-factor setup.");
+      showError(err.response?.data?.detail || "Could not start two-factor setup.");
     }
   };
 
   const confirmTwoFactor = async () => {
     setMessage("");
+
     try {
       const res = await postWithAuth(
         "/api/v1/accounts/2fa/confirm/",
         { code: twoFactorCode },
         {},
-        { onUnauthenticated: () => navigate("/accounts/login") },
+        { onUnauthenticated: () => navigate("/accounts/login") }
       );
+
       if (!res) return;
+
       setTwoFactor({ enabled: true, loading: false });
       setTwoFactorSetup(null);
       setTwoFactorCode("");
-      setMessageType("success");
-      setMessage(res.data.detail || "Two-factor authentication enabled.");
+      showSuccess(res.data.detail || "Two-factor authentication enabled.");
     } catch (err) {
-      setMessageType("error");
-      setMessage(err.response?.data?.detail || "Could not confirm two-factor authentication.");
+      showError(err.response?.data?.detail || "Could not confirm two-factor authentication.");
     }
   };
 
   const disableTwoFactor = async () => {
     setMessage("");
+
     try {
       const res = await postWithAuth(
         "/api/v1/accounts/2fa/disable/",
         { code: twoFactorCode },
         {},
-        { onUnauthenticated: () => navigate("/accounts/login") },
+        { onUnauthenticated: () => navigate("/accounts/login") }
       );
+
       if (!res) return;
+
       setTwoFactor({ enabled: false, loading: false });
       setTwoFactorSetup(null);
       setTwoFactorCode("");
-      setMessageType("success");
-      setMessage(res.data.detail || "Two-factor authentication disabled.");
+      showSuccess(res.data.detail || "Two-factor authentication disabled.");
     } catch (err) {
-      setMessageType("error");
-      setMessage(err.response?.data?.detail || "Could not disable two-factor authentication.");
+      showError(err.response?.data?.detail || "Could not disable two-factor authentication.");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="auth-container">
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-container">
       <h2>Profile</h2>
 
+      {!userInfo.email_verified && (
+        <div className="auth-message warning">
+          Your email <strong>{userInfo.display_email}</strong> is not yet verified.
+          {" "}
+          <button
+            type="button"
+            className="auth-inline-button"
+            onClick={() => navigate("/accounts/verify-email")}
+          >
+            Verify Now
+          </button>
+        </div>
+      )}
+
       {message && <div className={`auth-message ${messageType}`}>{message}</div>}
 
-      <form className="auth-form" onSubmit={submit}>
+      <section className="auth-form">
+        <h3>User Information</h3>
+
         <div className="auth-field">
-          <label htmlFor="profile-email">Email</label>
-          <input id="profile-email" type="email" value={email} disabled />
+          <label>Email</label>
+
+          {editing === "email" ? (
+            <form onSubmit={submitEmail}>
+              <input
+                type="email"
+                name="email"
+                value={emailForm.email}
+                onChange={updateEmailField}
+                required
+              />
+
+              <button className="auth-submit" type="submit" disabled={saving}>
+                {saving ? "Saving..." : "Save"}
+              </button>
+
+              <button type="button" onClick={cancelEdit}>
+                Cancel
+              </button>
+            </form>
+          ) : (
+            <div>
+              <span>{userInfo.display_email || "—"}</span>
+              <button type="button" onClick={() => setEditing("email")}>
+                Edit
+              </button>
+            </div>
+          )}
         </div>
 
-        {editableFields.map(([name, label, type]) => (
-          <div className="auth-field" key={name}>
-            <label htmlFor={`profile-${name}`}>{label}</label>
-            <input
-              id={`profile-${name}`}
-              name={name}
-              type={type}
-              value={form[name]}
-              onChange={updateField}
-              disabled={loading}
-            />
-          </div>
-        ))}
+        <form onSubmit={submitProfile}>
+          {editableFields.map(([name, label, type]) => (
+            <div className="auth-field" key={name}>
+              <label htmlFor={`profile-${name}`}>{label}</label>
 
-        <button className="auth-submit" type="submit" disabled={loading || saving}>
-          {saving ? "Saving..." : "Save Profile"}
-        </button>
-      </form>
+              {editing === name ? (
+                <>
+                  <input
+                    id={`profile-${name}`}
+                    name={name}
+                    type={type}
+                    value={form[name]}
+                    onChange={updateField}
+                  />
+
+                  <button className="auth-submit" type="submit" disabled={saving}>
+                    {saving ? "Saving..." : "Save"}
+                  </button>
+
+                  <button type="button" onClick={cancelEdit}>
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <div>
+                  <span>{form[name] || "—"}</span>
+                  <button type="button" onClick={() => setEditing(name)}>
+                    Edit
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </form>
+
+        <div className="auth-field">
+          <label>Password</label>
+
+          {editing === "password" ? (
+            <form onSubmit={submitPassword}>
+              <input
+                type="password"
+                name="old_password"
+                placeholder="Old password"
+                value={passwordForm.old_password}
+                onChange={updatePasswordField}
+                required
+              />
+
+              <input
+                type="password"
+                name="new_password1"
+                placeholder="New password"
+                value={passwordForm.new_password1}
+                onChange={updatePasswordField}
+                required
+              />
+
+              <input
+                type="password"
+                name="new_password2"
+                placeholder="Confirm new password"
+                value={passwordForm.new_password2}
+                onChange={updatePasswordField}
+                required
+              />
+
+              <button className="auth-submit" type="submit" disabled={saving}>
+                {saving ? "Saving..." : "Save"}
+              </button>
+
+              <button type="button" onClick={cancelEdit}>
+                Cancel
+              </button>
+            </form>
+          ) : (
+            <div>
+              <span>********</span>
+              <button type="button" onClick={() => setEditing("password")}>
+                Change
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
 
       <section className="auth-form" aria-labelledby="two-factor-heading">
         <h3 id="two-factor-heading">Two-Factor Authentication</h3>
@@ -200,7 +480,12 @@ export default function ProfilePage() {
         {twoFactorSetup && (
           <div className="auth-field">
             <label htmlFor="two-factor-key">Manual setup key</label>
-            <input id="two-factor-key" type="text" value={twoFactorSetup.manual_key || ""} readOnly />
+            <input
+              id="two-factor-key"
+              type="text"
+              value={twoFactorSetup.manual_key || ""}
+              readOnly
+            />
           </div>
         )}
 
@@ -219,7 +504,12 @@ export default function ProfilePage() {
         )}
 
         {!twoFactor.enabled && !twoFactorSetup && (
-          <button className="auth-submit" type="button" onClick={startTwoFactorSetup} disabled={twoFactor.loading}>
+          <button
+            className="auth-submit"
+            type="button"
+            onClick={startTwoFactorSetup}
+            disabled={twoFactor.loading}
+          >
             Enable 2FA
           </button>
         )}

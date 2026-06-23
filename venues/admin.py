@@ -104,7 +104,7 @@ class VenueApplicationAdmin(admin.ModelAdmin):
                     # self._send_password_setup_email(request, user)
 
                     # 2) Create venue
-                    Venue.objects.create(
+                    venue = Venue.objects.create(
                         name        = app.venue_name,
                         kind        = app.venue_type,
                         location    = app.location,

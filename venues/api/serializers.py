@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError, transaction
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -98,6 +99,9 @@ class VenueSerializer(serializers.ModelSerializer):
 
 class ReservationSerializer(serializers.ModelSerializer):
     venue_id = serializers.PrimaryKeyRelatedField(source="venue", queryset=Venue.objects.all())
+    venue_name = serializers.CharField(source="venue.name", read_only=True)
+    venue_location = serializers.CharField(source="venue.location", read_only=True)
+    is_upcoming = serializers.SerializerMethodField()
     user_id = serializers.IntegerField(source="user.id", read_only=True)
 
     class Meta:
@@ -106,6 +110,9 @@ class ReservationSerializer(serializers.ModelSerializer):
             "id",
             "user_id",
             "venue_id",
+            "venue_name",
+            "venue_location",
+            "is_upcoming",
             "firstname",
             "lastname",
             "email",
@@ -133,18 +140,17 @@ class ReservationSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def get_is_upcoming(self, obj):
+        return obj.is_upcoming()
+
     def create(self, validated_data):
         validated_data["user"] = self.context["request"].user
         return super().create(validated_data)
 
 
 class VenueApplicationSerializer(serializers.ModelSerializer):
-    admin_username = serializers.CharField(
-        validators=[UniqueValidator(queryset=User.objects.all(), message="This username is already taken.")]
-    )
-    admin_email = serializers.EmailField(
-        validators=[UniqueValidator(queryset=User.objects.all(), message="An account with this email already exists.")]
-    )
+    admin_username = serializers.CharField()
+    admin_email = serializers.EmailField()
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
 
     class Meta:
@@ -163,35 +169,60 @@ class VenueApplicationSerializer(serializers.ModelSerializer):
             "password",
         ]
 
+    def validate_admin_username(self, value):
+        username = value.strip()
+        if User.objects.filter(username__iexact=username).exists():
+            raise serializers.ValidationError("This username is already taken.")
+        return username
+
     def validate_admin_email(self, value):
-        return value.strip().lower()
+        email = value.strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError("An account with this email already exists.")
+        return email
+
+    def validate(self, attrs):
+        required_fields = [
+            "venue_name", "venue_type", "location", "phone",
+            "admin_username", "admin_email", "admin_firstname", "admin_lastname", "admin_phone", "password",
+        ]
+        missing = {field: "This field is required." for field in required_fields if not str(attrs.get(field, "")).strip()}
+        if missing:
+            raise serializers.ValidationError(missing)
+        return attrs
 
     def create(self, validated_data):
         password = validated_data.pop("password")
         admin_email = validated_data.pop("admin_email")
         admin_username = validated_data.pop("admin_username")
 
-        user = User(
-            username=admin_username,
-            email=admin_email,
-            user_type="venue_admin",
-            email_verified=True,
-            unverified_email=None,
-            is_active=False,
-            firstname=validated_data.get("admin_firstname", ""),
-            lastname=validated_data.get("admin_lastname", ""),
-            phone_number=validated_data.get("admin_phone", ""),
-        )
-        user.set_password(password)
-        user.save()
+        try:
+            with transaction.atomic():
+                user = User(
+                    username=admin_username,
+                    email=admin_email,
+                    user_type="venue_admin",
+                    email_verified=True,
+                    unverified_email=None,
+                    is_active=False,
+                    firstname=validated_data.get("admin_firstname", ""),
+                    lastname=validated_data.get("admin_lastname", ""),
+                    phone_number=validated_data.get("admin_phone", ""),
+                )
+                user.set_password(password)
+                user.save()
 
-        application = VenueApplication.objects.create(
-            owner_user=user,
-            admin_username=admin_username,
-            admin_email=admin_email,
-            **validated_data,
-        )
-        return application
+                return VenueApplication.objects.create(
+                    owner_user=user,
+                    admin_username=admin_username,
+                    admin_email=admin_email,
+                    status="pending",
+                    **validated_data,
+                )
+        except IntegrityError:
+            raise serializers.ValidationError({
+                "non_field_errors": ["Something went wrong while creating your account. Please try again."],
+            })
 
 
 class VenueEmailSerializer(serializers.Serializer):

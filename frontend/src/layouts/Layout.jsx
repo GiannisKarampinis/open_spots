@@ -73,17 +73,28 @@ export default function Layout() {
     window.addEventListener("auth:changed", syncAuth);
     window.addEventListener("storage", syncAuth);
 
-    getWithAuth("/api/v1/accounts/profile/")
-      .then((res) => {
-        if (cancelled || !res) return;
-        setUser(res.data);
-        localStorage.setItem("user", JSON.stringify(res.data));
-      })
-      .catch(() => {
-        if (cancelled) return;
-        clearStoredAuth();
-        setUser(null);
-      });
+    const token = getAccessToken();
+
+    if (token) {
+      getWithAuth("/api/v1/accounts/profile/")
+        .then((res) => {
+          if (cancelled || !res) return;
+          setUser(res.data);
+          localStorage.setItem("user", JSON.stringify(res.data));
+        })
+        .catch((err) => {
+          if (cancelled) return;
+
+          const status = err.response?.status;
+
+          if (status === 401 || status === 403) {
+            clearStoredAuth();
+            setUser(null);
+          } else {
+            console.error("Could not refresh profile in layout:", err);
+          }
+        });
+    }
 
     return () => {
       cancelled = true;

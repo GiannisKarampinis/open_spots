@@ -78,6 +78,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField(read_only=True)
+    display_email = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -85,6 +86,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "id",
             "username",
             "email",
+            "unverified_email",
+            "display_email",
             "firstname",
             "lastname",
             "user_type",
@@ -92,10 +95,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "email_verified",
             "full_name",
         ]
-        read_only_fields = ["id", "user_type", "email", "email_verified", "full_name"]
+        read_only_fields = [
+            "id",
+            "user_type",
+            "email",
+            "unverified_email",
+            "display_email",
+            "email_verified",
+            "full_name",
+        ]
 
     def get_full_name(self, obj):
         return obj.full_name_or_username
+
+    def get_display_email(self, obj):
+        return obj.unverified_email or obj.email
 
 
 class DeviceSessionSerializer(serializers.ModelSerializer):
@@ -137,19 +151,28 @@ class UserEmailUpdateSerializer(serializers.Serializer):
     def validate_email(self, value):
         user = self.context["request"].user
         normalized = value.strip().lower()
-        if user.email and user.email.strip().lower() == normalized:
+        current_email = user.email.strip().lower() if user.email else ""
+
+        if normalized == current_email:
             return normalized
 
         if User.objects.filter(email__iexact=normalized).exclude(pk=user.pk).exists():
             raise serializers.ValidationError("An account with this email already exists.")
+
         return normalized
 
     def update(self, instance, validated_data):
         new_email = validated_data["email"].strip().lower()
-        if new_email != instance.email:
+        current_email = instance.email.strip().lower() if instance.email else ""
+
+        if new_email != current_email:
             instance.unverified_email = new_email
             instance.email_verified = False
             instance.save(update_fields=["unverified_email", "email_verified"])
+            instance.email_update_requested = True
+        else:
+            instance.email_update_requested = False
+
         return instance
 
 

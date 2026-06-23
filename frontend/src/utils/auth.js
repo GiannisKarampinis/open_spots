@@ -1,30 +1,51 @@
 import axios from "axios";
 
 const ACCESS_KEY = "access";
+const REFRESH_KEY = "refresh";
 const LEGACY_ACCESS_KEY = "access_token";
-const LEGACY_REFRESH_KEYS = ["refresh", "refresh_token"];
+const LEGACY_REFRESH_KEY = "refresh_token";
 const USER_KEY = "user";
 
-let accessToken = null;
+let accessToken = localStorage.getItem(ACCESS_KEY) || localStorage.getItem(LEGACY_ACCESS_KEY) || null;
 
-function clearStoredTokens() {
-  localStorage.removeItem(ACCESS_KEY);
-  localStorage.removeItem(LEGACY_ACCESS_KEY);
-  LEGACY_REFRESH_KEYS.forEach((key) => localStorage.removeItem(key));
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop().split(";").shift();
+  }
+  return "";
+}
+
+export async function ensureCsrfToken() {
+  let token = getCookie("csrftoken");
+
+  if (!token) {
+    await axios.get("/api/v1/csrf/", { withCredentials: true });
+    token = getCookie("csrftoken");
+  }
+
+  return token;
 }
 
 export function getAccessToken() {
-  return accessToken;
+  return accessToken || localStorage.getItem(ACCESS_KEY) || localStorage.getItem(LEGACY_ACCESS_KEY);
+}
+
+export function getRefreshToken() {
+  return localStorage.getItem(REFRESH_KEY) || localStorage.getItem(LEGACY_REFRESH_KEY);
 }
 
 export function authHeaders() {
   const token = getAccessToken();
+
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export function readStoredUser() {
   try {
-    return JSON.parse(localStorage.getItem(USER_KEY));
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
@@ -33,35 +54,67 @@ export function readStoredUser() {
 export function storeAuthResponse(data) {
   if (data.access) {
     accessToken = data.access;
+    localStorage.setItem(ACCESS_KEY, data.access);
+    localStorage.removeItem(LEGACY_ACCESS_KEY);
   }
+
+  if (data.refresh) {
+    localStorage.setItem(REFRESH_KEY, data.refresh);
+    localStorage.removeItem(LEGACY_REFRESH_KEY);
+  }
+
   if (data.user) {
     localStorage.setItem(USER_KEY, JSON.stringify(data.user));
   }
-  clearStoredTokens();
+
   window.dispatchEvent(new Event("auth:changed"));
 }
 
 export function clearStoredAuth() {
   accessToken = null;
-  clearStoredTokens();
+
+  localStorage.removeItem(ACCESS_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+  localStorage.removeItem(LEGACY_ACCESS_KEY);
+  localStorage.removeItem(LEGACY_REFRESH_KEY);
   localStorage.removeItem(USER_KEY);
+
   window.dispatchEvent(new Event("auth:changed"));
 }
 
 export async function refreshAccessToken() {
-  const res = await axios.post("/api/token/refresh/", {}, { withCredentials: true });
+  const refresh = getRefreshToken();
+
+  if (!refresh) {
+    throw new Error("No refresh token available.");
+  }
+
+  const res = await axios.post(
+    "/api/token/refresh/",
+    { refresh },
+    { withCredentials: true }
+  );
+
   const access = res.data.access;
-  if (!access) return null;
+
+  if (!access) {
+    throw new Error("Refresh response did not include an access token.");
+  }
 
   accessToken = access;
-  clearStoredTokens();
+  localStorage.setItem(ACCESS_KEY, access);
+  localStorage.removeItem(LEGACY_ACCESS_KEY);
+
   window.dispatchEvent(new Event("auth:changed"));
+
   return access;
 }
 
 export async function logoutSession() {
   try {
     await axios.post("/api/v1/accounts/logout/", {}, { withCredentials: true });
+  } catch {
+    // Ignore backend logout failure; frontend auth must still be cleared.
   } finally {
     clearStoredAuth();
   }
@@ -69,6 +122,7 @@ export async function logoutSession() {
 
 export async function requestWithAuth(method, url, data = null, config = {}, options = {}) {
   let token = getAccessToken();
+
   if (!token) {
     try {
       token = await refreshAccessToken();
@@ -79,12 +133,20 @@ export async function requestWithAuth(method, url, data = null, config = {}, opt
     }
   }
 
+  const csrfToken = ["post", "patch", "put", "delete"].includes(method.toLowerCase())
+    ? await ensureCsrfToken()
+    : "";
+
   const requestConfig = {
     ...config,
     method,
     url,
     data,
-    headers: { ...authHeaders(), ...(config.headers || {}) },
+    headers: {
+      ...(config.headers || {}),
+      Authorization: `Bearer ${token}`,
+      ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+    },
     withCredentials: true,
   };
 
@@ -96,22 +158,21 @@ export async function requestWithAuth(method, url, data = null, config = {}, opt
     }
 
     try {
-      const access = await refreshAccessToken();
-      if (access) {
-        return await axios({
-          ...requestConfig,
-          headers: { ...requestConfig.headers, Authorization: `Bearer ${access}` },
-        });
-      }
+      const newAccess = await refreshAccessToken();
+
+      return await axios({
+        ...requestConfig,
+        headers: {
+          ...(requestConfig.headers || {}),
+          Authorization: `Bearer ${newAccess}`,
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+        },
+      });
     } catch {
       clearStoredAuth();
       options.onUnauthenticated?.();
       return null;
     }
-
-    clearStoredAuth();
-    options.onUnauthenticated?.();
-    return null;
   }
 }
 
