@@ -32,9 +32,7 @@ export default function ProfilePage() {
     email_verified: true,
   });
 
-  const [emailForm, setEmailForm] = useState({
-    email: "",
-  });
+  const [emailForm, setEmailForm] = useState({ email: "" });
 
   const [passwordForm, setPasswordForm] = useState({
     old_password: "",
@@ -79,10 +77,7 @@ export default function ProfilePage() {
           email_verified: profile.email_verified,
         });
 
-        setEmailForm({
-          email: profile.display_email || profile.email || "",
-        });
-
+        setEmailForm({ email: profile.display_email || profile.email || "" });
         storeAuthResponse({ user: profile });
       })
       .catch(() => {
@@ -106,14 +101,10 @@ export default function ProfilePage() {
       { onUnauthenticated: () => navigate("/accounts/login") }
     )
       .then((res) => {
-        if (!cancelled && res) {
-          setTwoFactor({ ...res.data, loading: false });
-        }
+        if (!cancelled && res) setTwoFactor({ ...res.data, loading: false });
       })
       .catch(() => {
-        if (!cancelled) {
-          setTwoFactor((current) => ({ ...current, loading: false }));
-        }
+        if (!cancelled) setTwoFactor((current) => ({ ...current, loading: false }));
       });
 
     return () => {
@@ -150,14 +141,8 @@ export default function ProfilePage() {
 
   const cancelEdit = () => {
     setEditing(null);
-    setEmailForm({
-      email: userInfo.display_email || userInfo.email || "",
-    });
-    setPasswordForm({
-      old_password: "",
-      new_password1: "",
-      new_password2: "",
-    });
+    setEmailForm({ email: userInfo.display_email || userInfo.email || "" });
+    setPasswordForm({ old_password: "", new_password1: "", new_password2: "" });
     setMessage("");
   };
 
@@ -338,8 +323,7 @@ export default function ProfilePage() {
 
       {!userInfo.email_verified && (
         <div className="auth-message warning">
-          Your email <strong>{userInfo.display_email}</strong> is not yet verified.
-          {" "}
+          Your email <strong>{userInfo.display_email}</strong> is not yet verified.{" "}
           <button
             type="button"
             className="auth-inline-button"
@@ -352,14 +336,14 @@ export default function ProfilePage() {
 
       {message && <div className={`auth-message ${messageType}`}>{message}</div>}
 
-      <section className="auth-form">
+      <section className="auth-form profile-section">
         <h3>User Information</h3>
 
-        <div className="auth-field">
+        <div className="auth-field profile-field">
           <label>Email</label>
 
           {editing === "email" ? (
-            <form onSubmit={submitEmail}>
+            <form className="profile-edit-form" onSubmit={submitEmail}>
               <input
                 type="email"
                 name="email"
@@ -368,31 +352,44 @@ export default function ProfilePage() {
                 required
               />
 
-              <button className="auth-submit" type="submit" disabled={saving}>
-                {saving ? "Saving..." : "Save"}
-              </button>
+              <div className="profile-form-actions">
+                <button className="profile-action-btn profile-save-btn" type="submit" disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </button>
 
-              <button type="button" onClick={cancelEdit}>
-                Cancel
-              </button>
+                <button
+                  className="profile-action-btn profile-cancel-btn"
+                  type="button"
+                  onClick={cancelEdit}
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           ) : (
-            <div>
-              <span>{userInfo.display_email || "—"}</span>
-              <button type="button" onClick={() => setEditing("email")}>
+            <div className="profile-display-row">
+              <div className="profile-value-frame">
+                <span>{userInfo.display_email || "—"}</span>
+              </div>
+
+              <button
+                type="button"
+                className="profile-edit-btn"
+                onClick={() => setEditing("email")}
+              >
                 Edit
               </button>
             </div>
           )}
         </div>
 
-        <form onSubmit={submitProfile}>
+        <form className="profile-fields-form" onSubmit={submitProfile}>
           {editableFields.map(([name, label, type]) => (
-            <div className="auth-field" key={name}>
+            <div className="auth-field profile-field" key={name}>
               <label htmlFor={`profile-${name}`}>{label}</label>
 
               {editing === name ? (
-                <>
+                <div className="profile-edit-row">
                   <input
                     id={`profile-${name}`}
                     name={name}
@@ -401,18 +398,31 @@ export default function ProfilePage() {
                     onChange={updateField}
                   />
 
-                  <button className="auth-submit" type="submit" disabled={saving}>
-                    {saving ? "Saving..." : "Save"}
-                  </button>
+                  <div className="profile-form-actions">
+                    <button className="profile-action-btn profile-save-btn" type="submit" disabled={saving}>
+                      {saving ? "Saving..." : "Save"}
+                    </button>
 
-                  <button type="button" onClick={cancelEdit}>
-                    Cancel
-                  </button>
-                </>
+                    <button
+                      className="profile-action-btn profile-cancel-btn"
+                      type="button"
+                      onClick={cancelEdit}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <div>
-                  <span>{form[name] || "—"}</span>
-                  <button type="button" onClick={() => setEditing(name)}>
+                <div className="profile-display-row">
+                  <div className="profile-value-frame">
+                    <span>{form[name] || "—"}</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="profile-edit-btn"
+                    onClick={() => setEditing(name)}
+                  >
                     Edit
                   </button>
                 </div>
@@ -421,50 +431,65 @@ export default function ProfilePage() {
           ))}
         </form>
 
-        <div className="auth-field">
+        <div className="auth-field profile-field">
           <label>Password</label>
 
           {editing === "password" ? (
-            <form onSubmit={submitPassword}>
-              <input
-                type="password"
-                name="old_password"
-                placeholder="Old password"
-                value={passwordForm.old_password}
-                onChange={updatePasswordField}
-                required
-              />
+            <form className="profile-password-form" onSubmit={submitPassword}>
+              <div className="profile-password-inputs">
+                <input
+                  type="password"
+                  name="old_password"
+                  placeholder="Old password"
+                  value={passwordForm.old_password}
+                  onChange={updatePasswordField}
+                  required
+                />
 
-              <input
-                type="password"
-                name="new_password1"
-                placeholder="New password"
-                value={passwordForm.new_password1}
-                onChange={updatePasswordField}
-                required
-              />
+                <input
+                  type="password"
+                  name="new_password1"
+                  placeholder="New password"
+                  value={passwordForm.new_password1}
+                  onChange={updatePasswordField}
+                  required
+                />
 
-              <input
-                type="password"
-                name="new_password2"
-                placeholder="Confirm new password"
-                value={passwordForm.new_password2}
-                onChange={updatePasswordField}
-                required
-              />
+                <input
+                  type="password"
+                  name="new_password2"
+                  placeholder="Confirm new password"
+                  value={passwordForm.new_password2}
+                  onChange={updatePasswordField}
+                  required
+                />
+              </div>
 
-              <button className="auth-submit" type="submit" disabled={saving}>
-                {saving ? "Saving..." : "Save"}
-              </button>
+              <div className="profile-form-actions profile-password-actions">
+                <button className="profile-action-btn profile-save-btn" type="submit" disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </button>
 
-              <button type="button" onClick={cancelEdit}>
-                Cancel
-              </button>
+                <button
+                  className="profile-action-btn profile-cancel-btn"
+                  type="button"
+                  onClick={cancelEdit}
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           ) : (
-            <div>
-              <span>********</span>
-              <button type="button" onClick={() => setEditing("password")}>
+            <div className="profile-display-row">
+              <div className="profile-value-frame">
+                <span>********</span>
+              </div>
+
+              <button
+                type="button"
+                className="profile-edit-btn"
+                onClick={() => setEditing("password")}
+              >
                 Change
               </button>
             </div>
