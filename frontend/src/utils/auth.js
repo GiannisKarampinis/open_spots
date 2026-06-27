@@ -8,24 +8,20 @@ const USER_KEY = "user";
 
 let accessToken = localStorage.getItem(ACCESS_KEY) || localStorage.getItem(LEGACY_ACCESS_KEY) || null;
 
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) {
-    return parts.pop().split(";").shift();
-  }
-  return "";
-}
+let cachedCsrfToken = null;
 
 export async function ensureCsrfToken() {
-  let token = getCookie("csrftoken");
-
-  if (!token) {
-    await axios.get("/api/v1/csrf/", { withCredentials: true });
-    token = getCookie("csrftoken");
+  if (cachedCsrfToken) {
+    return cachedCsrfToken;
   }
 
-  return token;
+  const res = await axios.get("/api/v1/csrf/", {
+    withCredentials: true,
+  });
+
+  cachedCsrfToken = res.data.csrfToken;
+
+  return cachedCsrfToken;
 }
 
 export function getAccessToken() {

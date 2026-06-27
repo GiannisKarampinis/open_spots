@@ -186,42 +186,27 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
 class EmailUpdateAPIView(generics.UpdateAPIView):
     serializer_class = UserEmailUpdateSerializer
     permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def get_object(self):
         return self.request.user
 
     def perform_update(self, serializer):
         user = serializer.save()
-
-        if getattr(user, "email_update_requested", False):
-            EmailVerificationCode.objects.filter(user=user).delete()
-            send_verification_code(user)
-            self.request.session["pending_user_id"] = user.id
-            self.request.session["verification_reason"] = "email_update"
-            self.request.session["code_already_sent"] = True
+        EmailVerificationCode.objects.filter(user=user).delete()
+        send_verification_code(user)
+        self.request.session["pending_user_id"] = user.id
+        self.request.session["verification_reason"] = "email_update"
+        self.request.session["code_already_sent"] = True
 
     def post(self, request, *args, **kwargs):
-        user = self.get_object()
-        old_email = user.email.strip().lower() if user.email else ""
-
-        response = self.update(request, *args, **kwargs)
-
-        user.refresh_from_db()
-        new_pending_email = user.unverified_email.strip().lower() if user.unverified_email else ""
-
-        if new_pending_email and new_pending_email != old_email:
-            response.data["requires_verification"] = True
-            response.data["detail"] = "Verification code sent to your new email. Please verify."
-        else:
-            response.data["requires_verification"] = False
-            response.data["detail"] = "Email unchanged."
-
-        return response
+        return self.update(request, *args, **kwargs)
 
 
 class PasswordChangeRequestAPIView(generics.GenericAPIView):
     serializer_class = UserPasswordChangeSerializer
     permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/password_recover.css";
+import { ensureCsrfToken } from "../utils/auth";
 
 export default function PasswordRecoverPage() {
   const navigate = useNavigate();
@@ -13,8 +14,21 @@ export default function PasswordRecoverPage() {
     event.preventDefault();
     setSubmitting(true);
     setMessage("");
+
     try {
-      const res = await axios.post("/api/v1/accounts/password/recover/", { email }, { withCredentials: true });
+      const csrfToken = await ensureCsrfToken();
+
+      const res = await axios.post(
+        "/api/v1/accounts/password/recover/",
+        { email },
+        {
+          withCredentials: true,
+          headers: {
+            "X-CSRFToken": csrfToken,
+          },
+        }
+      );
+
       setMessage(res.data.detail || "If the email exists, a verification code has been sent.");
       setTimeout(() => navigate("/accounts/verify-email"), 700);
     } catch (err) {
@@ -27,10 +41,26 @@ export default function PasswordRecoverPage() {
   return (
     <div className="form-container">
       <h2>Password Recovery</h2>
+
       {message && <p className="auth-message success">{message}</p>}
+
       <form onSubmit={submit}>
-        <p><label>Email<br /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label></p>
-        <button type="submit" disabled={submitting}>{submitting ? "Sending..." : "Send Verification Code"}</button>
+        <p>
+          <label>
+            Email
+            <br />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+        </p>
+
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Sending..." : "Send Verification Code"}
+        </button>
       </form>
     </div>
   );
