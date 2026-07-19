@@ -93,7 +93,7 @@ input[type="password"] {
     padding: 10px;
     background-color: #3a3a3a;
     border: 1px solid #555;
-    color: white;
+    color: var(--text-color);
     border-radius: 5px;
     margin-bottom: 15px;
 }
@@ -143,9 +143,9 @@ input[type="password"],
 select {
     width: 100%;
     padding: 10px;
-    background-color: #3a3a3a;
+    background-color: var(--background-color);
     border: 1px solid #555;
-    color: white;
+    color: var(--text-color);
     border-radius: 5px;
     margin-bottom: 15px;
 }
@@ -242,9 +242,9 @@ a:hover {
 .booking-container input[type="number"] {
     width: 100%;
     padding: 10px;
-    background-color: #3a3a3a;
+    background-color: var(--background-color);
     border: 1px solid #555;
-    color: white;
+    color: var(--text-color);
     border-radius: 5px;
     margin-bottom: 15px;
 }
