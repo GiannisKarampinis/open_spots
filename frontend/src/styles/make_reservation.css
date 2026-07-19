@@ -34,9 +34,9 @@ form select,
 form textarea {
     width: 100%;                           /* Full width */
     padding: 12px 15px;                    /* Padding */
-    background-color: #3a3a3a;             /* Dark background */
+    background-color: var(--background-color);             /* Dark background */
     border: 1px solid #555;                /* Border */
-    color: white;                         /* Text color */
+    color: var(--text-color);                         /* Text color */
     border-radius: 6px;                    /* Rounded corners */
     margin-bottom: 15px;                   /* Space below */
     font-size: 1rem;                       /* Font size */
@@ -58,8 +58,8 @@ form textarea:focus {
 form button {
     width: 100%;                          /* Full width */
     padding: 14px;                        /* Padding */
-    background-color: #007bff;            /* Bootstrap blue */
-    color: white;                        /* Text color */
+    background-color: var(--primary-color);            /* Bootstrap blue */
+    color: var(--button-text);                        /* Text color */
     border-radius: 6px;                   /* Rounded corners */
     border: none;                        /* No border */
     cursor: pointer;                     /* Pointer on hover */

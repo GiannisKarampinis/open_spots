@@ -205,7 +205,7 @@
   font: inherit;
 }
 
-.venue-detail-review-form button {
+.venue-detail-review-form.submit button {
   border: 0;
   border-radius: 8px;
   padding: 11px 14px;
@@ -386,6 +386,51 @@
   max-width: 700px;
   margin: 80px auto;
   text-align: center;
+}
+
+.venue-detail-rating-picker {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.venue-detail-rating-label {
+  font-weight: 700;
+}
+
+.venue-detail-rating-stars {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.venue-detail-star-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: var(--scroll-container-bg);
+  color: #ffffff;
+  font-size: 1.45rem;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+
+.venue-detail-star-button.active {
+  color: #facc15;
+}
+
+.venue-detail-star-button:hover {
+  transform: scale(1.08);
+  background: var(--scroll-container-bg);
+}
+
+.venue-detail-star-button:focus-visible {
+  outline: 2px solid #facc15;
+  outline-offset: 3px;
 }
 
 @keyframes venueDetailFade {

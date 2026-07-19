@@ -68,19 +68,24 @@ function MapPreview({ venue }) {
 }
 
 function Reviews({ reviews, onReviewSubmitted, venueId }) {
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [status, setStatus] = useState("");
 
   const submitReview = async (event) => {
     event.preventDefault();
+
     try {
       const res = await axios.post(
         `/api/v1/venues/${venueId}/reviews/`,
         { rating: Number(rating), comment },
-        { headers: authHeaders() },
+        { headers: authHeaders() }
       );
+
       onReviewSubmitted(res.data);
+      setRating(5);
+      setHoverRating(0);
       setComment("");
       setStatus("Your review has been submitted.");
     } catch (err) {
@@ -88,6 +93,7 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
         setStatus("Log in before submitting a review.");
         return;
       }
+
       setStatus("Could not submit your review.");
     }
   };
@@ -99,7 +105,11 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
           {reviews.map((review) => (
             <article className="venue-detail-review" key={review.id}>
               <strong>{review.username || "Guest"}</strong>
-              <div className="venue-detail-review-stars" aria-label={`${review.rating} out of 5`}>
+
+              <div
+                className="venue-detail-review-stars"
+                aria-label={`${review.rating} out of 5`}
+              >
                 {Array.from({ length: 5 }).map((_, index) => (
                   <FontAwesomeIcon
                     icon={faStar}
@@ -108,6 +118,7 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
                   />
                 ))}
               </div>
+
               {review.comment && <p>{review.comment}</p>}
             </article>
           ))}
@@ -118,16 +129,41 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
 
       <form className="venue-detail-review-form" onSubmit={submitReview}>
         <h4>Leave a Review</h4>
-        <label>
-          Rating
-          <select value={rating} onChange={(event) => setRating(event.target.value)} required>
-            <option value="5">5 stars</option>
-            <option value="4">4 stars</option>
-            <option value="3">3 stars</option>
-            <option value="2">2 stars</option>
-            <option value="1">1 star</option>
-          </select>
-        </label>
+
+        <div className="venue-detail-rating-picker">
+          <span className="venue-detail-rating-label">Rating</span>
+
+          <div
+            className="venue-detail-rating-stars"
+            role="radiogroup"
+            aria-label="Select rating"
+            onMouseLeave={() => setHoverRating(0)}
+          >
+            {Array.from({ length: 5 }).map((_, index) => {
+              const starValue = index + 1;
+              const displayedRating = hoverRating || rating;
+
+              return (
+                <button
+                  type="button"
+                  key={starValue}
+                  className={`venue-detail-star-button ${
+                    starValue <= displayedRating ? "active" : ""
+                  }`}
+                  onMouseEnter={() => setHoverRating(starValue)}
+                  onFocus={() => setHoverRating(starValue)}
+                  onClick={() => setRating(starValue)}
+                  aria-label={`${starValue} star${starValue > 1 ? "s" : ""}`}
+                  aria-checked={rating === starValue}
+                  role="radio"
+                >
+                  <FontAwesomeIcon icon={faStar} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <label>
           Comment
           <textarea
@@ -137,7 +173,9 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
             placeholder="Share your experience..."
           />
         </label>
+
         <button type="submit">Submit Review</button>
+
         {status && <p className="venue-detail-status">{status}</p>}
       </form>
     </>
