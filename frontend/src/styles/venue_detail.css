@@ -433,6 +433,66 @@
   outline-offset: 3px;
 }
 
+.venue-detail-reserve,
+.venue-detail-reserve * {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.venue-detail-reserve form,
+.venue-detail-form-step,
+.venue-detail-form-step > div,
+.venue-detail-form-step label {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.venue-detail-form-step input,
+.venue-detail-form-step select,
+.venue-detail-form-step textarea {
+  display: block;
+  background: var(--background-color);
+  color: var(--text-color);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin-bottom: 0;
+}
+
+.venue-detail-slots {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-sizing: border-box;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.venue-detail-slots button {
+  flex: 0 0 auto;
+  width: 58px;
+  max-width: 58px;
+  min-width: 58px;
+  box-sizing: border-box;
+  padding: 8px 7px;
+  border: 1px solid #ddd;
+  border-radius: 7px;
+  background: var(--background-color);
+  color: var(--text-color);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
 @keyframes venueDetailFade {
   from {
     opacity: 0;
