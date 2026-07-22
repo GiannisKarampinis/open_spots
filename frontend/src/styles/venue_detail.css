@@ -282,8 +282,8 @@
   border: 0;
   border-radius: 8px;
   padding: 11px 14px;
-  background: var(--button-text);
-  color: var(--text-color);
+  background: var(--primary-color);
+  color: var(--button-text);
   font-weight: 700;
   cursor: pointer;
 }
@@ -433,12 +433,41 @@
   outline-offset: 3px;
 }
 
-.venue-detail-reserve,
-.venue-detail-reserve * {
+.venue-detail-reserve {
   box-sizing: border-box;
   max-width: 100%;
   min-width: 0;
   overflow: hidden;
+}
+
+.venue-detail-reserve * {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.venue-detail-step-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.venue-detail-step-tabs button svg,
+.venue-detail-step-tabs button .svg-inline--fa {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  transform: scale(2);
+  transform-origin: center;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.venue-detail-step-tabs button:hover svg,
+.venue-detail-step-tabs button:hover .svg-inline--fa,
+.venue-detail-step-tabs button.active svg,
+.venue-detail-step-tabs button.active .svg-inline--fa {
+  transform: scale(2.5);
 }
 
 .venue-detail-reserve form,

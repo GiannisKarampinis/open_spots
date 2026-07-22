@@ -38,7 +38,6 @@ form textarea {
     border: 1px solid #555;                /* Border */
     color: var(--text-color);                         /* Text color */
     border-radius: 6px;                    /* Rounded corners */
-    margin-bottom: 15px;                   /* Space below */
     font-size: 1rem;                       /* Font size */
     transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth focus */
     outline: none;                        /* Remove default outline */
