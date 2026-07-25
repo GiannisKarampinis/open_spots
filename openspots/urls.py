@@ -47,13 +47,14 @@ urlpatterns += i18n_patterns(
     prefix_default_language=False,
 )
 
-urlpatterns += [
-    re_path(
-        r"^(?!api/|static/|media/|i18n/|admin/).*$",
-        serve_react_app,
-        name="react-app",
-    ),
-]
+if settings.SERVE_REACT_APP:
+    urlpatterns += [
+        re_path(
+            r"^(?!api/|static/|media/|i18n/|admin/).*$",
+            serve_react_app,
+            name="react-app",
+        ),
+    ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
