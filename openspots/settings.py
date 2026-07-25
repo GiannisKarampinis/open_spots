@@ -98,10 +98,18 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': os.getenv('API_THROTTLE_ANON', '100/minute'),
         'user': os.getenv('API_THROTTLE_USER', '500/minute'),
+        'auth_login': os.getenv('API_THROTTLE_AUTH_LOGIN', '10/minute'),
+        'auth_2fa': os.getenv('API_THROTTLE_AUTH_2FA', '10/minute'),
+        'auth_refresh': os.getenv('API_THROTTLE_AUTH_REFRESH', '30/minute'),
+        'auth_register': os.getenv('API_THROTTLE_AUTH_REGISTER', '10/hour'),
+        'auth_password': os.getenv('API_THROTTLE_AUTH_PASSWORD', '5/minute'),
+        'auth_verification': os.getenv('API_THROTTLE_AUTH_VERIFICATION', '10/minute'),
+        'auth_device': os.getenv('API_THROTTLE_AUTH_DEVICE', '30/minute'),
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }

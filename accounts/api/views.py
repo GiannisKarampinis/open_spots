@@ -8,7 +8,6 @@ from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -34,14 +33,6 @@ User = get_user_model()
 security_logger = logging.getLogger("accounts.security")
 REFRESH_COOKIE_NAME = getattr(settings, "JWT_REFRESH_COOKIE_NAME", "open_spots_refresh")
 TWO_FACTOR_PENDING_SECONDS = int(getattr(settings, "TWO_FACTOR_PENDING_SECONDS", 300))
-
-
-def _tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-    return {
-        "refresh":  str(refresh),
-        "access":   str(refresh.access_token),
-    }
 
 
 def _default_redirect_for_user(user):
@@ -475,20 +466,14 @@ class SocialLoginSessionAPIView(generics.GenericAPIView):
         if not user or not user.is_authenticated:
             return Response({"detail": "No authenticated social login session found."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        tokens = _tokens_for_user(user)
-        return Response(
-            {
-                **tokens,
-                "user": UserProfileSerializer(user).data,
-                "redirect_to": _default_redirect_for_user(user),
-            }
-        )
+        return _login_response_for_user(request, user)
 
 
 class RegisterAPIView(generics.CreateAPIView):
     serializer_class    = UserRegistrationSerializer
     authentication_classes = []
     permission_classes  = [permissions.AllowAny]
+    throttle_scope = "auth_register"
 
     def get_pending_signup_user(self, request):
         pending_user_id = request.session.get("pending_user_id")
@@ -512,7 +497,8 @@ class RegisterAPIView(generics.CreateAPIView):
         user = serializer.save()
 
         send_verification_code(user)
-        
+        security_logger.info("register_started user=%s ip=%s", user.pk, _client_ip(self.request))
+
         self.request.session["pending_user_id"] = user.id
         self.request.session["verification_reason"] = "signup"
         self.request.session["code_already_sent"] = True
@@ -550,7 +536,6 @@ class RegisterAPIView(generics.CreateAPIView):
 class ProfileAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
 
     def get_object(self):
         return self.request.user
@@ -565,7 +550,6 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
 class EmailUpdateAPIView(generics.UpdateAPIView):
     serializer_class = UserEmailUpdateSerializer
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
 
     def get_object(self):
         return self.request.user
@@ -585,7 +569,7 @@ class EmailUpdateAPIView(generics.UpdateAPIView):
 class PasswordChangeRequestAPIView(generics.GenericAPIView):
     serializer_class = UserPasswordChangeSerializer
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
+    throttle_scope = "auth_password"
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -596,6 +580,7 @@ class PasswordChangeRequestAPIView(generics.GenericAPIView):
 
         EmailVerificationCode.objects.filter(user=user).delete()
         send_verification_code(user)
+        security_logger.warning("password_change_requested user=%s ip=%s", user.pk, _client_ip(request))
 
         request.session["pending_user_id"] = user.id
         request.session["verification_reason"] = "password_change"
@@ -609,6 +594,7 @@ class PasswordChangeRequestAPIView(generics.GenericAPIView):
 class PasswordRecoveryRequestAPIView(generics.GenericAPIView):
     serializer_class = UserPasswordRecoverySerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth_password"
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -620,12 +606,18 @@ class PasswordRecoveryRequestAPIView(generics.GenericAPIView):
             request.session["pending_user_id"] = user.id
             request.session["verification_reason"] = "password_recovery"
             request.session["code_already_sent"] = True
+        security_logger.warning(
+            "password_recovery_requested matched_user=%s ip=%s",
+            bool(user),
+            _client_ip(request),
+        )
         return Response({"detail": "If the email exists, a verification code has been sent."})
 
 
 class PasswordResetAPIView(generics.GenericAPIView):
     serializer_class = UserPasswordResetSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth_password"
 
     def get_pending_user(self):
         user_id = self.request.session.get("pending_user_id")
@@ -641,6 +633,7 @@ class PasswordResetAPIView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user)
+        security_logger.warning("password_reset_completed user=%s ip=%s", user.pk, _client_ip(request))
         request.session.pop("pending_user_id", None)
         request.session.pop("verification_reason", None)
         request.session.pop("code_already_sent", None)
@@ -651,6 +644,7 @@ class PasswordResetAPIView(generics.GenericAPIView):
 class ResendVerificationAPIView(generics.GenericAPIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth_verification"
 
     def post(self, request, *args, **kwargs):
         user_id = request.session.get("pending_user_id")
@@ -674,6 +668,7 @@ class ResendVerificationAPIView(generics.GenericAPIView):
 class VerificationStatusAPIView(generics.GenericAPIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth_verification"
 
     def get(self, request, *args, **kwargs):
         user_id = request.session.get("pending_user_id")
@@ -708,6 +703,7 @@ class ConfirmVerificationAPIView(generics.GenericAPIView):
     serializer_class = VerificationCodeSerializer
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth_verification"
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -735,20 +731,24 @@ class ConfirmVerificationAPIView(generics.GenericAPIView):
             user.unverified_email = ""
             user.email_verified = True
             user.save(update_fields=["email", "unverified_email", "email_verified"])
+            security_logger.info("email_verified user=%s reason=%s ip=%s", user.pk, reason, _client_ip(request))
             request.session.pop("pending_user_id", None)
             request.session.pop("verification_reason", None)
             request.session.pop("code_already_sent", None)
+            user._current_device_session = _create_device_session(request, user)
             tokens = _tokens_for_user(user)
             request.session["jwt_access"] = tokens["access"]
             request.session["jwt_refresh"] = tokens["refresh"]
-            return Response(
+            response = Response(
                 {
                     "detail": "Email verified successfully.",
-                    **tokens,
+                    "access": tokens["access"],
                     "user": UserProfileSerializer(user).data,
                     "redirect_to": _default_redirect_for_user(user),
                 }
             )
+            _set_refresh_cookie(response, tokens["refresh"])
+            return response
 
         if reason == "password_recovery":
             request.session["password_recovery_verified"] = True

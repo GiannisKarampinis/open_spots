@@ -42,6 +42,41 @@ class AccountsAPITestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_login_uses_httponly_refresh_cookie_and_device_session(self):
+        self.user.email_verified = True
+        self.user.save(update_fields=["email_verified"])
+
+        response = self.client.post(
+            "/api/v1/accounts/login/",
+            {"username": "apiuser", "password": "pass1234"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
+        self.assertNotIn("refresh", response.data)
+        self.assertIn("open_spots_refresh", response.cookies)
+        self.assertTrue(response.cookies["open_spots_refresh"]["httponly"])
+        self.assertEqual(DeviceSession.objects.filter(user=self.user, revoked_at__isnull=True).count(), 1)
+
+    def test_cookie_refresh_rotates_token_without_request_body(self):
+        self.user.email_verified = True
+        self.user.save(update_fields=["email_verified"])
+        login_response = self.client.post(
+            "/api/v1/accounts/login/",
+            {"username": "apiuser", "password": "pass1234"},
+            format="json",
+        )
+        original_refresh = login_response.cookies["open_spots_refresh"].value
+
+        refresh_response = self.client.post("/api/token/refresh/", {}, format="json")
+
+        self.assertEqual(refresh_response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", refresh_response.data)
+        self.assertNotIn("refresh", refresh_response.data)
+        self.assertIn("open_spots_refresh", refresh_response.cookies)
+        self.assertNotEqual(refresh_response.cookies["open_spots_refresh"].value, original_refresh)
+
     def test_profile_returns_authenticated_user_data(self):
         self.client.login(username="apiuser", password="pass1234")
         response = self.client.get(self.url)
@@ -68,9 +103,9 @@ class AccountsAPITestCase(APITestCase):
         }
         response = self.client.post(self.register_url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["email"], "newapiuser@example.com")
-        self.assertEqual(response.data["username"], "newapiuser")
-        self.assertFalse(response.data.get("email_verified", True))
+        self.assertEqual(response.data["user"]["email"], "newapiuser@example.com")
+        self.assertEqual(response.data["user"]["username"], "newapiuser")
+        self.assertFalse(response.data["user"].get("email_verified", True))
 
     def test_confirmation_fails_without_pending_session(self):
         response = self.client.post(self.verification_confirm_url, {"code": "123456"}, format="json")
@@ -139,6 +174,6 @@ class AccountsAPITestCase(APITestCase):
         }
         response = self.client.post(self.register_url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["email"], "newapiuser@example.com")
-        self.assertEqual(response.data["username"], "newapiuser")
-        self.assertFalse(response.data.get("email_verified", True))
+        self.assertEqual(response.data["user"]["email"], "newapiuser@example.com")
+        self.assertEqual(response.data["user"]["username"], "newapiuser")
+        self.assertFalse(response.data["user"].get("email_verified", True))

@@ -1,20 +1,18 @@
 import axios from "axios";
 
 const ACCESS_KEY = "access";
-const REFRESH_KEY = "refresh";
 const LEGACY_ACCESS_KEY = "access_token";
-const LEGACY_REFRESH_KEY = "refresh_token";
+const LEGACY_REFRESH_KEYS = ["refresh", "refresh_token"];
 const USER_KEY = "user";
 
-let accessToken = localStorage.getItem(ACCESS_KEY) || localStorage.getItem(LEGACY_ACCESS_KEY) || null;
+let accessToken = null;
 let refreshPromise = null;
 let cachedCsrfToken = null;
 
 function clearStoredTokens() {
   localStorage.removeItem(ACCESS_KEY);
-  localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(LEGACY_ACCESS_KEY);
-  localStorage.removeItem(LEGACY_REFRESH_KEY);
+  LEGACY_REFRESH_KEYS.forEach((key) => localStorage.removeItem(key));
 }
 
 export async function ensureCsrfToken() {
@@ -32,11 +30,7 @@ export async function ensureCsrfToken() {
 }
 
 export function getAccessToken() {
-  return accessToken || localStorage.getItem(ACCESS_KEY) || localStorage.getItem(LEGACY_ACCESS_KEY);
-}
-
-export function getRefreshToken() {
-  return localStorage.getItem(REFRESH_KEY) || localStorage.getItem(LEGACY_REFRESH_KEY);
+  return accessToken;
 }
 
 export function authHeaders() {
@@ -57,19 +51,12 @@ export function readStoredUser() {
 export function storeAuthResponse(data) {
   if (data.access) {
     accessToken = data.access;
-    localStorage.setItem(ACCESS_KEY, data.access);
-    localStorage.removeItem(LEGACY_ACCESS_KEY);
-  }
-
-  if (data.refresh) {
-    localStorage.setItem(REFRESH_KEY, data.refresh);
-    localStorage.removeItem(LEGACY_REFRESH_KEY);
   }
 
   if (data.user) {
     localStorage.setItem(USER_KEY, JSON.stringify(data.user));
   }
-
+  clearStoredTokens();
   window.dispatchEvent(new Event("auth:changed"));
 }
 
@@ -90,8 +77,7 @@ export function refreshAccessToken() {
         }
 
         accessToken = access;
-        localStorage.setItem(ACCESS_KEY, access);
-        localStorage.removeItem(LEGACY_ACCESS_KEY);
+        clearStoredTokens();
         window.dispatchEvent(new Event("auth:changed"));
         return access;
       })

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { refreshAccessToken } from "../utils/auth";
+import { getAccessToken, refreshAccessToken, storeAuthResponse } from "../utils/auth";
 
 jest.mock("axios", () => {
   const mockAxios = jest.fn();
@@ -15,6 +15,8 @@ describe("refreshAccessToken", () => {
   });
 
   test("shares one refresh request between concurrent callers", async () => {
+    localStorage.setItem("access", "stale-access");
+    localStorage.setItem("refresh", "stale-refresh");
     let resolveRefresh;
     const response = new Promise((resolve) => {
       resolveRefresh = resolve;
@@ -34,6 +36,8 @@ describe("refreshAccessToken", () => {
       "rotated-access-token",
       "rotated-access-token",
     ]);
+    expect(localStorage.getItem("access")).toBeNull();
+    expect(localStorage.getItem("refresh")).toBeNull();
   });
 
   test("allows a later retry after a failed refresh", async () => {
@@ -45,5 +49,25 @@ describe("refreshAccessToken", () => {
     await expect(refreshAccessToken()).resolves.toBe("retry-access-token");
 
     expect(axios.post).toHaveBeenCalledTimes(2);
+  });
+
+  test("keeps access in memory and removes JavaScript-readable tokens", () => {
+    localStorage.setItem("refresh", "legacy-refresh");
+    localStorage.setItem("refresh_token", "legacy-refresh-token");
+    localStorage.setItem("access", "legacy-access");
+    localStorage.setItem("access_token", "legacy-access-token");
+
+    storeAuthResponse({
+      access: "memory-only-access",
+      refresh: "must-not-be-stored",
+      user: { id: 1, username: "apiuser" },
+    });
+
+    expect(getAccessToken()).toBe("memory-only-access");
+    expect(localStorage.getItem("access")).toBeNull();
+    expect(localStorage.getItem("access_token")).toBeNull();
+    expect(localStorage.getItem("refresh")).toBeNull();
+    expect(localStorage.getItem("refresh_token")).toBeNull();
+    expect(JSON.parse(localStorage.getItem("user"))).toEqual({ id: 1, username: "apiuser" });
   });
 });
