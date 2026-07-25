@@ -1,14 +1,20 @@
 from datetime import datetime
 
+import json
+
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import serializers as drf_serializers
+from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
+
 from drf_spectacular.utils import extend_schema
 
 from emails_manager.models import VenueEmailVerificationCode
@@ -49,6 +55,7 @@ from .serializers import (
     VenueVerificationCodeSerializer,
     ReviewSerializer,
 )
+
 
 SEND_COOLDOWN_SECONDS = 45
 
@@ -103,13 +110,116 @@ def _reorder_images(venue, request, model_cls):
     return Response({"detail": "Image order updated.", "updated_order": updated_ids})
 
 
-def _handle_dashboard_image_group(venue, request, model_cls, files_field, visible_field, *, auto_approve):
+def _parse_image_order_payload(request, order_field, visible_field):
+    raw_order = request.data.get(order_field)
+    if raw_order is not None:
+        if isinstance(raw_order, str):
+            try:
+                raw_order = json.loads(raw_order)
+            except json.JSONDecodeError as exc:
+                raise drf_serializers.ValidationError({order_field: "Invalid JSON image order."}) from exc
+        if not isinstance(raw_order, list):
+            raise drf_serializers.ValidationError({order_field: "Expected a list of image order items."})
+
+        normalized = []
+        for index, item in enumerate(raw_order):
+            if not isinstance(item, dict):
+                raise drf_serializers.ValidationError({order_field: f"Item {index} must be an object."})
+
+            kind = item.get("kind")
+            if kind == "existing":
+                image_id = item.get("id")
+                try:
+                    image_id = int(image_id)
+                except (TypeError, ValueError) as exc:
+                    raise drf_serializers.ValidationError({order_field: f"Item {index} has an invalid image id."}) from exc
+                normalized.append({"kind": "existing", "id": image_id})
+                continue
+
+            if kind == "new":
+                upload_key = item.get("upload_key")
+                if not isinstance(upload_key, str) or not upload_key.startswith("new-"):
+                    raise drf_serializers.ValidationError({order_field: f"Item {index} has an invalid upload key."})
+                normalized.append({"kind": "new", "upload_key": upload_key})
+                continue
+
+            raise drf_serializers.ValidationError({order_field: f"Item {index} has an invalid kind."})
+
+        return normalized
+
     visible_ids = request.data.get(visible_field)
+    if visible_ids is None:
+        visible_ids = request.data.get(f"{visible_field}[]")
+    if visible_ids is None:
+        return None
+
+    normalized = []
+    for token in [item for item in str(visible_ids).split(",") if item]:
+        if token.startswith("new-"):
+            normalized.append({"kind": "new", "upload_key": token})
+            continue
+        try:
+            normalized.append({"kind": "existing", "id": int(token)})
+        except (TypeError, ValueError) as exc:
+            raise drf_serializers.ValidationError({visible_field: f"Invalid image id '{token}'."}) from exc
+    return normalized
+
+
+def _parse_deleted_image_ids(request, deleted_field):
+    raw_deleted = request.data.get(deleted_field)
+    if raw_deleted is None:
+        return []
+
+    if isinstance(raw_deleted, str):
+        raw_deleted = raw_deleted.strip()
+        if not raw_deleted:
+            return []
+        try:
+            raw_deleted = json.loads(raw_deleted)
+        except json.JSONDecodeError as exc:
+            raise drf_serializers.ValidationError({deleted_field: "Invalid JSON deleted image id list."}) from exc
+
+    if not isinstance(raw_deleted, list):
+        raise drf_serializers.ValidationError({deleted_field: "Expected a list of image ids."})
+
+    deleted_ids = []
+    seen = set()
+    for item in raw_deleted:
+        try:
+            image_id = int(item)
+        except (TypeError, ValueError) as exc:
+            raise drf_serializers.ValidationError({deleted_field: "Deleted image ids must be integers."}) from exc
+        if image_id not in seen:
+            seen.add(image_id)
+            deleted_ids.append(image_id)
+    return deleted_ids
+
+
+def _handle_dashboard_image_group(
+    venue,
+    request,
+    model_cls,
+    files_field,
+    visible_field,
+    *,
+    auto_approve,
+    order_field=None,
+    deleted_field=None,
+):
+    visible_ids = request.data.get(visible_field)
+    if visible_ids is None:
+        visible_ids = request.data.get(f"{visible_field}[]")
     files = request.FILES.getlist(files_field)
     file_map = {f"new-{index}": file for index, file in enumerate(files)}
+    image_order = _parse_image_order_payload(request, order_field or f"{files_field}_order", visible_field)
+    deleted_ids = _parse_deleted_image_ids(request, deleted_field or f"deleted_{files_field}_ids")
 
-    if visible_ids is None:
-        next_order = model_cls.objects.filter(venue=venue).count()
+    if image_order is None:
+        next_order = model_cls.objects.filter(
+            venue=venue,
+            approved=True,
+            marked_for_deletion=False,
+        ).count()
         for index, file in enumerate(files):
             model_cls.objects.create(
                 venue=venue,
@@ -118,29 +228,58 @@ def _handle_dashboard_image_group(venue, request, model_cls, files_field, visibl
                 marked_for_deletion=False,
                 order=next_order + index,
             )
-        return []
+        return list(
+            model_cls.objects.filter(
+                venue=venue,
+                approved=True,
+                marked_for_deletion=False,
+            ).values_list("id", flat=True)
+        )
 
-    sequence = [item for item in str(visible_ids).split(",") if item]
+    ordered_existing_ids = [item["id"] for item in image_order if item["kind"] == "existing"]
+    duplicate_existing_ids = {
+        image_id for image_id in ordered_existing_ids if ordered_existing_ids.count(image_id) > 1
+    }
+    if duplicate_existing_ids:
+        raise drf_serializers.ValidationError({order_field or visible_field: "Image order contains duplicate existing image ids."})
+
+    existing_ids = set(ordered_existing_ids)
+    deleted_id_set = set(deleted_ids)
+    overlap = existing_ids & deleted_id_set
+    if overlap:
+        raise drf_serializers.ValidationError({
+            deleted_field or f"deleted_{files_field}_ids": "Deleted image ids cannot also appear in the image order."
+        })
+
+    all_referenced_ids = existing_ids | deleted_id_set
+    if all_referenced_ids:
+        found_ids = set(model_cls.objects.filter(venue=venue, id__in=all_referenced_ids).values_list("id", flat=True))
+        missing_ids = all_referenced_ids - found_ids
+        if missing_ids:
+            raise drf_serializers.ValidationError({
+                order_field or visible_field: f"Unknown image ids for this venue: {sorted(missing_ids)}."
+            })
+
     updated_ids = []
 
-    for order_index, token in enumerate(sequence):
-        if token.startswith("new-"):
-            file = file_map.get(token)
-            if file:
-                image = model_cls.objects.create(
-                    venue=venue,
-                    image=file,
-                    approved=auto_approve,
-                    marked_for_deletion=False,
-                    order=order_index,
-                )
-                updated_ids.append(image.id)
+    for order_index, item in enumerate(image_order):
+        if item["kind"] == "new":
+            file = file_map.get(item["upload_key"])
+            if not file:
+                raise drf_serializers.ValidationError({
+                    order_field or visible_field: f"Missing uploaded file for {item['upload_key']}."
+                })
+            image = model_cls.objects.create(
+                venue=venue,
+                image=file,
+                approved=auto_approve,
+                marked_for_deletion=False,
+                order=order_index,
+            )
+            updated_ids.append(image.id)
             continue
 
-        try:
-            image = model_cls.objects.get(pk=int(token), venue=venue)
-        except (TypeError, ValueError, model_cls.DoesNotExist):
-            continue
+        image = model_cls.objects.get(pk=item["id"], venue=venue)
 
         image.order = order_index
         image.marked_for_deletion = False
@@ -149,7 +288,13 @@ def _handle_dashboard_image_group(venue, request, model_cls, files_field, visibl
         image.save(update_fields=["order", "marked_for_deletion"] + (["approved"] if auto_approve else []))
         updated_ids.append(image.id)
 
-    model_cls.objects.filter(venue=venue, approved=True).exclude(id__in=updated_ids).update(marked_for_deletion=True)
+    if deleted_ids:
+        deleted_images = model_cls.objects.filter(venue=venue, id__in=deleted_ids)
+        if auto_approve:
+            deleted_images.delete()
+        else:
+            deleted_images.update(marked_for_deletion=True)
+
     return updated_ids
 
 
@@ -173,11 +318,6 @@ class VenueApplicationCreateAPIView(generics.CreateAPIView):
         self.request.session.pop("venue_verified_email", None)
         self.request.session.pop("venue_pending_email", None)
 
-    @extend_schema(
-        request=VenueApplicationSerializer,
-        responses={201: VenueApplicationSerializer},
-        summary="Submit a new venue application",
-    )
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
@@ -186,11 +326,6 @@ class VenueVerificationSendAPIView(generics.GenericAPIView):
     serializer_class = VenueEmailSerializer
     permission_classes = [permissions.AllowAny]
 
-    @extend_schema(
-        request=VenueEmailSerializer,
-        responses={200: "Verification code sent."},
-        summary="Send a verification code to a venue admin email",
-    )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -220,11 +355,7 @@ class VenueVerificationConfirmAPIView(generics.GenericAPIView):
     serializer_class = VenueVerificationCodeSerializer
     permission_classes = [permissions.AllowAny]
 
-    @extend_schema(
-        request=VenueVerificationCodeSerializer,
-        responses={200: "Venue email verified."},
-        summary="Confirm a venue verification code",
-    )
+
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -378,18 +509,23 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(_paginated_reservation_payload(queryset, request))
 
 
+    # OK - REVIEWED
     @action(detail=True, methods=["post"], url_path="toggle-full", permission_classes=[permissions.IsAuthenticated])
     def toggle_full(self, request, pk=None):
         venue = self.get_object()
+
         if not user_can_manage_venue(request.user, venue):
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
         with transaction.atomic():
-            venue = Venue.objects.select_for_update().get(id=venue.id)
+            venue = Venue.objects.select_for_update().get(id=venue.id)  # Locks the venue row while toggling, so two fast 
+                                                                        # requests cannot both read the same old value and 
+                                                                        # write the same new value incorrectly.
             venue.is_full = not venue.is_full
             venue.save(update_fields=["is_full"])
 
         return Response({"id": venue.id, "is_full": venue.is_full})
+
 
     @action(detail=True, methods=["get", "post"], url_path="working-hours", permission_classes=[permissions.IsAuthenticated])
     def working_hours(self, request, pk=None):
@@ -446,6 +582,7 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response({"working_days": [_working_day_payload(day) for day in venue.working_days.order_by("weekday")]})
 
+ 
     @action(detail=True, methods=["post"], url_path="submit-update", permission_classes=[permissions.IsAuthenticated])
     def submit_update(self, request, pk=None):
         venue = self.get_object()
@@ -489,6 +626,8 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
                 "venue_images",
                 "visible_venue_image_ids",
                 auto_approve=not require_approval,
+                order_field="venue_image_order",
+                deleted_field="deleted_venue_image_ids",
             )
             _handle_dashboard_image_group(
                 venue,
@@ -497,6 +636,8 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
                 "menu_images",
                 "visible_menu_image_ids",
                 auto_approve=not require_approval,
+                order_field="menu_image_order",
+                deleted_field="deleted_menu_image_ids",
             )
 
         detail = "Venue update request submitted." if require_approval else "Venue updated successfully."
@@ -504,6 +645,7 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
             {"detail": detail, "venue": _dashboard_venue_payload(venue, request)},
             status=status.HTTP_201_CREATED if require_approval else status.HTTP_200_OK,
         )
+
 
     @action(detail=True, methods=["get"], url_path="slots")
     def slots(self, request, pk=None):
@@ -532,6 +674,7 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
         ]
         return Response({"business_date": selected_date.isoformat(), "slots": payload})
 
+
     @action(detail=True, methods=["post"], url_path="reviews", permission_classes=[permissions.IsAuthenticated])
     def create_review(self, request, pk=None):
         venue = self.get_object()
@@ -552,8 +695,8 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class ReservationViewSet(viewsets.ModelViewSet):
-    serializer_class = ReservationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    serializer_class    = ReservationSerializer
+    permission_classes  = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
@@ -561,137 +704,121 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return Reservation.objects.filter(Q(user=user) | Q(venue__owner=user)).order_by("-created_at")
         return Reservation.objects.filter(user=user).order_by("-created_at")
 
-    @extend_schema(
-        summary="List authenticated user reservations or venue admin reservations",
-        responses=ReservationSerializer,
-    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @extend_schema(
-        summary="Create a new reservation",
-        request=ReservationSerializer,
-        responses=ReservationSerializer,
-    )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    # OK - REVIEWED
     @action(detail=True, methods=["post"], url_path="status")
-    @extend_schema(
-        request={"type": "object", "properties": {"status": {"type": "string"}}},
-        responses={200: ReservationSerializer},
-        summary="Update a reservation status",
-    )
     def update_status(self, request, pk=None):
         reservation = self.get_object()
+        
         if reservation.venue.owner != request.user and not request.user.is_superuser:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
         status_value = (request.data.get("status") or "").lower()
+        
         if status_value not in ["accepted", "rejected"]:
             return Response({"detail": "Invalid status."}, status=status.HTTP_400_BAD_REQUEST)
+        
         if reservation.status != "pending":
             return Response({"detail": "Only pending reservations can be updated."}, status=status.HTTP_400_BAD_REQUEST)
 
         reservation.status = status_value
         reservation.save(editor=request.user, update_fields=["status"])
+        
         return Response(_reservation_payload(reservation))
 
+    # OK - REVIEWED
     @action(detail=True, methods=["post"], url_path="arrival")
-    @extend_schema(
-        request={"type": "object", "properties": {"arrival_status": {"type": "string"}}},
-        responses={200: ReservationSerializer},
-        summary="Update reservation arrival status",
-    )
     def update_arrival(self, request, pk=None):
         reservation = self.get_object()
+        
         if reservation.venue.owner != request.user and not request.user.is_superuser:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
         arrival_status = (request.data.get("arrival_status") or "").lower()
+        
         if arrival_status not in ["checked_in", "no_show"]:
             return Response({"detail": "Invalid arrival status."}, status=status.HTTP_400_BAD_REQUEST)
+        
         if reservation.status != "accepted":
             return Response({"detail": "Arrival status can only be updated for accepted reservations."}, status=status.HTTP_400_BAD_REQUEST)
 
         reservation.arrival_status = arrival_status
         reservation.save(editor=request.user, update_fields=["arrival_status"])
+        
         return Response(_reservation_payload(reservation))
 
+    # OK - REVIEWED
     @action(detail=True, methods=["post"], url_path="move-to-requests")
-    @extend_schema(
-        responses={200: ReservationSerializer},
-        summary="Move a reservation back to pending requests",
-    )
     def move_to_requests(self, request, pk=None):
         reservation = self.get_object()
+        
         if reservation.venue.owner != request.user and not request.user.is_superuser:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-
-        moved = False
+        
         if reservation.status != "pending" or reservation.arrival_status != "pending":
-            reservation.status = "pending"
-            reservation.arrival_status = "pending"
+            reservation.status          = "pending"
+            reservation.arrival_status  = "pending"
+            
             reservation.save(editor=request.user, update_fields=["status", "arrival_status"])
-            moved = True
+            
+        return Response({"reservation": _reservation_payload(reservation)})
 
-        return Response({"moved": moved, "reservation": _reservation_payload(reservation)})
-
+    # OK - REVIEWED
     @action(detail=True, methods=["post"], url_path="seen")
-    @extend_schema(
-        request={"type": "object", "properties": {"state": {"type": "string"}}},
-        responses={200: ReservationSerializer},
-        summary="Mark a reservation as seen or unseen",
-    )
     def update_seen(self, request, pk=None):
         reservation = self.get_object()
+        
         if reservation.venue.owner != request.user and not request.user.is_superuser:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-        state = request.data.get("state")
-        if state not in ["seen", "unseen"]:
+        
+        requested_string_state = request.data.get("state")
+
+        if requested_string_state not in ["seen", "unseen"]:
             return Response({"detail": "Provide state=seen or state=unseen."}, status=status.HTTP_400_BAD_REQUEST)
 
-        target = state == "seen"
-        if reservation.seen != target:
-            reservation.seen = target
+        target_boolean_state = requested_string_state == "seen"
+        
+        if reservation.seen != target_boolean_state:
+            reservation.seen = target_boolean_state
             reservation.save(update_fields=["seen"])
 
         return Response({"reservation": _reservation_payload(reservation)})
 
+
     @action(detail=True, methods=["get"], url_path="details")
-    @extend_schema(
-        responses=ReservationSerializer,
-        summary="Retrieve reservation details",
-    )
     def reservation_details(self, request, pk=None):
+        
         reservation = self.get_object()
+        
         if reservation.venue.owner == request.user and not reservation.seen:
             reservation.seen = True
             reservation.save(update_fields=["seen", "special_requests"])
+        
         return Response(_reservation_payload(reservation))
 
     @action(detail=True, methods=["post"], url_path="cancel")
-    @extend_schema(
-        responses={200: ReservationSerializer},
-        summary="Cancel a reservation",
-    )
     def cancel(self, request, pk=None):
         reservation = self.get_object()
+        
         if reservation.user != request.user and not request.user.is_superuser:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        
         if reservation.status == "cancelled":
             return Response({"detail": "Reservation already cancelled."})
+        
         reservation.status = "cancelled"
         reservation.save(editor=request.user, update_fields=["status"])
+        
         return Response(_reservation_payload(reservation))
 
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
 
 def group_venues(venues):
     return {
@@ -705,7 +832,6 @@ class VenueListAPI(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        print("BHKE")
         kind = request.GET.get("kind")
         availability = request.GET.get("availability")
 

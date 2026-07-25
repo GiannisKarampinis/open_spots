@@ -257,6 +257,15 @@
   gap: 12px;
 }
 
+/* allow grid children to shrink inside narrow containers to avoid forcing overflow */
+.venue-detail-form-step {
+  min-width: 0;
+}
+
+.venue-detail-form-step > * {
+  min-width: 0;
+}
+
 .venue-detail-form-step h4 {
   margin: 0;
 }

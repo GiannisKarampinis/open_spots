@@ -782,11 +782,9 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 
 /* Form card */
 #manage-venue .venue-form-card {
-    background:     var(--surface-gradient);
     border-radius:  8px;
-    padding:        2rem;
-    box-shadow:     0 0 20px rgba(0,0,0,0.6);
-    max-width:      960px;
+    /* padding:        2rem; */
+    /* box-shadow:     0 0 20px rgba(0,0,0,0.6); */
     margin:         0 auto 2rem auto;
     color:          #000;
 }

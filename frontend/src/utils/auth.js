@@ -7,8 +7,15 @@ const LEGACY_REFRESH_KEY = "refresh_token";
 const USER_KEY = "user";
 
 let accessToken = localStorage.getItem(ACCESS_KEY) || localStorage.getItem(LEGACY_ACCESS_KEY) || null;
-
+let refreshPromise = null;
 let cachedCsrfToken = null;
+
+function clearStoredTokens() {
+  localStorage.removeItem(ACCESS_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+  localStorage.removeItem(LEGACY_ACCESS_KEY);
+  localStorage.removeItem(LEGACY_REFRESH_KEY);
+}
 
 export async function ensureCsrfToken() {
   if (cachedCsrfToken) {
@@ -68,42 +75,36 @@ export function storeAuthResponse(data) {
 
 export function clearStoredAuth() {
   accessToken = null;
-
-  localStorage.removeItem(ACCESS_KEY);
-  localStorage.removeItem(REFRESH_KEY);
-  localStorage.removeItem(LEGACY_ACCESS_KEY);
-  localStorage.removeItem(LEGACY_REFRESH_KEY);
+  clearStoredTokens();
   localStorage.removeItem(USER_KEY);
-
   window.dispatchEvent(new Event("auth:changed"));
 }
 
-export async function refreshAccessToken() {
-  const refresh = getRefreshToken();
+export function refreshAccessToken() {
+  if (!refreshPromise) {
+    refreshPromise = axios.post("/api/token/refresh/", {}, { withCredentials: true })
+      .then((res) => {
+        const access = res.data.access;
+        if (!access) {
+          throw new Error("Refresh response did not include an access token.");
+        }
 
-  if (!refresh) {
-    throw new Error("No refresh token available.");
+        accessToken = access;
+        localStorage.setItem(ACCESS_KEY, access);
+        localStorage.removeItem(LEGACY_ACCESS_KEY);
+        window.dispatchEvent(new Event("auth:changed"));
+        return access;
+      })
+      .catch((err) => {
+        clearStoredAuth();
+        throw err;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
   }
 
-  const res = await axios.post(
-    "/api/token/refresh/",
-    { refresh },
-    { withCredentials: true }
-  );
-
-  const access = res.data.access;
-
-  if (!access) {
-    throw new Error("Refresh response did not include an access token.");
-  }
-
-  accessToken = access;
-  localStorage.setItem(ACCESS_KEY, access);
-  localStorage.removeItem(LEGACY_ACCESS_KEY);
-
-  window.dispatchEvent(new Event("auth:changed"));
-
-  return access;
+  return refreshPromise;
 }
 
 export async function logoutSession() {

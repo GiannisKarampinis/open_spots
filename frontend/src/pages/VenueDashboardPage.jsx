@@ -33,6 +33,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faAlarmClock } from "@fortawesome/free-regular-svg-icons";
 import { getWithAuth, postWithAuth } from "../utils/auth";
+import { mediaUrl } from "../utils/media";
 import "../styles/venue_dashboard_legacy.css";
 import "../styles/venue_dashboard.css";
 
@@ -50,6 +51,13 @@ const venueTypes = [
   ["beach_bar",   "Beach Bar"],
   ["other",       "Other"],
 ];
+
+const EMPTY_IMAGE_LIST = [];
+
+const HALF_HOUR_TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
+  const totalMinutes = index * 30;
+  return `${String(Math.floor(totalMinutes / 60)).padStart(2, "0")}:${String(totalMinutes % 60).padStart(2, "0")}`;
+});
 
 const emptyReservationTable = {
   rows:       [],
@@ -840,32 +848,192 @@ function AnalyticsTab({ analytics, grouping, onGroupingChange, venueId }) {
 }
 
 
-function ImagePreviewStrip({ title, previewId, inputId, inputName, images, newFiles, onFiles, onRemoveExisting, onRemoveNew }) {
+function useObjectUrls(files) {
+  const [previews, setPreviews] = useState([]);
+
+  useEffect(() => {
+    const nextPreviews = files.map((item) => ({
+      ...item,
+      file: item.file || item,
+      src: URL.createObjectURL(item.file || item),
+    }));
+
+    setPreviews(nextPreviews);
+    return () => nextPreviews.forEach((preview) => URL.revokeObjectURL(preview.src));
+  }, [files]);
+
+  return previews;
+}
+
+
+function ImageGalleryModal({ images, index, title, onClose, onNavigate }) {
+  const current = images[index];
+  const [naturalSize, setNaturalSize] = useState(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+      if (event.key === "ArrowLeft") onNavigate(-1);
+      if (event.key === "ArrowRight") onNavigate(1);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, onNavigate]);
+
+  useEffect(() => {
+    setNaturalSize(null);
+  }, [current?.src]);
+
+  if (!current) return null;
+
+  return (
+    <div className="image-gallery-modal" role="dialog" aria-modal="true" aria-label={title} onClick={onClose}>
+      <div className="image-gallery-content" onClick={(event) => event.stopPropagation()}>
+        <button type="button" className="image-gallery-close" onClick={onClose} aria-label="Close image preview">
+          <FontAwesomeIcon icon={faXmark} />
+        </button>
+
+        {images.length > 1 && (
+          <button type="button" className="image-gallery-nav image-gallery-prev" onClick={() => onNavigate(-1)} aria-label="Previous image">
+            <FontAwesomeIcon icon={faChevronLeft} />
+          </button>
+        )}
+
+        <img
+          src={current.src}
+          alt={current.alt}
+          onLoad={(event) => {
+            setNaturalSize({
+              width: event.currentTarget.naturalWidth,
+              height: event.currentTarget.naturalHeight,
+            });
+          }}
+          style={naturalSize ? {
+            width: `${naturalSize.width}px`,
+            height: `${naturalSize.height}px`,
+          } : undefined}
+        />
+
+        {images.length > 1 && (
+          <button type="button" className="image-gallery-nav image-gallery-next" onClick={() => onNavigate(1)} aria-label="Next image">
+            <FontAwesomeIcon icon={faChevronRight} />
+          </button>
+        )}
+
+        <div className="image-gallery-caption">
+          <span>{title}</span>
+          <span>{naturalSize ? `${naturalSize.width} x ${naturalSize.height}` : `${index + 1} / ${images.length}`}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function ProfileBadge() {
+  return (
+    <span className="profile-label">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M4 20a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
+        <path d="m12.474 5.943 1.567 5.34a1 1 0 0 0 1.75.328l2.616-3.402" />
+        <path d="m20 9-3 9" />
+        <path d="m5.594 8.209 2.615 3.403a1 1 0 0 0 1.75-.329l1.567-5.34" />
+        <path d="M7 18 4 9" />
+        <circle cx="12" cy="4" r="2" />
+        <circle cx="20" cy="7" r="2" />
+        <circle cx="4" cy="7" r="2" />
+      </svg>
+      Profile
+    </span>
+  );
+}
+
+
+function ImagePreviewStrip({ title, previewId, inputId, inputName, items, pendingDeletedItems = [], onFiles, onRemove, onOpenImage, onReorder }) {
+  const [dragToken, setDragToken] = useState(null);
+  const visibleItems = useMemo(() => [...items, ...pendingDeletedItems], [items, pendingDeletedItems]);
+  const galleryItems = useMemo(() => visibleItems.map((item) => ({
+    src: item.src,
+    alt: item.alt,
+  })), [visibleItems]);
+
+  const moveItem = (fromToken, toToken) => {
+    if (!fromToken || fromToken === toToken) return;
+    const fromIndex = items.findIndex((item) => item.token === fromToken);
+    const toIndex = items.findIndex((item) => item.token === toToken);
+    if (fromIndex < 0 || toIndex < 0) return;
+
+    const next = [...items];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    onReorder(next.map((item) => item.token));
+  };
+
   return (
     <div className="file-upload-group">
       <div id={previewId} className="file-preview">
-        {images?.length || newFiles?.length ? (
+        {visibleItems?.length ? (
           <>
-        {images.map((image, index) => (
-          <div
-            className={`thumb-wrapper ${index === 0 ? "profile" : ""}`}
-            data-existing="true"
-            data-id={image.id}
-            data-approved="true"
-            data-deleted="false"
-            key={image.id}
-          >
-            {index === 0 && <span className="profile-label">Profile</span>}
-            <img src={image.url} width="80" alt={title} />
-            <button type="button" className="remove-btn" onClick={() => onRemoveExisting(image.id)}>x</button>
-          </div>
-        ))}
-        {newFiles.map((file, index) => (
-          <div className="thumb-wrapper" key={`${file.name}-${file.lastModified}`}>
-            <img src={URL.createObjectURL(file)} width="80" alt={file.name} />
-            <button type="button" className="remove-btn" onClick={() => onRemoveNew(index)}>x</button>
-          </div>
-        ))}
+            {visibleItems.map((item, index) => {
+              const activeIndex = items.findIndex((activeItem) => activeItem.token === item.token);
+              const isActive = activeIndex >= 0;
+              const isProfile = isActive && activeIndex === 0;
+              const galleryIndex = visibleItems.findIndex((visibleItem) => visibleItem.token === item.token);
+
+              return (
+              <div
+                className={`thumb-wrapper ${isProfile ? "profile" : ""} ${item.status ? `image-status-${item.status}` : ""} ${dragToken === item.token ? "dragging" : ""}`}
+                data-existing={item.type === "existing" ? "true" : "false"}
+                data-id={item.type === "existing" ? item.id : undefined}
+                data-new={item.type === "new" ? "true" : undefined}
+                data-approved={item.approved}
+                data-deleted={item.status === "pending-deletion" ? "true" : "false"}
+                draggable={isActive}
+                key={item.token}
+                onDragStart={(event) => {
+                  if (!isActive) {
+                    event.preventDefault();
+                    return;
+                  }
+                  setDragToken(item.token);
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("text/plain", item.token);
+                }}
+                onDragOver={(event) => {
+                  if (!isActive) return;
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                }}
+                onDrop={(event) => {
+                  if (!isActive) return;
+                  event.preventDefault();
+                  moveItem(event.dataTransfer.getData("text/plain") || dragToken, item.token);
+                  setDragToken(null);
+                }}
+                onDragEnd={() => setDragToken(null)}
+              >
+                {isProfile && <ProfileBadge />}
+                {item.status === "pending-approval" && <span className="image-state-label">Pending approval</span>}
+                {item.status === "pending-deletion" && <span className="image-state-label deletion">Pending deletion</span>}
+                <button type="button" className="image-thumb-button" onClick={() => onOpenImage(galleryItems, galleryIndex, title)} aria-label={`Open ${title} image ${index + 1}`}>
+                  <img src={item.src} alt={item.alt} />
+                </button>
+                {isActive && <button type="button" className="remove-btn" onClick={() => onRemove(item)} aria-label="Remove image">x</button>}
+              </div>
+            );
+            })}
           </>
         ) : <span className="no-files-msg">No files selected</span>}
       </div>
@@ -886,8 +1054,169 @@ function snapTime(value) {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
+// *********************************************************************************************
+const existingImageToken  = (id) => `existing-${id}`;
+const newImageToken       = (uid) => `new-local-${uid}`;
+
+function useOrderedImageUploads({ images = [], existingAlt, newAlt, requiresApproval = true }) {
+  const [imageRecords, setImageRecords] = useState([]);
+  const uploadUid                       = useRef(0);  // useRef is used because its value survives React renders,
+                                                      // updating it does not cause another render and it is ony an internal counter.
+
+  useEffect(() => { // Runs whenever the images prop changes.
+    setImageRecords((images || []).map((image, index) => ({
+      ...image, // copies all backend fields into the new object
+      type:     "existing",
+      token:    existingImageToken(image.id),
+      order:    typeof image.order === "number" ? image.order : index,
+      approved: Boolean(image.approved),
+      marked_for_deletion: Boolean(image.marked_for_deletion),
+    })));
+  }, [images]);
+
+
+  const activeRecords = useMemo( // active images (existing and new) that are not marked for deletion
+    () => imageRecords
+      .filter((image) => !image.marked_for_deletion)
+      .sort((left, right) => left.order - right.order),
+    [imageRecords],
+  );
+
+  const newImages = useMemo( // active unsaved images
+    () => activeRecords.filter((image) => image.type === "new"),
+    [activeRecords],
+  );
+  const newImagePreviews = useObjectUrls(newImages);
+
+  const items = useMemo(() => {
+    const previewByToken = new Map(newImagePreviews.map((preview) => [preview.token, preview]));
+    let newIndex = 0;
+
+    return activeRecords.map((image, index) => {
+      const status = image.approved ? "approved" : "pending-approval";
+      if (image.type === "existing") {
+        return {
+          ...image,
+          status,
+          src: mediaUrl(image.url),
+          alt: existingAlt(index),
+        };
+      }
+
+      const preview = previewByToken.get(image.token);
+      if (!preview) return null;
+
+      const item = {
+        ...image,
+        status,
+        src: preview.src,
+        alt: image.file.name || newAlt(newIndex),
+      };
+      newIndex += 1;
+      return item;
+    }).filter(Boolean);
+  }, [activeRecords, existingAlt, newAlt, newImagePreviews]);
+
+  const pendingDeletedItems = useMemo(() => {
+    const pendingDeleted = imageRecords
+      .filter((image) => image.type === "existing" && image.marked_for_deletion)
+      .sort((left, right) => left.order - right.order);
+
+    return pendingDeleted.map((image, index) => ({
+      ...image,
+      status: "pending-deletion",
+      src: mediaUrl(image.url),
+      alt: existingAlt(activeRecords.length + index),
+    }));
+  }, [activeRecords.length, existingAlt, imageRecords]);
+
+  const imageOrder = useMemo(() => {
+    const newIndexByUid = new Map(newImages.map((image, index) => [image.uid, index]));
+
+    return activeRecords.map((image) => {
+      if (image.type === "existing") {
+        return { kind: "existing", id: image.id };
+      }
+      if (image.type === "new") {
+        const index = newIndexByUid.get(image.uid);
+        return typeof index === "number" ? { kind: "new", upload_key: `new-${index}` } : null;
+      }
+      return null;
+    })
+      .filter(Boolean);
+  }, [activeRecords, newImages]);
+
+  const deletedIds = useMemo(
+    () => imageRecords
+      .filter((image) => image.type === "existing" && image.marked_for_deletion)
+      .map((image) => image.id),
+    [imageRecords],
+  );
+
+  /* OK - REVIEWED */
+  const appendFiles = (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    setImageRecords((current) => {
+      const activeOrders = current
+        .filter((image) => !image.marked_for_deletion)
+        .map((image) => image.order);
+      let nextOrder = activeOrders.length ? Math.max(...activeOrders) + 1 : 0;
+      const entries = files.map((file) => {
+        uploadUid.current += 1;
+        const uid = String(uploadUid.current);
+        const entry = {
+          id: null,
+          uid,
+          type: "new",
+          token: newImageToken(uid),
+          file,
+          order: nextOrder,
+          approved: !requiresApproval,
+          marked_for_deletion: false,
+        };
+        nextOrder += 1;
+        return entry;
+      });
+      return [...current, ...entries];
+    });
+    event.target.value = "";
+  };
+
+  const removeImage = (item) => {
+    setImageRecords((current) => current
+      .map((image) => image.token === item.token && image.type === "existing"
+        ? { ...image, marked_for_deletion: true }
+        : image)
+      .filter((image) => image.token !== item.token || image.type === "existing"));
+  };
+
+  const reorderImages = (nextOrder) => {
+    const orderByToken = new Map(nextOrder.map((token, index) => [token, index]));
+    setImageRecords((current) => current.map((image) => (
+      orderByToken.has(image.token)
+        ? { ...image, order: orderByToken.get(image.token) }
+        : image
+    )));
+  };
+
+  return {
+    items,
+    pendingDeletedItems,
+    newImages,
+    imageOrder,
+    deletedIds,
+    appendFiles,
+    removeImage,
+    reorderImages,
+  };
+}
+
 
 function ManageVenueTab({ venue, workingDays, onSubmit, saving }) {
+  const { t } = useTranslation();
+
   const [form, setForm] = useState({
     name: "",
     kind: "other",
@@ -897,10 +1226,21 @@ function ManageVenueTab({ venue, workingDays, onSubmit, saving }) {
     phone: "",
   });
   const [days, setDays] = useState([]);
-  const [venueImages, setVenueImages] = useState([]);
-  const [menuImages, setMenuImages] = useState([]);
-  const [newVenueImages, setNewVenueImages] = useState([]);
-  const [newMenuImages, setNewMenuImages] = useState([]);
+  const [imageModal, setImageModal] = useState(null);
+
+  const venueUploads = useOrderedImageUploads({
+    images: venue.images || EMPTY_IMAGE_LIST,
+    existingAlt: (index) => (index === 0 ? "Venue profile image" : `Venue image ${index + 1}`),
+    newAlt: (index) => `New venue image ${index + 1}`,
+    requiresApproval: venue.updates_require_approval,
+  });
+
+  const menuUploads = useOrderedImageUploads({
+    images: venue.menu_images || EMPTY_IMAGE_LIST,
+    existingAlt: (index) => `Menu image ${index + 1}`,
+    newAlt: (index) => `New menu image ${index + 1}`,
+    requiresApproval: venue.updates_require_approval,
+  });
 
   useEffect(() => {
     setForm({
@@ -911,8 +1251,6 @@ function ManageVenueTab({ venue, workingDays, onSubmit, saving }) {
       email: venue.email || "",
       phone: venue.phone || "",
     });
-    setVenueImages(venue.images || []);
-    setMenuImages(venue.menu_images || []);
   }, [venue]);
 
   useEffect(() => {
@@ -941,10 +1279,24 @@ function ManageVenueTab({ venue, workingDays, onSubmit, saving }) {
     onSubmit({
       form,
       workingDays: days,
-      venueImages,
-      menuImages,
-      newVenueImages,
-      newMenuImages,
+      newVenueImages: venueUploads.newImages,
+      newMenuImages: menuUploads.newImages,
+      venueImageOrder: venueUploads.imageOrder,
+      menuImageOrder: menuUploads.imageOrder,
+      deletedVenueImageIds: venueUploads.deletedIds,
+      deletedMenuImageIds: menuUploads.deletedIds,
+    });
+  };
+
+  const openImageModal = (images, index, title) => {
+    setImageModal({ images, index, title });
+  };
+
+  const navigateImageModal = (direction) => {
+    setImageModal((current) => {
+      if (!current) return current;
+      const nextIndex = (current.index + direction + current.images.length) % current.images.length;
+      return { ...current, index: nextIndex };
     });
   };
 
@@ -953,10 +1305,10 @@ function ManageVenueTab({ venue, workingDays, onSubmit, saving }) {
       <form method="POST" encType="multipart/form-data" className="venue-form-card" onSubmit={submit}>
         <div className="section-card mb-4 sensitive-contact-section">
           <div className="section-header">
-            <h5 className="mb-0">Sensitive & Contact Information</h5>
+            <h2 className="mb-0">Sensitive & Contact Information</h2>
           </div>
           <div id="sensitiveSection" className="section-body show">
-            <div className="grid">
+            <div className="grid venue-basic-fields">
               <div>
                 <label htmlFor="name">Venue Name</label>
                 <input type="text" name="name" id="name" value={form.name} onChange={(event) => updateForm("name", event.target.value)} className="form-input" required />
@@ -967,19 +1319,13 @@ function ManageVenueTab({ venue, workingDays, onSubmit, saving }) {
                   {venueTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                 </select>
               </div>
+              <div>
+                <label htmlFor="location">Location</label>
+                <input type="text" name="location" id="location" value={form.location} onChange={(event) => updateForm("location", event.target.value)} className="form-input" required />
+              </div>
             </div>
 
-            <div>
-              <label htmlFor="location">Location</label>
-              <input type="text" name="location" id="location" value={form.location} onChange={(event) => updateForm("location", event.target.value)} className="form-input" required />
-            </div>
-
-            <div>
-              <label htmlFor="description">Description</label>
-              <textarea name="description" id="description" rows="4" value={form.description} onChange={(event) => updateForm("description", event.target.value)} className="form-input"></textarea>
-            </div>
-
-            <div className="grid">
+            <div className="grid venue-basic-fields">
               <div>
                 <label htmlFor="email">Email</label>
                 <input type="email" name="email" id="email" value={form.email} onChange={(event) => updateForm("email", event.target.value)} className="form-input" />
@@ -990,28 +1336,37 @@ function ManageVenueTab({ venue, workingDays, onSubmit, saving }) {
               </div>
             </div>
 
-            <ImagePreviewStrip
-              title="Upload Venue Images"
-              previewId="venue-preview"
-              inputId="venue_images"
-              inputName="venue_images"
-              images={venueImages}
-              newFiles={newVenueImages}
-              onFiles={(event) => setNewVenueImages((current) => [...current, ...Array.from(event.target.files || [])])}
-              onRemoveExisting={(id) => setVenueImages((current) => current.filter((image) => image.id !== id))}
-              onRemoveNew={(index) => setNewVenueImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-            />
-            <ImagePreviewStrip
-              title="Upload Menu Images"
-              previewId="menu-preview"
-              inputId="menu_images"
-              inputName="menu_images"
-              images={menuImages}
-              newFiles={newMenuImages}
-              onFiles={(event) => setNewMenuImages((current) => [...current, ...Array.from(event.target.files || [])])}
-              onRemoveExisting={(id) => setMenuImages((current) => current.filter((image) => image.id !== id))}
-              onRemoveNew={(index) => setNewMenuImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-            />
+            <div>
+              <label htmlFor="description">Description</label>
+              <textarea name="description" id="description" rows="1" value={form.description} onChange={(event) => updateForm("description", event.target.value)} className="form-input"></textarea>
+            </div>
+
+            <div className="image-upload-grid">
+              <ImagePreviewStrip
+                title="Upload Venue Images"
+                previewId="venue-preview"
+                inputId="venue_images"
+                inputName="venue_images"
+                items={venueUploads.items}
+                pendingDeletedItems={venueUploads.pendingDeletedItems}
+                onFiles={venueUploads.appendFiles}
+                onRemove={venueUploads.removeImage}
+                onOpenImage={openImageModal}
+                onReorder={venueUploads.reorderImages}
+              />
+              <ImagePreviewStrip
+                title="Upload Menu Images"
+                previewId="menu-preview"
+                inputId="menu_images"
+                inputName="menu_images"
+                items={menuUploads.items}
+                pendingDeletedItems={menuUploads.pendingDeletedItems}
+                onFiles={menuUploads.appendFiles}
+                onRemove={menuUploads.removeImage}
+                onOpenImage={openImageModal}
+                onReorder={menuUploads.reorderImages}
+              />
+            </div>
           </div>
         </div>
 
@@ -1034,35 +1389,45 @@ function ManageVenueTab({ venue, workingDays, onSubmit, saving }) {
                   <tr key={day.id || day.weekday}>
                     <td>{day.weekday_display}</td>
                     <td><input type="checkbox" name={`${day.weekday}-is_closed`} checked={day.is_closed} onChange={(event) => updateDay(day.weekday, { is_closed: event.target.checked })} /></td>
-                    <td><input type="time" name={`${day.weekday}-open_time`} step="1800" value={day.open_time || ""} disabled={day.is_closed} onChange={(event) => updateDay(day.weekday, { open_time: snapTime(event.target.value) })} /></td>
-                    <td className="close-cell">
-                      <input type="time" name={`${day.weekday}-close_time`} step="1800" value={day.close_time || ""} disabled={day.is_closed} onChange={(event) => updateDay(day.weekday, { close_time: snapTime(event.target.value) })} />
-                      <span className={`next-day-label ${!day.closes_next_day ? "is-hidden" : ""}`} data-next-day-label> (+1 day)</span>
+                    <td>
+                      <div className="time-input-wrap">
+                        <input type="time" list="half-hour-times" name={`${day.weekday}-open_time`} min="00:00" max="23:30" step="1800" value={day.open_time || ""} disabled={day.is_closed} onChange={(event) => updateDay(day.weekday, { open_time: snapTime(event.target.value) })} onBlur={(event) => updateDay(day.weekday, { open_time: snapTime(event.target.value) })} />
+                      </div>
+                    </td>
+                    <td className={`close-cell ${day.closes_next_day ? "closes-next-day" : ""}`}> 
+                      <div className={`time-input-wrap ${day.closes_next_day ? "closes-next-day" : ""}`} data-closes-next-day={day.closes_next_day ? "true" : undefined}>
+                        <input type="time" list="half-hour-times" name={`${day.weekday}-close_time`} min="00:00" max="23:30" step="1800" value={day.close_time || ""} disabled={day.is_closed} onChange={(event) => updateDay(day.weekday, { close_time: snapTime(event.target.value) })} onBlur={(event) => updateDay(day.weekday, { close_time: snapTime(event.target.value) })} />
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <datalist id="half-hour-times">
+              {HALF_HOUR_TIME_OPTIONS.map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
           </div>
         </div>
 
         <button type="submit" className="btn-edit-status" disabled={saving}>
-          {saving ? "Saving..." : "Submit for Approval"}
+          {saving ? t("Saving...") : (venue?.updates_require_approval ? t("Submit for Approval") : t("Save"))}
         </button>
       </form>
 
-      <div id="imageModal" className="image-modal" aria-hidden="true">
-        <button type="button" className="close-btn" aria-label="Close image preview">x</button>
-        <img src="" alt="Preview" />
-      </div>
+      {imageModal && (
+        <ImageGalleryModal
+          images={imageModal.images}
+          index={imageModal.index}
+          title={imageModal.title}
+          onClose={() => setImageModal(null)}
+          onNavigate={navigateImageModal}
+        />
+      )}
     </div>
   );
 }
-
-
-
-
-
 
 
 function ReservationDetailsModal({ reservation, sourceKind, highlightSpecialRequests, onAction, onClose }) {
@@ -1226,10 +1591,7 @@ function ReservationDetailsModal({ reservation, sourceKind, highlightSpecialRequ
       </div>
     </div>
   );
-}
-
-
-
+} 
 
 
 export default function VenueDashboardPage() {
@@ -1535,60 +1897,83 @@ export default function VenueDashboardPage() {
     }
   };
 
-
+  /* OK - REVIEWED */
   const action = async (kind, reservation, value) => {
-    
     const endpoints = {
-      status:   [`/api/v1/reservations/${reservation.id}/status/`, { status: value }],
-      arrival:  [`/api/v1/reservations/${reservation.id}/arrival/`, { arrival_status: value }],
-      seen:     [`/api/v1/reservations/${reservation.id}/seen/`, { state: value }],
-      move:     [`/api/v1/reservations/${reservation.id}/move-to-requests/`, {}],
+      status:     [`/api/v1/reservations/${reservation.id}/status/`,            { status:         value }],
+      arrival:    [`/api/v1/reservations/${reservation.id}/arrival/`,           { arrival_status: value }],
+      seen:       [`/api/v1/reservations/${reservation.id}/seen/`,              { state:          value }],
+      move:       [`/api/v1/reservations/${reservation.id}/move-to-requests/`,  {}],
     };
 
     const [url, payload] = endpoints[kind];
+    
     try {
     
       const res = await postWithAuth(url, payload, {}, { onUnauthenticated: redirectToLogin });
+      /* This POST to the backend mutates the reservation and returns the updated reservation object. */
     
       if (!res) return;
     
+      const updatedReservation = res.data.reservation || res.data;
+
       if (kind === "seen") {
-        updateReservationInDashboard("requests", res.data.reservation || res.data);
-        fetchDashboard(); /* To update the unseen reservation count in the dashboard */
+        updateReservationInDashboard("requests", updatedReservation);
+        fetchDashboardCounts(); /* To update the unseen reservation count bell */
+        
         return;
       }
     
-      fetchDashboard();
+      fetchDashboardCounts();
     
-      fetchReservationBucket("requests");
-      fetchReservationBucket("arrivals");
-      fetchReservationBucket("history");
+      if (kind === "status" || kind === "move") {
+        /* Refresh both requests and arrivals tables because a status change or move can affect both. */
+        fetchReservationBucket("requests");
+        fetchReservationBucket("arrivals");
+        return;
+      }
+
+      if (kind === "arrival") {
+        fetchReservationBucket("arrivals");
+      }
     
     } catch (err) {
       setMessage(err.response?.data?.detail || "Could not update the reservation.");
     }
   };
 
+  /* OK - REVIEWED */
   const toggleAvailability = async () => {
     try {
-      const res = await postWithAuth(
-        `/api/v1/venues/${venueId}/toggle-full/`,
-        {},
-        {},
-        { onUnauthenticated: redirectToLogin },
+      const res = await postWithAuth(`/api/v1/venues/${venueId}/toggle-full/`,
+                                      {},
+                                      {},
+                                      { onUnauthenticated: redirectToLogin },
       );
+      
       if (!res) return;
+      
       setDashboard((current) => ({
         ...current,
         venue: { ...current.venue, is_full: res.data.is_full },
       }));
+      
       setMessage(res.data.is_full ? "Venue marked as full." : "Venue marked as available.");
     } catch (err) {
       setMessage(err.response?.data?.detail || "Could not update venue availability.");
     }
   };
 
-  const submitVenueUpdate = async ({ form, workingDays, venueImages, menuImages, newVenueImages, newMenuImages }) => {
+  const submitVenueUpdate = async ({
+    form,
+    workingDays,
+    newVenueImages,
+    newMenuImages,
+    venueImageOrder,
+    menuImageOrder,
+    deletedVenueImageIds,
+    deletedMenuImageIds,
+  }) => {
     setSaving(true);
     setMessage("");
 
@@ -1596,16 +1981,12 @@ export default function VenueDashboardPage() {
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value ?? "");
     });
-    formData.append("visible_venue_image_ids", [
-      ...venueImages.map((image) => String(image.id)),
-      ...newVenueImages.map((_, index) => `new-${index}`),
-    ].join(","));
-    formData.append("visible_menu_image_ids", [
-      ...menuImages.map((image) => String(image.id)),
-      ...newMenuImages.map((_, index) => `new-${index}`),
-    ].join(","));
-    newVenueImages.forEach((file) => formData.append("venue_images", file));
-    newMenuImages.forEach((file) => formData.append("menu_images", file));
+    formData.append("venue_image_order", JSON.stringify(venueImageOrder));
+    formData.append("menu_image_order", JSON.stringify(menuImageOrder));
+    formData.append("deleted_venue_image_ids", JSON.stringify(deletedVenueImageIds));
+    formData.append("deleted_menu_image_ids", JSON.stringify(deletedMenuImageIds));
+    newVenueImages.forEach((image) => formData.append("venue_images", image.file));
+    newMenuImages.forEach((image) => formData.append("menu_images", image.file));
 
     try {
       const updateRes = await postWithAuth(

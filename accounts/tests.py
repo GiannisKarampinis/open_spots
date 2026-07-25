@@ -1,7 +1,11 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from rest_framework_simplejwt.tokens import RefreshToken
 
+from accounts.models import DeviceSession
 from emails_manager.models import EmailVerificationCode
 
 User = get_user_model()
@@ -24,6 +28,18 @@ class AccountsAPITestCase(APITestCase):
 
     def test_profile_requires_authentication(self):
         response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_blacklisted_refresh_token_returns_401_during_rotation_race(self):
+        device_session = DeviceSession.objects.create(user=self.user)
+        refresh = RefreshToken.for_user(self.user)
+        refresh["device_session_id"] = str(device_session.id)
+        refresh.blacklist()
+        self.client.cookies["open_spots_refresh"] = str(refresh)
+
+        with patch("accounts.api.views._refresh_device_session", return_value=device_session):
+            response = self.client.post("/api/token/refresh/", {}, format="json")
+
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_profile_returns_authenticated_user_data(self):

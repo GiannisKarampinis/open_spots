@@ -1,4 +1,5 @@
 from datetime                   import timedelta
+from django.conf                import settings
 from django.core.paginator      import EmptyPage, Paginator
 from django.db.models           import Count, Q
 from django.db.models.functions import TruncDay, TruncMonth, TruncWeek, TruncYear
@@ -19,6 +20,8 @@ def _dashboard_venue_payload(venue, request):
     first_image = (
         venue.images.filter(approved=True, marked_for_deletion=False).order_by("order").first()
     )
+    all_images = venue.images.order_by("order", "id")
+    all_menu_images = venue.menu_images.order_by("order", "id")
     return {
         "id": venue.id,
         "name": venue.name,
@@ -32,14 +35,15 @@ def _dashboard_venue_payload(venue, request):
         "email": venue.email,
         "phone": venue.phone,
         "owner_id": venue.owner_id,
+        "updates_require_approval": bool(getattr(settings, "VENUE_UPDATES_REQUIRE_APPROVAL", True)),
         "first_image": VenueImageSerializer(first_image, context=context).data["url"] if first_image else None,
         "images": VenueImageSerializer(
-            venue.images.filter(approved=True, marked_for_deletion=False).order_by("order"),
+            all_images,
             many=True,
             context=context,
         ).data,
         "menu_images": VenueImageSerializer(
-            venue.menu_images.filter(approved=True, marked_for_deletion=False).order_by("order"),
+            all_menu_images,
             many=True,
             context=context,
         ).data,

@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLocationDot, faChair, faStar } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
+import { mediaUrl } from "../../utils/media";
 
 export default function VenueCard({ venue }) {
   const rating = Number(venue.average_rating);
@@ -8,7 +9,7 @@ export default function VenueCard({ venue }) {
   return (
     <Link className="venue-link" to={`/venues/venue/${venue.id}`}>
       <div className={`venue-card ${venue.is_full ? "full" : "available"}`}>
-        {venue.first_image && (<img src={venue.first_image} alt={venue.name} />)}
+        {venue.first_image && (<img src={mediaUrl(venue.first_image)} alt={venue.name} />)}
 
         <div className="venue-card-content">
           <h3>{venue.name}</h3>

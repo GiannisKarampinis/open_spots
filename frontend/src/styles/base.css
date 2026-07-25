@@ -135,6 +135,38 @@ body.dark-theme .main-nav a {
 .main-nav a:hover {
     color: var(--button-text-hover);
 }
+
+.language-dropdown {
+    min-height:     32px;
+    padding:        5px 28px 5px 10px;
+    border:         1px solid rgba(255, 255, 255, 0.45);
+    border-radius:  4px;
+    background-color: transparent;
+    color:          var(--button-text);
+    font-size:      0.95rem;
+    font-weight:    700;
+    line-height:    1.2;
+    cursor:         pointer;
+    padding:        5px 0;
+}
+
+.language-dropdown:hover,
+.language-dropdown:focus {
+    border-color: var(--button-text);
+    color: var(--button-text);
+    outline: none;
+}
+
+.language-dropdown option {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.dashboard-link {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+}
 /* ==========================
    Language Dropdown Menu
    ========================== */
@@ -158,10 +190,8 @@ body.dark-theme .main-nav a {
 }
 
 .language-dropdown {
-    background:     var(--surface-gradient);
     border-radius:  5px;
     padding:        5px 0;
-    color:          var(--text-color);
 }
 
 .language-dropdown.show {
@@ -291,14 +321,24 @@ footer a:hover {
    Buttons
    ========================== */
 .dashboard-link {
-    margin-right:   15px;
+    padding:        5px 10px;
+    border:         1px solid rgba(255, 255, 255, 0.45);
+    border-radius:  4px;
     font-weight:    bold;
-    color:          var(--primary-color);
+    color:          var(--button-text);
+    line-height:    1.2;
+    text-decoration: none;
+}
+
+.main-nav .dashboard-link,
+.main-nav .dashboard-link:visited {
+    color: var(--button-text);
 }
 
 .dashboard-link:hover {
-    text-decoration: underline;
-    color:           var(--primary-hover);
+    border-color:    var(--button-text);
+    color:           var(--button-text-hover);
+    text-decoration: none;
 }
 
 .apply-venue-btn {

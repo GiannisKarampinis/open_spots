@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import { authHeaders } from "../utils/auth";
+import { mediaUrl } from "../utils/media";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChair,
@@ -38,7 +39,7 @@ function Gallery({ images, emptyText, onOpen }) {
           type="button"
           onClick={() => onOpen(images, index)}
         >
-          <img src={image.url} alt="" />
+          <img src={mediaUrl(image.url)} alt="" />
         </button>
       ))}
     </div>
@@ -412,7 +413,7 @@ export default function VenueDetailPage() {
     };
   }, [venueId]);
 
-  const heroImage = venue?.first_image;
+  const heroImage = mediaUrl(venue?.first_image);
   const modalImage = modal.index >= 0 ? modal.images[modal.index] : null;
   const tabs = useMemo(
     () => [
@@ -559,7 +560,7 @@ export default function VenueDetailPage() {
           >
             <FontAwesomeIcon icon={faChevronLeft} />
           </button>
-          <img src={modalImage.url} alt="" onClick={(event) => event.stopPropagation()} />
+          <img src={mediaUrl(modalImage.url)} alt="" onClick={(event) => event.stopPropagation()} />
           <button
             className="venue-detail-modal-nav next"
             type="button"

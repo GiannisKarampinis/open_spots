@@ -466,33 +466,42 @@
 }
 
 #manage-venue .section-card {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  color: #111;
-  margin: 15px;
-  overflow: hidden;
+  --manage-venue-surface: rgba(255, 255, 255, 0.94);
+  --manage-venue-field: rgba(255, 255, 255, 0.78);
+  --manage-venue-field-muted: rgba(0, 123, 255, 0.08);
+  --manage-venue-text: var(--primary-hover);
+  --manage-venue-value-text: var(--text-color);
+  --manage-venue-heading: var(--surface-color);
+  --manage-venue-border: rgba(0, 86, 179, 0.2);
+  background: var(--manage-venue-surface);
+  border: 1px solid var(--manage-venue-border);
+  border-radius: 10px;
+  box-shadow: 0 14px 34px rgba(0, 51, 102, 0.18);
+  color: var(--manage-venue-text);
+  /* margin: 15px; */
+  overflow: visible;
 }
 
 #manage-venue .section-header {
   align-items: center;
-  background: #f8f9fa;
-  border: 0;
-  color: #111;
+  background: transparent;
+  border-bottom: 1px solid var(--manage-venue-border);
+  color: var(--manage-venue-heading);
   display: flex;
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-size: 1.45rem;
+  font-weight: 700;
   justify-content: space-between;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
   outline: 0;
-  padding: 0.75rem 1rem;
+  padding: 1.15rem 1.25rem 1rem;
   text-align: left;
   transition: background 0.2s ease;
   width: 100%;
 }
 
 #manage-venue .section-header:hover {
-  background: #eef1f5;
+  background: rgba(0, 123, 255, 0.04);
 }
 
 #manage-venue .section-header:focus {
@@ -500,10 +509,11 @@
 }
 
 #manage-venue .section-header h5 {
-  color: inherit;
-  font-size: inherit;
-  font-weight: inherit;
-  margin: 0;
+  color: var(--primary-hover);
+  font-size: 1.25rem;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
 }
 
 #manage-venue .section-body {
@@ -514,7 +524,7 @@
 
 #manage-venue .section-body.show {
   max-height: none;
-  padding: 1rem 1.25rem;
+  padding: 1rem 1.25rem 1.25rem;
 }
 
 #manage-venue .grid {
@@ -523,21 +533,74 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+#manage-venue .venue-basic-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 #manage-venue label {
-  color: #111;
+  display: block;
+  color: var(--primary-hover);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.28rem;
+}
+
+#manage-venue .custom-file-btn {
+  align-self: flex-end;
+  background-color: #4CAF50;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  display: block;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0;
+  padding: 0.55rem 1rem;
+  text-align: center;
+  transition: background 0.2s;
+  white-space: nowrap;
+  width: 25%;
+}
+
+#manage-venue .custom-file-btn:hover {
+  background-color: #45a049;
+}
+
+#manage-venue .image-upload-grid {
+  --thumb-gap: 1rem;
+  --thumb-radius: 6px;
+  --outline-offset: 0.45rem;
+  display: grid;
+  gap: var(--thumb-gap);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.25rem;
+  position: relative;
+}
+
+/* decorative region removed */
+
+#manage-venue .image-upload-grid .file-upload-group {
+  min-width: 0;
 }
 
 #manage-venue .form-input,
 #manage-venue .sensitive-contact-section input,
 #manage-venue .sensitive-contact-section textarea,
 #manage-venue .sensitive-contact-section select {
-  background-color: #fff;
-  border: 1px solid #ccc;
+  background: var(--manage-venue-field);
+  border: 1px solid var(--manage-venue-border);
   border-radius: 6px;
   box-shadow: none;
-  color: #111;
+  color: var(--manage-venue-value-text);
+  font-size: 0.9rem;
+  line-height: 1.25;
   margin-bottom: 1rem;
-  padding: 0.5rem;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.65rem;
+  overflow-wrap: anywhere;
   width: 100%;
 }
 
@@ -551,59 +614,382 @@
   outline: 0;
 }
 
+#manage-venue #description {
+  field-sizing: content;
+  min-height: 2.35rem;
+  resize: vertical;
+}
+
 #manage-venue .file-preview {
-  color: #111;
+  align-items: center;
+  align-content: flex-start;
+  background: var(--manage-venue-field-muted);
+  border: 1px solid var(--manage-venue-border);
+  border-radius: 6px;
+  color: var(--manage-venue-value-text);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  height: 184px;
+  max-height: 184px;
+  min-height: 184px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+#manage-venue .image-upload-grid .custom-file-btn {
+  width: 100%;
+}
+
+#manage-venue .thumb-wrapper {
+  border-radius: var(--thumb-radius);
+  display: block;
+  /* Make thumbnails scale so four fit per row: use container percentage minus gaps. */
+  flex: 0 0 calc((100% - (3 * var(--thumb-gap))) / 4);
+  width: calc((100% - (3 * var(--thumb-gap))) / 4);
+  aspect-ratio: 1 / 1;
+  overflow: visible;
+  position: relative;
+  min-width: 0;
+  z-index: 2;
+}
+
+/* Dashed outline slightly larger than the first thumbnail */
+#manage-venue .image-upload-grid .thumb-wrapper:first-child::after {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--outline-offset));
+  border-radius: calc(var(--thumb-radius) + var(--outline-offset));
+  border: 3px dashed rgba(74, 144, 226, 0.85);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#manage-venue .thumb-wrapper[draggable="true"] {
+  cursor: grab;
+}
+
+#manage-venue .thumb-wrapper.dragging {
+  opacity: 0.45;
+}
+
+#manage-venue .thumb-wrapper.profile .image-thumb-button {
+  outline: 2px solid #4CAF50;
+  outline-offset: 2px;
+}
+
+#manage-venue .thumb-wrapper.image-status-pending-deletion {
+  opacity: 0.58;
+}
+
+#manage-venue .profile-label {
+  align-items: center;
+  background: #4CAF50;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 500;
+  gap: 0.25rem;
+  left: 50%;
+  top: 0.25rem;
+  transform: translateX(-50%);
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+#manage-venue .profile-label svg {
+  height: 0.9rem;
+  width: 0.9rem;
+}
+
+#manage-venue .image-state-label {
+  align-items: center;
+  background: #f5a623;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  display: inline-flex;
+  font-size: 0.68rem;
+  font-weight: 700;
+  left: 0.25rem;
+  line-height: 1;
+  max-width: calc(100% - 0.5rem);
+  overflow: hidden;
+  padding: 0.25rem 0.45rem;
+  pointer-events: none;
+  position: absolute;
+  text-overflow: ellipsis;
+  top: 0.25rem;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+#manage-venue .profile-label + .image-state-label {
+  top: 1.85rem;
+}
+
+#manage-venue .image-state-label.deletion {
+  background: #dc3545;
+}
+
+#manage-venue .image-upload-grid .thumb-wrapper img {
+  border-radius: 6px;
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+#manage-venue .image-thumb-button {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: inherit;
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+  width: 100%;
+}
+
+#manage-venue .remove-btn {
+  background: rgba(220, 53, 69, 0.82);
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  height: 18px;
+  line-height: 14px;
+  padding: 0;
+  position: absolute;
+  right: 2px;
+  text-align: center;
+  top: 2px;
+  width: 18px;
+  z-index: 3;
+}
+
+#manage-venue .image-thumb-button:focus-visible {
+  outline: 2px solid var(--primary-hover);
+  outline-offset: 2px;
+}
+
+#manage-venue .image-gallery-modal {
+  align-items: flex-start;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  overflow: auto;
+  padding: 2rem;
+  position: fixed;
+  z-index: 30000;
+}
+
+#manage-venue .image-gallery-content {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  margin: auto;
+  position: relative;
+  width: fit-content;
+}
+
+#manage-venue .image-gallery-content img {
+  border-radius: 6px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  display: block;
+  max-height: none;
+  max-width: none;
+  object-fit: contain;
+}
+
+#manage-venue .image-gallery-close,
+#manage-venue .image-gallery-nav {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  color: var(--primary-hover);
+  cursor: pointer;
+  display: inline-flex;
+  height: 42px;
+  justify-content: center;
+  position: absolute;
+  width: 42px;
+  z-index: 1;
+}
+
+#manage-venue .image-gallery-close {
+  right: 0;
+  top: 0;
+  transform: translate(35%, -35%);
+}
+
+#manage-venue .image-gallery-prev {
+  left: 0;
+  transform: translateX(-50%);
+}
+
+#manage-venue .image-gallery-next {
+  right: 0;
+  transform: translateX(50%);
+}
+
+#manage-venue .image-gallery-close:hover,
+#manage-venue .image-gallery-nav:hover {
+  background: #fff;
+  color: var(--surface-color);
+}
+
+#manage-venue .image-gallery-caption {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.68);
+  border-radius: 6px;
+  bottom: 0;
+  color: #fff;
+  display: flex;
+  font-size: 0.9rem;
+  gap: 1rem;
+  justify-content: space-between;
+  left: 50%;
+  min-width: min(320px, 80vw);
+  padding: 0.5rem 0.75rem;
+  position: absolute;
+  transform: translate(-50%, 120%);
 }
 
 #manage-venue .working-hours-table {
   border-collapse: collapse;
-  color: #111;
-  margin-bottom: 1rem;
+  color: var(--manage-venue-value-text);
+  margin: 0 auto 1rem;
   width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
 }
 
 #manage-venue .working-hours-table th,
 #manage-venue .working-hours-table td {
-  border-bottom: 1px solid #eee;
-  padding: 0.5rem;
-  text-align: left;
+  border-bottom: 1px solid var(--manage-venue-border);
+  padding: 0.55rem 0.65rem;
+  text-align: center;
   vertical-align: middle;
 }
 
 #manage-venue .working-hours-table th {
-  background: #f8f9fa;
-  font-weight: 600;
+  background: var(--manage-venue-field-muted);
+  color: var(--primary-hover);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
-
 #manage-venue .working-hours-table input[type="time"] {
   appearance: auto;
   -webkit-appearance: auto;
-  background-color: #fff;
-  color: #111;
+  background: var(--manage-venue-field);
+  border: 1px solid var(--manage-venue-border);
+  border-radius: 6px;
+  color: var(--manage-venue-value-text);
   cursor: pointer;
   display: inline-block;
   min-height: 36px;
   opacity: 1;
+  padding: 0.45rem 0.55rem;
 }
+
+/* Make date inputs and reservation table form text clearly visible (black) */
+/* input[type="date"] {
+  color: #000 !important;
+} */
+
+/* Target reservation tables wrapped in .table-responsive (ReservationsTable uses this wrapper) */
+/* .table-responsive,
+.table-responsive .table,
+.table-responsive input,
+.table-responsive select,
+.table-responsive textarea,
+.table-responsive button,
+.table-responsive th,
+.table-responsive td {
+  color: #000 !important;
+} */
 
 #manage-venue .working-hours-table input[type="checkbox"] {
   height: 18px;
   width: 18px;
 }
 
-#manage-venue .working-hours-table th:nth-child(2),
+#manage-venue .working-hours-table td:first-child {
+  text-align: left;
+}
+
+/* #manage-venue .working-hours-table th:nth-child(2),
 #manage-venue .working-hours-table th:nth-child(3),
 #manage-venue .working-hours-table th:nth-child(4),
 #manage-venue .working-hours-table td:nth-child(2),
 #manage-venue .working-hours-table td:nth-child(3),
-#manage-venue .working-hours-table td:nth-child(4),
-#manage-venue .working-hours-table td:nth-child(5),
-#manage-venue .working-hours-table td:nth-child(6) {
+#manage-venue .working-hours-table td:nth-child(4)
+{
+  text-align: center;
+  vertical-align: middle;
+} */
+
+#manage-venue .working-hours-table th:nth-child(1),
+#manage-venue .working-hours-table td:nth-child(1) {
+  width: 30%;
+}
+
+#manage-venue .working-hours-table th:nth-child(2),
+#manage-venue .working-hours-table td:nth-child(2) {
+  width: 15%;
+}
+
+#manage-venue .working-hours-table th:nth-child(3),
+#manage-venue .working-hours-table td:nth-child(3),
+#manage-venue .working-hours-table th:nth-child(4),
+#manage-venue .working-hours-table td:nth-child(4) {
+  width: var(--working-hours-side-column);
+}
+
+#manage-venue .working-hours-table td:nth-child(4) {
   text-align: center;
 }
 
-#manage-venue .close-cell {
-  white-space: nowrap;
+/* show a small (+1 day) label in the upper-right of the close time input when closes_next_day is true */
+#manage-venue .working-hours-table .close-cell {
+  position: relative;
+}
+
+#manage-venue .working-hours-table .time-input-wrap {
+  position: relative;
+  display: inline-block;
+  overflow: visible;
+}
+
+#manage-venue .working-hours-table .time-input-wrap input[type="time"] {
+  /* ensure space for the pseudo-element */
+  padding-right: 2.2rem;
+}
+
+#manage-venue .working-hours-table .time-input-wrap[data-closes-next-day="true"]::after {
+  content:        "(+1 day)";
+  position:       absolute;
+  top:            -10%;
+  right:          -20%;
+  font-size:      0.9rem;
+  line-height:    1;
+  color:          var(--primary-hover);
+  background:     rgba(255,255,255,0.92);
+  padding:        0 0.35rem;
+  border-radius:  4px;
+  pointer-events: none;
 }
 
 #manage-venue .next-day-label {
@@ -674,6 +1060,28 @@
     grid-template-columns: 1fr;
   }
 
+  #manage-venue .venue-basic-fields {
+    grid-template-columns: 1fr;
+  }
+
+  #manage-venue .image-upload-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #manage-venue .image-gallery-modal {
+    padding: 1rem;
+  }
+
+  #manage-venue .image-gallery-prev {
+    left: 0.5rem;
+    transform: none;
+  }
+
+  #manage-venue .image-gallery-next {
+    right: 0.5rem;
+    transform: none;
+  }
+
   #manage-venue .section-body.show {
     padding: 1rem;
   }
@@ -681,4 +1089,83 @@
   #manage-venue .working-hours-table {
     font-size: 0.9rem;
   }
+}
+
+/* Ensure reservation tables don't overflow their container — allow wrapping */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  table-layout: auto;
+  min-width: 0; /* allow children to shrink inside flex/grid containers */
+}
+
+.table th,
+.table td {
+  white-space: normal; /* allow wrapping */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+  max-width: 28rem; /* prevent single cells from growing too wide */
+}
+
+.table td .btn,
+.table td button,
+.table td .paginate_button {
+  white-space: normal; /* let buttons wrap instead of forcing cell width */
+}
+
+@media (max-width: 520px) {
+  .table th,
+  .table td {
+    font-size: 0.9rem;
+  }
+  .table td .btn,
+  .table td button,
+  .table td .paginate_button {
+    padding: 6px 8px;
+    font-size: 0.85rem;
+  }
+}
+
+/* More aggressive clamping for reservation table columns (Date, Time, Guests) */
+.table.table-striped.responsive-reservations,
+.table.table-hover.responsive-reservations,
+.table.responsive-reservations {
+  table-layout: fixed;
+}
+
+.table.responsive-reservations th:nth-child(2),
+.table.responsive-reservations td:nth-child(2),
+.table.responsive-reservations th:nth-child(3),
+.table.responsive-reservations td:nth-child(3),
+.table.responsive-reservations th:nth-child(4),
+.table.responsive-reservations td:nth-child(4) {
+  max-width: 6.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* allow action buttons to wrap and shrink */
+.table.responsive-reservations td button,
+.table.responsive-reservations td .btn {
+  white-space: normal;
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* utility: apply responsive-reservations class to reservation tables via JS or markup; as fallback, target tables inside .table-responsive */
+.table-responsive > table.table:not(.no-responsive) {
+  min-width: 0;
+}
+
+/* Fallback: clamp long text inside cells to avoid layout break */
+.table-responsive td {
+  min-width: 0;
 }

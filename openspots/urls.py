@@ -22,21 +22,20 @@ urlpatterns = [
         "api/schema/",
         SpectacularAPIView.as_view(permission_classes=[AllowAny]),
         name="openapi-schema",
-    ),    path(
-    "api/docs/swagger/",
-    SpectacularSwaggerView.as_view(url_name="openapi-schema"),
-    name="swagger-ui",
     ),
-
     path(
-    "api/docs/redoc/",
-    SpectacularRedocView.as_view(url_name="openapi-schema"),
-    name="redoc-ui",
+        "api/docs/swagger/",
+        SpectacularSwaggerView.as_view(url_name="openapi-schema"),
+        name="swagger-ui",
+    ),
+    path(
+        "api/docs/redoc/",
+        SpectacularRedocView.as_view(url_name="openapi-schema"),
+        name="redoc-ui",
     ),
     path("api/token/", TokenObtainPairView.as_view()),
     path("api/token/refresh/", TokenRefreshView.as_view()),
     path("api/v1/csrf/", csrf_token, name="csrf-token"),
-
     path("api/v1/", include("venues.api.urls")),
     path("api/v1/accounts/", include("accounts.api.urls")),
 ]
@@ -55,3 +54,6 @@ urlpatterns += [
         name="react-app",
     ),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

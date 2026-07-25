@@ -13,13 +13,12 @@ class VenueImageSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     url = serializers.SerializerMethodField()
     order = serializers.IntegerField(read_only=True)
+    approved = serializers.BooleanField(read_only=True)
+    marked_for_deletion = serializers.BooleanField(read_only=True)
 
     def get_url(self, obj):
         if not obj.image:
             return None
-        request = self.context.get("request")
-        if request:
-            return request.build_absolute_uri(obj.image.url)
         return obj.image.url
 
 
@@ -71,9 +70,6 @@ class VenueSerializer(serializers.ModelSerializer):
         image = self._approved_images(venue, "images").first()
         if not image or not image.image:
             return None
-        request = self.context.get("request")
-        if request:
-            return request.build_absolute_uri(image.image.url)
         return image.image.url
 
     def get_images(self, venue):
