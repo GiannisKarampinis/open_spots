@@ -57,17 +57,20 @@ services:
       retries:                  10
     restart:                    unless-stopped
 
-  web: # frontend (Django ASGI via Daphne)
-    # Built from the repository `Dockerfile`. Exposes internal port 8000
-    # to the other services on the `appnet` network. Environment variables
-    # (DB/Redis/Celery connection info) are passed in so the app can connect
-    # to the services started by Compose.
-    build: .
+  web: # Django API/backend only. Vite runs on the host at port 5173.
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     env_file: .env
     environment:
       DJANGO_RUNNING_IN_DOCKER: "1"
-      DJANGO_DEBUG:             ${DJANGO_DEBUG:-1}
+      DJANGO_DEBUG:             ${DJANGO_DEBUG:-True}
       SECURE_SSL_REDIRECT:      ${SECURE_SSL_REDIRECT:-0}
+      SERVE_REACT_APP:          "False"
+      SITE_URL:                 ${SITE_URL:-http://localhost:8000}
+      FRONTEND_URL:             ${FRONTEND_URL:-http://localhost:5173}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      SECURITY_ALLOWED_CORS_ORIGINS: ${SECURITY_ALLOWED_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
       POSTGRES_DB:              ${POSTGRES_DB:-openspots}
       POSTGRES_USER:            ${POSTGRES_USER:-openspots}
       POSTGRES_PASSWORD:        ${POSTGRES_PASSWORD:-openspots}
@@ -84,7 +87,7 @@ services:
     # Run the ASGI server (Daphne) in the container.
     command:                    daphne -b 0.0.0.0 -p 8000 openspots.asgi:application
     volumes:
-      # `static_data` and `media_data` are named volumes shared with `nginx`.
+      - ./:/app
       - static_data:/app/staticfiles
       - media_data:/app/media
       - ./locale:/app/locale
@@ -135,7 +138,9 @@ services:
     # Celery worker: processes asynchronous tasks enqueued by the app.
     # Runs as an unprivileged user inside the container (uid/gid 65534)
     # to avoid writing files as root on mounted volumes.
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     env_file: .env
     environment:
       DJANGO_RUNNING_IN_DOCKER: "1"
@@ -154,6 +159,7 @@ services:
         condition:              service_healthy
     command:                    celery -A openspots worker -l info --uid=65534 --gid=65534
     volumes:
+      - ./:/app
       - ./locale:/app/locale
     networks:                   [appnet]
     restart:                    unless-stopped
@@ -163,7 +169,9 @@ services:
     # It stores its persistent schedule in `/app/celerybeat/celerybeat-schedule`.
     # The startup command ensures the directory exists and is writable by
     # the unprivileged user used inside the container.
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     env_file: .env
     environment:
       POSTGRES_DB:              ${POSTGRES_DB:-openspots}
@@ -182,6 +190,7 @@ services:
     command: >
       sh -c "mkdir -p /app/celerybeat && chown -R 65534:65534 /app/celerybeat && celery -A openspots beat -l info --schedule=/app/celerybeat/celerybeat-schedule --uid=65534 --gid=65534"
     volumes:
+      - ./:/app
       - celerybeat_data:/app/celerybeat
       - ./locale:/app/locale
     networks:                   [appnet]
@@ -191,6 +200,7 @@ services:
     # Lightweight reverse proxy that serves static/media from the
     # shared named volumes and proxies requests to `web`.
     image:                      nginx:1.27-alpine
+    profiles:                   ["proxy"]
     depends_on:
       - web
     ports:
