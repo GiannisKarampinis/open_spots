@@ -18,6 +18,7 @@ media_backup/
 
 # Node
 node_modules/
+frontend/dist/
 
 # Celery
 celerybeat-schedule

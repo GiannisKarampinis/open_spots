@@ -963,22 +963,33 @@ function ProfileBadge() {
 
 function ImagePreviewStrip({ title, previewId, inputId, inputName, items, pendingDeletedItems = [], onFiles, onRemove, onOpenImage, onReorder }) {
 	const [dragToken, setDragToken] = useState(null);
-	const visibleItems = useMemo(() => [...items, ...pendingDeletedItems], [items, pendingDeletedItems]);
+	const [previewItems, setPreviewItems] = useState(null);
+	const previewItemsRef = useRef(null);
+	const lastHoverTokenRef = useRef(null);
+	const activeItems = previewItems || items;
+	const visibleItems = useMemo(() => [...activeItems, ...pendingDeletedItems], [activeItems, pendingDeletedItems]);
 	const galleryItems = useMemo(() => visibleItems.map((item) => ({
 		src: item.src,
 		alt: item.alt,
 	})), [visibleItems]);
 
-	const moveItem = (fromToken, toToken) => {
-		if (!fromToken || fromToken === toToken) return;
-		const fromIndex = items.findIndex((item) => item.token === fromToken);
-		const toIndex = items.findIndex((item) => item.token === toToken);
-		if (fromIndex < 0 || toIndex < 0) return;
+	const moveItem = (sourceItems, fromToken, toToken) => {
+		if (!fromToken || fromToken === toToken) return sourceItems;
+		const fromIndex = sourceItems.findIndex((item) => item.token === fromToken);
+		const toIndex = sourceItems.findIndex((item) => item.token === toToken);
+		if (fromIndex < 0 || toIndex < 0) return sourceItems;
 
-		const next = [...items];
+		const next = [...sourceItems];
 		const [moved] = next.splice(fromIndex, 1);
 		next.splice(toIndex, 0, moved);
-		onReorder(next.map((item) => item.token));
+		return next;
+	};
+
+	const clearDragPreview = () => {
+		previewItemsRef.current = null;
+		lastHoverTokenRef.current = null;
+		setPreviewItems(null);
+		setDragToken(null);
 	};
 
 	return (
@@ -987,7 +998,7 @@ function ImagePreviewStrip({ title, previewId, inputId, inputName, items, pendin
 				{visibleItems?.length ? (
 					<>
 						{visibleItems.map((item, index) => {
-							const activeIndex = items.findIndex((activeItem) => activeItem.token === item.token);
+							const activeIndex = activeItems.findIndex((activeItem) => activeItem.token === item.token);
 							const isActive = activeIndex >= 0;
 							const isProfile = isActive && activeIndex === 0;
 							const galleryIndex = visibleItems.findIndex((visibleItem) => visibleItem.token === item.token);
@@ -1008,6 +1019,9 @@ function ImagePreviewStrip({ title, previewId, inputId, inputName, items, pendin
 											return;
 										}
 										setDragToken(item.token);
+										previewItemsRef.current = [...items];
+										lastHoverTokenRef.current = item.token;
+										setPreviewItems(previewItemsRef.current);
 										event.dataTransfer.effectAllowed = "move";
 										event.dataTransfer.setData("text/plain", item.token);
 									}}
@@ -1016,13 +1030,26 @@ function ImagePreviewStrip({ title, previewId, inputId, inputName, items, pendin
 										event.preventDefault();
 										event.dataTransfer.dropEffect = "move";
 									}}
+									onDragEnter={(event) => {
+										if (!isActive || !dragToken || lastHoverTokenRef.current === item.token) return;
+										event.preventDefault();
+										const next = moveItem(previewItemsRef.current || items, dragToken, item.token);
+										previewItemsRef.current = next;
+										lastHoverTokenRef.current = item.token;
+										setPreviewItems(next);
+									}}
 									onDrop={(event) => {
 										if (!isActive) return;
 										event.preventDefault();
-										moveItem(event.dataTransfer.getData("text/plain") || dragToken, item.token);
-										setDragToken(null);
+										const fromToken = event.dataTransfer.getData("text/plain") || dragToken;
+										let next = previewItemsRef.current || items;
+										if (lastHoverTokenRef.current !== item.token) {
+											next = moveItem(next, fromToken, item.token);
+										}
+										onReorder(next.map((image) => image.token));
+										clearDragPreview();
 									}}
-									onDragEnd={() => setDragToken(null)}
+									onDragEnd={clearDragPreview}
 								>
 									{isProfile && <ProfileBadge />}
 									{item.status === "pending-approval" && <span className="image-state-label">Pending approval</span>}
