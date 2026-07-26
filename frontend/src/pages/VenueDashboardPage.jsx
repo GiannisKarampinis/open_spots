@@ -1057,8 +1057,8 @@ function snapTime(value) {
 
 // ************************************************************************************************ 
 
-const existingImageToken = (id) => `existing-${id}`;
-const newImageToken = (uid) => `new-local-${uid}`;
+const existingImageToken 	= (id) => `existing-${id}`;
+const newImageToken 			= (uid) => `new-local-${uid}`;
 
 // ************************************************************************************************
 function useOrderedImageUploads({ images = [], requiresApproval = true }) {
@@ -1073,6 +1073,7 @@ function useOrderedImageUploads({ images = [], requiresApproval = true }) {
 	// updating it does not cause another render and it is ony an internal counter.
 
 
+	/* OK - REVIEWED */
 	useEffect(() => { // This effect synchronizes the local records when the backend-provided images change. 
 		setImageRecords((images || []).map((image, index) => ({
 			// Replaces all current records with normalized versions of the supplied backend images.
@@ -1086,7 +1087,7 @@ function useOrderedImageUploads({ images = [], requiresApproval = true }) {
 	}, [images]);
 
 
-
+	/* OK - REVIEWED */
 	const activeImageRecords = useMemo(
 		// useMemo reuses the result until imageRecords changes.
 		// calculates the active images (existing and new) that 
@@ -1098,6 +1099,7 @@ function useOrderedImageUploads({ images = [], requiresApproval = true }) {
 	);
 
 
+	/* OK - REVIEWED */
 	const newImages = useMemo( // active unsaved images (we have uploaded images but we didn't hit the save button yet)
 		() => activeImageRecords.filter((image) => image.type === "new"),
 		[activeImageRecords],
@@ -1695,8 +1697,7 @@ export default function VenueDashboardPage() {
 		}
 	};
 
-	const fetchDash
-	boardCounts = async () => {
+	const fetchDashboardCounts = async () => {
 		try {
 			const res = await getWithAuth(`/api/v1/venues/${venueId}/dashboard-counts/`,
 				{},
