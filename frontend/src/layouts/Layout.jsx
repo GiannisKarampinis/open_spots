@@ -75,7 +75,11 @@ export default function Layout() {
 
     const token = getAccessToken();
 
-    if (token) {
+    // Access tokens intentionally live only in memory, so a browser refresh
+    // clears them while the stored user and HttpOnly refresh cookie remain.
+    // In that case getWithAuth restores the access token before loading the
+    // current profile.
+    if (token || storedUser) {
       getWithAuth("/api/v1/accounts/profile/")
         .then((res) => {
           if (cancelled || !res) return;
@@ -104,13 +108,14 @@ export default function Layout() {
   }, []);
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token || !user) {
+    if (!user) {
       setOwnedVenue(null);
       return undefined;
     }
 
     let cancelled = false;
+    // Do not require an in-memory token here. getWithAuth can restore it from
+    // the secure refresh cookie after a full browser reload.
     getWithAuth("/api/v1/venues/owned/")
       .then((res) => {
         if (!cancelled && res) setOwnedVenue(res.data);

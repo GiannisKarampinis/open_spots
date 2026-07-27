@@ -116,12 +116,45 @@
   line-height: 1.7;
 }
 
+.venue-detail-map-shell {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+}
+
 .venue-detail-map {
   width: 100%;
-  min-height: 270px;
+  height: 320px;
   border: 0;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
+.venue-detail-map-link {
+  position: absolute;
+  z-index: 500;
+  right: 12px;
+  bottom: 24px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(20, 20, 20, 0.88);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+}
+
+.venue-detail-map-link:hover {
+  color: #fff;
+  background: rgba(20, 20, 20, 1);
+  text-decoration: none;
+}
+
+.venue-detail-map .leaflet-popup-content {
+  margin: 12px 16px;
+  color: #202020;
+  line-height: 1.5;
 }
 
 .venue-detail-gallery {

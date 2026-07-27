@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
+import {
+  CircleMarker,
+  MapContainer,
+  Popup,
+  TileLayer,
+  ZoomControl,
+} from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import { authHeaders } from "../utils/auth";
 import { mediaUrl } from "../utils/media";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -54,17 +62,63 @@ function MapPreview({ venue }) {
     return <p className="venue-detail-empty">Map coordinates are not available yet.</p>;
   }
 
-  const delta = 0.006;
-  const bbox = [lng - delta, lat - delta, lng + delta, lat + delta].join(",");
-  const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
+  const position = [lat, lng];
+  const largerMapUrl =
+    `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}` +
+    `#map=16/${lat}/${lng}`;
 
   return (
-    <iframe
-      className="venue-detail-map"
-      title={`${venue.name} map`}
-      src={src}
-      loading="lazy"
-    />
+    <div className="venue-detail-map-shell">
+      <MapContainer
+        key={`${lat}-${lng}`}
+        center={position}
+        zoom={15}
+        scrollWheelZoom={false}
+        zoomControl={false}
+        className="venue-detail-map"
+        aria-label={`${venue.name} map`}
+      >
+        <TileLayer
+          attribution={
+            '&copy; <a href="https://www.openstreetmap.org/copyright">' +
+            'OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">' +
+            "CARTO</a>"
+          }
+          maxZoom={20}
+          subdomains="abcd"
+          url={
+            "https://{s}.basemaps.cartocdn.com/rastertiles/" +
+            "voyager/{z}/{x}/{y}{r}.png"
+          }
+        />
+        <ZoomControl position="topright" />
+        <CircleMarker
+          center={position}
+          radius={10}
+          pathOptions={{
+            color: "#fff",
+            fillColor: "#e63946",
+            fillOpacity: 1,
+            weight: 3,
+          }}
+        >
+          <Popup>
+            <strong>{venue.name}</strong>
+            <br />
+            {venue.location}
+          </Popup>
+        </CircleMarker>
+      </MapContainer>
+
+      <a
+        className="venue-detail-map-link"
+        href={largerMapUrl}
+        target="_blank"
+        rel="noreferrer"
+      >
+        View larger map
+      </a>
+    </div>
   );
 }
 

@@ -1,5 +1,16 @@
 /* venue_list.css - styles for venue list page */
 
+:root {
+    --venue-card-min-width: 220px;
+    --venue-card-max-width: 235px;
+    --venue-card-image-ratio: 16 / 9;
+    --venue-card-gap: 16px;
+    --venue-card-padding: 14px;
+    --venue-card-font-size: 0.75rem;
+    --venue-card-title-scale: 1.35em;
+    --venue-card-icon-size: 1em;
+}
+
 /* --- Venue scroll container --- */
 /* Base horizontal row mode (unchanged) */
 .venue-scroll-container {
@@ -10,7 +21,7 @@
     /* Responsive padding ONLY */
     padding: clamp(8px, 2.5vw, 12px);
 
-    gap: 16px;
+    gap: var(--venue-card-gap);
     scroll-snap-type: x proximity;
     scroll-behavior: smooth;
     border-radius: 10px;
@@ -21,89 +32,42 @@
     -webkit-overflow-scrolling: touch;
 }
 
-/* ===========================
-   GRID MODE (filtered)
-   =========================== */
-
-/* ===========================
-   GRID MODE (filtered)
-   Fixed container at 4 / 2 / 1 columns
-   Gap stays 16px
-   =========================== */
-
-/* ===========================
-   GRID MODE: fixed container width
-   4 cols: 1264px
-   2 cols: 632px
-   1 col : 316px
-   =========================== */
+/* Two-row grid that adds columns horizontally */
 
 .venue-scroll-container.grid-mode {
     display: grid;
-
-    /* fixed spacing + padding */
-    gap: 16px;
-    padding: 8px;              /* 8px on each side -> matches your widths */
-
-    /* fixed background look */
+    grid-template-rows: repeat(2, auto);
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(
+        var(--venue-card-min-width),
+        var(--venue-card-max-width)
+    );
+    gap: var(--venue-card-gap);
+    width: 100%;
+    max-width: 1264px;
+    padding: 8px;
     background-color: var(--scroll-container-bg);
     border-radius: 10px;
-
-    /* center the fixed-width container on the page */
     margin: 0 auto;
-
-    /* no scrollbars in grid */
-    overflow: visible;
-    scroll-snap-type: none;
-    scroll-behavior: auto;
-
-    justify-content: start;    /* columns start at left inside fixed container */
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: #555 #1c1c1c;
+    justify-content: start;
 }
 
-/* fixed card size in grid mode */
 .venue-scroll-container.grid-mode .venue-link {
-    width: 300px;
-    max-width: 300px;
-    flex: initial;             /* cancels flex: 0 0 auto from base .venue-link */
-    scroll-snap-align: unset;
+    width: 100%;
+    max-width: var(--venue-card-max-width);
+    flex: initial;
+    scroll-snap-align: start;
 }
 
 .venue-scroll-container.grid-mode .venue-card {
     width: 100%;
-    max-width: 300px;
-}
-
-/* Desktop: 4 columns -> container width 1264px */
-@media (min-width: 1350px) {
-    .venue-scroll-container.grid-mode {
-        width: 1264px;
-        grid-template-columns: repeat(4, 300px);
-    }
-}
-
-/* Desktop: 3 columns -> container width 1264px */
-@media (min-width: 980px) and (max-width: 1349px) {
-    .venue-scroll-container.grid-mode {
-        width: 948px;
-        grid-template-columns: repeat(3, 300px);
-    }
-}
-
-/* Tablet: 2 columns -> container width 632px */
-@media (min-width: 700px) and (max-width: 979px) {
-    .venue-scroll-container.grid-mode {
-        width: 632px;
-        grid-template-columns: repeat(2, 300px);
-    }
-}
-
-/* Mobile: 1 column -> container width 316px */
-@media (max-width: 699px) {
-    .venue-scroll-container.grid-mode {
-        width: 316px;
-        grid-template-columns: 300px; /* fixed column */
-        justify-content: center;
-    }
+    max-width: var(--venue-card-max-width);
 }
 
 
@@ -128,7 +92,11 @@
 /* Venue card anchor */
 .venue-link {
     flex: 0 0 auto;
-    width: clamp(240px, 80vw, 300px);
+    width: clamp(
+        var(--venue-card-min-width),
+        80vw,
+        var(--venue-card-max-width)
+    );
     text-decoration: none;
     color: inherit;
     scroll-snap-align: start;
@@ -147,10 +115,11 @@
     border-radius:  10px;
     width:          100%;
     height:         100%;
+    font-size:      var(--venue-card-font-size);
     color:          var(--button-text);
     box-shadow:     0 0 10px rgba(255,255,255,0.1);
     transition:     transform 0.2s ease, box-shadow 0.2s ease;
-    max-width:      300px;
+    max-width:      var(--venue-card-max-width);
     box-sizing:     border-box;
 }
 
@@ -160,7 +129,7 @@
 }
 
 .venue-card-content {
-    padding: 16px;
+    padding: var(--venue-card-padding);
     color: var(--button-text);
     /* display: flex; */
     /* flex-direction: column; */
@@ -169,7 +138,8 @@
 
 .venue-card img {
     width: 100%;
-    height: clamp(140px, 30vw, 180px);
+    height: auto;
+    aspect-ratio: var(--venue-card-image-ratio);
     object-fit: cover;
     border-radius: 8px;
     display: block;
@@ -179,7 +149,7 @@
 .venue-card h3 {
     font-family: var(--global-font-family);
     font-weight: 700;
-    font-size: clamp(1.1rem, 4vw, 1.4rem);
+    font-size: var(--venue-card-title-scale);
     margin: 6px 0 8px 0;
     color: var(--button-text);
     text-overflow: ellipsis;
@@ -193,7 +163,7 @@
     justify-content: space-between;
     align-items: center;
     margin: 6px 0;
-    font-size: 0.95rem;
+    font-size: inherit;
     color: var(--button-text);
     width: 100%;
     box-sizing: border-box;
@@ -228,11 +198,10 @@
 }
 
 .venue-info-item svg {
-    width: 16px;
-    height: 16px;
+    width: var(--venue-card-icon-size);
+    height: var(--venue-card-icon-size);
     fill: var(--info-color);
     flex-shrink: 0;
-    margin-top: 2px;
 }
 
 .venue-info-item.rating {
