@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import {
   CircleMarker,
@@ -9,7 +9,7 @@ import {
   ZoomControl,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { authHeaders } from "../utils/auth";
+import { authHeaders, getAccessToken } from "../utils/auth";
 import { mediaUrl } from "../utils/media";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -63,6 +63,7 @@ function MapPreview({ venue }) {
   }
 
   const position = [lat, lng];
+
   const largerMapUrl =
     `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}` +
     `#map=16/${lat}/${lng}`;
@@ -91,7 +92,9 @@ function MapPreview({ venue }) {
             "voyager/{z}/{x}/{y}{r}.png"
           }
         />
+
         <ZoomControl position="topright" />
+
         <CircleMarker
           center={position}
           radius={10}
@@ -131,6 +134,11 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
   const submitReview = async (event) => {
     event.preventDefault();
 
+    if (!rating) {
+      setStatus("Please select a rating.");
+      return;
+    }
+
     try {
       const res = await axios.post(
         `/api/v1/venues/${venueId}/reviews/`,
@@ -139,7 +147,7 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
       );
 
       onReviewSubmitted(res.data);
-      setRating(5);
+      setRating(0);
       setHoverRating(0);
       setComment("");
       setStatus("Your review has been submitted.");
@@ -238,11 +246,19 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
 }
 
 function ReservationCard({ venueId }) {
+  const location = useLocation();
+  const isLoggedIn = Boolean(getAccessToken());
+
+  const loginPath = `/accounts/login?next=${encodeURIComponent(
+    `${location.pathname}${location.search}`
+  )}`;
+
   const [step, setStep] = useState(1);
   const [date, setDate] = useState(todayIso());
   const [slots, setSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [status, setStatus] = useState("");
+
   const [form, setForm] = useState({
     firstname: "",
     lastname: "",
@@ -255,23 +271,29 @@ function ReservationCard({ venueId }) {
   });
 
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     let cancelled = false;
 
     async function fetchSlots() {
       setSelectedSlot(null);
+
       try {
         const res = await axios.get(`/api/v1/venues/${venueId}/slots/`, {
           params: { date },
         });
+
         const now = new Date();
         const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
-          now.getMinutes(),
+          now.getMinutes()
         ).padStart(2, "0")}`;
+
         const available = (res.data.slots || []).filter((slot) => {
           if (!slot.is_available) return false;
           if (date !== todayIso()) return true;
           return slot.is_next_day || slot.time >= currentTime;
         });
+
         if (!cancelled) setSlots(available);
       } catch (err) {
         if (!cancelled) {
@@ -282,10 +304,11 @@ function ReservationCard({ venueId }) {
     }
 
     fetchSlots();
+
     return () => {
       cancelled = true;
     };
-  }, [date, venueId]);
+  }, [date, venueId, isLoggedIn]);
 
   const updateField = (event) => {
     const { name, value } = event.target;
@@ -294,6 +317,12 @@ function ReservationCard({ venueId }) {
 
   const submitReservation = async (event) => {
     event.preventDefault();
+
+    if (!isLoggedIn) {
+      setStatus("Log in before submitting a reservation.");
+      return;
+    }
+
     if (!selectedSlot) {
       setStatus("Choose an available time first.");
       return;
@@ -309,14 +338,16 @@ function ReservationCard({ venueId }) {
           date: selectedSlot.slot_date,
           time: selectedSlot.time,
         },
-        { headers: authHeaders() },
+        { headers: authHeaders() }
       );
+
       setStatus("Reservation submitted. Await confirmation.");
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         setStatus("Log in before submitting a reservation.");
         return;
       }
+
       setStatus("Could not submit the reservation. Please check the details.");
     }
   };
@@ -324,136 +355,210 @@ function ReservationCard({ venueId }) {
   return (
     <aside className="venue-detail-reserve">
       <h3>Reserve a Table</h3>
-      <form onSubmit={submitReservation}>
-        <div className="venue-detail-step-tabs">
-          {[faUser, faClock, faComment].map((icon, index) => {
-            const stepNumber = index + 1;
-            return (
-              <button
-                className={step === stepNumber ? "active" : ""}
-                key={stepNumber}
-                type="button"
-                onClick={() => setStep(stepNumber)}
-                aria-label={`Step ${stepNumber}`}
-              >
-                <FontAwesomeIcon icon={icon} />
-              </button>
-            );
-          })}
-        </div>
 
-        {step === 1 && (
-          <section className="venue-detail-form-step">
-            <h4>Your Information</h4>
-            <label>
-              First name
-              <input name="firstname" value={form.firstname} onChange={updateField} required />
-            </label>
-            <label>
-              Last name
-              <input name="lastname" value={form.lastname} onChange={updateField} required />
-            </label>
-            <label>
-              Email
-              <input name="email" type="email" value={form.email} onChange={updateField} required />
-            </label>
-            <label>
-              Phone
-              <input name="phone" value={form.phone} onChange={updateField} required />
-            </label>
-            <button type="button" onClick={() => setStep(2)}>
-              Next
-            </button>
-          </section>
-        )}
+      {!isLoggedIn ? (
+        <p className="venue-detail-login-message">
+          <Link to={loginPath}>Login</Link> to make a reservation.
+        </p>
+      ) : (
+        <form onSubmit={submitReservation}>
+          <div className="venue-detail-step-tabs">
+            {[faUser, faClock, faComment].map((icon, index) => {
+              const stepNumber = index + 1;
 
-        {step === 2 && (
-          <section className="venue-detail-form-step">
-            <h4>Reservation Details</h4>
-            <label>
-              Date
-              <input name="date" type="date" min={todayIso()} value={date} onChange={(e) => setDate(e.target.value)} />
-            </label>
-            <div>
-              <span className="venue-detail-label">Time</span>
-              <div className="venue-detail-slots">
-                {slots.length ? (
-                  slots.map((slot) => (
-                    <button
-                      className={selectedSlot === slot ? "active" : ""}
-                      key={`${slot.slot_date}-${slot.time}`}
-                      type="button"
-                      onClick={() => setSelectedSlot(slot)}
-                    >
-                      {slot.time}
-                      {slot.is_next_day ? " +1" : ""}
-                    </button>
-                  ))
-                ) : (
-                  <p>No available times for this date.</p>
-                )}
-              </div>
-            </div>
-            <label>
-              Number of guests
-              <input name="guests" min="1" type="number" value={form.guests} onChange={updateField} required />
-            </label>
-            <div className="venue-detail-button-row">
-              <button type="button" onClick={() => setStep(1)}>
-                Back
-              </button>
-              <button type="button" onClick={() => setStep(3)}>
+              return (
+                <button
+                  className={step === stepNumber ? "active" : ""}
+                  key={stepNumber}
+                  type="button"
+                  onClick={() => setStep(stepNumber)}
+                  aria-label={`Step ${stepNumber}`}
+                >
+                  <FontAwesomeIcon icon={icon} />
+                </button>
+              );
+            })}
+          </div>
+
+          {step === 1 && (
+            <section className="venue-detail-form-step">
+              <h4>Your Information</h4>
+
+              <label>
+                First name
+                <input
+                  name="firstname"
+                  value={form.firstname}
+                  onChange={updateField}
+                  required
+                />
+              </label>
+
+              <label>
+                Last name
+                <input
+                  name="lastname"
+                  value={form.lastname}
+                  onChange={updateField}
+                  required
+                />
+              </label>
+
+              <label>
+                Email
+                <input
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={updateField}
+                  required
+                />
+              </label>
+
+              <label>
+                Phone
+                <input
+                  name="phone"
+                  value={form.phone}
+                  onChange={updateField}
+                  required
+                />
+              </label>
+
+              <button type="button" onClick={() => setStep(2)}>
                 Next
               </button>
-            </div>
-          </section>
-        )}
+            </section>
+          )}
 
-        {step === 3 && (
-          <section className="venue-detail-form-step">
-            <h4>Additional Notes</h4>
-            <label>
-              Special requests
-              <select name="special_requests" value={form.special_requests} onChange={updateField}>
-                <option value="none">None</option>
-                <option value="vegan">Vegan</option>
-                <option value="vegetarian">Vegetarian</option>
-                <option value="gluten_free">Gluten-free</option>
-                <option value="wheelchair">Wheelchair accessible</option>
-                <option value="other">Other</option>
-              </select>
-            </label>
-            <label>
-              Allergies
-              <textarea name="allergies" rows="2" value={form.allergies} onChange={updateField} />
-            </label>
-            <label>
-              Comments
-              <textarea name="comments" rows="2" value={form.comments} onChange={updateField} />
-            </label>
-            <div className="venue-detail-button-row">
-              <button type="button" onClick={() => setStep(2)}>
-                Back
-              </button>
-              <button type="submit">Submit Reservation</button>
-            </div>
-          </section>
-        )}
+          {step === 2 && (
+            <section className="venue-detail-form-step">
+              <h4>Reservation Details</h4>
 
-        {status && <p className="venue-detail-status">{status}</p>}
-      </form>
+              <label>
+                Date
+                <input
+                  name="date"
+                  type="date"
+                  min={todayIso()}
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </label>
+
+              <div>
+                <span className="venue-detail-label">Time</span>
+
+                <div className="venue-detail-slots">
+                  {slots.length ? (
+                    slots.map((slot) => (
+                      <button
+                        className={selectedSlot === slot ? "active" : ""}
+                        key={`${slot.slot_date}-${slot.time}`}
+                        type="button"
+                        onClick={() => setSelectedSlot(slot)}
+                      >
+                        {slot.time}
+                        {slot.is_next_day ? " +1" : ""}
+                      </button>
+                    ))
+                  ) : (
+                    <p>No available times for this date.</p>
+                  )}
+                </div>
+              </div>
+
+              <label>
+                Number of guests
+                <input
+                  name="guests"
+                  min="1"
+                  type="number"
+                  value={form.guests}
+                  onChange={updateField}
+                  required
+                />
+              </label>
+
+              <div className="venue-detail-button-row">
+                <button type="button" onClick={() => setStep(1)}>
+                  Back
+                </button>
+
+                <button type="button" onClick={() => setStep(3)}>
+                  Next
+                </button>
+              </div>
+            </section>
+          )}
+
+          {step === 3 && (
+            <section className="venue-detail-form-step">
+              <h4>Additional Notes</h4>
+
+              <label>
+                Special requests
+                <select
+                  name="special_requests"
+                  value={form.special_requests}
+                  onChange={updateField}
+                >
+                  <option value="none">None</option>
+                  <option value="vegan">Vegan</option>
+                  <option value="vegetarian">Vegetarian</option>
+                  <option value="gluten_free">Gluten-free</option>
+                  <option value="wheelchair">Wheelchair accessible</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+
+              <label>
+                Allergies
+                <textarea
+                  name="allergies"
+                  rows="2"
+                  value={form.allergies}
+                  onChange={updateField}
+                />
+              </label>
+
+              <label>
+                Comments
+                <textarea
+                  name="comments"
+                  rows="2"
+                  value={form.comments}
+                  onChange={updateField}
+                />
+              </label>
+
+              <div className="venue-detail-button-row">
+                <button type="button" onClick={() => setStep(2)}>
+                  Back
+                </button>
+
+                <button type="submit">Submit Reservation</button>
+              </div>
+            </section>
+          )}
+
+          {status && <p className="venue-detail-status">{status}</p>}
+        </form>
+      )}
     </aside>
   );
 }
 
 export default function VenueDetailPage() {
   const { venueId } = useParams();
+
   const [venue, setVenue] = useState(null);
   const [activeTab, setActiveTab] = useState("about");
   const [modal, setModal] = useState({ images: [], index: -1 });
 
   useEffect(() => {
     let cancelled = false;
+
     async function fetchVenue() {
       const res = await axios.get(`/api/v1/venues/${venueId}/`);
       if (!cancelled) setVenue(res.data);
@@ -462,6 +567,7 @@ export default function VenueDetailPage() {
     fetchVenue().catch(() => {
       if (!cancelled) setVenue(false);
     });
+
     return () => {
       cancelled = true;
     };
@@ -469,6 +575,7 @@ export default function VenueDetailPage() {
 
   const heroImage = mediaUrl(venue?.first_image);
   const modalImage = modal.index >= 0 ? modal.images[modal.index] : null;
+
   const tabs = useMemo(
     () => [
       ["about", "About"],
@@ -476,7 +583,7 @@ export default function VenueDetailPage() {
       ["photos", "Photos"],
       ["reviews", "Reviews"],
     ],
-    [],
+    []
   );
 
   if (venue === false) {
@@ -492,19 +599,30 @@ export default function VenueDetailPage() {
     return <div className="venue-detail-state">Loading venue...</div>;
   }
 
-  const openModal = (images, index) => setModal({ images, index });
-  const closeModal = () => setModal({ images: [], index: -1 });
+  const openModal = (images, index) => {
+    setModal({ images, index });
+  };
+
+  const closeModal = () => {
+    setModal({ images: [], index: -1 });
+  };
+
   const moveModal = (delta) => {
     setModal((current) => ({
       ...current,
       index: (current.index + delta + current.images.length) % current.images.length,
     }));
   };
+
   const handleReviewSubmitted = (review) => {
     setVenue((current) => {
       const reviews = current.reviews || [];
       const withoutCurrentUserReview = reviews.filter((item) => item.id !== review.id);
-      return { ...current, reviews: [review, ...withoutCurrentUserReview] };
+
+      return {
+        ...current,
+        reviews: [review, ...withoutCurrentUserReview],
+      };
     });
   };
 
@@ -515,8 +633,10 @@ export default function VenueDetailPage() {
         style={heroImage ? { backgroundImage: `url("${heroImage}")` } : undefined}
       >
         <div className="venue-detail-hero-overlay" />
+
         <div className="venue-detail-hero-title">
           <h1>{venue.name}</h1>
+
           <p>
             <FontAwesomeIcon icon={faLocationDot} />
             {venue.location}
@@ -546,6 +666,7 @@ export default function VenueDetailPage() {
                   <FontAwesomeIcon icon={faChair} />
                   {venue.is_full ? "Full" : "Available"}
                 </span>
+
                 {venue.average_rating > 0 && (
                   <span>
                     <FontAwesomeIcon icon={faStar} />
@@ -553,9 +674,11 @@ export default function VenueDetailPage() {
                   </span>
                 )}
               </div>
+
               <p className="venue-detail-description">
                 {venue.description || "This venue has not added a description yet."}
               </p>
+
               <h3>Location</h3>
               <MapPreview venue={venue} />
             </article>
@@ -564,6 +687,7 @@ export default function VenueDetailPage() {
           {activeTab === "menu" && (
             <article className="venue-detail-panel">
               <h3>Menu</h3>
+
               <Gallery
                 images={venue.menu_images}
                 emptyText="This venue has not added a menu yet."
@@ -575,6 +699,7 @@ export default function VenueDetailPage() {
           {activeTab === "photos" && (
             <article className="venue-detail-panel">
               <h3>Photos</h3>
+
               <Gallery
                 images={venue.images}
                 emptyText="No photos available."
@@ -586,6 +711,7 @@ export default function VenueDetailPage() {
           {activeTab === "reviews" && (
             <article className="venue-detail-panel">
               <h3>Reviews</h3>
+
               <Reviews
                 reviews={venue.reviews}
                 venueId={venue.id}
@@ -600,9 +726,15 @@ export default function VenueDetailPage() {
 
       {modalImage && (
         <div className="venue-detail-modal" onClick={closeModal} role="presentation">
-          <button className="venue-detail-modal-close" type="button" onClick={closeModal} aria-label="Close">
+          <button
+            className="venue-detail-modal-close"
+            type="button"
+            onClick={closeModal}
+            aria-label="Close"
+          >
             <FontAwesomeIcon icon={faXmark} />
           </button>
+
           <button
             className="venue-detail-modal-nav prev"
             type="button"
@@ -614,7 +746,13 @@ export default function VenueDetailPage() {
           >
             <FontAwesomeIcon icon={faChevronLeft} />
           </button>
-          <img src={mediaUrl(modalImage.url)} alt="" onClick={(event) => event.stopPropagation()} />
+
+          <img
+            src={mediaUrl(modalImage.url)}
+            alt=""
+            onClick={(event) => event.stopPropagation()}
+          />
+
           <button
             className="venue-detail-modal-nav next"
             type="button"
