@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import {
   CircleMarker,
@@ -9,7 +9,7 @@ import {
   ZoomControl,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { authHeaders, getAccessToken } from "../utils/auth";
+import { authHeaders, getAccessToken, postWithAuth } from "../utils/auth";
 import { mediaUrl } from "../utils/media";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -245,8 +245,38 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
   );
 }
 
+function getReservationErrorMessage(data) {
+  if (!data) {
+    return "Could not submit the reservation. Please check the details.";
+  }
+
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (data.detail) {
+    return data.detail;
+  }
+
+  if (data.non_field_errors?.length) {
+    return data.non_field_errors[0];
+  }
+
+  const firstFieldError = Object.entries(data).find(([, value]) => {
+    return Array.isArray(value) && value.length > 0;
+  });
+
+  if (firstFieldError) {
+    const [field, value] = firstFieldError;
+    return `${field}: ${value[0]}`;
+  }
+
+  return "Could not submit the reservation. Please check the details.";
+}
+
 function ReservationCard({ venueId }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const isLoggedIn = Boolean(getAccessToken());
 
   const loginPath = `/accounts/login?next=${encodeURIComponent(
@@ -329,26 +359,35 @@ function ReservationCard({ venueId }) {
     }
 
     try {
-      await axios.post(
+      const res = await postWithAuth(
         "/api/v1/reservations/",
         {
           venue_id: Number(venueId),
           ...form,
           guests: Number(form.guests),
+          special_requests: form.special_requests !== "none",
+          comments:
+            form.special_requests !== "none"
+              ? `Special request: ${form.special_requests}. ${form.comments || ""}`.trim()
+              : form.comments,
           date: selectedSlot.slot_date,
-          time: selectedSlot.time,
+          time: String(selectedSlot.time || "").slice(0, 5),
         },
-        { headers: authHeaders() }
+        {},
+        {
+          onUnauthenticated: () => {
+            setStatus("Log in before submitting a reservation.");
+          },
+        }
       );
 
-      setStatus("Reservation submitted. Await confirmation.");
-    } catch (err) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        setStatus("Log in before submitting a reservation.");
-        return;
-      }
+      if (!res) return;
 
-      setStatus("Could not submit the reservation. Please check the details.");
+      navigate("/venues/reservation-pending");
+    } catch (err) {
+      console.log("Reservation error:", err.response?.status, err.response?.data);
+
+      setStatus(getReservationErrorMessage(err.response?.data));
     }
   };
 

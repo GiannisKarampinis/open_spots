@@ -470,11 +470,11 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
     cursor: pointer;
     border-bottom: 5px solid transparent;
     transition: border-color 0.3s;
-    color: var(--primary-color);
+    color: var(--button-text);
 }
 .tabs button.active {
     border-color: var(--primary-hover);
-    color: var(--primary-hover);
+    color: var(--button-text);
     font-weight: 600;
 }
 
