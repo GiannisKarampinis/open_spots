@@ -1,12 +1,12 @@
 /* Container */
 .max-w-xl.mx-auto.mt-8.p-6.bg-white.rounded.shadow {
-    background-color: #2a2a2a;               /* Dark gray background */
+    background-color: var(--surface-color);               /* Dark gray background */
     padding: 40px;                           /* Padding inside container */
     border-radius: 10px;                     /* Rounded corners */
     box-shadow: 0 0 25px rgba(255,255,255,0.1); /* Soft white glow */
     max-width: 500px;                        /* Max width */
     margin: 60px auto;                       /* Center horizontally with vertical margin */
-    color: white;                           /* Text color */
+    color: var(--button-text);                           /* Text color */
     font-family: var(--global-font-family) /* Font */
 }
 
@@ -16,14 +16,14 @@
     margin-bottom: 30px;                     /* Space below heading */
     font-weight: 700;                        /* Bold */
     font-size: 2rem;                         /* Large font */
-    color: #eee;                            /* Light gray */
+    color: var(--button-text);                            /* Light gray */
 }
 
 /* Form labels */
 form label {
     display: block;                         /* Full width */
     margin: 10px 0 5px;                    /* Vertical spacing */
-    color: white;
+    color: var(--button-text);
 }
 
 /* Form inputs */

@@ -223,7 +223,12 @@ export default function ReservationFormPage({ mode = "create" }) {
   };
 
   return (
-    <div className="max-w-xl mx-auto mt-8 p-6 bg-white rounded shadow reservation-form-page">
+    <div
+      id="reservationForm"
+      className={`reservation-form-page ${
+        mode === "edit" ? "reservation-form-page-edit" : "reservation-form-page-create"
+      }`}
+    >
       <h2 className="text-2xl font-semibold mb-4">
         {mode === "edit" ? "Edit Reservation for" : "Reserve at"}{" "}
         {venue?.name || "..."}
@@ -295,39 +300,31 @@ export default function ReservationFormPage({ mode = "create" }) {
           </label>
         </p>
 
-        <div className="venue-detail-slots time-slot-container">
-          {slots.length ? (
-            slots.map((slot) => (
-              <button
-                type="button"
-                key={`${slot.slot_date}-${slot.time}`}
-                className={
-                  form.time === String(slot.time || "").slice(0, 5) &&
-                  form.date === slot.slot_date
-                    ? "active time-slot"
-                    : "time-slot"
-                }
-                onClick={() => chooseSlot(slot)}
-              >
-                {String(slot.time || "").slice(0, 5)}
-                {slot.is_next_day ? " +1" : ""}
-              </button>
-            ))
-          ) : (
-            <p>No available times for this date.</p>
-          )}
-        </div>
-
         <p>
           <label>
             Time
-            <input
-              name="time"
-              value={form.time}
-              onChange={updateField}
-              required
-              placeholder="HH:MM"
-            />
+            <div className="venue-detail-slots time-slot-container">
+              {slots.length ? (
+                slots.map((slot) => (
+                  <button
+                    type="button"
+                    key={`${slot.slot_date}-${slot.time}`}
+                    className={
+                      form.time === String(slot.time || "").slice(0, 5) &&
+                      form.date === slot.slot_date
+                        ? "active time-slot"
+                        : "time-slot"
+                    }
+                    onClick={() => chooseSlot(slot)}
+                  >
+                    {String(slot.time || "").slice(0, 5)}
+                    {slot.is_next_day ? " +1" : ""}
+                  </button>
+                ))
+              ) : (
+                <p>No available times for this date.</p>
+              )}
+            </div>
           </label>
         </p>
 
