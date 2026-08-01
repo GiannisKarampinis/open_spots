@@ -88,7 +88,7 @@
 #reservationForm button[type="submit"] {
     width: 100%;
     padding: 14px;
-    margin-top: 20px;
+    margin-top: 10px;
     background-color: var(--primary-color);
     color: var(--button-text);
     border-radius: 6px;

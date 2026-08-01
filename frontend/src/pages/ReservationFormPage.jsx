@@ -173,18 +173,25 @@ export default function ReservationFormPage({ mode = "create" }) {
 
     const selectedSpecialRequest = form.special_requests;
 
-    const payload = {
-      ...form,
+    const basePayload = {
+      firstname: form.firstname,
+      lastname: form.lastname,
+      email: form.email,
+      phone: form.phone,
+      date: form.date,
       time: String(form.time || "").slice(0, 5),
       guests: Number(form.guests),
-      venue_id: Number(mode === "edit" ? venue?.id : venueId),
-
       special_requests: selectedSpecialRequest !== "none",
-
+      allergies: form.allergies,
       comments:
         selectedSpecialRequest !== "none"
           ? `Special request: ${selectedSpecialRequest}. ${form.comments || ""}`.trim()
           : form.comments,
+    };
+
+    const createPayload = {
+      ...basePayload,
+      venue_id: Number(venueId),
     };
 
     try {
@@ -193,14 +200,14 @@ export default function ReservationFormPage({ mode = "create" }) {
       if (mode === "edit") {
         res = await patchWithAuth(
           `/api/v1/reservations/${reservationId}/`,
-          payload,
+          basePayload,
           {},
           { onUnauthenticated: () => navigate("/accounts/login") }
         );
       } else {
         res = await postWithAuth(
           "/api/v1/reservations/",
-          payload,
+          createPayload,
           {},
           { onUnauthenticated: () => navigate("/accounts/login") }
         );
@@ -216,7 +223,13 @@ export default function ReservationFormPage({ mode = "create" }) {
     } catch (err) {
       console.log("Reservation error:", err.response?.status, err.response?.data);
 
-      setMessage(getErrorMessage(err.response?.data));
+      const data = err.response?.data;
+
+      if (typeof data === "string" && data.includes("<!doctype html>")) {
+        setMessage("Server error while saving reservation. Check Django logs.");
+      } else {
+        setMessage(getErrorMessage(data));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -390,13 +403,18 @@ export default function ReservationFormPage({ mode = "create" }) {
           {submitting ? "Saving..." : mode === "edit" ? "Save Changes" : "Reserve"}
         </button>
 
-        <Link
-          to={mode === "edit" ? "/venues/my-reservations" : `/venues/${venueId}`}
+        <button
+          type="button"
+          onClick={() =>
+            navigate(
+              mode === "edit" ? "/venues/my-reservations" : `/venues/${venueId}`
+            )
+          }
           className="text-blue-500 text-sm mt-4 inline-block"
         >
           {" "}
           Back
-        </Link>
+        </button>
       </form>
     </div>
   );
