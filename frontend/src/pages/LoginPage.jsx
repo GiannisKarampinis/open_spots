@@ -91,15 +91,26 @@ export default function LoginPage() {
 
       navigate(next || res.data.redirect_to || "/");
     } catch (err) {
-      const data = err.response?.data || {};
+      console.log("Login error status:", err.response?.status);
+      console.log("Login error data:", err.response?.data);
 
-      if (data.requires_verification) {
+      const data = err.response?.data;
+
+      if (data?.requires_verification) {
         setMessage(data.detail || "Please verify your email before continuing.");
         setTimeout(() => navigate("/accounts/verify-email"), 600);
-      } else if (typeof data === "object") {
-        setErrors(data);
+      } else if (data?.detail) {
+        setMessage(data.detail);
+      } else if (data?.non_field_errors?.length) {
+        setMessage(data.non_field_errors[0]);
+      } else if (data?.username?.length) {
+        setMessage(`Username: ${data.username[0]}`);
+      } else if (data?.password?.length) {
+        setMessage(`Password: ${data.password[0]}`);
+      } else if (typeof data === "string") {
+        setMessage(data);
       } else {
-        setMessage("Login failed. Please check your credentials.");
+        setMessage("Login failed. Please check the browser console and Django logs.");
       }
     } finally {
       setSubmitting(false);

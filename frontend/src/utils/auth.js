@@ -15,8 +15,10 @@ function clearStoredTokens() {
   LEGACY_REFRESH_KEYS.forEach((key) => localStorage.removeItem(key));
 }
 
-export async function ensureCsrfToken() {
-  if (cachedCsrfToken) {
+export async function ensureCsrfToken(options = {}) {
+  const { fresh = false } = options;
+
+  if (!fresh && cachedCsrfToken) {
     return cachedCsrfToken;
   }
 
@@ -24,9 +26,27 @@ export async function ensureCsrfToken() {
     withCredentials: true,
   });
 
-  cachedCsrfToken = res.data.csrfToken;
+  const token = res.data.csrfToken;
 
+  if (!token || typeof token !== "string") {
+    throw new Error("CSRF endpoint did not return a valid csrfToken.");
+  }
+
+  cachedCsrfToken = token;
   return cachedCsrfToken;
+}
+
+export async function postWithCsrf(url, data = {}, config = {}) {
+  const csrfToken = await ensureCsrfToken({ fresh: true });
+
+  return axios.post(url, data, {
+    ...config,
+    withCredentials: true,
+    headers: {
+      ...(config.headers || {}),
+      "X-CSRFToken": csrfToken,
+    },
+  });
 }
 
 export function getAccessToken() {
@@ -56,28 +76,35 @@ export function storeAuthResponse(data) {
   if (data.user) {
     localStorage.setItem(USER_KEY, JSON.stringify(data.user));
   }
+
   clearStoredTokens();
   window.dispatchEvent(new Event("auth:changed"));
 }
 
 export function clearStoredAuth() {
   accessToken = null;
+  cachedCsrfToken = null;
+
   clearStoredTokens();
   localStorage.removeItem(USER_KEY);
+
   window.dispatchEvent(new Event("auth:changed"));
 }
 
 export function refreshAccessToken() {
   if (!refreshPromise) {
-    refreshPromise = axios.post("/api/token/refresh/", {}, { withCredentials: true })
+    refreshPromise = axios
+      .post("/api/token/refresh/", {}, { withCredentials: true })
       .then((res) => {
         const access = res.data.access;
+
         if (!access) {
           throw new Error("Refresh response did not include an access token.");
         }
 
         accessToken = access;
         clearStoredTokens();
+
         window.dispatchEvent(new Event("auth:changed"));
         return access;
       })
@@ -95,7 +122,13 @@ export function refreshAccessToken() {
 
 export async function logoutSession() {
   try {
-    await axios.post("/api/v1/accounts/logout/", {}, { withCredentials: true });
+    await axios.post(
+      "/api/v1/accounts/logout/",
+      {},
+      {
+        withCredentials: true,
+      }
+    );
   } catch {
     // Ignore backend logout failure; frontend auth must still be cleared.
   } finally {
@@ -103,7 +136,13 @@ export async function logoutSession() {
   }
 }
 
-export async function requestWithAuth(method, url, data = null, config = {}, options = {}) {
+export async function requestWithAuth(
+  method,
+  url,
+  data = null,
+  config = {},
+  options = {}
+) {
   let token = getAccessToken();
 
   if (!token) {
@@ -116,8 +155,12 @@ export async function requestWithAuth(method, url, data = null, config = {}, opt
     }
   }
 
-  const csrfToken = ["post", "patch", "put", "delete"].includes(method.toLowerCase())
-    ? await ensureCsrfToken()
+  const needsCsrf = ["post", "patch", "put", "delete"].includes(
+    method.toLowerCase()
+  );
+
+  const csrfToken = needsCsrf
+    ? await ensureCsrfToken({ fresh: true })
     : "";
 
   const requestConfig = {

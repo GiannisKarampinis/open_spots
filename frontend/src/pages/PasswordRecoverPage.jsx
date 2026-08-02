@@ -1,38 +1,44 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import "../styles/password_recover.css";
-import { ensureCsrfToken } from "../utils/auth";
+import { postWithCsrf } from "../utils/auth";
 
 export default function PasswordRecoverPage() {
   const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async (event) => {
     event.preventDefault();
+
     setSubmitting(true);
     setMessage("");
 
     try {
-      const csrfToken = await ensureCsrfToken();
+      const res = await postWithCsrf("/api/v1/accounts/password/recover/", {
+        email,
+      });
 
-      const res = await axios.post(
-        "/api/v1/accounts/password/recover/",
-        { email },
-        {
-          withCredentials: true,
-          headers: {
-            "X-CSRFToken": csrfToken,
-          },
-        }
+      setMessage(
+        res.data.detail ||
+          "If the email exists, a verification code has been sent."
       );
 
-      setMessage(res.data.detail || "If the email exists, a verification code has been sent.");
-      setTimeout(() => navigate("/accounts/verify-email"), 700);
+      setTimeout(() => {
+        navigate("/accounts/verify-email");
+      }, 700);
     } catch (err) {
-      setMessage(err.response?.data?.detail || "Could not start password recovery.");
+      const data = err.response?.data;
+
+      if (data?.detail) {
+        setMessage(data.detail);
+      } else if (data?.email?.length) {
+        setMessage(data.email[0]);
+      } else {
+        setMessage("Could not start password recovery.");
+      }
     } finally {
       setSubmitting(false);
     }
