@@ -498,7 +498,7 @@ function ReservationCard({ venueId }) {
                         onClick={() => setSelectedSlot(slot)}
                       >
                         {slot.time}
-                        {slot.is_next_day ? " +1" : ""}
+                        {/*{slot.is_next_day ? " +1" : ""}*/}
                       </button>
                     ))
                   ) : (
