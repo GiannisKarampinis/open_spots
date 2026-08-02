@@ -624,7 +624,7 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 }
 .tabs button.active {
     border-color: var(--primary-hover);
-    color: var(--button-text);
+    color: var(--primary-hover);
     font-weight: 600;
 }
 
