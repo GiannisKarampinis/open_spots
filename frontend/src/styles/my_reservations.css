@@ -10,14 +10,14 @@
     font-weight: 700;
 }
 
-.tabs {
+.reservations-container .tabs {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1rem;
     flex-wrap: wrap;
 }
 
-.tab-button {
+.reservations-container .tab-button {
     padding: 0.6rem 1.2rem;
     border: none;
     background: var(--background-color);
@@ -30,21 +30,21 @@
     gap: 0.5rem;
 }
 
-.tab-button:hover {
+.reservations-container .tab-button:hover {
     background: var(--button-text-hover);
     transform: translateY(-2px);
 }
 
-.tab-button.active {
+.reservations-container .tab-button.active {
     background: var(--surface-gradient);
     color: white;
 }
 
-.tab-content {
+.reservations-container > .tab-content {
     display: none;
 }
 
-.tab-content.active {
+.reservations-container > .tab-content.active {
     display: block;
 }
 
