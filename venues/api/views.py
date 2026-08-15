@@ -31,6 +31,7 @@ from venues.models import (
 from venues.services.emails import (
     send_new_venue_application_email,
     send_venue_verification_code,
+    send_reservation_notification,
 )
 from venues.services.working_days import ensure_working_days
 from venues.utils import user_can_manage_venue
@@ -48,6 +49,7 @@ from .dashboard_helpers import (
 )
 from .serializers import (
     ReservationSerializer,
+    UpcomingReservationSerializer,
     VenueApplicationSerializer,
     VenueEmailSerializer,
     VenueSerializer,
@@ -58,6 +60,43 @@ from .serializers import (
 
 
 SEND_COOLDOWN_SECONDS = 45
+
+
+def _reservation_payload(reservation):
+    return {
+        "id": reservation.id,
+        "customer_name": reservation.full_name,
+        "venue_id": reservation.venue_id,
+        "venue_name": reservation.venue.name if reservation.venue_id else "",
+        "venue_location": reservation.venue.location if reservation.venue_id else "",
+        "is_upcoming": reservation.is_upcoming(),
+        "firstname": reservation.firstname,
+        "lastname": reservation.lastname,
+        "email": reservation.email,
+        "phone": reservation.phone,
+        "date": reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
+        "time": reservation.time.strftime("%H:%M") if reservation.time else None,
+        "guests": getattr(reservation, "guests", None),
+        "seen": bool(reservation.seen),
+        "status": reservation.status,
+        "arrival_status": reservation.arrival_status,
+        "special_requests": reservation.special_requests,
+        "allergies": reservation.allergies,
+        "comments": reservation.comments,
+        "updated_at": timezone.now().isoformat(),
+    }
+
+
+def _working_day_payload(day):
+    return {
+        "id": day.id,
+        "weekday": day.weekday,
+        "weekday_display": day.get_weekday_display(),
+        "is_closed": day.is_closed,
+        "open_time": day.open_time.strftime("%H:%M") if day.open_time else "",
+        "close_time": day.close_time.strftime("%H:%M") if day.close_time else "",
+        "closes_next_day": day.closes_next_day,
+    }
 
 
 def _reorder_images(venue, request, model_cls):
@@ -394,6 +433,59 @@ class VenueVerificationConfirmAPIView(generics.GenericAPIView):
 
         return Response({"detail": "Email verified."})
 
+def _first_venue_image_url(venue, request):
+    image = (
+        VenueImage.objects
+        .filter(
+            venue=venue,
+            approved=True,
+            marked_for_deletion=False,
+        )
+        .order_by("order", "id")
+        .first()
+    )
+
+    if not image or not image.image:
+        return ""
+
+    return request.build_absolute_uri(image.image.url)
+
+
+def _upcoming_reservation_payload(request):
+    user = request.user
+
+    if not user.is_authenticated:
+        return None
+
+    reservation = (
+        Reservation.objects
+        .filter(
+            user=user,
+            date__gte=timezone.localdate(),
+        )
+        .exclude(status__in=["cancelled", "rejected"])
+        .select_related("venue")
+        .order_by("date", "time")
+        .first()
+    )
+
+    if not reservation:
+        return None
+
+    venue = reservation.venue
+
+    return {
+        "id": reservation.id,
+        "date": reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
+        "time": reservation.time.strftime("%H:%M") if reservation.time else None,
+        "table_number": getattr(reservation, "table_number", None),
+        "venue": {
+            "id": venue.id,
+            "name": venue.name,
+            "location": venue.location,
+            "first_image_url": _first_venue_image_url(venue, request),
+        },
+    }
 
 class VenueViewSet(viewsets.ReadOnlyModelViewSet):
     queryset            = Venue.objects.all().order_by("name")
@@ -428,7 +520,8 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response({
             "count": len(data),
-            "results": grouped
+            "results": grouped,
+            "upcoming_reservation": _upcoming_reservation_payload(request),
         })
 
     @action(detail=False, methods=["get"], url_path="owned", permission_classes=[permissions.IsAuthenticated])
@@ -711,7 +804,32 @@ class ReservationViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        venue = serializer.validated_data["venue"]
+        reservation_date = serializer.validated_data["date"]
+        reservation_time = serializer.validated_data["time"]
+        if venue.has_overlapping_reservation(reservation_date, reservation_time, user=self.request.user):
+            raise drf_serializers.ValidationError({"time": "Sorry, that time slot is already reserved."})
+        reservation = serializer.save(user=self.request.user)
+        transaction.on_commit(lambda: send_reservation_notification(reservation))
+
+    def partial_update(self, request, *args, **kwargs):
+        reservation = self.get_object()
+        if reservation.status == "cancelled":
+            return Response({"detail": "Cancelled reservations cannot be edited."}, status=status.HTTP_400_BAD_REQUEST)
+        if reservation.user != request.user and not request.user.is_superuser:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = self.get_serializer(reservation, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        venue = serializer.validated_data.get("venue", reservation.venue)
+        reservation_date = serializer.validated_data.get("date", reservation.date)
+        reservation_time = serializer.validated_data.get("time", reservation.time)
+        overlapping = venue.reservations.exclude(pk=reservation.pk).filter(date=reservation_date, time=reservation_time).exists()
+        if overlapping:
+            return Response({"time": "Sorry, that time slot is already reserved."}, status=status.HTTP_400_BAD_REQUEST)
+        updated = serializer.save(status="pending", arrival_status="pending")
+        updated.save(editor=request.user)
+        return Response(self.get_serializer(updated).data)
 
     # OK - REVIEWED
     @action(detail=True, methods=["post"], url_path="status")
@@ -864,5 +982,6 @@ class VenueListAPI(APIView):
             "count": paginator.page.paginator.count,
             "next": paginator.get_next_link(),
             "previous": paginator.get_previous_link(),
-            "results": grouped
+            "results": grouped,
+            "upcoming_reservation": _upcoming_reservation_payload(request),
         })

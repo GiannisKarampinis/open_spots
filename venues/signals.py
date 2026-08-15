@@ -146,6 +146,47 @@ def reservation_created_or_updated(sender, instance: Reservation, created, **kwa
         if created_outbox or outbox_event.status in (ReservationOutboxEvent.STATUS_PENDING, ReservationOutboxEvent.STATUS_FAILED):
             transaction.on_commit(lambda event_id=outbox_event.id: process_outbox_event.delay(event_id))
 
+from .models import Venue, WorkingDay
+
+
+DEFAULT_WORKING_DAYS = [
+    0,  # Monday
+    1,  # Tuesday
+    2,  # Wednesday
+    3,  # Thursday
+    4,  # Friday
+    5,  # Saturday
+    6,  # Sunday
+]
+
+
+def ensure_working_days(venue):
+    existing_weekdays = set(
+        WorkingDay.objects.filter(venue=venue).values_list("weekday", flat=True)
+    )
+
+    missing_days = [
+        WorkingDay(
+            venue=venue,
+            weekday=weekday,
+            is_closed=False,
+            open_time="09:00",
+            close_time="23:00",
+            closes_next_day=False,
+        )
+        for weekday in DEFAULT_WORKING_DAYS
+        if weekday not in existing_weekdays
+    ]
+
+    if missing_days:
+        WorkingDay.objects.bulk_create(missing_days)
+
+
+@receiver(post_save, sender=Venue)
+def create_default_working_days(sender, instance, created, **kwargs):
+    if created:
+        ensure_working_days(instance)
+
 ###########################################################################################
 
 ###########################################################################################

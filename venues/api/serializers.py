@@ -92,6 +92,47 @@ class VenueSerializer(serializers.ModelSerializer):
             many=True,
         ).data
 
+class UpcomingReservationSerializer(serializers.ModelSerializer):
+    venue = serializers.SerializerMethodField()
+    table_number = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Reservation
+        fields = [
+            "id",
+            "date",
+            "time",
+            "table",
+            "table_number",
+            "venue",
+        ]
+
+    def get_venue(self, obj):
+        venue = obj.venue
+
+        return {
+            "id": venue.id,
+            "name": venue.name,
+            "location": venue.location,
+            "first_image": VenueSerializer(
+                venue,
+                context=self.context,
+            ).data.get("first_image"),
+        }
+
+    def get_table_number(self, obj):
+        table = getattr(obj, "table", None)
+
+        if not table:
+            return None
+
+        if hasattr(table, "number"):
+            return table.number
+
+        if hasattr(table, "table_number"):
+            return table.table_number
+
+        return str(table)
 
 class ReservationSerializer(serializers.ModelSerializer):
     venue_id = serializers.PrimaryKeyRelatedField(source="venue", queryset=Venue.objects.all())
