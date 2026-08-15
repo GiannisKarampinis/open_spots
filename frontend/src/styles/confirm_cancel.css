@@ -1,0 +1,68 @@
+.confirm-cancel-page {
+  max-width: 520px;
+  margin: 48px auto;
+  padding: 32px;
+  border-radius: 14px;
+  background: var(--surface-color);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  color: var(--button-text);
+}
+
+.confirm-cancel-page h2 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.confirm-cancel-page p {
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.confirm-cancel-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.confirm-cancel-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.confirm-cancel-btn:hover {
+  transform: translateY(-1px);
+}
+
+.confirm-cancel-btn.danger {
+  background: #dc2626;
+  color: var(--button-text);
+}
+
+.confirm-cancel-btn.danger:hover {
+  background: #b91c1c;
+}
+
+.confirm-cancel-btn.back {
+  background: var(--primary-color);
+  color: var(--button-text);
+}
+
+.confirm-cancel-btn.back:hover {
+  background: var(--primary-hover);
+}
+
+.confirm-cancel-message {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 600;
+}
