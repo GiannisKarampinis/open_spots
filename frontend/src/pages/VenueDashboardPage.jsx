@@ -762,14 +762,14 @@ function ReservationsTable({
 }
 
 
-function AnalyticsTab({ analytics, grouping, onGroupingChange, venueId }) {
+function AnalyticsTab({ analytics, grouping, onGroupingChange }) {
 	const { t } = useTranslation();
 	const stats = analytics || {};
 	const chartData = useMemo(() => normalizeAnalyticsRows(stats), [stats]);
 	const hasChartData = chartData.some((row) => row.visits || row.reservations);
 
 	return (
-		<div className="analytics-container" data-venue-id={venueId}>
+		<div className="analytics-container">
 			<form id="analyticsForm" className="d-flex justify-content-center mb-4" role="search" aria-label="Group analytics data">
 				<label htmlFor="group" className="me-2 fs-5">{t("Group by:")}</label>
 				<select name="group" id="group" className="form-select w-auto" aria-describedby="group-help" value={grouping} onChange={onGroupingChange}>
@@ -1651,7 +1651,7 @@ function ReservationDetailsModal({ reservation, sourceKind, highlightSpecialRequ
 
 export default function VenueDashboardPage() {
 	const { t } = useTranslation();
-	const { venueId } = useParams();      /* Reads the venueId from the URL parameters */
+	const { venueId } = useParams();   /* Reads the venueId from the URL parameters */
 	const navigate = useNavigate();    /* Later, this will be used to redirect */
 
 
@@ -1691,6 +1691,13 @@ export default function VenueDashboardPage() {
 		arrivals: { ...emptyReservationTable },
 		history: { ...emptyReservationTable },
 	});
+
+	useEffect(() => {
+		if (!message) return undefined;
+
+		const timer = window.setTimeout(() => setMessage(""), 5000);
+		return () => window.clearTimeout(timer);
+	}, [message]);
 
 	/* OK - REVIEWED */
 	const redirectToLogin = () => {
@@ -1998,11 +2005,11 @@ export default function VenueDashboardPage() {
 	};
 
 	/* OK - REVIEWED */
-	const toggleAvailability = async () => {
+	const toggleVenueAvailability = async () => {
 		try {
 			const res = await postWithAuth(`/api/v1/venues/${venueId}/toggle-full/`,
-				{},
-				{},
+				{}, /* request body */
+				{}, /* request config */
 				{ onUnauthenticated: redirectToLogin },
 			);
 
@@ -2010,11 +2017,15 @@ export default function VenueDashboardPage() {
 
 			setDashboard((current) => ({
 				...current,
-				venue: { ...current.venue, is_full: res.data.is_full },
+				venue: { 
+					...current.venue, 
+					is_full: res.data.is_full 
+				},
 			}));
-
-			setMessage(res.data.is_full ? "Venue marked as full." : "Venue marked as available.");
 		} catch (err) {
+			if (import.meta.env.DEV) {
+ 	 			console.error("Could not update venue availability:", err);
+			}
 			setMessage(err.response?.data?.detail || "Could not update venue availability.");
 		}
 	};
@@ -2083,23 +2094,37 @@ export default function VenueDashboardPage() {
 	};
 
 	return (
-		<div className="container mt-5" id="venue-dashboard" data-venue-id={venueId}>
-			{/* {message && <div className="alert-info">{message}</div>} */}
-
+		<div className="container mt-5" id="venue-dashboard">
+			{/* OK - REVIEWED */}
+			{message &&/*this means whenever the message has text*/ (
+				<div key={message} className="venue-dashboard-message shadow" role="alert" aria-live="assertive">
+					<div className="venue-dashboard-message__content">{message}</div>
+					<button
+						type="button"
+						className="venue-dashboard-message__close"
+						aria-label={t("Close")}
+						onClick={() => setMessage("")}
+					>
+						&times;
+					</button>
+					<div className="venue-dashboard-message__timer" aria-hidden="true" />
+				</div>
+			)}
+			{/* OK - REVIEWED */}
 			<div className="d-flex justify-content-between align-items-center mb-4">
 				<h1 className="fw-bold">{venue.name || t("Venue Dashboard")}</h1>
 				<div className="venue-status-toggle">
 					{venue.is_full ? (
 						<>
 							<span className="badge bg-danger me-2">{t("Full")}</span>
-							<button type="button" className="btn btn-outline-success btn-sm mark-availability" onClick={toggleAvailability}>
+							<button type="button" className="btn btn-outline-success btn-sm mark-availability" onClick={toggleVenueAvailability}>
 								{t("Mark as Available")}
 							</button>
 						</>
 					) : (
 						<>
 							<span className="badge bg-success me-2">{t("Available")}</span>
-							<button type="button" className="btn btn-outline-danger btn-sm mark-availability" onClick={toggleAvailability}>
+							<button type="button" className="btn btn-outline-danger btn-sm mark-availability" onClick={toggleVenueAvailability}>
 								{t("Mark as Full")}
 							</button>
 						</>
@@ -2203,7 +2228,6 @@ export default function VenueDashboardPage() {
 					<AnalyticsTab
 						analytics={dashboard?.analytics}
 						grouping={grouping}
-						venueId={venueId}
 						onGroupingChange={(event) => {
 							setGrouping(event.target.value);
 							fetchDashboard(event.target.value);

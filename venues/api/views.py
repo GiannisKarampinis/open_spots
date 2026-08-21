@@ -617,7 +617,7 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
             venue.is_full = not venue.is_full
             venue.save(update_fields=["is_full"])
 
-        return Response({"id": venue.id, "is_full": venue.is_full})
+        return Response({"is_full": venue.is_full})
 
 
     @action(detail=True, methods=["get", "post"], url_path="working-hours", permission_classes=[permissions.IsAuthenticated])

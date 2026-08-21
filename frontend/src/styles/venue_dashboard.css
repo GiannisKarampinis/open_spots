@@ -1169,3 +1169,66 @@
 .table-responsive td {
   min-width: 0;
 }
+
+.venue-dashboard-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1080;
+  width: min(30rem, calc(100vw - 2rem));
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.75rem;
+  color: #fff;
+  background: linear-gradient(135deg, #b42318, #7a271a);
+  box-shadow: 0 1rem 2.5rem rgba(78, 13, 8, 0.3) !important;
+}
+
+.venue-dashboard-message__content {
+  padding: 1rem 3.25rem 1rem 1.25rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.venue-dashboard-message__close {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.65rem;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.9);
+  background: transparent;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.venue-dashboard-message__close:hover,
+.venue-dashboard-message__close:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  outline: none;
+}
+
+.venue-dashboard-message__timer {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  transform-origin: left;
+  animation: venue-message-timer 5s linear forwards;
+}
+
+@keyframes venue-message-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .venue-dashboard-message__timer {
+    animation: none;
+  }
+}
