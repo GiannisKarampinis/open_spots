@@ -2141,7 +2141,7 @@ export default function VenueDashboardPage() {
 					return <button
 						key={id}
 						type="button"
-						className={activeTab === id ? "active d-flex align-items-center gap-1" : ""}
+						className={`d-flex flex-nowrap align-items-center justify-content-start gap-2 text-start text-nowrap ${activeTab === id ? "active" : ""}`}
 						onClick={() => selectTab(id)}
 					>
 						<FontAwesomeIcon icon={icon} aria-hidden="true" />
