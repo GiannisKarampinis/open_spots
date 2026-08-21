@@ -40,7 +40,7 @@ import "../styles/venue_dashboard.css";
 const tabs = [
 	["requests", faTableList, "Reservation Requests & Guest Arrivals"],
 	["history", faClockRotateLeft, "Reservation History"],
-	["analytics-tab", faChartBar, "Analytics"],
+	["analytics", faChartBar, "Analytics"],
 	["manage-venue", faBuilding, "Manage Venue"],
 ];
 
@@ -2133,12 +2133,15 @@ export default function VenueDashboardPage() {
 			</div>
 
 			<div className="tabs">
-				{tabs.map(([id, icon, label]) => (
-					<button
+				{tabs.map((tab) => {
+					const id 	= tab[0];
+					const icon 	= tab[1];
+					const label 	= tab[2];
+
+					return <button
 						key={id}
 						type="button"
 						className={activeTab === id ? "active d-flex align-items-center gap-1" : ""}
-						data-tab={id.replace("-tab", "")}
 						onClick={() => selectTab(id)}
 					>
 						<FontAwesomeIcon icon={icon} aria-hidden="true" />
@@ -2157,7 +2160,7 @@ export default function VenueDashboardPage() {
 							</span>
 						)}
 					</button>
-				))}
+				})}
 			</div>
 
 			<div className="tab-content">
@@ -2224,7 +2227,7 @@ export default function VenueDashboardPage() {
 					/>
 				</div>
 
-				<div id="analytics-tab" className={activeTab === "analytics-tab" ? "active tab-pane" : "tab-pane"}>
+				<div id="analytics" className={activeTab === "analytics" ? "active tab-pane" : "tab-pane"}>
 					<AnalyticsTab
 						analytics={dashboard?.analytics}
 						grouping={grouping}

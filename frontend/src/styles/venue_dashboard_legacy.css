@@ -628,10 +628,6 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
     font-weight: 600;
 }
 
-.tabs button[data-tab="requests"] {
-    position: relative;
-}
-
 .tab-content > div {
     display: none;
 }
