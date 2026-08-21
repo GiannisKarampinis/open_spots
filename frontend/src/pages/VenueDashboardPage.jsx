@@ -2132,6 +2132,7 @@ export default function VenueDashboardPage() {
 				</div>
 			</div>
 
+			{/* OK - REVIEWED */}
 			<div className="tabs">
 				{tabs.map((tab) => {
 					const id 	= tab[0];
@@ -2145,16 +2146,25 @@ export default function VenueDashboardPage() {
 						onClick={() => selectTab(id)}
 					>
 						<FontAwesomeIcon icon={icon} aria-hidden="true" />
+						
 						{t(label)}
-						{id === "requests" && (
-							<span id="notification-container" className="position-relative ms-2">
+						
+						{id === "requests" && notificationCount > 0 && (
+							<span
+								id="notification-container"
+								className="position-relative ms-2"
+							>
 								<FontAwesomeIcon
 									icon={faBell}
 									className="notification-bell"
 									aria-hidden="true"
-									style={{ display: notificationCount ? "inline-block" : "none" }}
 								/>
-								<span id="notification-badge" className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ display: notificationCount ? "inline-block" : "none", fontSize: "0.7rem" }}>
+
+								<span
+									id="notification-badge"
+									className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+									style={{ fontSize: "0.7rem" }}
+								>
 									{notificationCount}
 								</span>
 							</span>
