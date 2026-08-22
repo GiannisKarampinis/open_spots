@@ -80,6 +80,7 @@ function formatDateRangeLabel(value, t, locale) {
 	return `${formatDate(value.start || value.end, locale)} - ...`;
 }
 
+/* OK - REVIEWED */
 export default function DateRangePicker({ value, onChange, minDate = "", maxDate = "" }) {
 	const { t, i18n } 			= useTranslation();
 	const locale 				= i18n.language;
