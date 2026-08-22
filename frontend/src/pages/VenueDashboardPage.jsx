@@ -203,7 +203,7 @@ function formatDateRangeLabel(value, t, locale) {
 }
 
 
-function DateRangePickerShell({ targetTab, value, onChange, onClear }) {
+function DateRangePickerShell({ dateRangePickerId, value, onChange, onClear }) {
 	const { t, i18n } = useTranslation();
 	const locale = i18n.language;
 	const [open, setOpen] = useState(false);
@@ -282,13 +282,13 @@ function DateRangePickerShell({ targetTab, value, onChange, onClear }) {
 	};
 
 	return (
-		<div id={`date-range-component-${targetTab}`} className="date-range-container" ref={pickerRef}>
+		<div id={`date-range-component-${dateRangePickerId}`} className="date-range-container" ref={pickerRef}>
 			<div className="date-range-trigger-wrap">
 				<button
 					type="button"
-					id={`daterange-input-${targetTab}`}
+					id={`daterange-input-${dateRangePickerId}`}
 					className="btn btn-outline-secondary daterange-input"
-					data-target-tab={targetTab}
+					data-target-tab={dateRangePickerId}
 					aria-expanded={open}
 					aria-haspopup="dialog"
 					onClick={open ? () => setOpen(false) : openPicker}
@@ -347,13 +347,14 @@ function DateRangePickerShell({ targetTab, value, onChange, onClear }) {
 			</div>
 
 			{(value.start || value.end) && (
-				<button type="button" className="btn btn-sm btn-outline-secondary clear-range-btn" data-target-tab={targetTab} title="Clear date range" aria-label="Clear date range" onClick={clearRange}>
+				<button type="button" className="btn btn-sm btn-outline-secondary clear-range-btn" data-target-tab={dateRangePickerId} title="Clear date range" aria-label="Clear date range" onClick={clearRange}>
 					<FontAwesomeIcon icon={faXmark} aria-hidden="true" />
 				</button>
 			)}
 		</div>
 	);
 }
+
 
 
 function ReservationStatusBadge({ value }) {
@@ -1871,7 +1872,10 @@ export default function VenueDashboardPage() {
 		//   history:  { start: "", end: "" },
 		//   requests: { start: "2026-06-20", end: "2026-06-25" }
 		// }
-
+		// std::map<std::string, DateRange> ranges;
+		//	ranges["requests"] = oldRange;
+		//	ranges["history"] = historyRange;
+		//	ranges["requests"] = newRange; // replaces oldRange
 		if (key === "requests") {
 			setReservationTable("requests", { page: 1 });
 			setReservationTable("arrivals", { page: 1 });
@@ -2135,9 +2139,9 @@ export default function VenueDashboardPage() {
 			{/* OK - REVIEWED */}
 			<div className="tabs">
 				{tabs.map((tab) => {
-					const id 	= tab[0];
-					const icon 	= tab[1];
-					const label 	= tab[2];
+					const id    = tab[0];
+					const icon  = tab[1];
+					const label = tab[2];
 
 					return <button
 						key={id}
@@ -2174,10 +2178,10 @@ export default function VenueDashboardPage() {
 			</div>
 
 			<div className="tab-content">
-				<div id="requests" className={activeTab === "requests" ? "active" : ""}>
+				<div id="requests" hidden={activeTab !== "requests"}>
 					<DateRangePickerShell
-						targetTab="requestsTab"
-						value={dateRanges.requests}
+						dateRangePickerId="requestsTab"
+						value={dateRanges.requests} /* Here the value from VenueDashboardPage state is passed to the DateRangePickerShell component */
 						onChange={(range) => updateDateRange("requests", range)}
 						onClear={() => clearDateRange("requests")}
 					/>
@@ -2214,9 +2218,9 @@ export default function VenueDashboardPage() {
 					/>
 				</div>
 
-				<div id="history" className={activeTab === "history" ? "active" : ""}>
+				<div id="history" hidden={activeTab !== "history"}>
 					<DateRangePickerShell
-						targetTab="historyTab"
+						dateRangePickerId="historyTab"
 						value={dateRanges.history}
 						onChange={(range) => updateDateRange("history", range)}
 						onClear={() => clearDateRange("history")}
@@ -2237,7 +2241,7 @@ export default function VenueDashboardPage() {
 					/>
 				</div>
 
-				<div id="analytics" className={activeTab === "analytics" ? "active tab-pane" : "tab-pane"}>
+				<div id="analytics" hidden={activeTab !== "analytics"}>
 					<AnalyticsTab
 						analytics={dashboard?.analytics}
 						grouping={grouping}
@@ -2248,7 +2252,7 @@ export default function VenueDashboardPage() {
 					/>
 				</div>
 
-				<div id="manage-venue" className={activeTab === "manage-venue" ? "active tab-pane" : "tab-pane"}>
+				<div id="manage-venue" hidden={activeTab !== "manage-venue"}>
 					<ManageVenueTab
 						venue={venue}
 						workingDays={dashboard?.working_days || []}

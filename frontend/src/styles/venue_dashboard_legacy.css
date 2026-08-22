@@ -628,13 +628,6 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
     font-weight: 600;
 }
 
-.tab-content > div {
-    display: none;
-}
-.tab-content > div.active {
-    display: block;
-}
-
 .tab-content h2 {
     margin-top: 1rem;
     color: var(--primary-hover);
