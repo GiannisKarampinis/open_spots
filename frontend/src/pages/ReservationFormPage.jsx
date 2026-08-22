@@ -53,6 +53,66 @@ function getErrorMessage(data) {
   return "Could not save the reservation. Please check the details.";
 }
 
+const SPECIAL_REQUEST_VALUES = new Set([
+  "vegan",
+  "vegetarian",
+  "gluten_free",
+  "wheelchair",
+  "other",
+]);
+
+function normalizeSpecialRequest(value) {
+  if (!value) return "none";
+
+  const normalized = String(value)
+    .trim()
+    .toLowerCase()
+    .replaceAll("-", "_")
+    .replaceAll(" ", "_");
+
+  if (normalized === "gluten_free" || normalized === "glutenfree") {
+    return "gluten_free";
+  }
+
+  if (
+    normalized === "wheelchair_accessible" ||
+    normalized === "wheelchair_access" ||
+    normalized === "wheelchair"
+  ) {
+    return "wheelchair";
+  }
+
+  return SPECIAL_REQUEST_VALUES.has(normalized) ? normalized : "other";
+}
+
+function extractSpecialRequestFromComments(comments) {
+  const text = String(comments || "");
+
+  const match = text.match(/^Special request:\s*([^.]+)\.\s*/i);
+
+  if (!match) {
+    return {
+      specialRequest: "none",
+      cleanComments: text,
+    };
+  }
+
+  return {
+    specialRequest: normalizeSpecialRequest(match[1]),
+    cleanComments: text.replace(/^Special request:\s*([^.]+)\.\s*/i, "").trim(),
+  };
+}
+
+function buildReservationComments(specialRequest, comments) {
+  const cleanComments = extractSpecialRequestFromComments(comments).cleanComments;
+
+  if (specialRequest === "none") {
+    return cleanComments;
+  }
+
+  return `Special request: ${specialRequest}. ${cleanComments || ""}`.trim();
+}
+
 export default function ReservationFormPage({ mode = "create" }) {
   const { venueId, reservationId } = useParams();
   const navigate = useNavigate();
@@ -83,6 +143,8 @@ export default function ReservationFormPage({ mode = "create" }) {
 
         const r = res.data;
 
+        const parsedSpecialRequest = extractSpecialRequestFromComments(r.comments);
+
         setForm({
           firstname: r.firstname || "",
           lastname: r.lastname || "",
@@ -91,9 +153,11 @@ export default function ReservationFormPage({ mode = "create" }) {
           date: r.date || todayIso(),
           time: String(r.time || "").slice(0, 5),
           guests: r.guests || 2,
-          special_requests: r.special_requests ? "other" : "none",
+          special_requests: r.special_requests
+            ? parsedSpecialRequest.specialRequest
+            : "none",
           allergies: r.allergies || "",
-          comments: r.comments || "",
+          comments: parsedSpecialRequest.cleanComments,
         });
 
         setVenue({
@@ -183,10 +247,7 @@ export default function ReservationFormPage({ mode = "create" }) {
       guests: Number(form.guests),
       special_requests: selectedSpecialRequest !== "none",
       allergies: form.allergies,
-      comments:
-        selectedSpecialRequest !== "none"
-          ? `Special request: ${selectedSpecialRequest}. ${form.comments || ""}`.trim()
-          : form.comments,
+      comments: buildReservationComments(selectedSpecialRequest, form.comments),
     };
 
     const createPayload = {
