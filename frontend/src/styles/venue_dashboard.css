@@ -344,6 +344,7 @@
   display: inline-flex;
   gap: 0.5rem;
   justify-content: center;
+  max-width: none;
   min-height: 38px;
   min-width: 220px;
   padding: 0.45rem 0.7rem;
