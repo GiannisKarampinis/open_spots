@@ -21,7 +21,6 @@ import {
 import {
 	faBell,
 	faBuilding,
-	faCalendarDays,
 	faChartBar,
 	faChevronLeft,
 	faChevronRight,
@@ -34,6 +33,7 @@ import {
 import { faAlarmClock } from "@fortawesome/free-regular-svg-icons";
 import { getWithAuth, postWithAuth } from "../utils/auth";
 import { mediaUrl } from "../utils/media";
+import DateRangePicker from "../components/DateRangePicker";
 import "../styles/venue_dashboard_legacy.css";
 import "../styles/venue_dashboard.css";
 
@@ -69,6 +69,14 @@ const emptyReservationTable = {
 	sorting: [],
 	loading: false,
 };
+
+
+function toLocalYmd(date) {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, "0");
+	const day = String(date.getDate()).padStart(2, "0");
+	return `${year}-${month}-${day}`;
+}
 
 
 function statusClass(status) {
@@ -161,200 +169,6 @@ function tableControlPrefix(id) {
 	if (id === "pastTable") return "history";
 	return id.replace("Table", "");
 }
-
-
-function toYmd(date) {
-	const year = date.getFullYear();
-	const month = String(date.getMonth() + 1).padStart(2, "0");
-	const day = String(date.getDate()).padStart(2, "0");
-	return `${year}-${month}-${day}`;
-}
-
-
-function parseYmd(value) {
-	if (!value) return null;
-	const [year, month, day] = value.split("-").map(Number);
-	if (!year || !month || !day) return null;
-	return new Date(year, month - 1, day);
-}
-
-
-function getCalendarDays(viewDate) {
-	const firstOfMonth = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-	const start = new Date(firstOfMonth);
-	start.setDate(firstOfMonth.getDate() - firstOfMonth.getDay());
-
-	return Array.from({ length: 42 }, (_, index) => {
-		const date = new Date(start);
-		date.setDate(start.getDate() + index);
-		return {
-			date,
-			value: toYmd(date),
-			isCurrentMonth: date.getMonth() === viewDate.getMonth(),
-		};
-	});
-}
-
-
-function formatDateRangeLabel(value, t, locale) {
-	if (!value.start && !value.end) return t("Select date range");
-	if (value.start && value.end) return `${formatDate(value.start, locale)} - ${formatDate(value.end, locale)}`;
-	return `${formatDate(value.start || value.end, locale)} - ...`;
-}
-
-
-function DateRangePickerShell({ dateRangePickerId, value, onChange, onClear }) {
-	const { t, i18n } = useTranslation();
-	const locale = i18n.language;
-	const [open, setOpen] = useState(false);
-	const [draftRange, setDraftRange] = useState(value);
-	const [viewDate, setViewDate] = useState(() => parseYmd(value.start) || new Date());
-	const pickerRef = useRef(null);
-	const calendarDays = useMemo(() => getCalendarDays(viewDate), [viewDate]);
-	const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(viewDate);
-	const weekdayLabels = useMemo(() => (
-		Array.from({ length: 7 }, (_, dayIndex) => (
-			new Intl.DateTimeFormat(locale, { weekday: "short" }).format(new Date(2026, 1, dayIndex + 1))
-		))
-	), [locale]);
-
-	useEffect(() => {
-		if (!open) return undefined;
-
-		const closeOnOutsideClick = (event) => {
-			if (!pickerRef.current?.contains(event.target)) {
-				setOpen(false);
-				setDraftRange(value);
-			}
-		};
-		const closeOnEscape = (event) => {
-			if (event.key === "Escape") {
-				setOpen(false);
-				setDraftRange(value);
-			}
-		};
-
-		document.addEventListener("mousedown", closeOnOutsideClick);
-		document.addEventListener("keydown", closeOnEscape);
-		return () => {
-			document.removeEventListener("mousedown", closeOnOutsideClick);
-			document.removeEventListener("keydown", closeOnEscape);
-		};
-	}, [open, value]);
-
-	useEffect(() => {
-		if (!open) {
-			setDraftRange(value);
-		}
-	}, [open, value]);
-
-	const openPicker = () => {
-		setDraftRange(value);
-		setViewDate(parseYmd(value.start) || new Date());
-		setOpen(true);
-	};
-
-	const moveMonth = (offset) => {
-		setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
-	};
-
-	const selectDate = (dateValue) => {
-		if (!draftRange.start || draftRange.end) {
-			setDraftRange({ start: dateValue, end: "" });
-			return;
-		}
-
-		if (dateValue < draftRange.start) {
-			setDraftRange({ start: dateValue, end: "" });
-			return;
-		}
-
-		const nextRange = { start: draftRange.start, end: dateValue };
-		setDraftRange(nextRange);
-		onChange(nextRange);
-		setOpen(false);
-	};
-
-	const clearRange = () => {
-		setDraftRange({ start: "", end: "" });
-		onClear();
-		setOpen(false);
-	};
-
-	return (
-		<div id={`date-range-component-${dateRangePickerId}`} className="date-range-container" ref={pickerRef}>
-			<div className="date-range-trigger-wrap">
-				<button
-					type="button"
-					id={`daterange-input-${dateRangePickerId}`}
-					className="btn btn-outline-secondary daterange-input"
-					data-target-tab={dateRangePickerId}
-					aria-expanded={open}
-					aria-haspopup="dialog"
-					onClick={open ? () => setOpen(false) : openPicker}
-				>
-					<FontAwesomeIcon icon={faCalendarDays} className="calendar-icon" aria-hidden="true" />
-					<span>{formatDateRangeLabel(value, t, locale)}</span>
-				</button>
-
-				{open && (
-					<div className="date-range-popover" role="dialog" aria-label="Select date range">
-						<div className="date-range-calendar-header">
-							<button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => moveMonth(-1)} aria-label={t("Previous month")}>
-								<FontAwesomeIcon icon={faChevronLeft} aria-hidden="true" />
-							</button>
-							<strong>{monthLabel}</strong>
-							<button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => moveMonth(1)} aria-label={t("Next month")}>
-								<FontAwesomeIcon icon={faChevronRight} aria-hidden="true" />
-							</button>
-						</div>
-						<div className="date-range-weekdays" aria-hidden="true">
-							{weekdayLabels.map((day) => (
-								<span key={day}>{day}</span>
-							))}
-						</div>
-						<div className="date-range-calendar-grid">
-							{calendarDays.map((day) => {
-								const isStart = day.value === draftRange.start;
-								const isEnd = day.value === draftRange.end;
-								const isInRange = draftRange.start && draftRange.end && day.value > draftRange.start && day.value < draftRange.end;
-
-								return (
-									<button
-										key={day.value}
-										type="button"
-										className={[
-											"date-range-day",
-											day.isCurrentMonth ? "" : "is-muted",
-											isStart ? "is-start" : "",
-											isEnd ? "is-end" : "",
-											isInRange ? "is-in-range" : "",
-										].filter(Boolean).join(" ")}
-										onClick={() => selectDate(day.value)}
-										aria-pressed={isStart || isEnd}
-									>
-										{day.date.getDate()}
-									</button>
-								);
-							})}
-						</div>
-						<div className="date-range-calendar-footer">
-							<span>{draftRange.start && !draftRange.end ? t("Select an end date") : t("Choose start and end dates")}</span>
-							<button type="button" className="btn btn-sm btn-outline-secondary" onClick={clearRange}>{t("Clear")}</button>
-						</div>
-					</div>
-				)}
-			</div>
-
-			{(value.start || value.end) && (
-				<button type="button" className="btn btn-sm btn-outline-secondary clear-range-btn" data-target-tab={dateRangePickerId} title="Clear date range" aria-label="Clear date range" onClick={clearRange}>
-					<FontAwesomeIcon icon={faXmark} aria-hidden="true" />
-				</button>
-			)}
-		</div>
-	);
-}
-
 
 
 function ReservationStatusBadge({ value }) {
@@ -1686,6 +1500,10 @@ export default function VenueDashboardPage() {
 		requests: { start: "", end: "" },
 		history: { start: "", end: "" },
 	});
+	const today = toLocalYmd(new Date());
+	const yesterdayDate = new Date();
+	yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+	const yesterday = toLocalYmd(yesterdayDate);
 
 	const [reservationTables, setReservationTables] = useState({
 		requests: { ...emptyReservationTable },
@@ -1885,10 +1703,6 @@ export default function VenueDashboardPage() {
 	};
 
 	/* OK - REVIEWED */
-	const clearDateRange = (key) => {
-		updateDateRange(key, { start: "", end: "" });
-	};
-
 	/* OK - REVIEWED */
 	const updateTableSearch = (key, search) => {
 		/* For reservationTables[key], update the search value and reset page back to 1. */
@@ -2179,11 +1993,10 @@ export default function VenueDashboardPage() {
 
 			<div className="tab-content">
 				<div id="requests" hidden={activeTab !== "requests"}>
-					<DateRangePickerShell
-						dateRangePickerId="requestsTab"
-						value={dateRanges.requests} /* Here the value from VenueDashboardPage state is passed to the DateRangePickerShell component */
+					<DateRangePicker
+						value={dateRanges.requests}
 						onChange={(range) => updateDateRange("requests", range)}
-						onClear={() => clearDateRange("requests")}
+						minDate={today}
 					/>
 					<h2 className="mt-4"><FontAwesomeIcon icon={faAlarmClock} /> {t("Pending Reservation Requests")}</h2>
 					<ReservationsTable
@@ -2219,11 +2032,10 @@ export default function VenueDashboardPage() {
 				</div>
 
 				<div id="history" hidden={activeTab !== "history"}>
-					<DateRangePickerShell
-						dateRangePickerId="historyTab"
+					<DateRangePicker
 						value={dateRanges.history}
 						onChange={(range) => updateDateRange("history", range)}
-						onClear={() => clearDateRange("history")}
+						maxDate={yesterday}
 					/>
 					<ReservationsTable
 						id="pastTable"
