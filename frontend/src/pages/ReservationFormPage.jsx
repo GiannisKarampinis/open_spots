@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   getAccessToken,
   getWithAuth,
@@ -24,9 +25,9 @@ const emptyForm = {
   comments: "",
 };
 
-function getErrorMessage(data) {
+function getErrorMessage(data, t) {
   if (!data) {
-    return "Could not save the reservation. Please check the details.";
+    return t("Could not save the reservation. Please check the details.");
   }
 
   if (typeof data === "string") {
@@ -50,7 +51,7 @@ function getErrorMessage(data) {
     return `${field}: ${value[0]}`;
   }
 
-  return "Could not save the reservation. Please check the details.";
+  return t("Could not save the reservation. Please check the details.");
 }
 
 const SPECIAL_REQUEST_VALUES = new Set([
@@ -114,6 +115,7 @@ function buildReservationComments(specialRequest, comments) {
 }
 
 export default function ReservationFormPage({ mode = "create" }) {
+  const { t } = useTranslation();
   const { venueId, reservationId } = useParams();
   const navigate = useNavigate();
 
@@ -142,7 +144,6 @@ export default function ReservationFormPage({ mode = "create" }) {
         if (!res || cancelled) return;
 
         const r = res.data;
-
         const parsedSpecialRequest = extractSpecialRequestFromComments(r.comments);
 
         setForm({
@@ -162,7 +163,7 @@ export default function ReservationFormPage({ mode = "create" }) {
 
         setVenue({
           id: r.venue_id,
-          name: r.venue_name || `Venue #${r.venue_id}`,
+          name: r.venue_name || `${t("Venue")} #${r.venue_id}`,
         });
       } else {
         const res = await getWithAuth(
@@ -179,14 +180,14 @@ export default function ReservationFormPage({ mode = "create" }) {
 
     load().catch(() => {
       if (!cancelled) {
-        setMessage("Could not load reservation data.");
+        setMessage(t("Could not load reservation data."));
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [mode, navigate, reservationId, venueId]);
+  }, [mode, navigate, reservationId, venueId, t]);
 
   useEffect(() => {
     const id = mode === "edit" ? venue?.id : venueId;
@@ -287,9 +288,9 @@ export default function ReservationFormPage({ mode = "create" }) {
       const data = err.response?.data;
 
       if (typeof data === "string" && data.includes("<!doctype html>")) {
-        setMessage("Server error while saving reservation. Check Django logs.");
+        setMessage(t("Server error while saving reservation. Check Django logs."));
       } else {
-        setMessage(getErrorMessage(data));
+        setMessage(getErrorMessage(data, t));
       }
     } finally {
       setSubmitting(false);
@@ -304,7 +305,7 @@ export default function ReservationFormPage({ mode = "create" }) {
       }`}
     >
       <h2 className="text-2xl font-semibold mb-4">
-        {mode === "edit" ? "Edit Reservation for" : "Reserve at"}{" "}
+        {mode === "edit" ? t("Edit Reservation for") : t("Reserve at")}{" "}
         {venue?.name || "..."}
       </h2>
 
@@ -313,7 +314,7 @@ export default function ReservationFormPage({ mode = "create" }) {
       <form onSubmit={submit}>
         <p>
           <label>
-            First name
+            {t("First name")}
             <input
               name="firstname"
               value={form.firstname}
@@ -325,7 +326,7 @@ export default function ReservationFormPage({ mode = "create" }) {
 
         <p>
           <label>
-            Last name
+            {t("Last name")}
             <input
               name="lastname"
               value={form.lastname}
@@ -337,7 +338,7 @@ export default function ReservationFormPage({ mode = "create" }) {
 
         <p>
           <label>
-            Email
+            {t("Email")}
             <input
               name="email"
               type="email"
@@ -350,7 +351,7 @@ export default function ReservationFormPage({ mode = "create" }) {
 
         <p>
           <label>
-            Phone
+            {t("Phone")}
             <input
               name="phone"
               value={form.phone}
@@ -362,7 +363,7 @@ export default function ReservationFormPage({ mode = "create" }) {
 
         <p>
           <label>
-            Date
+            {t("Date")}
             <input
               name="date"
               type="date"
@@ -376,7 +377,7 @@ export default function ReservationFormPage({ mode = "create" }) {
 
         <p>
           <label>
-            Time
+            {t("Time")}
             <div className="venue-detail-slots time-slot-container">
               {slots.length ? (
                 slots.map((slot) => (
@@ -396,7 +397,7 @@ export default function ReservationFormPage({ mode = "create" }) {
                   </button>
                 ))
               ) : (
-                <p>No available times for this date.</p>
+                <p>{t("No available times for this date.")}</p>
               )}
             </div>
           </label>
@@ -404,7 +405,7 @@ export default function ReservationFormPage({ mode = "create" }) {
 
         <p>
           <label>
-            Guests
+            {t("Guests")}
             <input
               name="guests"
               min="1"
@@ -418,25 +419,25 @@ export default function ReservationFormPage({ mode = "create" }) {
 
         <p>
           <label>
-            Special requests
+            {t("Special requests")}
             <select
               name="special_requests"
               value={form.special_requests}
               onChange={updateField}
             >
-              <option value="none">None</option>
-              <option value="vegan">Vegan</option>
-              <option value="vegetarian">Vegetarian</option>
-              <option value="gluten_free">Gluten-free</option>
-              <option value="wheelchair">Wheelchair accessible</option>
-              <option value="other">Other</option>
+              <option value="none">{t("None")}</option>
+              <option value="vegan">{t("Vegan")}</option>
+              <option value="vegetarian">{t("Vegetarian")}</option>
+              <option value="gluten_free">{t("Gluten-free")}</option>
+              <option value="wheelchair">{t("Wheelchair accessible")}</option>
+              <option value="other">{t("Other")}</option>
             </select>
           </label>
         </p>
 
         <p>
           <label>
-            Allergies
+            {t("Allergies")}
             <textarea
               name="allergies"
               value={form.allergies}
@@ -447,7 +448,7 @@ export default function ReservationFormPage({ mode = "create" }) {
 
         <p>
           <label>
-            Comments
+            {t("Comments")}
             <textarea
               name="comments"
               value={form.comments}
@@ -461,7 +462,11 @@ export default function ReservationFormPage({ mode = "create" }) {
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           disabled={submitting}
         >
-          {submitting ? "Saving..." : mode === "edit" ? "Save Changes" : "Reserve"}
+          {submitting
+            ? t("Saving...")
+            : mode === "edit"
+              ? t("Save Changes")
+              : t("Reserve")}
         </button>
 
         <button
@@ -474,7 +479,7 @@ export default function ReservationFormPage({ mode = "create" }) {
           className="text-blue-500 text-sm mt-4 inline-block"
         >
           {" "}
-          Back
+          {t("Back")}
         </button>
       </form>
     </div>

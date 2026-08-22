@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   getWithAuth,
   patchWithAuth,
@@ -16,6 +17,7 @@ const editableFields = [
 ];
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -104,7 +106,9 @@ export default function ProfilePage() {
         if (!cancelled && res) setTwoFactor({ ...res.data, loading: false });
       })
       .catch(() => {
-        if (!cancelled) setTwoFactor((current) => ({ ...current, loading: false }));
+        if (!cancelled) {
+          setTwoFactor((current) => ({ ...current, loading: false }));
+        }
       });
 
     return () => {
@@ -142,7 +146,11 @@ export default function ProfilePage() {
   const cancelEdit = () => {
     setEditing(null);
     setEmailForm({ email: userInfo.display_email || userInfo.email || "" });
-    setPasswordForm({ old_password: "", new_password1: "", new_password2: "" });
+    setPasswordForm({
+      old_password: "",
+      new_password1: "",
+      new_password2: "",
+    });
     setMessage("");
   };
 
@@ -162,10 +170,12 @@ export default function ProfilePage() {
       if (!res) return;
 
       storeAuthResponse({ user: res.data });
-      showSuccess("Profile updated successfully.");
+      showSuccess(t("Profile updated successfully."));
       setEditing(null);
     } catch (err) {
-      showError(err.response?.data?.detail || "Could not update your profile.");
+      showError(
+        err.response?.data?.detail || t("Could not update your profile.")
+      );
     } finally {
       setSaving(false);
     }
@@ -187,16 +197,20 @@ export default function ProfilePage() {
       if (!res) return;
 
       if (res.data.requires_verification) {
-        showSuccess(res.data.detail || "Verification code sent to your new email.");
+        showSuccess(
+          res.data.detail || t("Verification code sent to your new email.")
+        );
         navigate("/accounts/verify-email");
         return;
       }
 
-      showSuccess(res.data.detail || "Email updated.");
+      showSuccess(res.data.detail || t("Email updated."));
       setEditing(null);
     } catch (err) {
       const data = err.response?.data;
-      showError(data?.email?.[0] || data?.detail || "Could not update your email.");
+      showError(
+        data?.email?.[0] || data?.detail || t("Could not update your email.")
+      );
     } finally {
       setSaving(false);
     }
@@ -208,7 +222,7 @@ export default function ProfilePage() {
     setMessage("");
 
     if (passwordForm.new_password1 !== passwordForm.new_password2) {
-      showError("The new passwords do not match.");
+      showError(t("The new passwords do not match."));
       setSaving(false);
       return;
     }
@@ -225,7 +239,7 @@ export default function ProfilePage() {
 
       showSuccess(
         res.data.detail ||
-          "Verification code sent. Confirm the code to complete the password change."
+          t("Verification code sent. Confirm the code to complete the password change.")
       );
 
       navigate("/accounts/verify-email");
@@ -237,7 +251,7 @@ export default function ProfilePage() {
           data?.new_password1?.[0] ||
           data?.new_password2?.[0] ||
           data?.detail ||
-          "Could not change your password."
+          t("Could not change your password.")
       );
     } finally {
       setSaving(false);
@@ -259,9 +273,13 @@ export default function ProfilePage() {
 
       setTwoFactorSetup(res.data);
       setTwoFactorCode("");
-      showSuccess("Add this key to your authenticator app, then enter the generated code.");
+      showSuccess(
+        t("Add this key to your authenticator app, then enter the generated code.")
+      );
     } catch (err) {
-      showError(err.response?.data?.detail || "Could not start two-factor setup.");
+      showError(
+        err.response?.data?.detail || t("Could not start two-factor setup.")
+      );
     }
   };
 
@@ -281,9 +299,12 @@ export default function ProfilePage() {
       setTwoFactor({ enabled: true, loading: false });
       setTwoFactorSetup(null);
       setTwoFactorCode("");
-      showSuccess(res.data.detail || "Two-factor authentication enabled.");
+      showSuccess(res.data.detail || t("Two-factor authentication enabled."));
     } catch (err) {
-      showError(err.response?.data?.detail || "Could not confirm two-factor authentication.");
+      showError(
+        err.response?.data?.detail ||
+          t("Could not confirm two-factor authentication.")
+      );
     }
   };
 
@@ -303,33 +324,37 @@ export default function ProfilePage() {
       setTwoFactor({ enabled: false, loading: false });
       setTwoFactorSetup(null);
       setTwoFactorCode("");
-      showSuccess(res.data.detail || "Two-factor authentication disabled.");
+      showSuccess(res.data.detail || t("Two-factor authentication disabled."));
     } catch (err) {
-      showError(err.response?.data?.detail || "Could not disable two-factor authentication.");
+      showError(
+        err.response?.data?.detail ||
+          t("Could not disable two-factor authentication.")
+      );
     }
   };
 
   if (loading) {
     return (
       <div className="auth-container">
-        <p>Loading profile...</p>
+        <p>{t("Loading profile...")}</p>
       </div>
     );
   }
 
   return (
     <div className="auth-container">
-      <h2>Profile</h2>
+      <h2>{t("Profile")}</h2>
 
       {!userInfo.email_verified && (
         <div className="auth-message warning">
-          Your email <strong>{userInfo.display_email}</strong> is not yet verified.{" "}
+          {t("Your email")} <strong>{userInfo.display_email}</strong>{" "}
+          {t("is not yet verified.")}{" "}
           <button
             type="button"
             className="auth-inline-button"
             onClick={() => navigate("/accounts/verify-email")}
           >
-            Verify Now
+            {t("Verify Now")}
           </button>
         </div>
       )}
@@ -337,10 +362,10 @@ export default function ProfilePage() {
       {message && <div className={`auth-message ${messageType}`}>{message}</div>}
 
       <section className="auth-form profile-section">
-        <h3>User Information</h3>
+        <h3>{t("User Information")}</h3>
 
         <div className="auth-field profile-field">
-          <label>Email</label>
+          <label>{t("Email")}</label>
 
           {editing === "email" ? (
             <form className="profile-edit-form" onSubmit={submitEmail}>
@@ -353,8 +378,12 @@ export default function ProfilePage() {
               />
 
               <div className="profile-form-actions">
-                <button className="profile-action-btn profile-save-btn" type="submit" disabled={saving}>
-                  {saving ? "Saving..." : "Save"}
+                <button
+                  className="profile-action-btn profile-save-btn"
+                  type="submit"
+                  disabled={saving}
+                >
+                  {saving ? t("Saving...") : t("Save")}
                 </button>
 
                 <button
@@ -362,7 +391,7 @@ export default function ProfilePage() {
                   type="button"
                   onClick={cancelEdit}
                 >
-                  Cancel
+                  {t("Cancel")}
                 </button>
               </div>
             </form>
@@ -377,7 +406,7 @@ export default function ProfilePage() {
                 className="profile-edit-btn"
                 onClick={() => setEditing("email")}
               >
-                Edit
+                {t("Edit")}
               </button>
             </div>
           )}
@@ -386,7 +415,7 @@ export default function ProfilePage() {
         <form className="profile-fields-form" onSubmit={submitProfile}>
           {editableFields.map(([name, label, type]) => (
             <div className="auth-field profile-field" key={name}>
-              <label htmlFor={`profile-${name}`}>{label}</label>
+              <label htmlFor={`profile-${name}`}>{t(label)}</label>
 
               {editing === name ? (
                 <div className="profile-edit-row">
@@ -399,8 +428,12 @@ export default function ProfilePage() {
                   />
 
                   <div className="profile-form-actions">
-                    <button className="profile-action-btn profile-save-btn" type="submit" disabled={saving}>
-                      {saving ? "Saving..." : "Save"}
+                    <button
+                      className="profile-action-btn profile-save-btn"
+                      type="submit"
+                      disabled={saving}
+                    >
+                      {saving ? t("Saving...") : t("Save")}
                     </button>
 
                     <button
@@ -408,7 +441,7 @@ export default function ProfilePage() {
                       type="button"
                       onClick={cancelEdit}
                     >
-                      Cancel
+                      {t("Cancel")}
                     </button>
                   </div>
                 </div>
@@ -423,7 +456,7 @@ export default function ProfilePage() {
                     className="profile-edit-btn"
                     onClick={() => setEditing(name)}
                   >
-                    Edit
+                    {t("Edit")}
                   </button>
                 </div>
               )}
@@ -432,7 +465,7 @@ export default function ProfilePage() {
         </form>
 
         <div className="auth-field profile-field">
-          <label>Password</label>
+          <label>{t("Password")}</label>
 
           {editing === "password" ? (
             <form className="profile-password-form" onSubmit={submitPassword}>
@@ -440,7 +473,7 @@ export default function ProfilePage() {
                 <input
                   type="password"
                   name="old_password"
-                  placeholder="Old password"
+                  placeholder={t("Old password")}
                   value={passwordForm.old_password}
                   onChange={updatePasswordField}
                   required
@@ -449,7 +482,7 @@ export default function ProfilePage() {
                 <input
                   type="password"
                   name="new_password1"
-                  placeholder="New password"
+                  placeholder={t("New password")}
                   value={passwordForm.new_password1}
                   onChange={updatePasswordField}
                   required
@@ -458,7 +491,7 @@ export default function ProfilePage() {
                 <input
                   type="password"
                   name="new_password2"
-                  placeholder="Confirm new password"
+                  placeholder={t("Confirm new password")}
                   value={passwordForm.new_password2}
                   onChange={updatePasswordField}
                   required
@@ -466,8 +499,12 @@ export default function ProfilePage() {
               </div>
 
               <div className="profile-form-actions profile-password-actions">
-                <button className="profile-action-btn profile-save-btn" type="submit" disabled={saving}>
-                  {saving ? "Saving..." : "Save"}
+                <button
+                  className="profile-action-btn profile-save-btn"
+                  type="submit"
+                  disabled={saving}
+                >
+                  {saving ? t("Saving...") : t("Save")}
                 </button>
 
                 <button
@@ -475,7 +512,7 @@ export default function ProfilePage() {
                   type="button"
                   onClick={cancelEdit}
                 >
-                  Cancel
+                  {t("Cancel")}
                 </button>
               </div>
             </form>
@@ -490,7 +527,7 @@ export default function ProfilePage() {
                 className="profile-edit-btn"
                 onClick={() => setEditing("password")}
               >
-                Change
+                {t("Change")}
               </button>
             </div>
           )}
@@ -498,13 +535,13 @@ export default function ProfilePage() {
       </section>
 
       <section className="auth-form" aria-labelledby="two-factor-heading">
-        <h3 id="two-factor-heading">Two-Factor Authentication</h3>
+        <h3 id="two-factor-heading">{t("Two-Factor Authentication")}</h3>
 
-        <p>{twoFactor.enabled ? "Enabled" : "Disabled"}</p>
+        <p>{twoFactor.enabled ? t("Enabled") : t("Disabled")}</p>
 
         {twoFactorSetup && (
           <div className="auth-field">
-            <label htmlFor="two-factor-key">Manual setup key</label>
+            <label htmlFor="two-factor-key">{t("Manual setup key")}</label>
             <input
               id="two-factor-key"
               type="text"
@@ -516,7 +553,7 @@ export default function ProfilePage() {
 
         {(twoFactorSetup || twoFactor.enabled) && (
           <div className="auth-field">
-            <label htmlFor="two-factor-code">Authenticator code</label>
+            <label htmlFor="two-factor-code">{t("Authenticator code")}</label>
             <input
               id="two-factor-code"
               type="text"
@@ -535,19 +572,27 @@ export default function ProfilePage() {
             onClick={startTwoFactorSetup}
             disabled={twoFactor.loading}
           >
-            Enable 2FA
+            {t("Enable 2FA")}
           </button>
         )}
 
         {twoFactorSetup && (
-          <button className="auth-submit" type="button" onClick={confirmTwoFactor}>
-            Confirm 2FA
+          <button
+            className="auth-submit"
+            type="button"
+            onClick={confirmTwoFactor}
+          >
+            {t("Confirm 2FA")}
           </button>
         )}
 
         {twoFactor.enabled && (
-          <button className="auth-submit" type="button" onClick={disableTwoFactor}>
-            Disable 2FA
+          <button
+            className="auth-submit"
+            type="button"
+            onClick={disableTwoFactor}
+          >
+            {t("Disable 2FA")}
           </button>
         )}
       </section>

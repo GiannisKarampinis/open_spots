@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Trans, useTranslation } from "react-i18next";
 import axios from "axios";
 import { storeAuthResponse } from "../utils/auth";
 import "../styles/auth.css";
@@ -13,7 +14,9 @@ function formatSeconds(totalSeconds) {
 }
 
 export default function VerifyEmailPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
@@ -21,18 +24,23 @@ export default function VerifyEmailPage() {
   const [total, setTotal] = useState(600);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("success");
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [resending, setResending]   = useState(false);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function fetchStatus() {
       try {
-        const res = await axios.get("/api/v1/accounts/verification/status/", { withCredentials: true });
+        const res = await axios.get("/api/v1/accounts/verification/status/", {
+          withCredentials: true,
+        });
+
         if (cancelled) return;
+
         const seconds = Number(res.data.remaining_seconds || 0);
+
         setEmail(res.data.email || "");
         setReason(res.data.reason || "");
         setRemaining(seconds);
@@ -40,7 +48,9 @@ export default function VerifyEmailPage() {
       } catch (err) {
         if (!cancelled) {
           setMessageType("error");
-          setMessage("No pending verification was found. Please sign up or log in again.");
+          setMessage(
+            t("No pending verification was found. Please sign up or log in again.")
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -48,16 +58,19 @@ export default function VerifyEmailPage() {
     }
 
     fetchStatus();
+
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (remaining <= 0) return undefined;
+
     const interval = window.setInterval(() => {
       setRemaining((current) => Math.max(0, current - 1));
     }, 1000);
+
     return () => window.clearInterval(interval);
   }, [remaining]);
 
@@ -67,30 +80,50 @@ export default function VerifyEmailPage() {
   }, [remaining, total]);
 
   const updateCode = (event) => {
-    const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, CODE_LENGTH);
+    const digitsOnly = event.target.value
+      .replace(/\D/g, "")
+      .slice(0, CODE_LENGTH);
+
     setCode(digitsOnly);
     setMessage("");
   };
 
   const submit = async (event) => {
     event.preventDefault();
+
     if (code.length !== CODE_LENGTH) {
       setMessageType("error");
-      setMessage("Enter the 6-digit verification code.");
+      setMessage(t("Enter the 6-digit verification code."));
       return;
     }
 
     setSubmitting(true);
     setMessage("");
+
     try {
-      const res = await axios.post("/api/v1/accounts/verification/confirm/", { code }, { withCredentials: true });
+      const res = await axios.post(
+        "/api/v1/accounts/verification/confirm/",
+        { code },
+        { withCredentials: true }
+      );
+
       storeAuthResponse(res.data);
+
       setMessageType("success");
-      setMessage(res.data.detail || "Email verified successfully.");
-      setTimeout(() => navigate(res.data.redirect_to || (reason === "password_recovery" ? "/accounts/reset-password" : "/")), 700);
+      setMessage(res.data.detail || t("Email verified successfully."));
+
+      setTimeout(() => {
+        navigate(
+          res.data.redirect_to ||
+            (reason === "password_recovery" ? "/accounts/reset-password" : "/")
+        );
+      }, 700);
     } catch (err) {
       setMessageType("error");
-      setMessage(err.response?.data?.detail || "Verification failed. Please check the code.");
+      setMessage(
+        err.response?.data?.detail ||
+          t("Verification failed. Please check the code.")
+      );
     } finally {
       setSubmitting(false);
     }
@@ -99,17 +132,27 @@ export default function VerifyEmailPage() {
   const resend = async () => {
     setResending(true);
     setMessage("");
+
     try {
-      const res = await axios.post("/api/v1/accounts/verification/resend/", {}, { withCredentials: true });
+      const res = await axios.post(
+        "/api/v1/accounts/verification/resend/",
+        {},
+        { withCredentials: true }
+      );
+
       const seconds = Number(res.data.remaining_seconds || 600);
+
       setRemaining(seconds);
       setTotal(seconds);
       setCode("");
       setMessageType("success");
-      setMessage(res.data.detail || "Verification code resent.");
+      setMessage(res.data.detail || t("Verification code resent."));
     } catch (err) {
       setMessageType("error");
-      setMessage(err.response?.data?.detail || "Could not resend the verification code.");
+      setMessage(
+        err.response?.data?.detail ||
+          t("Could not resend the verification code.")
+      );
     } finally {
       setResending(false);
     }
@@ -118,13 +161,25 @@ export default function VerifyEmailPage() {
   return (
     <div className="verification-page">
       <div className="verification-container">
-        <h2>Verify Your Email</h2>
+        <h2>{t("Verify Your Email")}</h2>
+
         <p>
-          Please enter the 6-digit code we sent
-          {email ? <> to <strong>{email}</strong></> : " to your email address"}.
+          {email ? (
+            <Trans
+              i18nKey="Please enter the 6-digit code we sent to email."
+              values={{ email }}
+              components={{ strong: <strong /> }}
+            />
+          ) : (
+            t("Please enter the 6-digit code we sent to your email address.")
+          )}
         </p>
 
-        {message && <div className={`auth-message ${messageType}`}>{message}</div>}
+        {message && (
+          <div className={`auth-message ${messageType}`}>
+            {message}
+          </div>
+        )}
 
         <form className="verification-form" onSubmit={submit}>
           <input
@@ -134,22 +189,33 @@ export default function VerifyEmailPage() {
             pattern="\d{6}"
             value={code}
             onChange={updateCode}
-            placeholder="Enter 6-digit code"
+            placeholder={t("Enter 6-digit code")}
             autoFocus
             disabled={loading}
             required
           />
+
           <button type="submit" disabled={submitting || loading || remaining <= 0}>
-            {submitting ? "Verifying..." : "Verify"}
+            {submitting ? t("Verifying...") : t("Verify")}
           </button>
         </form>
 
-        <button className="resend-button" type="button" onClick={resend} disabled={resending || loading}>
-          {resending ? "Sending..." : "Resend Code"}
+        <button
+          className="resend-button"
+          type="button"
+          onClick={resend}
+          disabled={resending || loading}
+        >
+          {resending ? t("Sending...") : t("Resend Code")}
         </button>
 
         <p className="auth-prompt">
-          Need a different account? <Link to="/accounts/signup">Sign up again</Link>
+          <Trans
+            i18nKey="Need a different account? Sign up again"
+            components={{
+              signupLink: <Link to="/accounts/signup" />,
+            }}
+          />
         </p>
       </div>
 
@@ -157,13 +223,23 @@ export default function VerifyEmailPage() {
         <div className="verification-countdown">
           {remaining > 0 ? (
             <>
-              Verification code expires in <span>{formatSeconds(remaining)}</span>.
+              <Trans
+                i18nKey="Verification code expires in time."
+                values={{ time: formatSeconds(remaining) }}
+                components={{ span: <span /> }}
+              />
+
               <div className="verification-bar-bg">
-                <div className="verification-bar-fill" style={{ width: `${percent}%` }} />
+                <div
+                  className="verification-bar-fill"
+                  style={{ width: `${percent}%` }}
+                />
               </div>
             </>
           ) : (
-            <div className="auth-message error">Verification code has expired. Please resend the code.</div>
+            <div className="auth-message error">
+              {t("Verification code has expired. Please resend the code.")}
+            </div>
           )}
         </div>
       )}

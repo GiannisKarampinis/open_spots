@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Trans, useTranslation } from "react-i18next";
 import axios from "axios";
 import googleIcon from "../assets/google-icon.svg";
 import { storeAuthResponse } from "../utils/auth";
@@ -8,7 +9,9 @@ import "../styles/feedback.css";
 
 function fieldErrors(errors, name) {
   const value = errors?.[name];
+
   if (!value) return [];
+
   return Array.isArray(value) ? value : [value];
 }
 
@@ -16,7 +19,11 @@ function getSafeRedirectPath(path) {
   if (!path) return "";
 
   // Prevent external redirects like https://example.com
-  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("//")) {
+  if (
+    path.startsWith("http://") ||
+    path.startsWith("https://") ||
+    path.startsWith("//")
+  ) {
     return "";
   }
 
@@ -24,10 +31,16 @@ function getSafeRedirectPath(path) {
 }
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [form, setForm] = useState({ username: "", password: "", code: "" });
+  const [form, setForm] = useState({
+    username: "",
+    password: "",
+    code: "",
+  });
+
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -50,12 +63,17 @@ export default function LoginPage() {
   const updateField = (event) => {
     const { name, value } = event.target;
 
-    setForm((current) => ({ ...current, [name]: value }));
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+
     setErrors((current) => ({
       ...current,
       [name]: undefined,
       non_field_errors: undefined,
     }));
+
     setMessage("");
   };
 
@@ -71,17 +89,22 @@ export default function LoginPage() {
         ? await axios.post(
             "/api/v1/accounts/login/2fa/",
             { code: form.code },
-            { withCredentials: true },
+            { withCredentials: true }
           )
         : await axios.post(
             "/api/v1/accounts/login/",
-            { username: form.username, password: form.password },
-            { withCredentials: true },
+            {
+              username: form.username,
+              password: form.password,
+            },
+            { withCredentials: true }
           );
 
       if (res.data.requires_2fa) {
         setRequiresTwoFactor(true);
-        setMessage(res.data.detail || "Enter the code from your authenticator app.");
+        setMessage(
+          res.data.detail || t("Enter the code from your authenticator app.")
+        );
         return;
       }
 
@@ -97,20 +120,27 @@ export default function LoginPage() {
       const data = err.response?.data;
 
       if (data?.requires_verification) {
-        setMessage(data.detail || "Please verify your email before continuing.");
-        setTimeout(() => navigate("/accounts/verify-email"), 600);
+        setMessage(
+          data.detail || t("Please verify your email before continuing.")
+        );
+
+        setTimeout(() => {
+          navigate("/accounts/verify-email");
+        }, 600);
       } else if (data?.detail) {
         setMessage(data.detail);
       } else if (data?.non_field_errors?.length) {
         setMessage(data.non_field_errors[0]);
       } else if (data?.username?.length) {
-        setMessage(`Username: ${data.username[0]}`);
+        setMessage(t("Username error", { error: data.username[0] }));
       } else if (data?.password?.length) {
-        setMessage(`Password: ${data.password[0]}`);
+        setMessage(t("Password error", { error: data.password[0] }));
       } else if (typeof data === "string") {
         setMessage(data);
       } else {
-        setMessage("Login failed. Please check the browser console and Django logs.");
+        setMessage(
+          t("Login failed. Please check the browser console and Django logs.")
+        );
       }
     } finally {
       setSubmitting(false);
@@ -139,7 +169,11 @@ export default function LoginPage() {
 
   return (
     <div className="login-container">
-      <h2>{requiresTwoFactor ? "Two-Factor Authentication" : "Welcome Back"}</h2>
+      <h2>
+        {requiresTwoFactor
+          ? t("Two-Factor Authentication")
+          : t("Welcome Back")}
+      </h2>
 
       {feedbackMessages.length > 0 && (
         <div
@@ -148,14 +182,17 @@ export default function LoginPage() {
           aria-atomic="true"
         >
           {feedbackMessages.map((feedbackMessage) => (
-            <div className="alert alert-error fade-message" key={feedbackMessage}>
+            <div
+              className="alert alert-error fade-message"
+              key={feedbackMessage}
+            >
               {feedbackMessage}
 
               <button
                 className="close-btn"
                 type="button"
                 onClick={clearFeedback}
-                aria-label="Dismiss message"
+                aria-label={t("Dismiss message")}
               >
                 &times;
               </button>
@@ -170,15 +207,19 @@ export default function LoginPage() {
             <a
               className="google-login-link"
               href={googleLoginUrl}
-              aria-label="Login with Google"
+              aria-label={t("Login with Google")}
             >
-              <img src={googleIcon} alt="Google logo" className="google-icon" />
-              Login with Google
+              <img
+                src={googleIcon}
+                alt={t("Google logo")}
+                className="google-icon"
+              />
+              {t("Login with Google")}
             </a>
           </div>
 
           <div className="divider">
-            <span>or</span>
+            <span>{t("or")}</span>
           </div>
         </>
       )}
@@ -186,7 +227,8 @@ export default function LoginPage() {
       <form className="login-form" onSubmit={submit}>
         {requiresTwoFactor ? (
           <div>
-            <label htmlFor="login-code">Authenticator code</label>
+            <label htmlFor="login-code">{t("Authenticator code")}</label>
+
             <input
               id="login-code"
               name="code"
@@ -202,7 +244,8 @@ export default function LoginPage() {
         ) : (
           <>
             <div>
-              <label htmlFor="login-username">Username</label>
+              <label htmlFor="login-username">{t("Username")}</label>
+
               <input
                 id="login-username"
                 name="username"
@@ -216,7 +259,8 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="login-password">Password</label>
+              <label htmlFor="login-password">{t("Password")}</label>
+
               <input
                 id="login-password"
                 name="password"
@@ -232,7 +276,11 @@ export default function LoginPage() {
         )}
 
         <button className="btn primary-btn" type="submit" disabled={submitting}>
-          {submitting ? "Logging in..." : requiresTwoFactor ? "Verify" : "Login"}
+          {submitting
+            ? t("Logging in...")
+            : requiresTwoFactor
+              ? t("Verify")
+              : t("Login")}
         </button>
 
         {requiresTwoFactor && (
@@ -241,25 +289,35 @@ export default function LoginPage() {
             type="button"
             onClick={() => {
               setRequiresTwoFactor(false);
-              setForm((current) => ({ ...current, code: "" }));
+              setForm((current) => ({
+                ...current,
+                code: "",
+              }));
               clearFeedback();
             }}
             disabled={submitting}
           >
-            Back
+            {t("Back")}
           </button>
         )}
       </form>
 
       {!requiresTwoFactor && (
         <p className="auth-secondary-link">
-          <Link to="/accounts/password-recover">Forgot your password?</Link>
+          <Link to="/accounts/password-recover">
+            {t("Forgot your password?")}
+          </Link>
         </p>
       )}
 
       {!requiresTwoFactor && (
         <p className="signup-prompt">
-          Don&apos;t have an account? <Link to="/accounts/signup">Sign up</Link>
+          <Trans
+            i18nKey="Don't have an account? Sign up"
+            components={{
+              signupLink: <Link to="/accounts/signup" />,
+            }}
+          />
         </p>
       )}
     </div>

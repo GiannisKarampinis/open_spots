@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import {
   CircleMarker,
@@ -55,11 +56,17 @@ function Gallery({ images, emptyText, onOpen }) {
 }
 
 function MapPreview({ venue }) {
+  const { t } = useTranslation();
+
   const lat = Number(venue.latitude);
   const lng = Number(venue.longitude);
 
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-    return <p className="venue-detail-empty">Map coordinates are not available yet.</p>;
+    return (
+      <p className="venue-detail-empty">
+        {t("Map coordinates are not available yet.")}
+      </p>
+    );
   }
 
   const position = [lat, lng];
@@ -77,7 +84,7 @@ function MapPreview({ venue }) {
         scrollWheelZoom={false}
         zoomControl={false}
         className="venue-detail-map"
-        aria-label={`${venue.name} map`}
+        aria-label={t("Venue map", { name: venue.name })}
       >
         <TileLayer
           attribution={
@@ -119,13 +126,15 @@ function MapPreview({ venue }) {
         target="_blank"
         rel="noreferrer"
       >
-        View larger map
+        {t("View larger map")}
       </a>
     </div>
   );
 }
 
 function Reviews({ reviews, onReviewSubmitted, venueId }) {
+  const { t } = useTranslation();
+
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -135,7 +144,7 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
     event.preventDefault();
 
     if (!rating) {
-      setStatus("Please select a rating.");
+      setStatus(t("Please select a rating."));
       return;
     }
 
@@ -150,14 +159,14 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
       setRating(0);
       setHoverRating(0);
       setComment("");
-      setStatus("Your review has been submitted.");
+      setStatus(t("Your review has been submitted."));
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
-        setStatus("Log in before submitting a review.");
+        setStatus(t("Log in before submitting a review."));
         return;
       }
 
-      setStatus("Could not submit your review.");
+      setStatus(t("Could not submit your review."));
     }
   };
 
@@ -167,11 +176,11 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
         <div className="venue-detail-reviews">
           {reviews.map((review) => (
             <article className="venue-detail-review" key={review.id}>
-              <strong>{review.username || "Guest"}</strong>
+              <strong>{review.username || t("Guest")}</strong>
 
               <div
                 className="venue-detail-review-stars"
-                aria-label={`${review.rating} out of 5`}
+                aria-label={t("Rating out of 5", { rating: review.rating })}
               >
                 {Array.from({ length: 5 }).map((_, index) => (
                   <FontAwesomeIcon
@@ -187,19 +196,19 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
           ))}
         </div>
       ) : (
-        <p className="venue-detail-empty">No reviews yet.</p>
+        <p className="venue-detail-empty">{t("No reviews yet.")}</p>
       )}
 
       <form className="venue-detail-review-form" onSubmit={submitReview}>
-        <h4>Leave a Review</h4>
+        <h4>{t("Leave a Review")}</h4>
 
         <div className="venue-detail-rating-picker">
-          <span className="venue-detail-rating-label">Rating</span>
+          <span className="venue-detail-rating-label">{t("Rating")}</span>
 
           <div
             className="venue-detail-rating-stars"
             role="radiogroup"
-            aria-label="Select rating"
+            aria-label={t("Select rating")}
             onMouseLeave={() => setHoverRating(0)}
           >
             {Array.from({ length: 5 }).map((_, index) => {
@@ -216,7 +225,7 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
                   onMouseEnter={() => setHoverRating(starValue)}
                   onFocus={() => setHoverRating(starValue)}
                   onClick={() => setRating(starValue)}
-                  aria-label={`${starValue} star${starValue > 1 ? "s" : ""}`}
+                  aria-label={t("Select star rating", { count: starValue })}
                   aria-checked={rating === starValue}
                   role="radio"
                 >
@@ -228,16 +237,16 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
         </div>
 
         <label>
-          Comment
+          {t("Comment")}
           <textarea
             rows="4"
             value={comment}
             onChange={(event) => setComment(event.target.value)}
-            placeholder="Share your experience..."
+            placeholder={t("Share your experience...")}
           />
         </label>
 
-        <button type="submit">Submit Review</button>
+        <button type="submit">{t("Submit Review")}</button>
 
         {status && <p className="venue-detail-status">{status}</p>}
       </form>
@@ -245,9 +254,9 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
   );
 }
 
-function getReservationErrorMessage(data) {
+function getReservationErrorMessage(data, t) {
   if (!data) {
-    return "Could not submit the reservation. Please check the details.";
+    return t("Could not submit the reservation. Please check the details.");
   }
 
   if (typeof data === "string") {
@@ -271,10 +280,11 @@ function getReservationErrorMessage(data) {
     return `${field}: ${value[0]}`;
   }
 
-  return "Could not submit the reservation. Please check the details.";
+  return t("Could not submit the reservation. Please check the details.");
 }
 
 function ReservationCard({ venueId }) {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const isLoggedIn = Boolean(getAccessToken());
@@ -328,7 +338,7 @@ function ReservationCard({ venueId }) {
       } catch (err) {
         if (!cancelled) {
           setSlots([]);
-          setStatus("Could not load available times.");
+          setStatus(t("Could not load available times."));
         }
       }
     }
@@ -338,7 +348,7 @@ function ReservationCard({ venueId }) {
     return () => {
       cancelled = true;
     };
-  }, [date, venueId, isLoggedIn]);
+  }, [date, venueId, isLoggedIn, t]);
 
   const updateField = (event) => {
     const { name, value } = event.target;
@@ -349,12 +359,12 @@ function ReservationCard({ venueId }) {
     event.preventDefault();
 
     if (!isLoggedIn) {
-      setStatus("Log in before submitting a reservation.");
+      setStatus(t("Log in before submitting a reservation."));
       return;
     }
 
     if (!selectedSlot) {
-      setStatus("Choose an available time first.");
+      setStatus(t("Choose an available time first."));
       return;
     }
 
@@ -376,7 +386,7 @@ function ReservationCard({ venueId }) {
         {},
         {
           onUnauthenticated: () => {
-            setStatus("Log in before submitting a reservation.");
+            setStatus(t("Log in before submitting a reservation."));
           },
         }
       );
@@ -387,17 +397,17 @@ function ReservationCard({ venueId }) {
     } catch (err) {
       console.log("Reservation error:", err.response?.status, err.response?.data);
 
-      setStatus(getReservationErrorMessage(err.response?.data));
+      setStatus(getReservationErrorMessage(err.response?.data, t));
     }
   };
 
   return (
     <aside className="venue-detail-reserve">
-      <h3>Reserve a Table</h3>
+      <h3>{t("Reserve a Table")}</h3>
 
       {!isLoggedIn ? (
         <p className="venue-detail-login-message">
-          <Link to={loginPath}>Login</Link> to make a reservation.
+          <Link to={loginPath}>{t("Login")}</Link> {t("to make a reservation.")}
         </p>
       ) : (
         <form onSubmit={submitReservation}>
@@ -411,7 +421,7 @@ function ReservationCard({ venueId }) {
                   key={stepNumber}
                   type="button"
                   onClick={() => setStep(stepNumber)}
-                  aria-label={`Step ${stepNumber}`}
+                  aria-label={t("Step number", { number: stepNumber })}
                 >
                   <FontAwesomeIcon icon={icon} />
                 </button>
@@ -421,10 +431,10 @@ function ReservationCard({ venueId }) {
 
           {step === 1 && (
             <section className="venue-detail-form-step">
-              <h4>Your Information</h4>
+              <h4>{t("Your Information")}</h4>
 
               <label>
-                First name
+                {t("First name")}
                 <input
                   name="firstname"
                   value={form.firstname}
@@ -434,7 +444,7 @@ function ReservationCard({ venueId }) {
               </label>
 
               <label>
-                Last name
+                {t("Last name")}
                 <input
                   name="lastname"
                   value={form.lastname}
@@ -444,7 +454,7 @@ function ReservationCard({ venueId }) {
               </label>
 
               <label>
-                Email
+                {t("Email")}
                 <input
                   name="email"
                   type="email"
@@ -455,7 +465,7 @@ function ReservationCard({ venueId }) {
               </label>
 
               <label>
-                Phone
+                {t("Phone")}
                 <input
                   name="phone"
                   value={form.phone}
@@ -465,17 +475,17 @@ function ReservationCard({ venueId }) {
               </label>
 
               <button type="button" onClick={() => setStep(2)}>
-                Next
+                {t("Next")}
               </button>
             </section>
           )}
 
           {step === 2 && (
             <section className="venue-detail-form-step">
-              <h4>Reservation Details</h4>
+              <h4>{t("Reservation Details")}</h4>
 
               <label>
-                Date
+                {t("Date")}
                 <input
                   name="date"
                   type="date"
@@ -486,7 +496,7 @@ function ReservationCard({ venueId }) {
               </label>
 
               <div>
-                <span className="venue-detail-label">Time</span>
+                <span className="venue-detail-label">{t("Time")}</span>
 
                 <div className="venue-detail-slots">
                   {slots.length ? (
@@ -498,17 +508,16 @@ function ReservationCard({ venueId }) {
                         onClick={() => setSelectedSlot(slot)}
                       >
                         {slot.time}
-                        {/*{slot.is_next_day ? " +1" : ""}*/}
                       </button>
                     ))
                   ) : (
-                    <p>No available times for this date.</p>
+                    <p>{t("No available times for this date.")}</p>
                   )}
                 </div>
               </div>
 
               <label>
-                Number of guests
+                {t("Number of guests")}
                 <input
                   name="guests"
                   min="1"
@@ -521,11 +530,11 @@ function ReservationCard({ venueId }) {
 
               <div className="venue-detail-button-row">
                 <button type="button" onClick={() => setStep(1)}>
-                  Back
+                  {t("Back")}
                 </button>
 
                 <button type="button" onClick={() => setStep(3)}>
-                  Next
+                  {t("Next")}
                 </button>
               </div>
             </section>
@@ -533,26 +542,26 @@ function ReservationCard({ venueId }) {
 
           {step === 3 && (
             <section className="venue-detail-form-step">
-              <h4>Additional Notes</h4>
+              <h4>{t("Additional Notes")}</h4>
 
               <label>
-                Special requests
+                {t("Special requests")}
                 <select
                   name="special_requests"
                   value={form.special_requests}
                   onChange={updateField}
                 >
-                  <option value="none">None</option>
-                  <option value="vegan">Vegan</option>
-                  <option value="vegetarian">Vegetarian</option>
-                  <option value="gluten_free">Gluten-free</option>
-                  <option value="wheelchair">Wheelchair accessible</option>
-                  <option value="other">Other</option>
+                  <option value="none">{t("None")}</option>
+                  <option value="vegan">{t("Vegan")}</option>
+                  <option value="vegetarian">{t("Vegetarian")}</option>
+                  <option value="gluten_free">{t("Gluten-free")}</option>
+                  <option value="wheelchair">{t("Wheelchair accessible")}</option>
+                  <option value="other">{t("Other")}</option>
                 </select>
               </label>
 
               <label>
-                Allergies
+                {t("Allergies")}
                 <textarea
                   name="allergies"
                   rows="2"
@@ -562,7 +571,7 @@ function ReservationCard({ venueId }) {
               </label>
 
               <label>
-                Comments
+                {t("Comments")}
                 <textarea
                   name="comments"
                   rows="2"
@@ -573,10 +582,10 @@ function ReservationCard({ venueId }) {
 
               <div className="venue-detail-button-row">
                 <button type="button" onClick={() => setStep(2)}>
-                  Back
+                  {t("Back")}
                 </button>
 
-                <button type="submit">Submit Reservation</button>
+                <button type="submit">{t("Submit Reservation")}</button>
               </div>
             </section>
           )}
@@ -589,6 +598,7 @@ function ReservationCard({ venueId }) {
 }
 
 export default function VenueDetailPage() {
+  const { t } = useTranslation();
   const { venueId } = useParams();
 
   const [venue, setVenue] = useState(null);
@@ -617,25 +627,25 @@ export default function VenueDetailPage() {
 
   const tabs = useMemo(
     () => [
-      ["about", "About"],
-      ["menu", "Menu"],
-      ["photos", "Photos"],
-      ["reviews", "Reviews"],
+      ["about", t("About")],
+      ["menu", t("Menu")],
+      ["photos", t("Photos")],
+      ["reviews", t("Reviews")],
     ],
-    []
+    [t]
   );
 
   if (venue === false) {
     return (
       <div className="venue-detail-state">
-        <p>Venue not found.</p>
-        <Link to="/">Back to venues</Link>
+        <p>{t("Venue not found.")}</p>
+        <Link to="/">{t("Back to venues")}</Link>
       </div>
     );
   }
 
   if (!venue) {
-    return <div className="venue-detail-state">Loading venue...</div>;
+    return <div className="venue-detail-state">{t("Loading venue...")}</div>;
   }
 
   const openModal = (images, index) => {
@@ -703,7 +713,7 @@ export default function VenueDetailPage() {
               <div className="venue-detail-summary">
                 <span className={venue.is_full ? "full" : "available"}>
                   <FontAwesomeIcon icon={faChair} />
-                  {venue.is_full ? "Full" : "Available"}
+                  {venue.is_full ? t("Full") : t("Available")}
                 </span>
 
                 {venue.average_rating > 0 && (
@@ -715,21 +725,21 @@ export default function VenueDetailPage() {
               </div>
 
               <p className="venue-detail-description">
-                {venue.description || "This venue has not added a description yet."}
+                {venue.description || t("This venue has not added a description yet.")}
               </p>
 
-              <h3>Location</h3>
+              <h3>{t("Location")}</h3>
               <MapPreview venue={venue} />
             </article>
           )}
 
           {activeTab === "menu" && (
             <article className="venue-detail-panel">
-              <h3>Menu</h3>
+              <h3>{t("Menu")}</h3>
 
               <Gallery
                 images={venue.menu_images}
-                emptyText="This venue has not added a menu yet."
+                emptyText={t("This venue has not added a menu yet.")}
                 onOpen={openModal}
               />
             </article>
@@ -737,11 +747,11 @@ export default function VenueDetailPage() {
 
           {activeTab === "photos" && (
             <article className="venue-detail-panel">
-              <h3>Photos</h3>
+              <h3>{t("Photos")}</h3>
 
               <Gallery
                 images={venue.images}
-                emptyText="No photos available."
+                emptyText={t("No photos available.")}
                 onOpen={openModal}
               />
             </article>
@@ -749,7 +759,7 @@ export default function VenueDetailPage() {
 
           {activeTab === "reviews" && (
             <article className="venue-detail-panel">
-              <h3>Reviews</h3>
+              <h3>{t("Reviews")}</h3>
 
               <Reviews
                 reviews={venue.reviews}
@@ -769,7 +779,7 @@ export default function VenueDetailPage() {
             className="venue-detail-modal-close"
             type="button"
             onClick={closeModal}
-            aria-label="Close"
+            aria-label={t("Close")}
           >
             <FontAwesomeIcon icon={faXmark} />
           </button>
@@ -781,7 +791,7 @@ export default function VenueDetailPage() {
               event.stopPropagation();
               moveModal(-1);
             }}
-            aria-label="Previous"
+            aria-label={t("Previous")}
           >
             <FontAwesomeIcon icon={faChevronLeft} />
           </button>
@@ -799,7 +809,7 @@ export default function VenueDetailPage() {
               event.stopPropagation();
               moveModal(1);
             }}
-            aria-label="Next"
+            aria-label={t("Next")}
           >
             <FontAwesomeIcon icon={faChevronRight} />
           </button>

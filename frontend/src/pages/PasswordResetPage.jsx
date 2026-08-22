@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import "../styles/password_reset.css";
 import { ensureCsrfToken } from "../utils/auth";
 
 export default function PasswordResetPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -28,7 +30,7 @@ export default function PasswordResetPage() {
 
     if (form.new_password1 !== form.new_password2) {
       setType("error");
-      setMessage("Passwords do not match.");
+      setMessage(t("Passwords do not match."));
       return;
     }
 
@@ -50,11 +52,16 @@ export default function PasswordResetPage() {
       );
 
       setType("success");
-      setMessage(res.data.detail || "Password reset successful.");
-      setTimeout(() => navigate("/accounts/login"), 900);
+      setMessage(res.data.detail || t("Password reset successful."));
+
+      setTimeout(() => {
+        navigate("/accounts/login");
+      }, 900);
     } catch (err) {
       setType("error");
-      setMessage(err.response?.data?.detail || "Could not reset your password.");
+      setMessage(
+        err.response?.data?.detail || t("Could not reset your password.")
+      );
     } finally {
       setSubmitting(false);
     }
@@ -62,14 +69,14 @@ export default function PasswordResetPage() {
 
   return (
     <div className="form-container">
-      <h2>Reset Your Password</h2>
+      <h2>{t("Reset Your Password")}</h2>
 
       {message && <p className={`auth-message ${type}`}>{message}</p>}
 
       <form onSubmit={submit}>
         <p>
           <label>
-            New password
+            {t("New password")}
             <br />
             <input
               name="new_password1"
@@ -83,7 +90,7 @@ export default function PasswordResetPage() {
 
         <p>
           <label>
-            Confirm new password
+            {t("Confirm new password")}
             <br />
             <input
               name="new_password2"
@@ -96,12 +103,12 @@ export default function PasswordResetPage() {
         </p>
 
         <button type="submit" disabled={submitting}>
-          {submitting ? "Changing..." : "Change Password"}
+          {submitting ? t("Changing...") : t("Change Password")}
         </button>
       </form>
 
       <p>
-        <Link to="/accounts/login">Back to login</Link>
+        <Link to="/accounts/login">{t("Back to login")}</Link>
       </p>
     </div>
   );

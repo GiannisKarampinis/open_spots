@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "../styles/password_recover.css";
 import { postWithCsrf } from "../utils/auth";
 
 export default function PasswordRecoverPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -23,7 +25,7 @@ export default function PasswordRecoverPage() {
 
       setMessage(
         res.data.detail ||
-          "If the email exists, a verification code has been sent."
+          t("If the email exists, a verification code has been sent.")
       );
 
       setTimeout(() => {
@@ -37,7 +39,7 @@ export default function PasswordRecoverPage() {
       } else if (data?.email?.length) {
         setMessage(data.email[0]);
       } else {
-        setMessage("Could not start password recovery.");
+        setMessage(t("Could not start password recovery."));
       }
     } finally {
       setSubmitting(false);
@@ -46,26 +48,26 @@ export default function PasswordRecoverPage() {
 
   return (
     <div className="form-container">
-      <h2>Password Recovery</h2>
+      <h2>{t("Password Recovery")}</h2>
 
       {message && <p className="auth-message success">{message}</p>}
 
       <form onSubmit={submit}>
         <p>
           <label>
-            Email
+            {t("Email")}
             <br />
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
               required
             />
           </label>
         </p>
 
         <button type="submit" disabled={submitting}>
-          {submitting ? "Sending..." : "Send Verification Code"}
+          {submitting ? t("Sending...") : t("Send Verification Code")}
         </button>
       </form>
     </div>
