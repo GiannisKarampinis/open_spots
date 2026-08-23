@@ -18,8 +18,11 @@
 }
 
 .date-range-picker .quick-date-buttons {
-  display:  flex;
-  gap:      0.5rem;
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  margin-right: 0.25rem;
+  width: calc(300px + 0.4rem);
 }
 
 .date-range-picker .quick-date-button[aria-pressed="true"] {
@@ -48,9 +51,12 @@
 }
 
 .date-range-picker .daterange-input.quick-date-button {
-  flex:       0 0 auto;
-  min-width:  fit-content;
-  width:      fit-content;
+  flex: 0 0 150px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: 150px;
+  padding-inline: 0.65rem;
+  width: 150px;
 }
 
 .date-range-picker .daterange-input:hover,
@@ -200,9 +206,23 @@
   .date-range-picker {
     align-items: stretch;
     flex-wrap: wrap;
+    row-gap: 0.75rem;
   }
 
   .date-range-picker .daterange-input {
     min-width: 0;
+  }
+
+  .date-range-picker .quick-date-buttons {
+    justify-content: center;
+    margin-right: 0;
+    max-width: calc(300px + 0.4rem);
+    width: 100%;
+  }
+
+  .date-range-picker .daterange-input.quick-date-button {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
   }
 }
