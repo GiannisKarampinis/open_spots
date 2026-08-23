@@ -81,7 +81,7 @@ function formatDateRangeLabel(value, t, locale) {
 }
 
 /* OK - REVIEWED */
-export default function DateRangePicker({ value, onChange, minDate = "", maxDate = "" }) {
+export default function DateRangePicker({ value, onChange, minDate = "", maxDate = "", showQuickDateButtons_Future = false, showQuickDateButtons_Past = false }) {
 	const { t, i18n } 			= useTranslation();
 	const locale 				= i18n.language;
 	const [open, setOpen] 			= useState(false);
@@ -92,6 +92,24 @@ export default function DateRangePicker({ value, onChange, minDate = "", maxDate
 	const calendarDays 			= useMemo(() => getCalendarDays(viewDate), [viewDate]);
 	const monthLabel 			= new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(viewDate);
 	const weekdayLabels 			= useMemo(() => getWeekdayLabels(locale), [locale]);
+	const today 				= toYmd(new Date());
+	const tomorrowDate 			= new Date();
+	tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+	const tomorrow 				= toYmd(tomorrowDate);
+	
+	const yesterdayDate 			= new Date();
+	yesterdayDate.setDate(yesterdayDate.getDate() - 1);	
+	const yesterday 			= toYmd(yesterdayDate);
+
+	const lastWeekStartDate 		= new Date();
+	lastWeekStartDate.setDate(lastWeekStartDate.getDate() - 7);
+	const lastWeekStart 			= toYmd(lastWeekStartDate);
+
+	const isTodayPressed 			= (value.start === today && value.end === today) || (value.start === today && value.end === tomorrow);
+	const isTomorrowPressed 		= (value.start === tomorrow && value.end === tomorrow) || (value.start === today && value.end === tomorrow);
+	const isYesterdayPressed 		= value.start === yesterday && value.end === yesterday;
+	const isLastWeekPressed 		= value.start === lastWeekStart && value.end === yesterday;
+	const hasSelectedRange 			= Boolean(value.start || value.end);
 
 	/* OK - REVIEWED */
 	useEffect(() => {
@@ -154,8 +172,78 @@ export default function DateRangePicker({ value, onChange, minDate = "", maxDate
 		setOpen(false);
 	};
 
+	/* OK - REVIEWED */
+	const applyQuickRange = (nextRange) => {
+		setDraftRange(nextRange);
+		setHoveredDate("");
+		setOpen(false);
+		onChange(nextRange);
+	};
+
+	/* OK - REVIEWED */
+	const toggleFutureQuickDate = (dateValue) => {
+		const nextTodayPressed 	  = dateValue === today ? !isTodayPressed : isTodayPressed;
+		const nextTomorrowPressed = dateValue === tomorrow ? !isTomorrowPressed : isTomorrowPressed;
+		let nextRange = EMPTY_RANGE;
+
+		if (nextTodayPressed && nextTomorrowPressed) {
+			nextRange = { start: today, end: tomorrow };
+		} else if (nextTodayPressed) {
+			nextRange = { start: today, end: today };
+		} else if (nextTomorrowPressed) {
+			nextRange = { start: tomorrow, end: tomorrow };
+		}
+
+		applyQuickRange(nextRange);
+	};
+
+	/* OK - REVIEWED */
+	const togglePastQuickRange = (range, isPressed) => {
+		applyQuickRange(isPressed ? EMPTY_RANGE : range);
+	};
+
 	return (
 		<div className="date-range-picker" >
+			{showQuickDateButtons_Future && (
+				<div className="quick-date-buttons">
+					<button
+						type="button"
+						className="btn btn-outline-secondary daterange-input quick-date-button"
+						aria-pressed={isTodayPressed}
+						onClick={() => toggleFutureQuickDate(today)}
+					>
+						{t("Today")}
+					</button>
+					<button
+						type="button"
+						className="btn btn-outline-secondary daterange-input quick-date-button"
+						aria-pressed={isTomorrowPressed}
+						onClick={() => toggleFutureQuickDate(tomorrow)}
+					>
+						{t("Tomorrow")}
+					</button>
+				</div>
+			)}
+			{showQuickDateButtons_Past && (
+				<div className="quick-date-buttons">
+					<button
+						type="button"
+						className="btn btn-outline-secondary daterange-input quick-date-button"
+						aria-pressed={isYesterdayPressed}
+						onClick={() => togglePastQuickRange({ start: yesterday, end: yesterday }, isYesterdayPressed)}
+					>
+						{t("Yesterday")}
+					</button>
+					<button
+						type="button"
+						className="btn btn-outline-secondary daterange-input quick-date-button"
+						aria-pressed={isLastWeekPressed}
+						onClick={() => togglePastQuickRange({ start: lastWeekStart, end: yesterday }, isLastWeekPressed)}
+					>
+						{t("Last Week")}
+					</button>
+				</div>
+			)}
 			<div className="date-range-trigger-wrap">
 				<button
 					type="button" 		/* This denotes that this is a regular interactive button, will not be used to submit a form */
@@ -219,11 +307,17 @@ export default function DateRangePicker({ value, onChange, minDate = "", maxDate
 				)}
 			</div>
 
-			{(value.start || value.end) && (
-				<button type="button" className="btn btn-sm btn-outline-secondary clear-range-btn" title={t("Clear date range")} aria-label={t("Clear date range")} onClick={clearRange}>
-					<FontAwesomeIcon icon={faXmark} aria-hidden="true" />
-				</button>
-			)}
+			<button
+				type="button"
+				className={`btn btn-sm btn-outline-secondary clear-range-btn${hasSelectedRange ? "" : " is-placeholder"}`}
+				title={hasSelectedRange ? t("Clear date range") : undefined}
+				aria-label={hasSelectedRange ? t("Clear date range") : undefined}
+				aria-hidden={!hasSelectedRange}
+				disabled={!hasSelectedRange}
+				onClick={clearRange}
+			>
+				<FontAwesomeIcon icon={faXmark} aria-hidden="true" />
+			</button>
 		</div>
 	);
 }

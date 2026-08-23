@@ -1997,6 +1997,7 @@ export default function VenueDashboardPage() {
 						value={dateRanges.requests}
 						onChange={(range) => updateDateRange("requests", range)}
 						minDate={today}
+						showQuickDateButtons_Future
 					/>
 					<h2 className="mt-4"><FontAwesomeIcon icon={faAlarmClock} /> {t("Pending Reservation Requests")}</h2>
 					<ReservationsTable
@@ -2036,6 +2037,7 @@ export default function VenueDashboardPage() {
 						value={dateRanges.history}
 						onChange={(range) => updateDateRange("history", range)}
 						maxDate={yesterday}
+						showQuickDateButtons_Past
 					/>
 					<ReservationsTable
 						id="pastTable"

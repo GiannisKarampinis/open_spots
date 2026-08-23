@@ -17,6 +17,17 @@
   max-width: 100%;
 }
 
+.date-range-picker .quick-date-buttons {
+  display:  flex;
+  gap:      0.5rem;
+}
+
+.date-range-picker .quick-date-button[aria-pressed="true"] {
+  background:   var(--primary-hover);
+  border-color: var(--primary-color);
+  box-shadow:   0 5px 14px rgba(0, 123, 255, 0.22);
+}
+
 .date-range-picker .daterange-input {
   align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.24);
@@ -34,6 +45,12 @@
   white-space: nowrap;
   width: 100%;
 	transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.date-range-picker .daterange-input.quick-date-button {
+  flex:       0 0 auto;
+  min-width:  fit-content;
+  width:      fit-content;
 }
 
 .date-range-picker .daterange-input:hover,
@@ -65,6 +82,10 @@
   margin-left: 0;
   padding: 0;
   width: 34px;
+}
+
+.date-range-picker .clear-range-btn.is-placeholder {
+  visibility: hidden; /* makes the button invisible while keeping its allocated width and height. */
 }
 
 .date-range-picker .clear-range-btn:hover {
