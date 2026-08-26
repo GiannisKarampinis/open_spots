@@ -33,6 +33,7 @@ import {
 import { faAlarmClock } from "@fortawesome/free-regular-svg-icons";
 import { getWithAuth, postWithAuth } from "../utils/auth";
 import { mediaUrl } from "../utils/media";
+import { subscribeToVenueNotifications } from "../utils/venueNotifications";
 import DateRangePicker from "../components/DateRangePicker";
 import "../styles/venue_dashboard_legacy.css";
 import "../styles/venue_dashboard.css";
@@ -1510,6 +1511,7 @@ export default function VenueDashboardPage() {
 		arrivals: { ...emptyReservationTable },
 		history: { ...emptyReservationTable },
 	});
+	const realtimeRefreshRef = useRef(() => {});
 
 	useEffect(() => {
 		if (!message) return undefined;
@@ -1674,6 +1676,18 @@ export default function VenueDashboardPage() {
 		reservationTables.history.search,
 		JSON.stringify(reservationTables.history.sorting),
 	]);
+
+	realtimeRefreshRef.current = () => {
+		fetchDashboardCounts();
+		fetchReservationBucket("requests");
+		fetchReservationBucket("arrivals");
+		fetchReservationBucket("history");
+	};
+
+	useEffect(() => subscribeToVenueNotifications({
+		venueId,
+		onRefresh: () => realtimeRefreshRef.current(),
+	}), [venueId]);
 
 	const venue = dashboard?.venue || {};
 	const notificationCount = dashboard?.reservation_counts?.unseen_requests || 0;
