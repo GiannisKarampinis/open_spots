@@ -7,12 +7,12 @@ import {
   postWithAuth,
   storeAuthResponse,
 } from "../utils/auth";
-import "../styles/auth.css";
+import "../styles/ProfilePage.css";
 
 const editableFields = [
+  ["username", "Username", "text"],
   ["firstname", "First name", "text"],
   ["lastname", "Last name", "text"],
-  ["username", "Username", "text"],
   ["phone_number", "Phone number", "text"],
 ];
 
@@ -45,12 +45,20 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(null);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("success");
+  const [emailWarningDismissed, setEmailWarningDismissed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const [twoFactor, setTwoFactor] = useState({ enabled: false, loading: true });
   const [twoFactorSetup, setTwoFactorSetup] = useState(null);
   const [twoFactorCode, setTwoFactorCode] = useState("");
+
+  useEffect(() => {
+    if (!message) return undefined;
+
+    const timeoutId = window.setTimeout(() => setMessage(""), 5000);
+    return () => window.clearTimeout(timeoutId);
+  }, [message]);
 
   useEffect(() => {
     let cancelled = false;
@@ -196,6 +204,17 @@ export default function ProfilePage() {
 
       if (!res) return;
 
+      const pendingEmail = emailForm.email.trim().toLowerCase();
+      setUserInfo((current) => ({
+        ...current,
+        unverified_email: pendingEmail,
+        display_email: pendingEmail,
+        email_verified: false,
+      }));
+      setEmailForm({ email: pendingEmail });
+      setEmailWarningDismissed(false);
+      setEditing(null);
+
       if (res.data.requires_verification) {
         showSuccess(
           res.data.detail || t("Verification code sent to your new email.")
@@ -205,7 +224,6 @@ export default function ProfilePage() {
       }
 
       showSuccess(res.data.detail || t("Email updated."));
-      setEditing(null);
     } catch (err) {
       const data = err.response?.data;
       showError(
@@ -335,34 +353,56 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="auth-container">
+      <div className="profile-page">
         <p>{t("Loading profile...")}</p>
       </div>
     );
   }
 
   return (
-    <div className="auth-container">
-      <h2>{t("Profile")}</h2>
+    <div >
+      <section className="profile-page auth-form profile-section">
+        <h3>{t("Profile")}</h3>
 
-      {!userInfo.email_verified && (
-        <div className="auth-message warning">
-          {t("Your email")} <strong>{userInfo.display_email}</strong>{" "}
-          {t("is not yet verified.")}{" "}
-          <button
-            type="button"
-            className="auth-inline-button"
-            onClick={() => navigate("/accounts/verify-email")}
-          >
-            {t("Verify Now")}
-          </button>
+        <div className="profile-message-area" aria-live="polite">
+          {!userInfo.email_verified && !emailWarningDismissed && (
+            <div className="auth-message warning">
+              <span>
+                {t("Your email")} <strong>{userInfo.display_email}</strong>{" "}
+                {t("is not yet verified.")}{" "}
+                <button
+                  type="button"
+                  className="auth-inline-button"
+                  onClick={() => navigate("/accounts/verify-email")}
+                >
+                  {t("Verify Now")}
+                </button>
+              </span>
+              <button
+                type="button"
+                className="profile-message-close"
+                aria-label={t("Dismiss message")}
+                onClick={() => setEmailWarningDismissed(true)}
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {message && (
+            <div className={`auth-message ${messageType}`}>
+              <span>{message}</span>
+              <button
+                type="button"
+                className="profile-message-close"
+                aria-label={t("Dismiss message")}
+                onClick={() => setMessage("")}
+              >
+                ×
+              </button>
+            </div>
+          )}
         </div>
-      )}
-
-      {message && <div className={`auth-message ${messageType}`}>{message}</div>}
-
-      <section className="auth-form profile-section">
-        <h3>{t("User Information")}</h3>
 
         <div className="auth-field profile-field">
           <label>{t("Email")}</label>
@@ -417,57 +457,29 @@ export default function ProfilePage() {
             <div className="auth-field profile-field" key={name}>
               <label htmlFor={`profile-${name}`}>{t(label)}</label>
 
-              {editing === name ? (
-                <div className="profile-edit-row">
-                  <input
-                    id={`profile-${name}`}
-                    name={name}
-                    type={type}
-                    value={form[name]}
-                    onChange={updateField}
-                  />
-
-                  <div className="profile-form-actions">
-                    <button
-                      className="profile-action-btn profile-save-btn"
-                      type="submit"
-                      disabled={saving}
-                    >
-                      {saving ? t("Saving...") : t("Save")}
-                    </button>
-
-                    <button
-                      className="profile-action-btn profile-cancel-btn"
-                      type="button"
-                      onClick={cancelEdit}
-                    >
-                      {t("Cancel")}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="profile-display-row">
-                  <div className="profile-value-frame">
-                    <span>{form[name] || "—"}</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="profile-edit-btn"
-                    onClick={() => setEditing(name)}
-                  >
-                    {t("Edit")}
-                  </button>
-                </div>
-              )}
+              <input
+                id={`profile-${name}`}
+                name={name}
+                type={type}
+                value={form[name]}
+                onChange={updateField}
+                readOnly={name === "username"}
+                className={name === "username" ? "profile-readonly-input" : undefined}
+              />
             </div>
           ))}
+
+          <button
+            className="profile-update-btn"
+            type="submit"
+            disabled={saving}
+          >
+            {saving ? t("Updating...") : t("Update Profile")}
+          </button>
         </form>
 
-        <div className="auth-field profile-field">
-          <label>{t("Password")}</label>
-
-          {editing === "password" ? (
+        {editing === "password" ? (
+          <div className="auth-field profile-field">
             <form className="profile-password-form" onSubmit={submitPassword}>
               <div className="profile-password-inputs">
                 <input
@@ -516,25 +528,19 @@ export default function ProfilePage() {
                 </button>
               </div>
             </form>
-          ) : (
-            <div className="profile-display-row">
-              <div className="profile-value-frame">
-                <span>********</span>
-              </div>
-
-              <button
-                type="button"
-                className="profile-edit-btn"
-                onClick={() => setEditing("password")}
-              >
-                {t("Change")}
-              </button>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="profile-password-link"
+            onClick={() => setEditing("password")}
+          >
+            {t("Change Password")}
+          </button>
+        )}
       </section>
 
-      <section className="auth-form" aria-labelledby="two-factor-heading">
+      <section className="profile-page auth-form" aria-labelledby="two-factor-heading">
         <h3 id="two-factor-heading">{t("Two-Factor Authentication")}</h3>
 
         <p>{twoFactor.enabled ? t("Enabled") : t("Disabled")}</p>
