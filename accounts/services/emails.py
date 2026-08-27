@@ -1,4 +1,4 @@
-def send_verification_code(user):
+def send_verification_code(user, *, recipient=None, async_send=True):
     # Import locally to avoid circular imports
     from emails_manager.utils   import send_email_with_template
     from emails_manager.models  import EmailVerificationCode
@@ -22,7 +22,7 @@ def send_verification_code(user):
 
     # 4. Determine email target
     subject     = "Your OpenSpots Verification Code"
-    recipient   = user.unverified_email or user.email
+    recipient = recipient or user.unverified_email or user.email
 
     # 5. Send email using the common helper
     send_email_with_template(
@@ -30,5 +30,5 @@ def send_verification_code(user):
         recipient       =   recipient,
         template_base   =   "verification_code",
         context         =   context,
-        async_send      =   True,  # keep async sending
+        async_send      =   async_send,
     )

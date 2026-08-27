@@ -81,3 +81,4 @@ def send_email_with_template(subject: str, recipient: str, template_base: str, c
             logger.debug("Email sent synchronously to %s", recipient)
         except Exception:
             logger.exception("Synchronous email sending failed for %s", recipient)
+            raise

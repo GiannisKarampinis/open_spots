@@ -1,7 +1,10 @@
 from django.db      import models
 from django.utils   import timezone
 from django.conf    import settings
+import secrets
 
+def generate_verification_code():
+    return f"{secrets.randbelow(1_000_000):06d}"
 
 class EmailVerificationCode(models.Model):
     user        = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -16,8 +19,7 @@ class EmailVerificationCode(models.Model):
 
     @staticmethod
     def generate_code():
-        from random import randint
-        return f"{randint(100000, 999999)}"
+        return generate_verification_code()
     
 
 class VenueEmailVerificationCode(models.Model):
@@ -32,9 +34,7 @@ class VenueEmailVerificationCode(models.Model):
 
     @classmethod
     def generate_code(cls):
-        # 6-digit code, zero-padded
-        import random
-        return f"{random.randint(0, 999999):06d}"
+        return generate_verification_code()
 
     @classmethod
     def create_for_email(cls, email):

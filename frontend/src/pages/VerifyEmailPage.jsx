@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import axios from "axios";
-import { storeAuthResponse } from "../utils/auth";
+import { clearStoredAuth, storeAuthResponse } from "../utils/auth";
 import "../styles/auth.css";
 
 const CODE_LENGTH = 6;
@@ -107,7 +107,11 @@ export default function VerifyEmailPage() {
         { withCredentials: true }
       );
 
-      storeAuthResponse(res.data);
+      if (res.data.access || res.data.user) {
+        storeAuthResponse(res.data);
+      } else if (res.data.session_invalidated) {
+        clearStoredAuth();
+      }
 
       setMessageType("success");
       setMessage(res.data.detail || t("Email verified successfully."));

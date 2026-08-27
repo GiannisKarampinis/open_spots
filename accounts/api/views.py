@@ -3,6 +3,8 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, permissions, status
@@ -11,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from .serializers import (
@@ -33,6 +36,11 @@ User = get_user_model()
 security_logger = logging.getLogger("accounts.security")
 REFRESH_COOKIE_NAME = getattr(settings, "JWT_REFRESH_COOKIE_NAME", "open_spots_refresh")
 TWO_FACTOR_PENDING_SECONDS = int(getattr(settings, "TWO_FACTOR_PENDING_SECONDS", 300))
+PASSWORD_CHANGE_PENDING_SECONDS = int(
+    getattr(settings, "PASSWORD_CHANGE_PENDING_SECONDS", 600)
+)
+VERIFICATION_MAX_ATTEMPTS = int(getattr(settings, "VERIFICATION_MAX_ATTEMPTS", 5))
+VERIFICATION_LOCK_SECONDS = int(getattr(settings, "VERIFICATION_LOCK_SECONDS", 600))
 
 
 def _default_redirect_for_user(user):
@@ -89,6 +97,16 @@ def _tokens_for_user(user):
         "refresh": str(refresh),
         "access": str(refresh.access_token),
     }
+
+
+def _revoke_all_user_sessions(user):
+    now = timezone.now()
+    DeviceSession.objects.filter(user=user, revoked_at__isnull=True).update(revoked_at=now)
+    outstanding_tokens = OutstandingToken.objects.filter(user=user)
+    BlacklistedToken.objects.bulk_create(
+        [BlacklistedToken(token=token) for token in outstanding_tokens],
+        ignore_conflicts=True,
+    )
 
 
 def _client_ip(request):
@@ -576,15 +594,37 @@ class PasswordChangeRequestAPIView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         user = request.user
-        serializer.save()
+        pending_password_hash = make_password(serializer.validated_data["new_password1"])
+        pending_password_expires_at = str(
+            (timezone.now() + timezone.timedelta(seconds=PASSWORD_CHANGE_PENDING_SECONDS)).timestamp()
+        )
 
-        EmailVerificationCode.objects.filter(user=user).delete()
-        send_verification_code(user)
-        security_logger.warning("password_change_requested user=%s ip=%s", user.pk, _client_ip(request))
+        try:
+            send_verification_code(user, recipient=user.email, async_send=False)
+        except Exception:
+            EmailVerificationCode.objects.filter(user=user).delete()
+            request.session.pop("pending_password_hash", None)
+            request.session.pop("pending_password_expires_at", None)
+            request.session.pop("pending_user_id", None)
+            request.session.pop("verification_reason", None)
+            request.session.pop("code_already_sent", None)
+            security_logger.exception(
+                "password_change_verification_send_failed user=%s ip=%s",
+                user.pk,
+                _client_ip(request),
+            )
+            return Response(
+                {"detail": "Could not send the verification code. Please try again."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
+        request.session["pending_password_hash"] = pending_password_hash
+        request.session["pending_password_expires_at"] = pending_password_expires_at
         request.session["pending_user_id"] = user.id
         request.session["verification_reason"] = "password_change"
         request.session["code_already_sent"] = True
+
+        security_logger.warning("password_change_requested user=%s ip=%s", user.pk, _client_ip(request))
 
         return Response({
             "detail": "Verification code sent. Confirm the code to complete the password change.",
@@ -633,12 +673,15 @@ class PasswordResetAPIView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user)
+        _revoke_all_user_sessions(user)
         security_logger.warning("password_reset_completed user=%s ip=%s", user.pk, _client_ip(request))
         request.session.pop("pending_user_id", None)
         request.session.pop("verification_reason", None)
         request.session.pop("code_already_sent", None)
         request.session.pop("password_recovery_verified", None)
-        return Response({"detail": "Password reset successful."})
+        response = Response({"detail": "Password reset successful."})
+        _delete_refresh_cookie(response)
+        return response
 
 
 class ResendVerificationAPIView(generics.GenericAPIView):
@@ -705,6 +748,7 @@ class ConfirmVerificationAPIView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
     throttle_scope = "auth_verification"
 
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -713,18 +757,76 @@ class ConfirmVerificationAPIView(generics.GenericAPIView):
         if not user_id or not reason:
             return Response({"detail": "No pending verification in session."}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = get_object_or_404(User, id=user_id)
-
+        locked_until = request.session.get("verification_locked_until")
         try:
-            code_obj = EmailVerificationCode.objects.get(user=user, code=serializer.validated_data["code"].strip())
-        except EmailVerificationCode.DoesNotExist:
-            return Response({"detail": "Invalid verification code."}, status=status.HTTP_400_BAD_REQUEST)
+            verification_locked = (
+                bool(locked_until)
+                and timezone.now().timestamp() < float(locked_until)
+            )
+        except (TypeError, ValueError):
+            verification_locked = True
+        if verification_locked:
+            return Response(
+                {"detail": "Too many verification attempts. Try again later."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        if locked_until:
+            request.session.pop("verification_attempts", None)
+            request.session.pop("verification_locked_until", None)
+
+        user = get_object_or_404(User, id=user_id)
+        pending_password_hash = None
+        if reason == "password_change":
+            pending_password_hash = request.session.get("pending_password_hash")
+            expires_at = request.session.get("pending_password_expires_at")
+            try:
+                password_change_expired = (
+                    not expires_at or timezone.now().timestamp() >= float(expires_at)
+                )
+            except (TypeError, ValueError):
+                password_change_expired = True
+            if not pending_password_hash or password_change_expired:
+                request.session.pop("pending_password_hash", None)
+                request.session.pop("pending_password_expires_at", None)
+                return Response(
+                    {"detail": "The pending password change has expired. Please start again."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        code_obj = (
+            EmailVerificationCode.objects.select_for_update()
+            .filter(user=user, code=serializer.validated_data["code"].strip())
+            .first()
+        )
+        if not code_obj:
+            try:
+                attempts = int(request.session.get("verification_attempts", 0)) + 1
+            except (TypeError, ValueError):
+                attempts = 1
+            request.session["verification_attempts"] = attempts
+            if attempts >= VERIFICATION_MAX_ATTEMPTS:
+                request.session["verification_locked_until"] = str(
+                    (
+                        timezone.now()
+                        + timezone.timedelta(seconds=VERIFICATION_LOCK_SECONDS)
+                    ).timestamp()
+                )
+                return Response(
+                    {"detail": "Too many verification attempts. Try again later."},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                )
+            return Response(
+                {"detail": "Invalid verification code."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if code_obj.is_expired():
             code_obj.delete()
             return Response({"detail": "Verification code expired. Please request a new one."}, status=status.HTTP_400_BAD_REQUEST)
 
         code_obj.delete()
+        request.session.pop("verification_attempts", None)
+        request.session.pop("verification_locked_until", None)
 
         if reason in ["signup", "email_update"]:
             user.email = user.unverified_email or user.email
@@ -755,13 +857,20 @@ class ConfirmVerificationAPIView(generics.GenericAPIView):
             return Response({"detail": "Verification successful. You may now reset your password."})
 
         if reason == "password_change":
-            user.email = user.unverified_email or user.email
-            user.unverified_email = ""
-            user.email_verified = True
-            user.save(update_fields=["email", "unverified_email", "email_verified"])
+            user.password = pending_password_hash
+            user.save(update_fields=["password"])
+            _revoke_all_user_sessions(user)
             request.session.pop("pending_user_id", None)
             request.session.pop("verification_reason", None)
             request.session.pop("code_already_sent", None)
-            return Response({"detail": "Password change verified and email confirmed."})
+            request.session.pop("pending_password_hash", None)
+            request.session.pop("pending_password_expires_at", None)
+            response = Response({
+                "detail": "Password changed successfully. Please log in again.",
+                "session_invalidated": True,
+                "redirect_to": "/accounts/login",
+            })
+            _delete_refresh_cookie(response)
+            return response
 
         return Response({"detail": "Unsupported verification flow."}, status=status.HTTP_400_BAD_REQUEST)

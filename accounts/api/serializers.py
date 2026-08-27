@@ -192,16 +192,6 @@ class UserPasswordChangeSerializer(serializers.Serializer):
             raise serializers.ValidationError({"new_password2": "The new passwords do not match."})
         return attrs
 
-    def save(self, **kwargs):
-        user = self.context["request"].user
-        original_email = user.email.strip().lower() if user.email else ""
-        user.set_password(self.validated_data["new_password1"])
-        user.email_verified = False
-        user.unverified_email = original_email
-        user.save(update_fields=["password", "email_verified", "unverified_email"])
-        return user
-
-
 class UserPasswordRecoverySerializer(serializers.Serializer):
     email = serializers.EmailField()
 
