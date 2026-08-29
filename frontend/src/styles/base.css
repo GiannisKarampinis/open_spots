@@ -19,6 +19,12 @@
     --button-text:          #ffffff;                  /* Button text color */
     --button-text-hover:    #e6e6e6;                  /* Button text hover color */
     --scroll-container-bg:  #edeef4;                  /* Scroll container background */  
+    --table-row-primary-background: #e4edf3;           /* Lighter OpenSpots-blue table rows */
+    --table-row-alternate-background: #cedde7;         /* Darker OpenSpots-blue table rows */
+    --table-row-text-color: #252525;                    /* Table row text */
+    --data-control-surface-color: #083a5a;              /* Data table, table header, and date control surfaces */
+    --data-control-button-color: #083a5a;               /* Data table and date control buttons */
+    --data-table-surround-color: #083a5a;               /* Outer data table surroundings */
     --venue-available:      #4caf50;                  /* Green for available venues */
     --venue-available-shadow: rgba(76, 175, 80, 0.6); /* Shadow for available venues */
     --venue-full:           #f44336;                  /* Red for full venues */
