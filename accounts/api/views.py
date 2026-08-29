@@ -1,5 +1,6 @@
 import base64
 import logging
+import math
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -28,6 +29,7 @@ from .serializers import (
     UserRegistrationSerializer,
     VerificationCodeSerializer,
 )
+from .throttles import VerificationResendIPThrottle, VerificationResendUserThrottle
 from ..services.emails import send_verification_code
 from accounts.models import DeviceSession
 from emails_manager.models import EmailVerificationCode
@@ -41,6 +43,9 @@ PASSWORD_CHANGE_PENDING_SECONDS = int(
 )
 VERIFICATION_MAX_ATTEMPTS = int(getattr(settings, "VERIFICATION_MAX_ATTEMPTS", 5))
 VERIFICATION_LOCK_SECONDS = int(getattr(settings, "VERIFICATION_LOCK_SECONDS", 600))
+VERIFICATION_RESEND_COOLDOWN_SECONDS = int(
+    getattr(settings, "VERIFICATION_RESEND_COOLDOWN_SECONDS", 60)
+)
 
 
 def _default_redirect_for_user(user):
@@ -63,6 +68,15 @@ def _remaining_verification_seconds(code_obj):
         return 0
     expires_at = code_obj.created_at + timezone.timedelta(minutes=10)
     return max(0, int((expires_at - timezone.now()).total_seconds()))
+
+
+def _remaining_resend_cooldown_seconds(code_obj):
+    if not code_obj:
+        return 0
+    available_at = code_obj.created_at + timezone.timedelta(
+        seconds=VERIFICATION_RESEND_COOLDOWN_SECONDS
+    )
+    return max(0, math.ceil((available_at - timezone.now()).total_seconds()))
 
 
 def _refresh_cookie_kwargs():
@@ -687,7 +701,7 @@ class PasswordResetAPIView(generics.GenericAPIView):
 class ResendVerificationAPIView(generics.GenericAPIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
-    throttle_scope = "auth_verification"
+    throttle_classes = [VerificationResendIPThrottle, VerificationResendUserThrottle]
 
     def post(self, request, *args, **kwargs):
         user_id = request.session.get("pending_user_id")
@@ -696,6 +710,17 @@ class ResendVerificationAPIView(generics.GenericAPIView):
             return Response({"detail": "No pending verification in session."}, status=status.HTTP_400_BAD_REQUEST)
 
         user = get_object_or_404(User, id=user_id)
+        latest_code = _latest_verification_code(user)
+        resend_after = _remaining_resend_cooldown_seconds(latest_code)
+        if resend_after > 0:
+            return Response(
+                {
+                    "detail": f"Please wait {resend_after} seconds before requesting another code.",
+                    "retry_after": resend_after,
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
         EmailVerificationCode.objects.filter(user=user).delete()
         send_verification_code(user)
         request.session["code_already_sent"] = True
@@ -704,6 +729,7 @@ class ResendVerificationAPIView(generics.GenericAPIView):
             {
                 "detail": "Verification code resent.",
                 "remaining_seconds": _remaining_verification_seconds(latest_code),
+                "resend_after_seconds": _remaining_resend_cooldown_seconds(latest_code),
             }
         )
 
@@ -729,6 +755,7 @@ class VerificationStatusAPIView(generics.GenericAPIView):
                 "email": user.unverified_email or user.email,
                 "remaining_seconds": remaining,
                 "is_expired": remaining <= 0,
+                "resend_after_seconds": _remaining_resend_cooldown_seconds(latest_code),
             }
         )
 

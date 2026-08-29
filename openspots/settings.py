@@ -109,10 +109,16 @@ REST_FRAMEWORK = {
         'auth_register': os.getenv('API_THROTTLE_AUTH_REGISTER', '10/hour'),
         'auth_password': os.getenv('API_THROTTLE_AUTH_PASSWORD', '5/minute'),
         'auth_verification': os.getenv('API_THROTTLE_AUTH_VERIFICATION', '10/minute'),
+        'auth_verification_resend_ip': os.getenv('API_THROTTLE_VERIFICATION_RESEND_IP', '10/hour'),
+        'auth_verification_resend_user': os.getenv('API_THROTTLE_VERIFICATION_RESEND_USER', '3/hour'),
         'auth_device': os.getenv('API_THROTTLE_AUTH_DEVICE', '30/minute'),
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+VERIFICATION_RESEND_COOLDOWN_SECONDS = int(
+    os.getenv('VERIFICATION_RESEND_COOLDOWN_SECONDS', '60')
+)
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'openSpots API',
