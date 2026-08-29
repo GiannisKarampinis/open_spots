@@ -723,15 +723,6 @@ class VerificationStatusAPIView(generics.GenericAPIView):
         latest_code = _latest_verification_code(user)
         remaining = _remaining_verification_seconds(latest_code)
 
-        if not latest_code or remaining <= 0:
-            EmailVerificationCode.objects.filter(user=user).delete()
-            send_verification_code(user)
-            latest_code = _latest_verification_code(user)
-            remaining = _remaining_verification_seconds(latest_code)
-            request.session["code_already_sent"] = True
-        elif not request.session.get("code_already_sent"):
-            request.session["code_already_sent"] = True
-
         return Response(
             {
                 "reason": reason,
