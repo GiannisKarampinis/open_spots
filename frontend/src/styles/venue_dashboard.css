@@ -71,8 +71,18 @@
   font: inherit;
 }
 
-.table-striped tbody tr:nth-child(odd) {
-  background-color: rgba(255, 255, 255, 0.04);
+#venue-dashboard .table-responsive .table tbody tr:nth-child(odd) > * {
+  background-color: var(--table-row-primary-background);
+  color: var(--table-row-text-color);
+}
+
+#venue-dashboard .table-responsive .table tbody tr:nth-child(even) > * {
+  background-color: var(--table-row-alternate-background);
+  color: var(--table-row-text-color);
+}
+
+#venue-dashboard .table-responsive .table tbody td {
+  border: 0;
 }
 
 .table-hover tbody tr {
@@ -84,12 +94,11 @@
 }
 
 .datatable-controls {
-  background: var(--surface-gradient);
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
+  background:     var(--data-control-surface-color);
+  border-radius:  6px;
+  box-shadow:     0 2px 6px rgba(0,0,0,0.35);
+  gap:            1rem;
+  padding:        0.75rem 1rem;
 }
 
 .datatable-length-control {
@@ -122,7 +131,7 @@
 }
 
 .datatable-controls select {
-  background: var(--surface-gradient);
+  background: var(--data-control-button-color);
   color: var(--button-text);
   cursor: pointer;
   font-weight: 600;
@@ -174,12 +183,18 @@
 
 .datatable-footer {
   align-items: center;
+  background: var(--data-control-surface-color);
   display: flex;
   gap: 1rem;
   justify-content: center;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-top: 0.6rem;
+  margin-bottom: 0.6rem;
   position: relative;
+}
+
+.table-dark > tr > th {
+  background-color:   var(--data-control-surface-color);
+  color:              var(--button-text);
 }
 
 .datatable-info,
@@ -203,7 +218,7 @@
 }
 
 .paginate_button {
-  background-color: var(--primary-color);
+  background-color: var(--data-control-button-color);
   border: 1px solid #555;
   border-radius: 4px;
   color: #f1f1f1;
@@ -954,6 +969,30 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   width: 100%;
+  background: var(--data-table-surround-color);
+  box-shadow: none;
+}
+
+#requests .table-responsive .paginate_button,
+#history .table-responsive .paginate_button,
+#requests .table-responsive tbody .btn,
+#history .table-responsive tbody .btn {
+  background-color: var(--data-control-button-color);
+  border-color: var(--data-control-button-color);
+  color: var(--button-text);
+}
+
+#requests .table-responsive .paginate_button:hover:not(:disabled),
+#history .table-responsive .paginate_button:hover:not(:disabled),
+#requests .table-responsive tbody .btn:hover,
+#history .table-responsive tbody .btn:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: var(--button-text);
+}
+
+.table-responsive > .table.shadow-sm {
+  box-shadow: none;
 }
 
 .table {

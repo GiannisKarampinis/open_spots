@@ -109,13 +109,6 @@ h1.fw-bold {
     padding:        8px 12px;
 }
 
-.table thead th {
-    background:         var(--surface-gradient);
-    color:              var(--button-text); 
-    font-weight:        600;
-    letter-spacing:     0.03em;
-}
-
 /* === DataTables Striping & Hover === */
 table.dataTable.stripe tbody tr.odd { background-color: var(--surface-color); }
 table.dataTable.stripe tbody tr.even { background-color: var(--primary-color); }
