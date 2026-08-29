@@ -1,7 +1,7 @@
 .date-range-picker {
   display: flex;
   align-items: center;
-  background: var(--surface-gradient);
+  background: var(--data-control-surface-color);
   border-radius: 6px;
   gap: 0.5rem;
   justify-content: center;
@@ -35,7 +35,7 @@
   align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 6px;
-  background: var(--surface-gradient);
+  background: var(--data-control-button-color);
   color: var(--button-text, #f8f9fa);
   display: inline-flex;
   gap: 0.5rem;
@@ -80,7 +80,7 @@
   align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
-  background: var(--surface-gradient);
+  background: var(--data-control-button-color);
   color: var(--button-text, #f8f9fa);
   display: inline-flex;
   height: 34px;
