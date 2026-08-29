@@ -97,6 +97,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "username",
             "user_type",
             "email",
             "unverified_email",
