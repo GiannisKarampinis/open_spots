@@ -27,6 +27,7 @@ import {
 	faClockRotateLeft,
 	faEye,
 	faEyeSlash,
+	faMagnifyingGlass,
 	faTableList,
 	faXmark,
 } from "@fortawesome/free-solid-svg-icons";
@@ -470,26 +471,18 @@ function ReservationsTable({
 
 	return (
 		<div className="table-responsive">
-			<div className="datatable-controls d-flex justify-content-between mb-2">
-				<div id={`${controlPrefix}-show-entries-wrapper`} className="datatable-length-control">
-					<label>
-						{t("Show")}{" "}
-						<select
-							value={pageSize}
-							onChange={(event) => onPageSizeChange(Number(event.target.value))}
-						>
-							{[10, 25, 50, 100].map((size) => (
-								<option key={size} value={size}>{size}</option>
-							))}
-						</select>{" "}
-						{t("entries")}
-					</label>
-				</div>
+			<div className="datatable-controls d-flex justify-content-between">
 				<div id={`${controlPrefix}-search-wrapper`} className="datatable-search-control">
 					<label>
 						{t("Search:")}
+						<FontAwesomeIcon
+							icon={faMagnifyingGlass}
+							className="datatable-search-icon"
+							aria-hidden="true"
+						/>
 						<input
 							type="search"
+							placeholder={t("Type customer's name...")}
 							value={search ?? ""}
 							onChange={(event) => onSearchChange(event.target.value)}
 						/>
@@ -550,6 +543,20 @@ function ReservationsTable({
 				</tbody>
 			</table>
 			<div className="datatable-footer">
+				<div id={`${controlPrefix}-show-entries-wrapper`} className="datatable-length-control">
+					<label>
+						{t("Show")}
+						<select
+							value={pageSize}
+							onChange={(event) => onPageSizeChange(Number(event.target.value))}
+						>
+							{[10, 25, 50, 100].map((size) => (
+								<option key={size} value={size}>{size}</option>
+							))}
+						</select>
+						{t("entries")}
+					</label>
+				</div>
 				<div className="datatable-info">
 					{totalRows
 						? t("Showing {{first}} to {{last}} of {{total}} entries", { first: firstVisibleRow, last: lastVisibleRow, total: totalRows })

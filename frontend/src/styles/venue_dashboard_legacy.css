@@ -151,7 +151,6 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 /* === Top Controls Wrapper (Search + Entries) === */
 .datatable-controls {
     display:            flex;
-    margin-bottom:      1rem;
     padding:            0.75rem 1rem;
     background:         var(--surface-gradient);
     border-radius:      6px;
@@ -175,59 +174,8 @@ table.dataTable tbody tr:hover { background-color: var(--primary-hover) !importa
 .datatable-controls #upcoming-search-wrapper input,
 .datatable-controls #special-search-wrapper input,
 .datatable-controls #history-search-wrapper input {
-    margin-left: 1rem;
-    width: 90%;
-}
-
-/* Search input fields inside datatable controls */
-.datatable-controls input[type="search"],
-.datatable-controls input[type="text"] {
-    background-color: var(--background-color);
-    border: 1px solid #555;
-    color: var(--text-color);
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-    box-shadow: inset 0 0 6px rgba(0,0,0,0.7);
-    width: 100%;
-    /* max-width: 300px; prevent overly large search bars */
-}
-
-/* On focus: highlight border and background */
-.datatable-controls input[type="search"]:focus,
-.datatable-controls input[type="text"]:focus {
-    background-color: var(--button-text-hover);
-    border-color: #4a90e2;
-    outline: none;
-    box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
-}
-
-/* Dropdown (select) inside show-entries wrappers */
-.datatable-controls select {
-    background:     var(--surface-gradient);
-    border:         1px solid #555;
-    color:          var(--button-text);
-    padding:        8px 12px;
-    border-radius:  6px;
-    font-size:      0.95rem;
-    font-weight:    600;
-    box-shadow:     inset 0 0 6px rgba(0,0,0,0.7);
-    transition:     background-color 0.3s ease, border-color 0.3s ease;
-}
-
-/* On hover and focus for dropdown */
-.datatable-controls select:hover {
-    background-color:   var(--surface-gradient);
-    border-color:       #777;
-    cursor:             pointer;
-}
-
-.datatable-controls select:focus {
-    background-color: var(--primary-hover);
-    border-color: #4a90e2;
-    outline: none;
-    box-shadow: 0 0 5px 2px rgba(74,144,226,0.5);
+    /* margin-left: 1rem; */
+    width: 97%;
 }
 
 /* === Buttons === */
