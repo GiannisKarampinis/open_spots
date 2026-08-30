@@ -1,3 +1,5 @@
+import unicodedata
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
@@ -7,6 +9,28 @@ from rest_framework.validators import UniqueValidator
 from accounts.models import DeviceSession
 
 User = get_user_model()
+NAME_MAX_LENGTH = User._meta.get_field("firstname").max_length
+
+
+class PersonNameField(serializers.CharField):
+    default_error_messages = {
+        "digits": "Names cannot contain digits.",
+        "control_characters": "Names cannot contain control characters.",
+    }
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("allow_blank", False)
+        kwargs.setdefault("max_length", NAME_MAX_LENGTH)
+        kwargs.setdefault("trim_whitespace", True)
+        super().__init__(**kwargs)
+
+    def to_internal_value(self, data):
+        value = super().to_internal_value(data)
+        if any(character.isdigit() for character in value):
+            self.fail("digits")
+        if any(unicodedata.category(character) == "Cc" for character in value):
+            self.fail("control_characters")
+        return value
 
 phone_number_validator = RegexValidator(
     regex=r"^\+?\d{7,15}$",
@@ -36,8 +60,8 @@ class UserLoginSerializer(serializers.Serializer):
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    firstname = serializers.CharField(required=True, allow_blank=False)
-    lastname = serializers.CharField(required=True, allow_blank=False)
+    firstname = PersonNameField(required=True)
+    lastname = PersonNameField(required=True)
     username = serializers.CharField(
         validators=[UniqueValidator(queryset=User.objects.all(), message="This username is already taken.")]
     )
@@ -77,8 +101,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    firstname = PersonNameField(required=True)
+    lastname = PersonNameField(required=True)
     full_name = serializers.SerializerMethodField(read_only=True)
-    display_email = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -87,7 +112,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "username",
             "email",
             "unverified_email",
-            "display_email",
             "firstname",
             "lastname",
             "user_type",
@@ -101,16 +125,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "user_type",
             "email",
             "unverified_email",
-            "display_email",
             "email_verified",
             "full_name",
         ]
 
     def get_full_name(self, obj):
         return obj.full_name_or_username
-
-    def get_display_email(self, obj):
-        return obj.unverified_email or obj.email
 
 
 class DeviceSessionSerializer(serializers.ModelSerializer):
@@ -148,6 +168,7 @@ class TwoFactorCodeSerializer(serializers.Serializer):
 
 class UserEmailUpdateSerializer(serializers.Serializer):
     email = serializers.EmailField()
+    profile = serializers.DictField(required=False, write_only=True)
 
     def validate_email(self, value):
         user = self.context["request"].user
@@ -163,17 +184,7 @@ class UserEmailUpdateSerializer(serializers.Serializer):
         return normalized
 
     def update(self, instance, validated_data):
-        new_email = validated_data["email"].strip().lower()
-        current_email = instance.email.strip().lower() if instance.email else ""
-
-        if new_email != current_email:
-            instance.unverified_email = new_email
-            instance.email_verified = False
-            instance.save(update_fields=["unverified_email", "email_verified"])
-            instance.email_update_requested = True
-        else:
-            instance.email_update_requested = False
-
+        validated_data.pop("profile", None)
         return instance
 
 

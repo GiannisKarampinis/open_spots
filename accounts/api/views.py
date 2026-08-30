@@ -576,6 +576,16 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
         return self.retrieve(request, *args, **kwargs)
 
     def patch(self, request, *args, **kwargs):
+        user = request.user
+        if (
+            user.unverified_email
+            and user.email
+            and user.unverified_email.strip().lower() != user.email.strip().lower()
+            and not user.email_verified
+        ):
+            user.unverified_email = ""
+            user.email_verified = True
+            user.save(update_fields=["unverified_email", "email_verified"])
         return self.partial_update(request, *args, **kwargs)
 
 
@@ -588,14 +598,40 @@ class EmailUpdateAPIView(generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         user = serializer.save()
+        pending_email = serializer.validated_data["email"].strip().lower()
+        if (
+            user.unverified_email
+            and user.email
+            and user.unverified_email.strip().lower() != user.email.strip().lower()
+            and not user.email_verified
+        ):
+            # Repair email updates staged by the legacy flow. The primary email
+            # was never replaced, so it remains the verified address.
+            user.unverified_email = ""
+            user.email_verified = True
+            user.save(update_fields=["unverified_email", "email_verified"])
         EmailVerificationCode.objects.filter(user=user).delete()
-        send_verification_code(user)
+        send_verification_code(user, recipient=pending_email)
         self.request.session["pending_user_id"] = user.id
         self.request.session["verification_reason"] = "email_update"
+        self.request.session["pending_email_update"] = pending_email
         self.request.session["code_already_sent"] = True
+        self.request.session["pending_profile_update"] = dict(self.pending_profile_data)
 
     def post(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        profile_serializer = UserProfileSerializer(
+            request.user,
+            data=request.data.get("profile", {}),
+            partial=True,
+            context=self.get_serializer_context(),
+        )
+        profile_serializer.is_valid(raise_exception=True)
+        self.pending_profile_data = profile_serializer.validated_data
+        self.update(request, *args, **kwargs)
+        return Response({
+            "detail": "Verification code sent to your new email. Your profile will be updated after verification.",
+            "requires_verification": True,
+        })
 
 
 class PasswordChangeRequestAPIView(generics.GenericAPIView):
@@ -722,7 +758,9 @@ class ResendVerificationAPIView(generics.GenericAPIView):
             )
 
         EmailVerificationCode.objects.filter(user=user).delete()
-        send_verification_code(user)
+        pending_email = request.session.get("pending_email_update")
+        recipient = pending_email if reason == "email_update" else None
+        send_verification_code(user, recipient=recipient)
         request.session["code_already_sent"] = True
         latest_code = _latest_verification_code(user)
         return Response(
@@ -746,13 +784,14 @@ class VerificationStatusAPIView(generics.GenericAPIView):
             return Response({"detail": "No pending verification in session."}, status=status.HTTP_400_BAD_REQUEST)
 
         user = get_object_or_404(User, id=user_id)
+        pending_email = request.session.get("pending_email_update")
         latest_code = _latest_verification_code(user)
         remaining = _remaining_verification_seconds(latest_code)
 
         return Response(
             {
                 "reason": reason,
-                "email": user.unverified_email or user.email,
+                "email": pending_email if reason == "email_update" else (user.unverified_email or user.email),
                 "remaining_seconds": remaining,
                 "is_expired": remaining <= 0,
                 "resend_after_seconds": _remaining_resend_cooldown_seconds(latest_code),
@@ -793,6 +832,18 @@ class ConfirmVerificationAPIView(generics.GenericAPIView):
             request.session.pop("verification_locked_until", None)
 
         user = get_object_or_404(User, id=user_id)
+        pending_email = request.session.get("pending_email_update")
+        if reason == "email_update":
+            if not pending_email:
+                return Response(
+                    {"detail": "The pending email update has expired. Please start again."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if User.objects.filter(email__iexact=pending_email).exclude(pk=user.pk).exists():
+                return Response(
+                    {"detail": "An account with this email already exists."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         pending_password_hash = None
         if reason == "password_change":
             pending_password_hash = request.session.get("pending_password_hash")
@@ -847,21 +898,34 @@ class ConfirmVerificationAPIView(generics.GenericAPIView):
         request.session.pop("verification_locked_until", None)
 
         if reason in ["signup", "email_update"]:
-            user.email = user.unverified_email or user.email
+            user.email = pending_email if reason == "email_update" else (user.unverified_email or user.email)
             user.unverified_email = ""
             user.email_verified = True
-            user.save(update_fields=["email", "unverified_email", "email_verified"])
+            update_fields = ["email", "unverified_email", "email_verified"]
+            if reason == "email_update":
+                pending_profile = request.session.get("pending_profile_update") or {}
+                for field in ("firstname", "lastname", "phone_number"):
+                    if field in pending_profile:
+                        setattr(user, field, pending_profile[field])
+                        update_fields.append(field)
+            user.save(update_fields=update_fields)
             security_logger.info("email_verified user=%s reason=%s ip=%s", user.pk, reason, _client_ip(request))
             request.session.pop("pending_user_id", None)
             request.session.pop("verification_reason", None)
             request.session.pop("code_already_sent", None)
+            request.session.pop("pending_profile_update", None)
+            request.session.pop("pending_email_update", None)
             user._current_device_session = _create_device_session(request, user)
             tokens = _tokens_for_user(user)
             request.session["jwt_access"] = tokens["access"]
             request.session["jwt_refresh"] = tokens["refresh"]
             response = Response(
                 {
-                    "detail": "Email verified successfully.",
+                    "detail": (
+                        "Email verified and profile updated successfully."
+                        if reason == "email_update"
+                        else "Email verified successfully."
+                    ),
                     "access": tokens["access"],
                     "user": UserProfileSerializer(user).data,
                     "redirect_to": _default_redirect_for_user(user),

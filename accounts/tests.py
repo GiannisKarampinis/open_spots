@@ -91,6 +91,58 @@ class AccountsAPITestCase(APITestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.firstname, "Api")
 
+    @patch("accounts.api.views.send_verification_code")
+    def test_email_update_defers_email_and_profile_fields_until_verification(self, send_code):
+        self.user.email_verified = True
+        self.user.firstname = "Before"
+        self.user.save(update_fields=["email_verified", "firstname"])
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(
+            "/api/v1/accounts/email/update/",
+            {
+                "email": "new-address@example.com",
+                "profile": {
+                    "firstname": "After",
+                    "lastname": "Verified",
+                    "phone_number": "+30123456789",
+                },
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["requires_verification"])
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "apiuser@example.com")
+        self.assertEqual(self.user.firstname, "Before")
+        self.assertFalse(self.user.unverified_email)
+        self.assertTrue(self.user.email_verified)
+
+        EmailVerificationCode.objects.create(user=self.user, code="123456")
+        confirm = self.client.post(
+            self.verification_confirm_url,
+            {"code": "123456"},
+            format="json",
+        )
+
+        self.assertEqual(confirm.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            confirm.data["detail"],
+            "Email verified and profile updated successfully.",
+        )
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "new-address@example.com")
+        self.assertEqual(self.user.firstname, "After")
+        self.assertEqual(self.user.lastname, "Verified")
+        self.assertEqual(self.user.phone_number, "+30123456789")
+        self.assertTrue(self.user.email_verified)
+        self.assertEqual(self.user.unverified_email, "")
+        send_code.assert_called_once_with(
+            self.user,
+            recipient="new-address@example.com",
+        )
+
     def test_register_creates_customer_account(self):
         payload = {
             "username": "newapiuser",
