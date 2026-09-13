@@ -5,7 +5,7 @@
 :root {
     --background-color:     #ffffff;                  /* Page background */
     --surface-color:        rgb(8, 58, 90);           /* #003366; Navbar, footer, cards */
-    --text-color:           #222222;                  /* Main text */
+    --text-color:           #23272F;                  /* Main text */
     --link-color:           #ff7b00;                  /* Links */
     --link-hover:           #ff5e00;                  /* Link hover */
 
