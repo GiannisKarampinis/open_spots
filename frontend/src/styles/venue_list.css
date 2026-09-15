@@ -569,3 +569,44 @@
         padding: 0 12px;
     }
 }
+
+.alert.venue-load-error {
+    width: 60%;
+    box-sizing: border-box;
+    margin-inline: auto;
+    padding: 12px 16px;
+    line-height: normal;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+}
+
+.venue-retry-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.venue-retry-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.venue-retry-btn:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
+@media (max-width: 768px) {
+    .alert.venue-load-error {
+        width: 100%;
+    }
+}

@@ -6,6 +6,7 @@ import "../styles/venue_list.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFilter,
+  faRotateRight,
   faPenToSquare,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
@@ -188,8 +189,12 @@ export default function VenuesPage() {
       <h2>{t("Explore & Reserve Your Perfect Spot")}</h2>
 
       {message && (
-        <div className="alert alert-info mb-3">
-          {message}
+        <div className="alert alert-danger mb-3 venue-load-error" role="alert">
+          <span>{message}</span>
+          <button type="button" className="venue-retry-btn" onClick={fetchVenues}>
+            <FontAwesomeIcon icon={faRotateRight} aria-hidden="true" />
+            {t("Retry")}
+          </button>
         </div>
       )}
 
