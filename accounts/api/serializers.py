@@ -37,10 +37,11 @@ phone_number_validator = RegexValidator(
     message="Please enter a valid phone number with 7 to 15 digits, optionally starting with +.",
 )
 
-
+# OK - REVIEWED
 class UserLoginSerializer(serializers.Serializer):
+    # The following fields are required for user login:
     username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True) # The password is accepted as input but not returned in the response for security reasons.
 
     def validate(self, attrs):
         request     = self.context.get("request")
@@ -49,10 +50,7 @@ class UserLoginSerializer(serializers.Serializer):
 
         user = authenticate(request = request, username = username, password = password)
         if not user:
-            matching_user = User.objects.filter(username=username).first()
-            if not matching_user:
-                raise serializers.ValidationError({"username": "This username does not exist. Please sign up first."})
-            raise serializers.ValidationError({"password": "Incorrect password. Please try again."})
+            raise serializers.ValidationError("Invalid username or password")
 
         attrs["user"] = user
         
