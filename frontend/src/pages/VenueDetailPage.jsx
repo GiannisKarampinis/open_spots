@@ -306,6 +306,7 @@ function ReservationCard({ venueId }) {
     phone: "",
     guests: 2,
     special_requests: "none",
+    smoking: "no smoking",
     allergies: "",
     comments: "",
   });
@@ -376,6 +377,7 @@ function ReservationCard({ venueId }) {
           ...form,
           guests: Number(form.guests),
           special_requests: form.special_requests !== "none",
+          smoking: form.smoking,
           comments:
             form.special_requests !== "none"
               ? `Special request: ${form.special_requests}. ${form.comments || ""}`.trim()
@@ -557,6 +559,18 @@ function ReservationCard({ venueId }) {
                   <option value="gluten_free">{t("Gluten-free")}</option>
                   <option value="wheelchair">{t("Wheelchair accessible")}</option>
                   <option value="other">{t("Other")}</option>
+                </select>
+              </label>
+
+              <label>
+                {t("Smoking")}
+                <select
+                  name="smoking"
+                  value={form.smoking ? "smoking" : "no smoking"}
+                  onChange={updateField}
+                >
+                  <option value="no smoking">{t("No smoking")}</option>
+                  <option value="smoking">{t("Smoking")}</option>
                 </select>
               </label>
 

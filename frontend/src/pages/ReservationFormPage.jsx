@@ -21,6 +21,7 @@ const emptyForm = {
   time: "",
   guests: 2,
   special_requests: "none",
+  smoking: "no smoking",
   allergies: "",
   comments: "",
 };
@@ -159,6 +160,7 @@ export default function ReservationFormPage({ mode = "create" }) {
             : "none",
           allergies: r.allergies || "",
           comments: parsedSpecialRequest.cleanComments,
+          smoking: r.smoking || "no smoking",
         });
 
         setVenue({
@@ -249,6 +251,7 @@ export default function ReservationFormPage({ mode = "create" }) {
       special_requests: selectedSpecialRequest !== "none",
       allergies: form.allergies,
       comments: buildReservationComments(selectedSpecialRequest, form.comments),
+      smoking: form.smoking,
     };
 
     const createPayload = {
@@ -431,6 +434,20 @@ export default function ReservationFormPage({ mode = "create" }) {
               <option value="gluten_free">{t("Gluten-free")}</option>
               <option value="wheelchair">{t("Wheelchair accessible")}</option>
               <option value="other">{t("Other")}</option>
+            </select>
+          </label>
+        </p>
+        
+        <p>
+          <label>
+            {t("Smoking")}
+            <select
+              name="smoking"
+              value={form.smoking}
+              onChange={updateField}
+            >
+              <option value="no smoking">{t("No smoking")}</option>
+              <option value="smoking">{t("Smoking")}</option>
             </select>
           </label>
         </p>
