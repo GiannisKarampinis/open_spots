@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import {
@@ -10,7 +10,7 @@ import {
   ZoomControl,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { authHeaders, getAccessToken, postWithAuth } from "../utils/auth";
+import { postWithAuth } from "../utils/auth";
 import { mediaUrl } from "../utils/media";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -149,11 +149,14 @@ function Reviews({ reviews, onReviewSubmitted, venueId }) {
     }
 
     try {
-      const res = await axios.post(
+      const res = await postWithAuth(
         `/api/v1/venues/${venueId}/reviews/`,
         { rating: Number(rating), comment },
-        { headers: authHeaders() }
+        {},
+        { onUnauthenticated: () => setStatus(t("Log in before submitting a review.")) }
       );
+
+      if (!res) return;
 
       onReviewSubmitted(res.data);
       setRating(0);
@@ -283,11 +286,11 @@ function getReservationErrorMessage(data, t) {
   return t("Could not submit the reservation. Please check the details.");
 }
 
-function ReservationCard({ venueId }) {
+function ReservationCard({ venueId, user, authLoading }) {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const isLoggedIn = Boolean(getAccessToken());
+  const isLoggedIn = Boolean(user);
 
   const loginPath = `/accounts/login?next=${encodeURIComponent(
     `${location.pathname}${location.search}`
@@ -407,7 +410,7 @@ function ReservationCard({ venueId }) {
     <aside className="venue-detail-reserve">
       <h3>{t("Reserve a Table")}</h3>
 
-      {!isLoggedIn ? (
+      {authLoading ? null : !isLoggedIn ? (
         <p className="venue-detail-login-message">
           <Link to={loginPath}>{t("Login")}</Link> {t("to make a reservation.")}
         </p>
@@ -614,6 +617,7 @@ function ReservationCard({ venueId }) {
 export default function VenueDetailPage() {
   const { t } = useTranslation();
   const { venueId } = useParams();
+  const { user, authLoading } = useOutletContext();
 
   const [venue, setVenue] = useState(null);
   const [activeTab, setActiveTab] = useState("about");
@@ -784,7 +788,7 @@ export default function VenueDetailPage() {
           )}
         </section>
 
-        <ReservationCard venueId={venue.id} />
+        <ReservationCard venueId={venue.id} user={user} authLoading={authLoading} />
       </div>
 
       {modalImage && (

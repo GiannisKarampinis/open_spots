@@ -1,8 +1,12 @@
+import { VerificationReason } from "../utils/verificationReasons";
+import { getVerificationChallenge, getResetToken, clearVerification, verificationConfig, rememberResetToken } from "../utils/verification";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import axios from "axios";
+import { postWithCsrf } from "../utils/csrf";
 import { clearStoredAuth, storeAuthResponse } from "../utils/auth";
+import { useToastMessage } from "../components/ToastProvider";
 import "../styles/auth.css";
 
 const CODE_LENGTH = 6;
@@ -17,13 +21,14 @@ export default function VerifyEmailPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  const [challengeId] = useState(getVerificationChallenge);
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
   const [remaining, setRemaining] = useState(0);
+  const [resendAfter, setResendAfter] = useState(0);
   const [total, setTotal] = useState(600);
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("success");
+  const [message, setMessage, messageType, setMessageType] = useToastMessage("success");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
@@ -34,16 +39,21 @@ export default function VerifyEmailPage() {
     async function fetchStatus() {
       try {
         const res = await axios.get("/api/v1/accounts/verification/status/", {
-          withCredentials: true,
+          ...verificationConfig(challengeId),
         });
 
         if (cancelled) return;
+        if (res.data.verified && res.data.reason === VerificationReason.PASSWORD_RECOVERY && getResetToken()) {
+          navigate("/accounts/reset-password");
+          return;
+        }
 
         const seconds = Number(res.data.remaining_seconds || 0);
 
         setEmail(res.data.email || "");
         setReason(res.data.reason || "");
         setRemaining(seconds);
+        setResendAfter(Number(res.data.resend_after_seconds || 0));
         setTotal(Math.max(seconds, 1));
       } catch (err) {
         if (!cancelled) {
@@ -62,7 +72,7 @@ export default function VerifyEmailPage() {
     return () => {
       cancelled = true;
     };
-  }, [t]);
+  }, [t, challengeId, navigate]);
 
   useEffect(() => {
     if (remaining <= 0) return undefined;
@@ -73,6 +83,16 @@ export default function VerifyEmailPage() {
 
     return () => window.clearInterval(interval);
   }, [remaining]);
+
+  useEffect(() => {
+    if (resendAfter <= 0) return undefined;
+
+    const interval = window.setInterval(() => {
+      setResendAfter((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [resendAfter]);
 
   const percent = useMemo(() => {
     if (!total) return 0;
@@ -101,11 +121,14 @@ export default function VerifyEmailPage() {
     setMessage("");
 
     try {
-      const res = await axios.post(
+      const res = await postWithCsrf(
         "/api/v1/accounts/verification/confirm/",
         { code },
-        { withCredentials: true }
+        verificationConfig(challengeId)
       );
+
+      if (res.data.reset_token) rememberResetToken(res.data.reset_token, challengeId);
+      else clearVerification(challengeId);
 
       if (res.data.access || res.data.user) {
         storeAuthResponse(res.data);
@@ -119,7 +142,7 @@ export default function VerifyEmailPage() {
       setTimeout(() => {
         navigate(
           res.data.redirect_to ||
-            (reason === "password_recovery" ? "/accounts/reset-password" : "/")
+            (reason === VerificationReason.PASSWORD_RECOVERY ? "/accounts/reset-password" : "/")
         );
       }, 700);
     } catch (err) {
@@ -138,20 +161,22 @@ export default function VerifyEmailPage() {
     setMessage("");
 
     try {
-      const res = await axios.post(
+      const res = await postWithCsrf(
         "/api/v1/accounts/verification/resend/",
         {},
-        { withCredentials: true }
+        verificationConfig(challengeId)
       );
 
       const seconds = Number(res.data.remaining_seconds || 600);
 
       setRemaining(seconds);
+      setResendAfter(Number(res.data.resend_after_seconds || 0));
       setTotal(seconds);
       setCode("");
       setMessageType("success");
       setMessage(res.data.detail || t("Verification code resent."));
     } catch (err) {
+      setResendAfter(Number(err.response?.data?.retry_after || 0));
       setMessageType("error");
       setMessage(
         err.response?.data?.detail ||
@@ -159,6 +184,20 @@ export default function VerifyEmailPage() {
       );
     } finally {
       setResending(false);
+    }
+  };
+
+  const cancelVerification = async () => {
+    setSubmitting(true);
+    try {
+      await postWithCsrf("/api/v1/accounts/verification/cancel/", {}, verificationConfig(challengeId));
+      clearVerification(challengeId);
+      navigate("/accounts/login");
+    } catch (err) {
+      setMessageType("error");
+      setMessage(err.response?.data?.detail || t("Could not cancel verification."));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -199,7 +238,7 @@ export default function VerifyEmailPage() {
             required
           />
 
-          <button type="submit" disabled={submitting || loading || remaining <= 0}>
+          <button type="submit" disabled={submitting || resending || loading || remaining <= 0}>
             {submitting ? t("Verifying...") : t("Verify")}
           </button>
         </form>
@@ -208,11 +247,18 @@ export default function VerifyEmailPage() {
           className="resend-button"
           type="button"
           onClick={resend}
-          disabled={resending || loading}
+          disabled={submitting || resending || loading || resendAfter > 0}
         >
-          {resending ? t("Sending...") : t("Resend Code")}
+          {resending
+            ? t("Sending...")
+            : resendAfter > 0
+              ? t("Resend available in {{time}}", { time: formatSeconds(resendAfter) })
+              : t("Resend Code")}
         </button>
 
+        <button type="button" onClick={cancelVerification} disabled={loading || submitting || resending}>
+          {t("Cancel verification")}
+        </button>
         <p className="auth-prompt">
           <Trans
             i18nKey="Need a different account? Sign up again"

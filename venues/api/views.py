@@ -17,7 +17,6 @@ from rest_framework.pagination import PageNumberPagination
 
 from drf_spectacular.utils import extend_schema
 
-from emails_manager.models import VenueEmailVerificationCode
 from venues.models import (
     Review,
     Reservation,
@@ -30,11 +29,11 @@ from venues.models import (
 )
 from venues.services.emails import (
     send_new_venue_application_email,
-    send_venue_verification_code,
     send_reservation_notification,
 )
 from venues.services.working_days import ensure_working_days
 from venues.utils import user_can_manage_venue
+from openspots.security import CsrfProtectedAPIViewMixin
 
 from .dashboard_helpers import (
     DASHBOARD_GROUPINGS,
@@ -59,7 +58,6 @@ from .serializers import (
 )
 
 
-SEND_COOLDOWN_SECONDS = 45
 
 
 def _reservation_payload(reservation):
@@ -337,101 +335,10 @@ def _handle_dashboard_image_group(
     return updated_ids
 
 
-class VenueApplicationCreateAPIView(generics.CreateAPIView):
-    serializer_class = VenueApplicationSerializer
-    permission_classes = [permissions.AllowAny]
+from .verification import (
+    VenueApplicationCreateAPIView, VenueVerificationSendAPIView, VenueVerificationConfirmAPIView,
+)
 
-    def perform_create(self, serializer):
-        admin_email = serializer.validated_data["admin_email"].strip().lower()
-        if not self.request.session.get("venue_email_verified"):
-            raise drf_serializers.ValidationError({"admin_email": "Email verification is required before submitting the application."})
-
-        pending_email = self.request.session.get("venue_verified_email")
-        if not pending_email or pending_email.lower() != admin_email:
-            raise drf_serializers.ValidationError({"admin_email": "The verified email must match the application email."})
-
-        application = serializer.save()
-        transaction.on_commit(lambda: send_new_venue_application_email(application))
-
-        self.request.session.pop("venue_email_verified", None)
-        self.request.session.pop("venue_verified_email", None)
-        self.request.session.pop("venue_pending_email", None)
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
-
-class VenueVerificationSendAPIView(generics.GenericAPIView):
-    serializer_class = VenueEmailSerializer
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        email = serializer.validated_data["email"].strip().lower()
-        last_sent_ts = request.session.get("venue_code_last_sent_at")
-        now_ts = timezone.now().timestamp()
-        if last_sent_ts and (now_ts - float(last_sent_ts) < SEND_COOLDOWN_SECONDS):
-            return Response({"detail": "Please wait before requesting another code."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-
-        request.session["venue_email_verified"] = False
-        request.session["venue_pending_email"] = email
-        request.session.pop("venue_verified_email", None)
-
-        code_obj = VenueEmailVerificationCode.create_for_email(email)
-        try:
-            send_venue_verification_code(email, code_obj.code)
-        except Exception:
-            VenueEmailVerificationCode.objects.filter(id=code_obj.id).delete()
-            return Response({"detail": "Could not send the verification code."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        request.session["venue_code_last_sent_at"] = str(now_ts)
-        return Response({"detail": "Code sent."})
-
-
-class VenueVerificationConfirmAPIView(generics.GenericAPIView):
-    serializer_class = VenueVerificationCodeSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        email = request.session.get("venue_pending_email")
-        if not email:
-            return Response({"detail": "No email pending verification."}, status=status.HTTP_400_BAD_REQUEST)
-
-        locked_until = request.session.get("venue_code_locked_until")
-        now_ts = timezone.now().timestamp()
-        if locked_until and now_ts < float(locked_until):
-            return Response({"detail": "Too many attempts. Try again later."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-
-        code = serializer.validated_data["code"].strip()
-        try:
-            code_obj = VenueEmailVerificationCode.objects.get(email=email, code=code)
-        except VenueEmailVerificationCode.DoesNotExist:
-            attempts = int(request.session.get("venue_code_attempts", 0)) + 1
-            request.session["venue_code_attempts"] = attempts
-            if attempts >= 5:
-                lock_until = timezone.now() + timezone.timedelta(minutes=10)
-                request.session["venue_code_locked_until"] = str(lock_until.timestamp())
-                return Response({"detail": "Too many attempts. Try again later."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-            return Response({"detail": "Invalid code."}, status=status.HTTP_400_BAD_REQUEST)
-
-        if code_obj.is_expired():
-            code_obj.delete()
-            return Response({"detail": "Code expired. Please resend."}, status=status.HTTP_400_BAD_REQUEST)
-
-        code_obj.delete()
-        request.session["venue_email_verified"] = True
-        request.session["venue_verified_email"] = email
-        request.session.pop("venue_pending_email", None)
-        request.session.pop("venue_code_attempts", None)
-        request.session.pop("venue_code_locked_until", None)
-
-        return Response({"detail": "Email verified."})
 
 def _first_venue_image_url(venue, request):
     image = (

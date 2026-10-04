@@ -1,18 +1,85 @@
+
 from unittest.mock import patch
 
+from django.core.cache import cache
 from django.contrib.auth import get_user_model
+from django.test import Client, TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import DeviceSession
-from emails_manager.models import EmailVerificationCode
 
 User = get_user_model()
 
 
+@override_settings(
+    SECURITY_ALLOWED_CORS_ORIGINS=["http://localhost:5173"],
+)
+class CsrfEnforcementTests(TestCase):
+    csrf_protected_posts = (
+        ("/api/v1/accounts/login/", {"username": "x", "password": "x"}),
+        ("/api/v1/accounts/login/2fa/", {"code": "000000"}),
+        ("/api/token/refresh/", {}),
+        ("/api/v1/accounts/logout/", {}),
+        ("/api/v1/accounts/register/", {}),
+        ("/api/v1/accounts/password/recover/", {"email": "nobody@example.com"}),
+        ("/api/v1/accounts/password/reset/", {}),
+        ("/api/v1/accounts/verification/resend/", {}),
+        ("/api/v1/accounts/verification/confirm/", {"code": "000000"}),
+        ("/api/v1/accounts/verification/cancel/", {}),
+        ("/api/v1/venues/verification/send/", {"email": "nobody@example.com"}),
+        ("/api/v1/venues/verification/confirm/", {"code": "000000"}),
+        ("/api/v1/venues/apply/", {}),
+    )
+
+    def setUp(self):
+        self.client = Client(enforce_csrf_checks=True)
+
+    def test_cookie_backed_api_posts_reject_missing_csrf_token(self):
+        for url, payload in self.csrf_protected_posts:
+            with self.subTest(url=url):
+                response = self.client.post(url, payload, content_type="application/json")
+                self.assertEqual(response.status_code, 403)
+
+    def test_cookie_backed_api_post_rejects_invalid_csrf_token(self):
+        self.client.get("/api/v1/csrf/")
+        response = self.client.post(
+            "/api/v1/accounts/logout/",
+            {},
+            content_type="application/json",
+            HTTP_X_CSRFTOKEN="invalid",
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_cookie_backed_api_post_accepts_matching_csrf_token(self):
+        token = self.client.get("/api/v1/csrf/").json()["csrfToken"]
+        response = self.client.post(
+            "/api/v1/accounts/logout/",
+            {},
+            content_type="application/json",
+            HTTP_X_CSRFTOKEN=token,
+            HTTP_ORIGIN="http://localhost:5173",
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_api_rejects_untrusted_origin_even_with_valid_csrf_token(self):
+        token = self.client.get("/api/v1/csrf/").json()["csrfToken"]
+        response = self.client.post(
+            "/api/v1/accounts/logout/",
+            {},
+            content_type="application/json",
+            HTTP_X_CSRFTOKEN=token,
+            HTTP_ORIGIN="https://evil.example",
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.content, b"CORS origin is not allowed.")
+
+
 class AccountsAPITestCase(APITestCase):
     def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
         self.user = User.objects.create_user(
             username="apiuser",
             email="apiuser@example.com",
@@ -91,254 +158,7 @@ class AccountsAPITestCase(APITestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.firstname, "Api")
 
-    @patch("accounts.api.views.send_verification_code")
-    def test_email_update_defers_email_and_profile_fields_until_verification(self, send_code):
-        self.user.email_verified = True
-        self.user.firstname = "Before"
-        self.user.save(update_fields=["email_verified", "firstname"])
-        self.client.force_authenticate(self.user)
-
-        response = self.client.post(
-            "/api/v1/accounts/email/update/",
-            {
-                "email": "new-address@example.com",
-                "profile": {
-                    "firstname": "After",
-                    "lastname": "Verified",
-                    "phone_number": "+30123456789",
-                },
-            },
-            format="json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data["requires_verification"])
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.email, "apiuser@example.com")
-        self.assertEqual(self.user.firstname, "Before")
-        self.assertFalse(self.user.unverified_email)
-        self.assertTrue(self.user.email_verified)
-
-        EmailVerificationCode.objects.create(user=self.user, code="123456")
-        confirm = self.client.post(
-            self.verification_confirm_url,
-            {"code": "123456"},
-            format="json",
-        )
-
-        self.assertEqual(confirm.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            confirm.data["detail"],
-            "Email verified and profile updated successfully.",
-        )
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.email, "new-address@example.com")
-        self.assertEqual(self.user.firstname, "After")
-        self.assertEqual(self.user.lastname, "Verified")
-        self.assertEqual(self.user.phone_number, "+30123456789")
-        self.assertTrue(self.user.email_verified)
-        self.assertEqual(self.user.unverified_email, "")
-        send_code.assert_called_once_with(
-            self.user,
-            recipient="new-address@example.com",
-        )
-
-    def test_register_creates_customer_account(self):
-        payload = {
-            "username": "newapiuser",
-            "email": "newapiuser@example.com",
-            "firstname": "New",
-            "lastname": "User",
-            "phone_number": "+1234567890",
-            "password": "strong-password-123",
-            "password2": "strong-password-123",
-        }
-        response = self.client.post(self.register_url, payload, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["user"]["email"], "newapiuser@example.com")
-        self.assertEqual(response.data["user"]["username"], "newapiuser")
-        self.assertFalse(response.data["user"].get("email_verified", True))
-
-    def test_confirmation_fails_without_pending_session(self):
-        response = self.client.post(self.verification_confirm_url, {"code": "123456"}, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_confirmation_succeeds_with_valid_code(self):
-        verification_user = User.objects.create_user(
-            username="verifyuser",
-            email="verifyuser@example.com",
-            password="pass1234",
-        )
-        code_obj = EmailVerificationCode.objects.create(user=verification_user, code="123456")
-        session = self.client.session
-        session["pending_user_id"] = verification_user.id
-        session["verification_reason"] = "signup"
-        session.save()
-
-        response = self.client.post(self.verification_confirm_url, {"code": "123456"}, format="json")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        verification_user.refresh_from_db()
-        self.assertTrue(verification_user.email_verified)
-
-    def test_confirmation_locks_after_five_invalid_codes(self):
-        self.user.email_verified = False
-        self.user.save(update_fields=["email_verified"])
-        valid_code = EmailVerificationCode.objects.create(user=self.user, code="123456")
-        session = self.client.session
-        session["pending_user_id"] = self.user.id
-        session["verification_reason"] = "signup"
-        session.save()
-
-        for attempt in range(5):
-            response = self.client.post(
-                self.verification_confirm_url,
-                {"code": "000000"},
-                format="json",
-            )
-
-        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
-        self.assertEqual(self.client.session["verification_attempts"], 5)
-        self.assertIn("verification_locked_until", self.client.session)
-
-        locked_response = self.client.post(
-            self.verification_confirm_url,
-            {"code": valid_code.code},
-            format="json",
-        )
-        self.assertEqual(locked_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
-        self.assertTrue(EmailVerificationCode.objects.filter(pk=valid_code.pk).exists())
-
-    def test_password_recovery_allows_reset_after_verification(self):
-        recovery_email = "apiuser@example.com"
-        response = self.client.post(self.password_recover_url, {"email": recovery_email}, format="json")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        session = self.client.session
-        self.assertEqual(session["pending_user_id"], self.user.id)
-        self.assertEqual(session["verification_reason"], "password_recovery")
-
-        # Simulate successful code confirmation
-        session["password_recovery_verified"] = True
-        session.save()
-        response = self.client.post(self.password_reset_url, {"new_password1": "newstrongpass123", "new_password2": "newstrongpass123"}, format="json")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password("newstrongpass123"))
-
-    def test_password_reset_revokes_existing_device_sessions(self):
-        device_session = DeviceSession.objects.create(user=self.user)
-        refresh = RefreshToken.for_user(self.user)
-        refresh["device_session_id"] = str(device_session.id)
-        self.client.cookies["open_spots_refresh"] = str(refresh)
-        session = self.client.session
-        session["pending_user_id"] = self.user.id
-        session["verification_reason"] = "password_recovery"
-        session["password_recovery_verified"] = True
-        session.save()
-
-        response = self.client.post(
-            self.password_reset_url,
-            {"new_password1": "newstrongpass123", "new_password2": "newstrongpass123"},
-            format="json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        device_session.refresh_from_db()
-        self.assertIsNotNone(device_session.revoked_at)
-        self.assertEqual(response.cookies["open_spots_refresh"]["max-age"], 0)
-
-    def test_password_change_waits_for_verification_and_revokes_sessions(self):
-        self.user.email_verified = True
-        self.user.save(update_fields=["email_verified"])
-        login_response = self.client.post(
-            "/api/v1/accounts/login/",
-            {"username": "apiuser", "password": "pass1234"},
-            format="json",
-        )
-        old_access = login_response.data["access"]
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {old_access}")
-
-        request_response = self.client.post(
-            self.password_change_url,
-            {
-                "old_password": "pass1234",
-                "new_password1": "changed-password-123",
-                "new_password2": "changed-password-123",
-            },
-            format="json",
-        )
-
-        self.assertEqual(request_response.status_code, status.HTTP_200_OK)
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password("pass1234"))
-        self.assertFalse(self.user.check_password("changed-password-123"))
-        self.assertNotEqual(
-            self.client.session["pending_password_hash"],
-            "changed-password-123",
-        )
-
-        code = EmailVerificationCode.objects.get(user=self.user).code
-        confirm_response = self.client.post(
-            self.verification_confirm_url,
-            {"code": code},
-            format="json",
-        )
-
-        self.assertEqual(confirm_response.status_code, status.HTTP_200_OK)
-        self.assertTrue(confirm_response.data["session_invalidated"])
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password("changed-password-123"))
-        self.assertFalse(DeviceSession.objects.filter(user=self.user, revoked_at__isnull=True).exists())
-        self.assertEqual(confirm_response.cookies["open_spots_refresh"]["max-age"], 0)
-
-        protected_response = self.client.get(self.url)
-        self.assertEqual(protected_response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_expired_pending_password_change_is_rejected(self):
-        code = EmailVerificationCode.objects.create(user=self.user, code="123456")
-        session = self.client.session
-        session["pending_user_id"] = self.user.id
-        session["verification_reason"] = "password_change"
-        session["pending_password_hash"] = self.user.password
-        session["pending_password_expires_at"] = "0"
-        session.save()
-
-        response = self.client.post(
-            self.verification_confirm_url,
-            {"code": code.code},
-            format="json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("expired", response.data["detail"].lower())
-        self.assertTrue(EmailVerificationCode.objects.filter(pk=code.pk).exists())
-
-    @patch("accounts.api.views.send_verification_code")
-    def test_password_change_uses_verified_email_and_cleans_up_send_failure(self, send_code):
-        self.user.email_verified = True
-        self.user.unverified_email = "attacker-controlled@example.com"
-        self.user.save(update_fields=["email_verified", "unverified_email"])
-        self.client.force_authenticate(self.user)
-
-        send_code.side_effect = RuntimeError("email unavailable")
-        response = self.client.post(
-            self.password_change_url,
-            {
-                "old_password": "pass1234",
-                "new_password1": "changed-password-123",
-                "new_password2": "changed-password-123",
-            },
-            format="json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        send_code.assert_called_once_with(
-            self.user,
-            recipient="apiuser@example.com",
-            async_send=False,
-        )
-        self.assertNotIn("pending_password_hash", self.client.session)
-        self.assertNotIn("pending_password_expires_at", self.client.session)
-        self.assertFalse(EmailVerificationCode.objects.filter(user=self.user).exists())
+    # Verification lifecycle coverage has moved to test_challenges.py.
 
     def test_profile_requires_authentication(self):
         response = self.client.get(self.url)

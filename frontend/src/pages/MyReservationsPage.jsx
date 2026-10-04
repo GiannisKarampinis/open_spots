@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import axios from "axios";
-import { authHeaders, getAccessToken } from "../utils/auth";
+import { getWithAuth, postWithAuth } from "../utils/auth";
 import "../styles/my_reservations.css";
 
 function isUpcoming(reservation) {
@@ -104,20 +103,18 @@ export default function MyReservationsPage() {
   const [loading, setLoading] = useState(true);
 
   const loadReservations = useCallback(async () => {
-    const res = await axios.get("/api/v1/reservations/", {
-      headers: authHeaders(),
-      withCredentials: true,
-    });
+    const res = await getWithAuth(
+      "/api/v1/reservations/",
+      {},
+      { onUnauthenticated: () => navigate("/accounts/login?next=/venues/my-reservations") }
+    );
+
+    if (!res) return;
 
     setReservations(Array.isArray(res.data) ? res.data : res.data.results || []);
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
-    if (!getAccessToken()) {
-      navigate("/accounts/login?next=/venues/my-reservations");
-      return;
-    }
-
     loadReservations()
       .catch(() => setMessage(t("Could not load reservations.")))
       .finally(() => setLoading(false));
@@ -146,14 +143,14 @@ export default function MyReservationsPage() {
     }
 
     try {
-      await axios.post(
+      const res = await postWithAuth(
         `/api/v1/reservations/${id}/cancel/`,
         {},
-        {
-          headers: authHeaders(),
-          withCredentials: true,
-        }
+        {},
+        { onUnauthenticated: () => navigate("/accounts/login?next=/venues/my-reservations") }
       );
+
+      if (!res) return;
 
       await loadReservations();
     } catch {

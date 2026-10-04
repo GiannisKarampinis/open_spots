@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useToastMessage } from "../components/ToastProvider";
 import {
-  getAccessToken,
   getWithAuth,
   patchWithAuth,
   postWithAuth,
@@ -123,15 +123,10 @@ export default function ReservationFormPage({ mode = "create" }) {
   const [venue, setVenue] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [slots, setSlots] = useState([]);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useToastMessage("error");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!getAccessToken()) {
-      navigate(`/accounts/login?next=${encodeURIComponent(window.location.pathname)}`);
-      return;
-    }
-
     let cancelled = false;
 
     async function load() {

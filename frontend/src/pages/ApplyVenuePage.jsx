@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { csrfPost } from "../api/csrf";
+import { postWithCsrf } from "../utils/csrf";
+import { verificationConfig } from "../utils/verification";
+import { useToastMessage } from "../components/ToastProvider";
 import "../styles/apply_venue.css";
 import "../styles/partial_signup.css";
 import "../styles/verify_code.css";
@@ -69,9 +71,10 @@ export default function ApplyVenuePage() {
 
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("success");
+  const [message, setMessage, messageType, setMessageType] = useToastMessage("success");
   const [emailVerified, setEmailVerified] = useState(false);
+  const [venueChallengeId, setVenueChallengeId] = useState("");
+  const [verificationToken, setVerificationToken] = useState("");
   const [code, setCode] = useState("");
   const [sendingCode, setSendingCode] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -96,6 +99,9 @@ export default function ApplyVenuePage() {
 
     if (name === "admin_email") {
       setEmailVerified(false);
+      setVenueChallengeId("");
+      setVerificationToken("");
+      setCode("");
     }
   };
 
@@ -110,15 +116,18 @@ export default function ApplyVenuePage() {
     setMessage("");
 
     try {
-      const res = await csrfPost("/api/v1/venues/verification/send/", {
+      const res = await postWithCsrf("/api/v1/venues/verification/send/", {
         email: form.admin_email,
-      });
+      }, verificationConfig(venueChallengeId));
+      setVenueChallengeId(res.data.challenge_id);
+      setVerificationToken("");
 
       setMessageType("success");
       setMessage(res.data.detail || t("Code sent. Check your inbox."));
     } catch (err) {
       setMessageType("error");
       setMessage(err.response?.data?.detail || t("Failed to send code."));
+      if (err.response?.status === 400) setVenueChallengeId("");
     } finally {
       setSendingCode(false);
     }
@@ -135,10 +144,11 @@ export default function ApplyVenuePage() {
     setMessage("");
 
     try {
-      const res = await csrfPost("/api/v1/venues/verification/confirm/", {
+      const res = await postWithCsrf("/api/v1/venues/verification/confirm/", {
         code,
-      });
+      }, verificationConfig(venueChallengeId));
 
+      setVerificationToken(res.data.verification_token);
       setEmailVerified(true);
       setMessageType("success");
       setMessage(res.data.detail || t("Email verified"));
@@ -219,15 +229,25 @@ export default function ApplyVenuePage() {
     try {
       const payload = {
         ...form,
+        verification_token: verificationToken,
       };
 
       delete payload.password2;
 
-      await csrfPost("/api/v1/venues/apply/", payload);
+      await postWithCsrf("/api/v1/venues/apply/", payload, verificationConfig(venueChallengeId));
+      setVerificationToken("");
+      setVenueChallengeId("");
 
       navigate("/venues/application-submitted");
     } catch (err) {
       const data = err.response?.data || {};
+
+      if (data.verification_required) {
+        setEmailVerified(false);
+        setVenueChallengeId("");
+        setVerificationToken("");
+        setCode("");
+      }
 
       if (typeof data === "object") {
         setErrors(data);
@@ -317,13 +337,14 @@ export default function ApplyVenuePage() {
                 type="email"
                 value={form.admin_email}
                 onChange={updateField}
+                disabled={sendingCode || verifying || submitting}
                 required
               />
 
               <button
                 type="button"
                 onClick={sendCode}
-                disabled={sendingCode || emailVerified}
+                disabled={sendingCode || verifying || submitting || emailVerified}
               >
                 {emailVerified
                   ? t("Verified")
@@ -342,13 +363,13 @@ export default function ApplyVenuePage() {
                   setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
                 }
                 placeholder={t("Enter 6-digit code")}
-                disabled={emailVerified}
+                disabled={emailVerified || sendingCode || verifying || submitting}
               />
 
               <button
                 type="button"
                 onClick={verifyCode}
-                disabled={verifying || emailVerified}
+                disabled={verifying || sendingCode || submitting || emailVerified || !venueChallengeId}
               >
                 {verifying ? t("Verifying...") : t("Verify")}
               </button>

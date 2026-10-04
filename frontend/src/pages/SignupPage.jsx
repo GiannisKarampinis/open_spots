@@ -1,7 +1,8 @@
+import { rememberVerification } from "../utils/verification";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
-import axios from "axios";
+import { postWithCsrf } from "../utils/csrf";
 import "../styles/auth.css";
 import "../styles/feedback.css";
 
@@ -39,7 +40,6 @@ export default function SignupPage() {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("success");
-  const [feedbackKey, setFeedbackKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
   const updateField = (event) => {
@@ -72,7 +72,6 @@ export default function SignupPage() {
     if (hasMissingRequiredField) {
       setMessageType("error");
       setMessage(t(REQUIRED_FIELDS_MESSAGE));
-      setFeedbackKey((current) => current + 1);
       return;
     }
 
@@ -81,20 +80,18 @@ export default function SignupPage() {
       setErrors({
         phone_number: t(PHONE_NUMBER_MESSAGE),
       });
-      setFeedbackKey((current) => current + 1);
+      setMessage(t(PHONE_NUMBER_MESSAGE));
       return;
     }
 
     setSubmitting(true);
 
     try {
-      const res = await axios.post("/api/v1/accounts/register/", form, {
-        withCredentials: true,
-      });
+      const res = await postWithCsrf("/api/v1/accounts/register/", form);
 
+      rememberVerification(res.data);
       setMessageType("success");
       setMessage(res.data.detail || t("Account created. Please check your email."));
-      setFeedbackKey((current) => current + 1);
       setForm(initialForm);
 
       setTimeout(() => {
@@ -105,11 +102,14 @@ export default function SignupPage() {
 
       if (typeof data === "object") {
         setErrors(data);
-        setFeedbackKey((current) => current + 1);
+        const firstApiMessage = Object.values(data)
+          .flatMap((value) => (Array.isArray(value) ? value : [value]))
+          .find(Boolean);
+        setMessageType("error");
+        setMessage(firstApiMessage || t("Could not create the account. Please try again."));
       } else {
         setMessageType("error");
         setMessage(t("Could not create the account. Please try again."));
-        setFeedbackKey((current) => current + 1);
       }
     } finally {
       setSubmitting(false);
@@ -126,55 +126,16 @@ export default function SignupPage() {
     ["password2", t("Confirm password"), "password", "new-password"],
   ];
 
-  const nonFieldErrors = fieldErrors(errors, "non_field_errors");
-  const detailErrors = fieldErrors(errors, "detail");
-
-  const firstFieldError = fields
-    .map(([name]) => fieldErrors(errors, name)[0])
-    .find(Boolean);
-
-  const firstError = detailErrors[0] || nonFieldErrors[0] || firstFieldError;
-
-  const feedbackMessages = [
-    ...(message ? [message] : []),
-    ...(firstError ? [firstError] : []),
-  ];
-
-  const clearFeedback = () => {
-    setMessage("");
-    setErrors({});
-  };
-
   return (
     <div className="auth-container">
       <h2>{t("Sign Up")}</h2>
 
-      {feedbackMessages.length > 0 && (
+      {message && (
         <div
-          className="messages-container floating-messages"
-          key={feedbackKey}
-          aria-live="polite"
-          aria-atomic="true"
+          className={`alert alert-${messageType}`}
+          role={messageType === "error" ? "alert" : "status"}
         >
-          {feedbackMessages.map((feedbackMessage) => (
-            <div
-              className={`alert alert-${
-                message && feedbackMessage === message ? messageType : "error"
-              } fade-message`}
-              key={feedbackMessage}
-            >
-              {feedbackMessage}
-
-              <button
-                className="close-btn"
-                type="button"
-                onClick={clearFeedback}
-                aria-label={t("Dismiss message")}
-              >
-                &times;
-              </button>
-            </div>
-          ))}
+          {message}
         </div>
       )}
 

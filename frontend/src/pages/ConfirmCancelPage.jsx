@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
-import { authHeaders, getAccessToken } from "../utils/auth";
+import { getWithAuth, postWithAuth } from "../utils/auth";
 import "../styles/confirm_cancel.css";
 import { useTranslation } from "react-i18next";
+import { useToastMessage } from "../components/ToastProvider";
 
 export default function ConfirmCancelPage() {
   const { t } = useTranslation();
@@ -11,33 +11,30 @@ export default function ConfirmCancelPage() {
   const navigate = useNavigate();
 
   const [reservation, setReservation] = useState(null);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useToastMessage("error");
 
   useEffect(() => {
-    if (!getAccessToken()) {
-      navigate(`/accounts/login?next=${window.location.pathname}`);
-      return;
-    }
-
-    axios
-      .get(`/api/v1/reservations/${reservationId}/`, {
-        headers: authHeaders(),
-        withCredentials: true,
+    getWithAuth(
+      `/api/v1/reservations/${reservationId}/`,
+      {},
+      { onUnauthenticated: () => navigate(`/accounts/login?next=${window.location.pathname}`) }
+    )
+      .then((res) => {
+        if (res) setReservation(res.data);
       })
-      .then((res) => setReservation(res.data))
       .catch(() => setMessage(t("Could not load reservation.")));
   }, [navigate, reservationId, t]);
 
   const cancel = async () => {
     try {
-      await axios.post(
+      const res = await postWithAuth(
         `/api/v1/reservations/${reservationId}/cancel/`,
         {},
-        {
-          headers: authHeaders(),
-          withCredentials: true,
-        }
+        {},
+        { onUnauthenticated: () => navigate(`/accounts/login?next=${window.location.pathname}`) }
       );
+
+      if (!res) return;
 
       navigate("/venues/my-reservations");
     } catch {

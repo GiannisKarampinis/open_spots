@@ -36,11 +36,13 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "False").strip().lower() in {"1", "true",
 allowed = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver,web").split(",")
 ALLOWED_HOSTS = [h.strip() for h in allowed if h.strip()]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
-SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False") == "True"
-CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "False") == "True"
+SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", str(not DEBUG)).strip().lower() in {"1", "true", "yes", "on"}
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", str(not DEBUG)).strip().lower() in {"1", "true", "yes", "on"}
+CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", str(not DEBUG)).strip().lower() in {"1", "true", "yes", "on"}
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
@@ -101,17 +103,19 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.ScopedRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': os.getenv('API_THROTTLE_ANON', '100/minute'),
-        'user': os.getenv('API_THROTTLE_USER', '500/minute'),
-        'auth_login': os.getenv('API_THROTTLE_AUTH_LOGIN', '10/minute'),
-        'auth_2fa': os.getenv('API_THROTTLE_AUTH_2FA', '10/minute'),
-        'auth_refresh': os.getenv('API_THROTTLE_AUTH_REFRESH', '30/minute'),
-        'auth_register': os.getenv('API_THROTTLE_AUTH_REGISTER', '10/hour'),
-        'auth_password': os.getenv('API_THROTTLE_AUTH_PASSWORD', '5/minute'),
-        'auth_verification': os.getenv('API_THROTTLE_AUTH_VERIFICATION', '10/minute'),
-        'auth_verification_resend_ip': os.getenv('API_THROTTLE_VERIFICATION_RESEND_IP', '10/hour'),
-        'auth_verification_resend_user': os.getenv('API_THROTTLE_VERIFICATION_RESEND_USER', '3/hour'),
-        'auth_device': os.getenv('API_THROTTLE_AUTH_DEVICE', '30/minute'),
+        'venue_verification_send_email': os.getenv('API_THROTTLE_VENUE_SEND_EMAIL', '3/hour'),
+        'venue_verification_send_ip': os.getenv('API_THROTTLE_VENUE_SEND_IP', '10/hour'),
+        'anon':                             os.getenv('API_THROTTLE_ANON', '100/minute'),
+        'user':                             os.getenv('API_THROTTLE_USER', '500/minute'),
+        'auth_login':                       os.getenv('API_THROTTLE_AUTH_LOGIN', '10/minute'),
+        'auth_2fa':                         os.getenv('API_THROTTLE_AUTH_2FA', '10/minute'),
+        'auth_refresh':                     os.getenv('API_THROTTLE_AUTH_REFRESH', '30/minute'),
+        'auth_register':                    os.getenv('API_THROTTLE_AUTH_REGISTER', '10/hour'),
+        'auth_password':                    os.getenv('API_THROTTLE_AUTH_PASSWORD', '5/minute'),
+        'auth_verification':                os.getenv('API_THROTTLE_AUTH_VERIFICATION', '10/minute'),
+        'auth_verification_resend_ip':      os.getenv('API_THROTTLE_VERIFICATION_RESEND_IP', '10/hour'),
+        'auth_verification_resend_user':    os.getenv('API_THROTTLE_VERIFICATION_RESEND_USER', '3/hour'),
+        'auth_device':                      os.getenv('API_THROTTLE_AUTH_DEVICE', '30/minute'),
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
@@ -166,6 +170,10 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE if 'TIME_ZONE' in globals() else 'UTC'
 OUTBOX_SWEEP_INTERVAL_SECONDS = float(os.getenv("OUTBOX_SWEEP_INTERVAL_SECONDS", "30"))
 CELERY_BEAT_SCHEDULE = {
+    "purge-verification-challenges-daily": {
+        "task": "accounts.tasks.purge_verification_challenges",
+        "schedule": 86400.0,
+    },
     "process-pending-outbox-events-every-30s": {
         "task": "venues.tasks.process_pending_outbox_events",
         "schedule": OUTBOX_SWEEP_INTERVAL_SECONDS,
@@ -245,12 +253,15 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',  
     'django.middleware.common.CommonMiddleware',
+    'openspots.security.StrictCORSMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'accounts.middleware.ThreadLocalMiddleware',
+    'openspots.security.SecurityHeadersMiddleware',
+    'openspots.security.SecurityEventLoggingMiddleware',
 ]
 
 

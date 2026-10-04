@@ -1,10 +1,9 @@
+from accounts.models import VerificationReason
 import base64
 import logging
-import math
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -20,32 +19,16 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from .serializers import (
     DeviceSessionSerializer,
     TwoFactorCodeSerializer,
-    UserEmailUpdateSerializer,
     UserLoginSerializer,
-    UserPasswordChangeSerializer,
-    UserPasswordRecoverySerializer,
-    UserPasswordResetSerializer,
     UserProfileSerializer,
-    UserRegistrationSerializer,
-    VerificationCodeSerializer,
 )
-from .throttles import VerificationResendIPThrottle, VerificationResendUserThrottle
-from ..services.emails import send_verification_code
+from ..services.challenges import begin_challenge, get_challenge, close_challenge
 from accounts.models import DeviceSession
-from emails_manager.models import EmailVerificationCode
+from openspots.security import CsrfProtectedAPIViewMixin
 
 User = get_user_model()
 security_logger = logging.getLogger("accounts.security")
 REFRESH_COOKIE_NAME = getattr(settings, "JWT_REFRESH_COOKIE_NAME", "open_spots_refresh")
-TWO_FACTOR_PENDING_SECONDS = int(getattr(settings, "TWO_FACTOR_PENDING_SECONDS", 300))
-PASSWORD_CHANGE_PENDING_SECONDS = int(
-    getattr(settings, "PASSWORD_CHANGE_PENDING_SECONDS", 600)
-)
-VERIFICATION_MAX_ATTEMPTS = int(getattr(settings, "VERIFICATION_MAX_ATTEMPTS", 5))
-VERIFICATION_LOCK_SECONDS = int(getattr(settings, "VERIFICATION_LOCK_SECONDS", 600))
-VERIFICATION_RESEND_COOLDOWN_SECONDS = int(
-    getattr(settings, "VERIFICATION_RESEND_COOLDOWN_SECONDS", 60)
-)
 
 
 def _default_redirect_for_user(user):
@@ -57,26 +40,6 @@ def _default_redirect_for_user(user):
             return f"/venues/dashboard/{venue.id}/"
         return "/venues/apply-venue/"
     return "/"
-
-
-def _latest_verification_code(user):
-    return EmailVerificationCode.objects.filter(user=user).order_by("-created_at").first()
-
-
-def _remaining_verification_seconds(code_obj):
-    if not code_obj:
-        return 0
-    expires_at = code_obj.created_at + timezone.timedelta(minutes=10)
-    return max(0, int((expires_at - timezone.now()).total_seconds()))
-
-
-def _remaining_resend_cooldown_seconds(code_obj):
-    if not code_obj:
-        return 0
-    available_at = code_obj.created_at + timezone.timedelta(
-        seconds=VERIFICATION_RESEND_COOLDOWN_SECONDS
-    )
-    return max(0, math.ceil((available_at - timezone.now()).total_seconds()))
 
 
 def _refresh_cookie_kwargs():
@@ -200,38 +163,6 @@ def _has_two_factor_enabled(user):
     return _confirmed_totp_device(user) is not None
 
 
-def _begin_two_factor_login(request, user):
-    request.session["pending_2fa_user_id"] = user.id
-    request.session["pending_2fa_started_at"] = timezone.now().isoformat()
-
-
-def _clear_two_factor_login(request):
-    request.session.pop("pending_2fa_user_id", None)
-    request.session.pop("pending_2fa_started_at", None)
-
-
-def _pending_two_factor_user(request):
-    user_id = request.session.get("pending_2fa_user_id")
-    started_at = request.session.get("pending_2fa_started_at")
-    if not user_id or not started_at:
-        return None
-
-    try:
-        started = timezone.datetime.fromisoformat(started_at)
-    except ValueError:
-        _clear_two_factor_login(request)
-        return None
-
-    if timezone.is_naive(started):
-        started = timezone.make_aware(started)
-
-    if timezone.now() - started > timezone.timedelta(seconds=TWO_FACTOR_PENDING_SECONDS):
-        _clear_two_factor_login(request)
-        return None
-
-    return User.objects.filter(id=user_id, is_active=True).first()
-
-
 def _login_response_for_user(request, user):
     user._current_device_session = _create_device_session(request, user)
     tokens = _tokens_for_user(user)
@@ -257,38 +188,41 @@ def _totp_manual_key(device):
     return base64.b32encode(device.bin_key).decode("ascii").rstrip("=")
 
 
-class LoginAPIView(generics.GenericAPIView):
-    serializer_class   = UserLoginSerializer
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-    throttle_scope = "auth_login"
+class LoginAPIView(CsrfProtectedAPIViewMixin, generics.GenericAPIView):
+    serializer_class        = UserLoginSerializer
+    authentication_classes  = [] # disables automatic authentication for this endpoint such as checking JWTs.
+    permission_classes      = [permissions.AllowAny] # lets anyone call the endpoint, including users who haven't logged in-which is necessary for login.
+    throttle_scope          = "auth_login"
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = serializer.validated_data["user"]
-        is_google_user = user.socialaccount_set.filter(provider="google").exists()
+        user            = serializer.validated_data["user"]
+        is_google_user  = user.socialaccount_set.filter(provider="google").exists()
+
         if not user.email_verified and not is_google_user:
-            latest_code = _latest_verification_code(user)
-            request.session["pending_user_id"]     = user.id
-            request.session["code_already_sent"]   = _remaining_verification_seconds(latest_code) > 0
-            request.session["verification_reason"] = "signup"
+            # Read that challenge function to understand what it creates and how it is matched with the challenge_id in the response. It is used to verify the user's email before allowing them to log in.
+            challenge = begin_challenge(user, VerificationReason.SIGNUP, user.unverified_email or user.email, resume=True)
+
             return Response(
                 {
-                    "detail": "Please verify your email before continuing.",
-                    "requires_verification": True,
+                    "detail":                   "Please verify your email before continuing.",
+                    "requires_verification":    True,
+                    "challenge_id":             str(challenge.id),
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        if _has_two_factor_enabled(user):
-            _begin_two_factor_login(request, user)
+        device = _confirmed_totp_device(user)
+        if device:
+            challenge = begin_challenge(user, VerificationReason.TWO_FACTOR_LOGIN, user.email, payload={"device_id": device.pk}, resume=True)
             security_logger.info("login_2fa_required user=%s ip=%s", user.pk, _client_ip(request))
             return Response(
                 {
-                    "detail": "Enter the code from your authenticator app.",
+                    "detail":       "Enter the code from your authenticator app.",
                     "requires_2fa": True,
+                    "challenge_id": str(challenge.id),
                 },
                 status=status.HTTP_202_ACCEPTED,
             )
@@ -296,32 +230,36 @@ class LoginAPIView(generics.GenericAPIView):
         return _login_response_for_user(request, user)
 
 
-class TwoFactorLoginVerifyAPIView(generics.GenericAPIView):
+class TwoFactorLoginVerifyAPIView(CsrfProtectedAPIViewMixin, generics.GenericAPIView):
     serializer_class = TwoFactorCodeSerializer
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
     throttle_scope = "auth_2fa"
 
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
-        user = _pending_two_factor_user(request)
-        if not user:
-            return Response(
-                {"detail": "Two-factor login expired. Please log in again."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        from .verification import challenge_user
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        device = _confirmed_totp_device(user)
+        challenge = get_challenge(request, lock=True)
+        if challenge.reason != VerificationReason.TWO_FACTOR_LOGIN:
+            return Response({"detail": "This challenge is not for two-factor login."}, status=400)
+        if challenge.attempts >= int(getattr(settings, "VERIFICATION_MAX_ATTEMPTS", 5)):
+            return Response({"detail": "Too many attempts. Wait for this login challenge to expire."}, status=429)
+        user = challenge_user(challenge)
+        if not user:
+            close_challenge(challenge)
+            return Response({"detail": "The account changed. Please log in again."}, status=400)
+        device = TOTPDevice.objects.select_for_update().filter(pk=challenge.payload.get("device_id"), user=user, confirmed=True).first()
         if not device or not device.verify_token(serializer.validated_data["code"]):
+            challenge.attempts += 1
+            challenge.save(update_fields=["attempts"])
             return Response({"detail": "Invalid two-factor code."}, status=status.HTTP_400_BAD_REQUEST)
-
-        _clear_two_factor_login(request)
+        close_challenge(challenge)
         return _login_response_for_user(request, user)
 
 
-class CookieTokenRefreshAPIView(generics.GenericAPIView):
+class CookieTokenRefreshAPIView(CsrfProtectedAPIViewMixin, generics.GenericAPIView):
     serializer_class = TokenRefreshSerializer
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
@@ -360,7 +298,7 @@ class CookieTokenRefreshAPIView(generics.GenericAPIView):
         return response
 
 
-class LogoutAPIView(generics.GenericAPIView):
+class LogoutAPIView(CsrfProtectedAPIViewMixin, generics.GenericAPIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
@@ -501,70 +439,6 @@ class SocialLoginSessionAPIView(generics.GenericAPIView):
         return _login_response_for_user(request, user)
 
 
-class RegisterAPIView(generics.CreateAPIView):
-    serializer_class    = UserRegistrationSerializer
-    authentication_classes = []
-    permission_classes  = [permissions.AllowAny]
-    throttle_scope = "auth_register"
-
-    def get_pending_signup_user(self, request):
-        pending_user_id = request.session.get("pending_user_id")
-        verification_reason = request.session.get("verification_reason")
-
-        if not pending_user_id or verification_reason != "signup":
-            return None
-
-        return User.objects.filter(id=pending_user_id, email_verified=False).first()
-
-    def clear_pending_signup(self, request):
-        pending_user = self.get_pending_signup_user(request)
-        if pending_user:
-            pending_user.delete()
-
-        request.session.pop("pending_user_id", None)
-        request.session.pop("verification_reason", None)
-        request.session.pop("code_already_sent", None)
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-
-        send_verification_code(user)
-        security_logger.info("register_started user=%s ip=%s", user.pk, _client_ip(self.request))
-
-        self.request.session["pending_user_id"] = user.id
-        self.request.session["verification_reason"] = "signup"
-        self.request.session["code_already_sent"] = True
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if not serializer.is_valid():
-            pending_user = self.get_pending_signup_user(request)
-            requested_username = str(request.data.get("username", "")).strip()
-            requested_email = str(request.data.get("email", "")).strip().lower()
-            pending_email = (pending_user.email or "").strip().lower() if pending_user else ""
-
-            if pending_user and (requested_username == pending_user.username or requested_email == pending_email):
-                self.clear_pending_signup(request)
-                serializer = self.get_serializer(data=request.data)
-
-            serializer.is_valid(raise_exception=True)
-        else:
-            self.clear_pending_signup(request)
-
-        self.perform_create(serializer)
-        user = serializer.instance
-        return Response(
-            {
-                "detail": "Account created. Please check your email for the verification code.",
-                "requires_verification": True,
-                "user": UserProfileSerializer(user).data,
-            },
-            status=status.HTTP_201_CREATED,
-        )
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
 class ProfileAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -589,370 +463,10 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
         return self.partial_update(request, *args, **kwargs)
 
 
-class EmailUpdateAPIView(generics.UpdateAPIView):
-    serializer_class = UserEmailUpdateSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_object(self):
-        return self.request.user
-
-    def perform_update(self, serializer):
-        user = serializer.save()
-        pending_email = serializer.validated_data["email"].strip().lower()
-        if (
-            user.unverified_email
-            and user.email
-            and user.unverified_email.strip().lower() != user.email.strip().lower()
-            and not user.email_verified
-        ):
-            # Repair email updates staged by the legacy flow. The primary email
-            # was never replaced, so it remains the verified address.
-            user.unverified_email = ""
-            user.email_verified = True
-            user.save(update_fields=["unverified_email", "email_verified"])
-        EmailVerificationCode.objects.filter(user=user).delete()
-        send_verification_code(user, recipient=pending_email)
-        self.request.session["pending_user_id"] = user.id
-        self.request.session["verification_reason"] = "email_update"
-        self.request.session["pending_email_update"] = pending_email
-        self.request.session["code_already_sent"] = True
-        self.request.session["pending_profile_update"] = dict(self.pending_profile_data)
-
-    def post(self, request, *args, **kwargs):
-        profile_serializer = UserProfileSerializer(
-            request.user,
-            data=request.data.get("profile", {}),
-            partial=True,
-            context=self.get_serializer_context(),
-        )
-        profile_serializer.is_valid(raise_exception=True)
-        self.pending_profile_data = profile_serializer.validated_data
-        self.update(request, *args, **kwargs)
-        return Response({
-            "detail": "Verification code sent to your new email. Your profile will be updated after verification.",
-            "requires_verification": True,
-        })
-
-
-class PasswordChangeRequestAPIView(generics.GenericAPIView):
-    serializer_class = UserPasswordChangeSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    throttle_scope = "auth_password"
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        user = request.user
-        pending_password_hash = make_password(serializer.validated_data["new_password1"])
-        pending_password_expires_at = str(
-            (timezone.now() + timezone.timedelta(seconds=PASSWORD_CHANGE_PENDING_SECONDS)).timestamp()
-        )
-
-        try:
-            send_verification_code(user, recipient=user.email, async_send=False)
-        except Exception:
-            EmailVerificationCode.objects.filter(user=user).delete()
-            request.session.pop("pending_password_hash", None)
-            request.session.pop("pending_password_expires_at", None)
-            request.session.pop("pending_user_id", None)
-            request.session.pop("verification_reason", None)
-            request.session.pop("code_already_sent", None)
-            security_logger.exception(
-                "password_change_verification_send_failed user=%s ip=%s",
-                user.pk,
-                _client_ip(request),
-            )
-            return Response(
-                {"detail": "Could not send the verification code. Please try again."},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
-
-        request.session["pending_password_hash"] = pending_password_hash
-        request.session["pending_password_expires_at"] = pending_password_expires_at
-        request.session["pending_user_id"] = user.id
-        request.session["verification_reason"] = "password_change"
-        request.session["code_already_sent"] = True
-
-        security_logger.warning("password_change_requested user=%s ip=%s", user.pk, _client_ip(request))
-
-        return Response({
-            "detail": "Verification code sent. Confirm the code to complete the password change.",
-            "requires_verification": True,
-        })
-
-class PasswordRecoveryRequestAPIView(generics.GenericAPIView):
-    serializer_class = UserPasswordRecoverySerializer
-    permission_classes = [permissions.AllowAny]
-    throttle_scope = "auth_password"
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data["email"].strip().lower()
-        user = User.objects.filter(email__iexact=email).first()
-        if user:
-            send_verification_code(user)
-            request.session["pending_user_id"] = user.id
-            request.session["verification_reason"] = "password_recovery"
-            request.session["code_already_sent"] = True
-        security_logger.warning(
-            "password_recovery_requested matched_user=%s ip=%s",
-            bool(user),
-            _client_ip(request),
-        )
-        return Response({"detail": "If the email exists, a verification code has been sent."})
-
-
-class PasswordResetAPIView(generics.GenericAPIView):
-    serializer_class = UserPasswordResetSerializer
-    permission_classes = [permissions.AllowAny]
-    throttle_scope = "auth_password"
-
-    def get_pending_user(self):
-        user_id = self.request.session.get("pending_user_id")
-        if not user_id or not self.request.session.get("password_recovery_verified"):
-            return None
-        return get_object_or_404(User, id=user_id)
-
-    def post(self, request, *args, **kwargs):
-        user = self.get_pending_user()
-        if not user:
-            return Response({"detail": "Invalid or expired password recovery session."}, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user)
-        _revoke_all_user_sessions(user)
-        security_logger.warning("password_reset_completed user=%s ip=%s", user.pk, _client_ip(request))
-        request.session.pop("pending_user_id", None)
-        request.session.pop("verification_reason", None)
-        request.session.pop("code_already_sent", None)
-        request.session.pop("password_recovery_verified", None)
-        response = Response({"detail": "Password reset successful."})
-        _delete_refresh_cookie(response)
-        return response
-
-
-class ResendVerificationAPIView(generics.GenericAPIView):
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [VerificationResendIPThrottle, VerificationResendUserThrottle]
-
-    def post(self, request, *args, **kwargs):
-        user_id = request.session.get("pending_user_id")
-        reason = request.session.get("verification_reason")
-        if not user_id or not reason:
-            return Response({"detail": "No pending verification in session."}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = get_object_or_404(User, id=user_id)
-        latest_code = _latest_verification_code(user)
-        resend_after = _remaining_resend_cooldown_seconds(latest_code)
-        if resend_after > 0:
-            return Response(
-                {
-                    "detail": f"Please wait {resend_after} seconds before requesting another code.",
-                    "retry_after": resend_after,
-                },
-                status=status.HTTP_429_TOO_MANY_REQUESTS,
-            )
-
-        EmailVerificationCode.objects.filter(user=user).delete()
-        pending_email = request.session.get("pending_email_update")
-        recipient = pending_email if reason == "email_update" else None
-        send_verification_code(user, recipient=recipient)
-        request.session["code_already_sent"] = True
-        latest_code = _latest_verification_code(user)
-        return Response(
-            {
-                "detail": "Verification code resent.",
-                "remaining_seconds": _remaining_verification_seconds(latest_code),
-                "resend_after_seconds": _remaining_resend_cooldown_seconds(latest_code),
-            }
-        )
-
-
-class VerificationStatusAPIView(generics.GenericAPIView):
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-    throttle_scope = "auth_verification"
-
-    def get(self, request, *args, **kwargs):
-        user_id = request.session.get("pending_user_id")
-        reason = request.session.get("verification_reason")
-        if not user_id or not reason:
-            return Response({"detail": "No pending verification in session."}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = get_object_or_404(User, id=user_id)
-        pending_email = request.session.get("pending_email_update")
-        latest_code = _latest_verification_code(user)
-        remaining = _remaining_verification_seconds(latest_code)
-
-        return Response(
-            {
-                "reason": reason,
-                "email": pending_email if reason == "email_update" else (user.unverified_email or user.email),
-                "remaining_seconds": remaining,
-                "is_expired": remaining <= 0,
-                "resend_after_seconds": _remaining_resend_cooldown_seconds(latest_code),
-            }
-        )
-
-
-class ConfirmVerificationAPIView(generics.GenericAPIView):
-    serializer_class = VerificationCodeSerializer
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-    throttle_scope = "auth_verification"
-
-    @transaction.atomic
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user_id = request.session.get("pending_user_id")
-        reason = request.session.get("verification_reason")
-        if not user_id or not reason:
-            return Response({"detail": "No pending verification in session."}, status=status.HTTP_400_BAD_REQUEST)
-
-        locked_until = request.session.get("verification_locked_until")
-        try:
-            verification_locked = (
-                bool(locked_until)
-                and timezone.now().timestamp() < float(locked_until)
-            )
-        except (TypeError, ValueError):
-            verification_locked = True
-        if verification_locked:
-            return Response(
-                {"detail": "Too many verification attempts. Try again later."},
-                status=status.HTTP_429_TOO_MANY_REQUESTS,
-            )
-        if locked_until:
-            request.session.pop("verification_attempts", None)
-            request.session.pop("verification_locked_until", None)
-
-        user = get_object_or_404(User, id=user_id)
-        pending_email = request.session.get("pending_email_update")
-        if reason == "email_update":
-            if not pending_email:
-                return Response(
-                    {"detail": "The pending email update has expired. Please start again."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            if User.objects.filter(email__iexact=pending_email).exclude(pk=user.pk).exists():
-                return Response(
-                    {"detail": "An account with this email already exists."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        pending_password_hash = None
-        if reason == "password_change":
-            pending_password_hash = request.session.get("pending_password_hash")
-            expires_at = request.session.get("pending_password_expires_at")
-            try:
-                password_change_expired = (
-                    not expires_at or timezone.now().timestamp() >= float(expires_at)
-                )
-            except (TypeError, ValueError):
-                password_change_expired = True
-            if not pending_password_hash or password_change_expired:
-                request.session.pop("pending_password_hash", None)
-                request.session.pop("pending_password_expires_at", None)
-                return Response(
-                    {"detail": "The pending password change has expired. Please start again."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        code_obj = (
-            EmailVerificationCode.objects.select_for_update()
-            .filter(user=user, code=serializer.validated_data["code"].strip())
-            .first()
-        )
-        if not code_obj:
-            try:
-                attempts = int(request.session.get("verification_attempts", 0)) + 1
-            except (TypeError, ValueError):
-                attempts = 1
-            request.session["verification_attempts"] = attempts
-            if attempts >= VERIFICATION_MAX_ATTEMPTS:
-                request.session["verification_locked_until"] = str(
-                    (
-                        timezone.now()
-                        + timezone.timedelta(seconds=VERIFICATION_LOCK_SECONDS)
-                    ).timestamp()
-                )
-                return Response(
-                    {"detail": "Too many verification attempts. Try again later."},
-                    status=status.HTTP_429_TOO_MANY_REQUESTS,
-                )
-            return Response(
-                {"detail": "Invalid verification code."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if code_obj.is_expired():
-            code_obj.delete()
-            return Response({"detail": "Verification code expired. Please request a new one."}, status=status.HTTP_400_BAD_REQUEST)
-
-        code_obj.delete()
-        request.session.pop("verification_attempts", None)
-        request.session.pop("verification_locked_until", None)
-
-        if reason in ["signup", "email_update"]:
-            user.email = pending_email if reason == "email_update" else (user.unverified_email or user.email)
-            user.unverified_email = ""
-            user.email_verified = True
-            update_fields = ["email", "unverified_email", "email_verified"]
-            if reason == "email_update":
-                pending_profile = request.session.get("pending_profile_update") or {}
-                for field in ("firstname", "lastname", "phone_number"):
-                    if field in pending_profile:
-                        setattr(user, field, pending_profile[field])
-                        update_fields.append(field)
-            user.save(update_fields=update_fields)
-            security_logger.info("email_verified user=%s reason=%s ip=%s", user.pk, reason, _client_ip(request))
-            request.session.pop("pending_user_id", None)
-            request.session.pop("verification_reason", None)
-            request.session.pop("code_already_sent", None)
-            request.session.pop("pending_profile_update", None)
-            request.session.pop("pending_email_update", None)
-            user._current_device_session = _create_device_session(request, user)
-            tokens = _tokens_for_user(user)
-            request.session["jwt_access"] = tokens["access"]
-            request.session["jwt_refresh"] = tokens["refresh"]
-            response = Response(
-                {
-                    "detail": (
-                        "Email verified and profile updated successfully."
-                        if reason == "email_update"
-                        else "Email verified successfully."
-                    ),
-                    "access": tokens["access"],
-                    "user": UserProfileSerializer(user).data,
-                    "redirect_to": _default_redirect_for_user(user),
-                }
-            )
-            _set_refresh_cookie(response, tokens["refresh"])
-            return response
-
-        if reason == "password_recovery":
-            request.session["password_recovery_verified"] = True
-            return Response({"detail": "Verification successful. You may now reset your password."})
-
-        if reason == "password_change":
-            user.password = pending_password_hash
-            user.save(update_fields=["password"])
-            _revoke_all_user_sessions(user)
-            request.session.pop("pending_user_id", None)
-            request.session.pop("verification_reason", None)
-            request.session.pop("code_already_sent", None)
-            request.session.pop("pending_password_hash", None)
-            request.session.pop("pending_password_expires_at", None)
-            response = Response({
-                "detail": "Password changed successfully. Please log in again.",
-                "session_invalidated": True,
-                "redirect_to": "/accounts/login",
-            })
-            _delete_refresh_cookie(response)
-            return response
-
-        return Response({"detail": "Unsupported verification flow."}, status=status.HTTP_400_BAD_REQUEST)
+# Keep existing view imports working while the challenge endpoints live separately.
+from .verification import (
+    RegisterAPIView, EmailUpdateAPIView, PasswordChangeRequestAPIView,
+    PasswordRecoveryRequestAPIView, PasswordResetAPIView, ResendVerificationAPIView,
+    VerificationStatusAPIView, ConfirmVerificationAPIView, CancelVerificationAPIView,
+    CurrentVerificationAPIView,
+)

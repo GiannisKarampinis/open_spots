@@ -7,8 +7,7 @@ from django.urls import path, include, re_path
 from .views import csrf_token, serve_react_app
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.views import TokenObtainPairView
-from accounts.api.views import CookieTokenRefreshAPIView
+from accounts.api.views import CookieTokenRefreshAPIView, LoginAPIView
 
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
@@ -31,7 +30,7 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name="openapi-schema"),
         name="redoc-ui",
     ),
-    path("api/token/", TokenObtainPairView.as_view()),
+    path("api/token/", LoginAPIView.as_view()),
     path("api/token/refresh/", CookieTokenRefreshAPIView.as_view()),
     path("api/v1/csrf/", csrf_token, name="csrf-token"),
     path("api/v1/", include("venues.api.urls")),

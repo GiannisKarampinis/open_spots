@@ -1,100 +1,46 @@
 import axios from "axios";
+import { clearVerification } from "./verification";
+import { clearCsrfToken, ensureCsrfToken, postWithCsrf } from "./csrf";
 
-const ACCESS_KEY = "access";
-const LEGACY_ACCESS_KEY = "access_token";
-const LEGACY_REFRESH_KEYS = ["refresh", "refresh_token"];
-const USER_KEY = "user";
-
-let accessToken = null;
-let refreshPromise = null;
-let cachedCsrfToken = null;
-
-function clearStoredTokens() {
-  localStorage.removeItem(ACCESS_KEY);
-  localStorage.removeItem(LEGACY_ACCESS_KEY);
-  LEGACY_REFRESH_KEYS.forEach((key) => localStorage.removeItem(key));
-}
-
-export async function ensureCsrfToken(options = {}) {
-  const { fresh = false } = options;
-
-  if (!fresh && cachedCsrfToken) {
-    return cachedCsrfToken;
-  }
-
-  const res = await axios.get("/api/v1/csrf/", {
-    withCredentials: true,
-  });
-
-  const token = res.data.csrfToken;
-
-  if (!token || typeof token !== "string") {
-    throw new Error("CSRF endpoint did not return a valid csrfToken.");
-  }
-
-  cachedCsrfToken = token;
-  return cachedCsrfToken;
-}
-
-export async function postWithCsrf(url, data = {}, config = {}) {
-  const csrfToken = await ensureCsrfToken({ fresh: true });
-
-  return axios.post(url, data, {
-    ...config,
-    withCredentials: true,
-    headers: {
-      ...(config.headers || {}),
-      "X-CSRFToken": csrfToken,
-    },
-  });
-}
+let accessToken     = null;
+let currentUser     = null;
+let refreshPromise  = null;
 
 export function getAccessToken() {
   return accessToken;
 }
 
-export function authHeaders() {
-  const token = getAccessToken();
-
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-export function readStoredUser() {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+export function getCurrentUser() {
+  return currentUser;
 }
 
 export function storeAuthResponse(data) {
-  if (data.access) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new TypeError("Authentication response must be an object.");
+  }
+
+  if (data.access) { /* optional property access */
     accessToken = data.access;
   }
 
-  if (data.user) {
-    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  if (data.user) { /* optional property user */
+    currentUser = data.user;
   }
 
-  clearStoredTokens();
   window.dispatchEvent(new Event("auth:changed"));
 }
 
 export function clearStoredAuth() {
   accessToken = null;
-  cachedCsrfToken = null;
-
-  clearStoredTokens();
-  localStorage.removeItem(USER_KEY);
+  currentUser = null;
+  clearCsrfToken();
 
   window.dispatchEvent(new Event("auth:changed"));
 }
 
 export function refreshAccessToken() {
   if (!refreshPromise) {
-    refreshPromise = axios
-      .post("/api/token/refresh/", {}, { withCredentials: true })
+    refreshPromise = postWithCsrf("/api/token/refresh/")
       .then((res) => {
         const access = res.data.access;
 
@@ -103,8 +49,6 @@ export function refreshAccessToken() {
         }
 
         accessToken = access;
-        clearStoredTokens();
-
         window.dispatchEvent(new Event("auth:changed"));
         return access;
       })
@@ -122,16 +66,11 @@ export function refreshAccessToken() {
 
 export async function logoutSession() {
   try {
-    await axios.post(
-      "/api/v1/accounts/logout/",
-      {},
-      {
-        withCredentials: true,
-      }
-    );
+    await postWithCsrf("/api/v1/accounts/logout/");
   } catch {
     // Ignore backend logout failure; frontend auth must still be cleared.
   } finally {
+    clearVerification();
     clearStoredAuth();
   }
 }
@@ -183,22 +122,23 @@ export async function requestWithAuth(
       throw err;
     }
 
+    let newAccess;
     try {
-      const newAccess = await refreshAccessToken();
-
-      return await axios({
-        ...requestConfig,
-        headers: {
-          ...(requestConfig.headers || {}),
-          Authorization: `Bearer ${newAccess}`,
-          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
-        },
-      });
+      newAccess = await refreshAccessToken();
     } catch {
       clearStoredAuth();
       options.onUnauthenticated?.();
       return null;
     }
+
+    return axios({
+      ...requestConfig,
+      headers: {
+        ...(requestConfig.headers || {}),
+        Authorization: `Bearer ${newAccess}`,
+        ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+      },
+    });
   }
 }
 

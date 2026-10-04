@@ -1,7 +1,7 @@
 import  React, { useEffect, useRef, useState } from "react";
 import  { Link, useNavigate } from "react-router-dom";
 import  { Outlet }  from "react-router-dom";
-import  { clearStoredAuth, getAccessToken, getWithAuth, logoutSession, readStoredUser } from "../utils/auth";
+import  { getCurrentUser, getWithAuth, logoutSession, storeAuthResponse } from "../utils/auth";
 import  "../styles/base.css";
 import  { useTranslation } from "react-i18next";
 import  i18n        from "../i18n.jsx";
@@ -57,53 +57,32 @@ export default function Layout() {
   const navigate = useNavigate();
   const menuRef = useRef(null);
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [ownedVenue, setOwnedVenue] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
 
   useEffect(() => {
-    const storedUser = readStoredUser();
-    if (storedUser) {
-      setUser(storedUser);
-    }
-
     let cancelled = false;
-    const syncAuth = () => setUser(readStoredUser());
+    const syncAuth = () => setUser(getCurrentUser());
     window.addEventListener("auth:changed", syncAuth);
-    window.addEventListener("storage", syncAuth);
 
-    const token = getAccessToken();
-
-    // Access tokens intentionally live only in memory, so a browser refresh
-    // clears them while the stored user and HttpOnly refresh cookie remain.
-    // In that case getWithAuth restores the access token before loading the
-    // current profile.
-    if (token || storedUser) {
-      getWithAuth("/api/v1/accounts/profile/")
-        .then((res) => {
-          if (cancelled || !res) return;
-          setUser(res.data);
-          localStorage.setItem("user", JSON.stringify(res.data));
-        })
-        .catch((err) => {
-          if (cancelled) return;
-
-          const status = err.response?.status;
-
-          if (status === 401 || status === 403) {
-            clearStoredAuth();
-            setUser(null);
-          } else {
-            console.error("Could not refresh profile in layout:", err);
-          }
-        });
-    }
+    getWithAuth("/api/v1/accounts/profile/")
+      .then((res) => {
+        if (cancelled || !res) return;
+        storeAuthResponse({ user: res.data });
+      })
+      .catch((err) => {
+        if (!cancelled) console.error("Could not restore session:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setAuthLoading(false);
+      });
 
     return () => {
       cancelled = true;
       window.removeEventListener("auth:changed", syncAuth);
-      window.removeEventListener("storage", syncAuth);
     };
   }, []);
 
@@ -184,7 +163,7 @@ export default function Layout() {
             <option value="el">GR</option>
           </select>
 
-          {user ? (
+          {authLoading ? null : user ? (
             <>
             {ownedVenue && (
               <>
@@ -259,7 +238,7 @@ export default function Layout() {
         </nav>
       </header>
 
-      <main><Outlet /></main>
+      <main><Outlet context={{ user, authLoading }} /></main>
 
       <footer>© 2025 OpenSpots. All rights reserved.</footer>
     </>

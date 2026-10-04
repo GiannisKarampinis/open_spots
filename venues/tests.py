@@ -40,6 +40,23 @@ class VenuesAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Test Venue")
 
+    def test_venue_list_can_be_searched_by_name(self):
+        Venue.objects.create(
+            name="Different Place",
+            kind="restaurant",
+            location="Other Street",
+        )
+
+        response = self.client.get(self.list_url, {"search": "test ven"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        venues = [
+            venue
+            for group in response.data["results"].values()
+            for venue in group
+        ]
+        self.assertEqual([venue["name"] for venue in venues], ["Test Venue"])
+
     def test_owned_venue_uses_jwt_user_when_session_cookie_is_stale(self):
         stale_session_user = User.objects.create_user(
             username="stale_session_user",

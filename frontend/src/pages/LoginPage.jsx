@@ -1,7 +1,8 @@
+import { rememberVerification, verificationConfig } from "../utils/verification";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
-import axios from "axios";
+import { postWithCsrf } from "../utils/csrf";
 import googleIcon from "../assets/google-icon.svg";
 import { storeAuthResponse } from "../utils/auth";
 import "../styles/login1.css";
@@ -45,6 +46,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
+  const [twoFactorChallengeId, setTwoFactorChallengeId] = useState("");
 
   const nextFromQuery = new URLSearchParams(location.search).get("next");
   const nextFromState = location.state?.from;
@@ -86,21 +88,21 @@ export default function LoginPage() {
 
     try {
       const res = requiresTwoFactor
-        ? await axios.post(
+        ? await postWithCsrf(
             "/api/v1/accounts/login/2fa/",
             { code: form.code },
-            { withCredentials: true }
+            verificationConfig(twoFactorChallengeId)
           )
-        : await axios.post(
+        : await postWithCsrf(
             "/api/v1/accounts/login/",
             {
               username: form.username,
               password: form.password,
-            },
-            { withCredentials: true }
+            }
           );
 
       if (res.data.requires_2fa) {
+        setTwoFactorChallengeId(res.data.challenge_id);
         setRequiresTwoFactor(true);
         setMessage(
           res.data.detail || t("Enter the code from your authenticator app.")
@@ -109,17 +111,17 @@ export default function LoginPage() {
       }
 
       storeAuthResponse(res.data);
+      setTwoFactorChallengeId("");
 
       sessionStorage.removeItem("redirectAfterLogin");
 
       navigate(next || res.data.redirect_to || "/");
     } catch (err) {
-      console.log("Login error status:", err.response?.status);
-      console.log("Login error data:", err.response?.data);
 
       const data = err.response?.data;
 
       if (data?.requires_verification) {
+        rememberVerification(data);
         setMessage(
           data.detail || t("Please verify your email before continuing.")
         );
@@ -289,6 +291,7 @@ export default function LoginPage() {
             type="button"
             onClick={() => {
               setRequiresTwoFactor(false);
+              setTwoFactorChallengeId("");
               setForm((current) => ({
                 ...current,
                 code: "",

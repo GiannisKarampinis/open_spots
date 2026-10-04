@@ -3,14 +3,31 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseForbidden
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 
 logger = logging.getLogger("security")
 
 
-def _origin_allowed(origin):
+class CsrfProtectedAPIViewMixin:
+    """Require Django CSRF validation even for DRF APIView subclasses.
+
+    DRF marks API views as exempt from Django's global CSRF middleware and
+    normally enforces CSRF only when SessionAuthentication authenticates a
+    user. Cookie-backed anonymous workflows (login, recovery, verification,
+    refresh, and similar endpoints) therefore need an explicit check.
+    """
+
+    @method_decorator(csrf_protect)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+
+def _origin_allowed(request, origin):
     if not origin:
         return True
-    return origin in getattr(settings, "SECURITY_ALLOWED_CORS_ORIGINS", [])
+    request_origin = f"{request.scheme}://{request.get_host()}"
+    return origin == request_origin or origin in getattr(settings, "SECURITY_ALLOWED_CORS_ORIGINS", [])
 
 
 def _is_api_request(request):
@@ -24,7 +41,7 @@ class StrictCORSMiddleware:
     """
 
     allowed_methods = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-    allowed_headers = "Authorization, Content-Type, X-CSRFToken, X-Requested-With"
+    allowed_headers = "Authorization, Content-Type, X-CSRFToken, X-Requested-With, X-Verification-Challenge"
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -32,7 +49,7 @@ class StrictCORSMiddleware:
     def __call__(self, request): # this runs for every incoming request
         origin = request.headers.get("Origin")
 
-        if _is_api_request(request) and origin and not _origin_allowed(origin):
+        if _is_api_request(request) and origin and not _origin_allowed(request, origin):
             return HttpResponseForbidden("CORS origin is not allowed.")
 
         if _is_api_request(request) and request.method == "OPTIONS":
@@ -40,7 +57,7 @@ class StrictCORSMiddleware:
         else:
             response = self.get_response(request) # this is the moment where the view is called and the response is generated
 
-        if _is_api_request(request) and origin and _origin_allowed(origin):
+        if _is_api_request(request) and origin and _origin_allowed(request, origin):
             response["Access-Control-Allow-Origin"] = origin
             response["Access-Control-Allow-Credentials"] = "true"
             response["Access-Control-Allow-Methods"] = self.allowed_methods

@@ -1,3 +1,4 @@
+import { clearVerification, verificationConfig } from "../utils/verification";
 import { useEffect, useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import axios from "axios";
@@ -13,7 +14,7 @@ function formatSeconds(totalSeconds) {
   return `${minutes}:${seconds}`;
 }
 
-export default function EmailVerificationModal({ onClose, onVerified }) {
+export default function EmailVerificationModal({ onClose, onVerified, onCancelled, challengeId }) {
   const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
@@ -27,7 +28,7 @@ export default function EmailVerificationModal({ onClose, onVerified }) {
 
   useEffect(() => {
     let cancelled = false;
-    axios.get("/api/v1/accounts/verification/status/", { withCredentials: true })
+    axios.get("/api/v1/accounts/verification/status/", verificationConfig(challengeId))
       .then((res) => {
         if (cancelled) return;
         const seconds = Number(res.data.remaining_seconds || 0);
@@ -43,7 +44,7 @@ export default function EmailVerificationModal({ onClose, onVerified }) {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, [t]);
+  }, [t, challengeId]);
 
   useEffect(() => {
     if (remaining <= 0) return undefined;
@@ -78,7 +79,8 @@ export default function EmailVerificationModal({ onClose, onVerified }) {
     setSubmitting(true);
     setMessage("");
     try {
-      const res = await postWithCsrf("/api/v1/accounts/verification/confirm/", { code });
+      const res = await postWithCsrf("/api/v1/accounts/verification/confirm/", { code }, verificationConfig(challengeId));
+      clearVerification(challengeId);
       storeAuthResponse(res.data);
       onVerified(res.data.user, res.data.detail);
     } catch (err) {
@@ -93,7 +95,7 @@ export default function EmailVerificationModal({ onClose, onVerified }) {
     setResending(true);
     setMessage("");
     try {
-      const res = await postWithCsrf("/api/v1/accounts/verification/resend/", {});
+      const res = await postWithCsrf("/api/v1/accounts/verification/resend/", {}, verificationConfig(challengeId));
       const seconds = Number(res.data.remaining_seconds || 600);
       setRemaining(seconds);
       setResendAfter(Number(res.data.resend_after_seconds || 0));
@@ -110,6 +112,20 @@ export default function EmailVerificationModal({ onClose, onVerified }) {
     }
   };
 
+  const cancelVerification = async () => {
+    setSubmitting(true);
+    try {
+      await postWithCsrf("/api/v1/accounts/verification/cancel/", {}, verificationConfig(challengeId));
+      clearVerification(challengeId);
+      onCancelled();
+    } catch (err) {
+      setMessageType("error");
+      setMessage(err.response?.data?.detail || t("Could not cancel verification."));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="email-verification-backdrop" role="presentation">
       <section className="email-verification-modal" role="dialog" aria-modal="true" aria-labelledby="email-verification-title">
@@ -117,7 +133,7 @@ export default function EmailVerificationModal({ onClose, onVerified }) {
         <h2 id="email-verification-title">{t("Verify Your New Email")}</h2>
         <p>
           <Trans
-            i18nKey="Verify the new email before applying profile changes."
+            i18nKey="profile.emailVerification.instructions"
             values={{ email }}
             components={{ strong: <strong /> }}
           />
@@ -141,16 +157,19 @@ export default function EmailVerificationModal({ onClose, onVerified }) {
             disabled={loading}
             required
           />
-          <button type="submit" disabled={loading || submitting || remaining <= 0}>
-            {submitting ? t("Verifying...") : t("Verify and Update Profile")}
+          <button type="submit" disabled={loading || submitting || resending || remaining <= 0}>
+            {submitting ? t("Verifying...") : t("Verify Email")}
           </button>
         </form>
-        <button className="email-verification-resend" type="button" onClick={resend} disabled={loading || resending || resendAfter > 0}>
+        <button className="email-verification-resend" type="button" onClick={resend} disabled={loading || submitting || resending || resendAfter > 0}>
           {resending
             ? t("Sending...")
             : resendAfter > 0
               ? t("Resend available in {{time}}", { time: formatSeconds(resendAfter) })
               : t("Resend Code")}
+        </button>
+        <button type="button" onClick={cancelVerification} disabled={loading || submitting || resending}>
+          {t("Cancel verification")}
         </button>
         {!loading && (
           <div className="email-verification-countdown">

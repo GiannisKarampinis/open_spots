@@ -15,13 +15,20 @@
 
   <form method="post" class="verification-form">
     {% csrf_token %}
+    <input type="hidden" name="challenge_id" value="{{ challenge_id }}">
     <input type="text" name="code" maxlength="6" required pattern="\d{6}" placeholder="{% trans "Enter 6-digit code" %}" autofocus>
     <button type="submit">{% trans "Verify" %}</button>
   </form>
 
   <form method="post" action="{% url 'resend_code' %}" style="margin-top: 1em;">
     {% csrf_token %}
+    <input type="hidden" name="challenge_id" value="{{ challenge_id }}">
     <button type="submit" class="resend-button">{% trans "Resend Code" %}</button>
+  </form>
+  <form method="post" action="{% url 'cancel_verification' %}">
+    {% csrf_token %}
+    <input type="hidden" name="challenge_id" value="{{ challenge_id }}">
+    <button type="submit">{% trans "Cancel verification" %}</button>
   </form>
 </div>
 

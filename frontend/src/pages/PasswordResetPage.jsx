@@ -1,21 +1,23 @@
+import { getVerificationChallenge, getResetToken, clearVerification, verificationConfig } from "../utils/verification";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import axios from "axios";
 import "../styles/password_reset.css";
-import { ensureCsrfToken } from "../utils/auth";
+import { postWithCsrf } from "../utils/csrf";
+import { useToastMessage } from "../components/ToastProvider";
 
 export default function PasswordResetPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  const [challengeId] = useState(getVerificationChallenge);
+  const [resetToken] = useState(getResetToken);
   const [form, setForm] = useState({
     new_password1: "",
     new_password2: "",
   });
 
-  const [message, setMessage] = useState("");
-  const [type, setType] = useState("success");
+  const [message, setMessage, type, setType] = useToastMessage("success");
   const [submitting, setSubmitting] = useState(false);
 
   const updateField = (event) => {
@@ -38,19 +40,13 @@ export default function PasswordResetPage() {
     setMessage("");
 
     try {
-      const csrfToken = await ensureCsrfToken();
-
-      const res = await axios.post(
+      const res = await postWithCsrf(
         "/api/v1/accounts/password/reset/",
-        form,
-        {
-          withCredentials: true,
-          headers: {
-            "X-CSRFToken": csrfToken,
-          },
-        }
+        { ...form, reset_token: resetToken },
+        verificationConfig(challengeId)
       );
 
+      clearVerification(challengeId);
       setType("success");
       setMessage(res.data.detail || t("Password reset successful."));
 

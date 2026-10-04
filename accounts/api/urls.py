@@ -1,6 +1,8 @@
 from django.urls import path
 
 from .views import (
+    CancelVerificationAPIView,
+    CurrentVerificationAPIView,
     ConfirmVerificationAPIView,
     DeviceSessionListAPIView,
     DeviceSessionRevokeAPIView,
@@ -23,6 +25,8 @@ from .views import (
 )
 
 urlpatterns = [
+    path("verification/current/", CurrentVerificationAPIView.as_view(), name="accounts-verification-current"),
+    path("verification/cancel/", CancelVerificationAPIView.as_view(), name="accounts-verification-cancel"),
     path("login/", LoginAPIView.as_view(), name="accounts-login"),
     path("login/2fa/", TwoFactorLoginVerifyAPIView.as_view(), name="accounts-login-2fa"),
     path("logout/", LogoutAPIView.as_view(), name="accounts-logout"),

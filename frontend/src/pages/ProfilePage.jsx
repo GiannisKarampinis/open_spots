@@ -1,3 +1,5 @@
+import { VerificationReason } from "../utils/verificationReasons";
+import { rememberVerification, clearVerification, verificationConfig } from "../utils/verification";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -63,18 +65,21 @@ export default function ProfilePage() {
     new_password1:  "",
     new_password2:  "",
   });
-  const [profileErrors, setProfileErrors] = useState({});
+  const [profileErrors, setProfileErrors]   = useState({});
   const [passwordErrors, setPasswordErrors] = useState({});
 
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [message, setMessage, messageType, setMessageType] = useToastMessage("success");
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving]   = useState(false);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [pendingEmailVerification, setPendingEmailVerification] = useState(null);
+  const [checkingEmailVerification, setCheckingEmailVerification] = useState(true);
 
-  const [twoFactor, setTwoFactor] = useState({ enabled: false, loading: true });
+  const [twoFactor, setTwoFactor] = useState({ enabled: null, loading: true });
   const [twoFactorSetup, setTwoFactorSetup] = useState(null);
   const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [twoFactorSubmitting, setTwoFactorSubmitting] = useState(false);
 
   /* OK - REVIEWED */
   const emailDiffersFromVerified = form.email.trim().toLowerCase() !== (userInfo.email || "").trim().toLowerCase();
@@ -86,6 +91,7 @@ export default function ProfilePage() {
     form.phone_number.trim() !== savedForm.phone_number.trim() ||
     form.email.trim().toLowerCase() !== savedForm.email.trim().toLowerCase();
 
+  /* OK - REVIEWED */
   useEffect(() => { /* PROFILE DATA LOADING */
     let cancelled = false;
 
@@ -102,7 +108,7 @@ export default function ProfilePage() {
           lastname:     profile.lastname      || "",
           username:     profile.username      || "",
           email:        profile.email         || "",
-          phone_number: profile.phone_number  || "",
+          phone_number: profile.phone_number  || ""
         };
         setForm(loadedForm);
         setSavedForm(loadedForm);
@@ -126,35 +132,70 @@ export default function ProfilePage() {
 
     return () => {
       // cleanup function to prevent state updates:
-      // 1. The user leaves ProfilePage before the profile data is loaded.
-      cancelled = true;
-    };
-  }, [navigate]);
-
-  useEffect(() => { /* TWO-FACTOR STATUS LOADING */
-    let cancelled = false;
-
-    getWithAuth(
-      "/api/v1/accounts/2fa/status/",
-      {},
-      { onUnauthenticated: () => navigate("/accounts/login") }
-    )
-      .then((res) => {
-        if (!cancelled && res) setTwoFactor({ ...res.data, loading: false });
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setTwoFactor((current) => ({ ...current, loading: false }));
-        }
-      });
-
-    return () => {
+      // The user leaves ProfilePage before the profile data is loaded.
       cancelled = true;
     };
   }, [navigate]);
   // navigate: It's function reference could theoretically change
   // if the router context or router instance changes.
   // During ordinary OpenSpots usage, it normally remains stable.
+
+  /* OK - REVIEWED */
+  useEffect(() => { /* TWO-FACTOR STATUS LOADING */
+    let cancelled = false;
+    setTwoFactor({ enabled: null, loading: true });
+
+    getWithAuth(
+      "/api/v1/accounts/2fa/status/",
+      {},
+      { onUnauthenticated: () => navigate("/accounts/login") }
+    ).then((res) => {
+        if (!cancelled) {
+          setTwoFactor({ enabled: res?.data?.enabled ?? null, loading: false });
+        }
+    }).catch(() => {
+        if (!cancelled) {
+          setTwoFactor({ enabled: null, loading: false });
+        }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    /*
+      Exactly. Each execution of the effect function has its own scope and its own cancelled variable.
+      Its cleanup and request callbacks share that run’s variable. The next run creates a separate one.
+    */
+    if (loading) return undefined;
+
+    let cancelled = false;
+    getWithAuth("/api/v1/accounts/verification/current/").then((res) => {
+        if (cancelled || !res?.data?.pending || res.data.reason !== VerificationReason.EMAIL_UPDATE) return;
+
+        const pendingEmail = (res.data.email || "").trim().toLowerCase();
+        if (!pendingEmail) return;
+
+        rememberVerification(res.data);
+        setPendingEmailVerification({ ...res.data, email: pendingEmail });
+        setForm((current) => ({ ...current, email: pendingEmail }));
+        setShowEmailVerification(true);
+    }).catch(() => {
+        // Profile loading owns authentication errors; status is optional state restoration.
+    }).finally(() => {
+        if (!cancelled) setCheckingEmailVerification(false);
+    });
+
+    return () => { /* CLEANUP FUNCTION */
+      /* Called when:
+        1. we leave the component (unmounts)
+        2. Before the effect runs again (dependencies change)
+      */
+      cancelled = true;
+    };
+  }, [loading]); /* This var belongs to the component */
 
   const showSuccess = (text) => {
     setMessageType("success");
@@ -169,11 +210,12 @@ export default function ProfilePage() {
   /* OK - REVIEWED */
   const validateEmail = (value) => { /* FIXME: IS THERE A MORE ROBUST VALIDATION? */
     const normalizedEmail = value.trim().toLowerCase();
+
     if (!normalizedEmail) return t("This field is required.");
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return t("Enter a valid email address.");
     }
-
     return "";
   };
 
@@ -249,6 +291,7 @@ export default function ProfilePage() {
   /* OK - REVIEWED */
   const cancelEdit = () => {
     setIsEditingPassword(false);
+    setPasswordErrors({});
     setPasswordForm({
       old_password:   "",
       new_password1:  "",
@@ -261,8 +304,8 @@ export default function ProfilePage() {
 
     if (!hasProfileChanges || saving) return;
 
-    const normalizedEmail = form.email.trim().toLowerCase();
-    const emailError      = validateEmail(normalizedEmail);
+    const normalizedCurrentFormEmail = form.email.trim().toLowerCase();
+    const emailError      = validateEmail(normalizedCurrentFormEmail);
     const firstnameError  = validateName(form.firstname);
     const lastnameError   = validateName(form.lastname);
     const phoneError      = validatePhone(form.phone_number);
@@ -279,33 +322,68 @@ export default function ProfilePage() {
 
     setProfileErrors({});
     setSaving(true);
+    let profileSaved = false;
 
     try {
-      const savedEmail = (userInfo.email || "").trim().toLowerCase();
-      const emailChanged = normalizedEmail !== savedEmail;
-
-      const emailVerificationPending = Boolean(
-          userInfo.unverified_email &&
-          !userInfo.email_verified &&
-          userInfo.unverified_email.trim().toLowerCase() === normalizedEmail
-      );
+      const savedEmail    = (userInfo.email || "").trim().toLowerCase();
+      const emailChanged  = normalizedCurrentFormEmail !== savedEmail;
+      const emailVerificationPending =
+        pendingEmailVerification?.email === normalizedCurrentFormEmail;
       const profileFields = {
         firstname:    form.firstname.trim(),
         lastname:     form.lastname.trim(),
         phone_number: form.phone_number,
       };
+      const profileChanged =
+        profileFields.firstname !== savedForm.firstname.trim() ||
+        profileFields.lastname !== savedForm.lastname.trim() ||
+        profileFields.phone_number.trim() !== savedForm.phone_number.trim();
 
-      if (emailChanged || emailVerificationPending) {
+      if (profileChanged) {
+        const profileRes = await patchWithAuth(
+          "/api/v1/accounts/profile/",
+          profileFields,
+          {},
+          { onUnauthenticated: () => navigate("/accounts/login") }
+        );
+
+        if (!profileRes) return;
+
+        profileSaved = true;
+        storeAuthResponse({ user: profileRes.data });
+        setSavedForm((current) => ({
+          ...current,
+          firstname: profileRes.data.firstname || "",
+          lastname: profileRes.data.lastname || "",
+          phone_number: profileRes.data.phone_number || "",
+        }));
+      }
+
+      if (emailVerificationPending) {
+        if (profileChanged) showSuccess(t("Profile updated successfully."));
+        setShowEmailVerification(true);
+        return;
+      }
+
+      if (emailChanged) {
         const emailRes = await postWithAuth(
           "/api/v1/accounts/email/update/",
-          { email: normalizedEmail, profile: profileFields },
-          {},
+          { email: normalizedCurrentFormEmail },
+          verificationConfig(pendingEmailVerification?.challenge_id || ""),
           { onUnauthenticated: () => navigate("/accounts/login") }
         );
 
         if (!emailRes) return;
 
-        setForm((current) => ({ ...current, email: normalizedEmail }));
+        rememberVerification(emailRes.data);
+
+        setForm((current) => ({ ...current, email: normalizedCurrentFormEmail }));
+        setPendingEmailVerification({
+          challenge_id: emailRes.data.challenge_id,
+          pending: true,
+          reason: VerificationReason.EMAIL_UPDATE,
+          email: normalizedCurrentFormEmail,
+        });
         showSuccess(
           emailRes.data.detail || t("Verification code sent to your new email.")
         );
@@ -313,24 +391,7 @@ export default function ProfilePage() {
         return;
       }
 
-      const res = await patchWithAuth(
-        "/api/v1/accounts/profile/",
-        profileFields,
-        {},
-        { onUnauthenticated: () => navigate("/accounts/login") }
-      );
-
-      if (!res) return;
-
-      storeAuthResponse({ user: res.data });
-      setSavedForm((current) => ({
-        ...current,
-        firstname: res.data.firstname || "",
-        lastname: res.data.lastname || "",
-        phone_number: res.data.phone_number || "",
-      }));
-
-      showSuccess(t("Profile updated successfully."));
+      if (profileChanged) showSuccess(t("Profile updated successfully."));
     } catch (err) {
       const data = err.response?.data || {};
       const fieldErrors = {};
@@ -338,7 +399,9 @@ export default function ProfilePage() {
         if (data[field]) fieldErrors[field] = Array.isArray(data[field]) ? data[field][0] : data[field];
       }
       setProfileErrors(fieldErrors);
-      if (!Object.keys(fieldErrors).length) {
+      if (profileSaved) {
+        showError(t("Profile details saved, but the email change could not be started."));
+      } else if (!Object.keys(fieldErrors).length) {
         showError(data.detail || data.non_field_errors?.[0] || t("Could not update your profile."));
       }
     } finally {
@@ -363,6 +426,8 @@ export default function ProfilePage() {
     };
     setForm(updatedForm);
     setSavedForm(updatedForm);
+    clearVerification(pendingEmailVerification?.challenge_id);
+    setPendingEmailVerification(null);
     setShowEmailVerification(false);
     showSuccess(detail || t("Profile and email updated successfully."));
   };
@@ -402,6 +467,7 @@ export default function ProfilePage() {
           t("Verification code sent. Confirm the code to complete the password change.")
       );
 
+      rememberVerification(res.data);
       navigate("/accounts/verify-email");
     } catch (err) {
       const data = err.response?.data || {};
@@ -419,6 +485,8 @@ export default function ProfilePage() {
   };
 
   const startTwoFactorSetup = async () => {
+    if (twoFactorSubmitting) return;
+    setTwoFactorSubmitting(true);
     setMessage("");
 
     try {
@@ -440,10 +508,14 @@ export default function ProfilePage() {
       showError(
         err.response?.data?.detail || t("Could not start two-factor setup.")
       );
+    } finally {
+      setTwoFactorSubmitting(false);
     }
   };
 
   const confirmTwoFactor = async () => {
+    if (twoFactorSubmitting) return;
+    setTwoFactorSubmitting(true);
     setMessage("");
 
     try {
@@ -465,10 +537,14 @@ export default function ProfilePage() {
         err.response?.data?.detail ||
           t("Could not confirm two-factor authentication.")
       );
+    } finally {
+      setTwoFactorSubmitting(false);
     }
   };
 
   const disableTwoFactor = async () => {
+    if (twoFactorSubmitting) return;
+    setTwoFactorSubmitting(true);
     setMessage("");
 
     try {
@@ -490,6 +566,8 @@ export default function ProfilePage() {
         err.response?.data?.detail ||
           t("Could not disable two-factor authentication.")
       );
+    } finally {
+      setTwoFactorSubmitting(false);
     }
   };
 
@@ -537,6 +615,7 @@ export default function ProfilePage() {
                 onChange={updateField}
                 onBlur={validateProfileFieldOnBlur}
                 readOnly={name === "username"}
+                disabled={name === "email" && checkingEmailVerification}
                 required={["email", "firstname", "lastname"].includes(name)}
                 maxLength={["firstname", "lastname"].includes(name) ? NAME_MAX_LENGTH : undefined}
                 aria-invalid={Boolean(profileErrors[name])}
@@ -601,6 +680,7 @@ export default function ProfilePage() {
                   className="profile-button profile-button-danger profile-action-btn"
                   type="button"
                   onClick={cancelEdit}
+                  disabled={saving}
                 >
                   {t("Cancel")}
                 </button>
@@ -623,6 +703,12 @@ export default function ProfilePage() {
 
       {showEmailVerification && (
         <EmailVerificationModal
+          challengeId={pendingEmailVerification?.challenge_id}
+          onCancelled={() => {
+            setPendingEmailVerification(null);
+            setShowEmailVerification(false);
+            setForm((current) => ({ ...current, email: userInfo.email }));
+          }}
           onClose={() => setShowEmailVerification(false)}
           onVerified={finishEmailVerification}
         />
@@ -631,7 +717,13 @@ export default function ProfilePage() {
       <section className="profile-page profile-two-factor-section" aria-labelledby="two-factor-heading">
         <h3 id="two-factor-heading">{t("Two-Factor Authentication")}</h3>
 
-        <p>{twoFactor.enabled ? t("Enabled") : t("Disabled")}</p>
+        <p>
+          {twoFactor.loading
+            ? t("Loading...")
+            : twoFactor.enabled === null
+              ? t("Could not load two-factor status.")
+              : twoFactor.enabled ? t("Enabled") : t("Disabled")}
+        </p>
 
         {twoFactorSetup && (
           <div className="profile-field">
@@ -653,6 +745,7 @@ export default function ProfilePage() {
               type="text"
               inputMode="numeric"
               value={twoFactorCode}
+              disabled={twoFactor.loading || twoFactor.enabled === null || twoFactorSubmitting}
               onChange={(event) => setTwoFactorCode(event.target.value)}
               autoComplete="one-time-code"
             />
@@ -664,8 +757,8 @@ export default function ProfilePage() {
             className="profile-button profile-button-primary profile-two-factor-btn"
             type="button"
             onClick={startTwoFactorSetup}
-            disabled={twoFactor.loading}
-            aria-busy={twoFactor.loading}
+            disabled={twoFactor.loading || twoFactor.enabled === null || twoFactorSubmitting}
+            aria-busy={twoFactor.loading || twoFactorSubmitting}
           >
             {t("Enable 2FA")}
           </button>
@@ -676,6 +769,8 @@ export default function ProfilePage() {
             className="profile-button profile-button-primary profile-two-factor-btn"
             type="button"
             onClick={confirmTwoFactor}
+            disabled={twoFactor.loading || twoFactor.enabled === null || twoFactorSubmitting}
+            aria-busy={twoFactorSubmitting}
           >
             {t("Confirm 2FA")}
           </button>
@@ -686,6 +781,8 @@ export default function ProfilePage() {
             className="profile-button profile-button-danger profile-two-factor-btn"
             type="button"
             onClick={disableTwoFactor}
+            disabled={twoFactor.loading || twoFactor.enabled === null || twoFactorSubmitting}
+            aria-busy={twoFactorSubmitting}
           >
             {t("Disable 2FA")}
           </button>

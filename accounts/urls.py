@@ -3,8 +3,10 @@ from django.contrib.auth    import views as auth_views
 from accounts               import views
 from .views                 import CustomLoginView
 from .                      import api_views
+from .verification_forms import cancel_verification_view
 
 urlpatterns = [
+    path('cancel-verification/', cancel_verification_view, name='cancel_verification'),
     path('login/',                  CustomLoginView.as_view(),                          name='login'),
     path('signup/',                 views.signup_view,                                  name='signup'),
     path('profile/',                views.profile_view,                                 name='profile'),
