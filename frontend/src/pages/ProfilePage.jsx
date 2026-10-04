@@ -164,38 +164,37 @@ export default function ProfilePage() {
     };
   }, [navigate]);
 
+  /* OK - REVIEWED */
   useEffect(() => {
-    /*
-      Exactly. Each execution of the effect function has its own scope and its own cancelled variable.
-      Its cleanup and request callbacks share that run’s variable. The next run creates a separate one.
-    */
     if (loading) return undefined;
 
     let cancelled = false;
-    getWithAuth("/api/v1/accounts/verification/current/").then((res) => {
-        if (cancelled || !res?.data?.pending || res.data.reason !== VerificationReason.EMAIL_UPDATE) return;
+    getWithAuth(
+      "/api/v1/accounts/verification/current/",
+      { timeout: 15000 }, // 15 seconds timeout for the server to respond, because the verification status check may take a while if the server is under load.
+      { onUnauthenticated: () => {
+        if (!cancelled) navigate("/accounts/login");
+      } }
+    ).then((res) => {
+      if (cancelled || !res?.data?.pending || res.data.reason !== VerificationReason.EMAIL_UPDATE) return;
 
-        const pendingEmail = (res.data.email || "").trim().toLowerCase();
-        if (!pendingEmail) return;
+      const pendingEmail = (res.data.email || "").trim().toLowerCase();
+      if (!pendingEmail) return;
 
-        rememberVerification(res.data);
-        setPendingEmailVerification({ ...res.data, email: pendingEmail });
-        setForm((current) => ({ ...current, email: pendingEmail }));
-        setShowEmailVerification(true);
-    }).catch(() => {
-        // Profile loading owns authentication errors; status is optional state restoration.
+      setPendingEmailVerification({ ...res.data, email: pendingEmail });
+      setForm((current) => ({ ...current, email: pendingEmail }));
+      setShowEmailVerification(true);
+    }).catch((err) => {
+      if (!cancelled && err.response?.status === 401) navigate("/accounts/login");
+      // Restoring pending verification is optional; other failures leave the profile usable.
     }).finally(() => {
-        if (!cancelled) setCheckingEmailVerification(false);
+      if (!cancelled) setCheckingEmailVerification(false);
     });
 
-    return () => { /* CLEANUP FUNCTION */
-      /* Called when:
-        1. we leave the component (unmounts)
-        2. Before the effect runs again (dependencies change)
-      */
+    return () => {
       cancelled = true;
     };
-  }, [loading]); /* This var belongs to the component */
+  }, [loading, navigate]);
 
   const showSuccess = (text) => {
     setMessageType("success");
