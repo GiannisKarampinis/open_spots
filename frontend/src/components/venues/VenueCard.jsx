@@ -9,7 +9,13 @@ export default function VenueCard({ venue }) {
   return (
     <Link className="venue-link" to={`/venues/venue/${venue.id}`}>
       <div className={`venue-card ${venue.is_full ? "full" : "available"}`}>
-        {venue.first_image && (<img src={mediaUrl(venue.first_image)} alt={venue.name} />)}
+        {venue.first_image ? (
+          <img src={mediaUrl(venue.first_image)} alt={venue.name} />
+        ) : (
+          <div className="venue-image-placeholder" role="img" aria-label={venue.name}>
+            <FontAwesomeIcon icon={faLocationDot} />
+          </div>
+        )}
 
         <div className="venue-card-content">
           <h3>{venue.name}</h3>
