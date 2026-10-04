@@ -404,6 +404,10 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
 
         kind = request.GET.get("kind")
         availability = request.GET.get("availability")
+        search = request.GET.get("search", "").strip()
+
+        if search:
+            venues = venues.filter(name__icontains=search)
 
         if kind:
             if kind == "cafe":

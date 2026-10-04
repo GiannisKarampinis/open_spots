@@ -1,14 +1,26 @@
 /* venue_list.css - styles for venue list page */
 
 :root {
-    --venue-card-min-width: 220px;
-    --venue-card-max-width: 235px;
+    --venue-card-min-width: 200px;
+    --venue-card-max-width: 215px;
     --venue-card-image-ratio: 16 / 9;
     --venue-card-gap: 16px;
     --venue-card-padding: 14px;
     --venue-card-font-size: 0.75rem;
     --venue-card-title-scale: 1.35em;
     --venue-card-icon-size: 1em;
+    --venue-scrollbar-track: var(--table-row-primary-background);
+    --venue-scrollbar-thumb: var(--table-row-alternate-background);
+    --venue-scrollbar-thumb-hover: color-mix(
+        in srgb,
+        var(--table-row-alternate-background) 82%,
+        var(--table-row-text-color)
+    );
+    --venue-scrollbar-thumb-active: color-mix(
+        in srgb,
+        var(--table-row-alternate-background) 68%,
+        var(--table-row-text-color)
+    );
 }
 
 /* --- Venue scroll container --- */
@@ -38,8 +50,9 @@
     display: grid;
     grid-template-rows: repeat(1, auto);
     grid-auto-flow: column;
-    grid-auto-columns: minmax(
+    grid-auto-columns: clamp(
         var(--venue-card-min-width),
+        22vw,
         var(--venue-card-max-width)
     );
     gap: var(--venue-card-gap);
@@ -51,11 +64,51 @@
     margin: 0 auto;
     overflow-x: auto;
     overflow-y: hidden;
-    scroll-snap-type: x proximity;
+    scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
     scrollbar-width: thin;
-    scrollbar-color: #555 #1c1c1c;
+    scrollbar-color: var(--venue-scrollbar-thumb) var(--venue-scrollbar-track);
     justify-content: start;
+}
+
+.venue-section {
+    position: relative;
+}
+
+.venue-section-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.venue-scroll-controls {
+    display: flex;
+    gap: 8px;
+    padding-bottom: 0.75rem;
+}
+
+.venue-scroll-controls button {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #555;
+    border-radius: 50%;
+    background: var(--surface-color);
+    color: var(--button-text);
+    cursor: pointer;
+}
+
+.venue-scroll-controls button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.venue-scroll-controls button:focus-visible,
+.venue-link:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 3px;
 }
 
 .venue-scroll-container.grid-mode .venue-link {
@@ -73,20 +126,29 @@
 
 /* Custom scrollbar */
 .venue-scroll-container::-webkit-scrollbar {
-    height: 8px;
+    height: 10px;
 }
 
 .venue-scroll-container::-webkit-scrollbar-track {
-    background: #1c1c1c;
+    background: var(--venue-scrollbar-track);
+    border-radius: 999px;
+    margin-inline: 8px;
 }
 
 .venue-scroll-container::-webkit-scrollbar-thumb {
-    background-color: #555;
-    border-radius: 4px;
+    min-width: 48px;
+    background-color: var(--venue-scrollbar-thumb);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+    border-radius: 999px;
 }
 
 .venue-scroll-container::-webkit-scrollbar-thumb:hover {
-    background-color: #777;
+    background-color: var(--venue-scrollbar-thumb-hover);
+}
+
+.venue-scroll-container::-webkit-scrollbar-thumb:active {
+    background-color: var(--venue-scrollbar-thumb-active);
 }
 
 /* Venue card anchor */
@@ -140,7 +202,8 @@
     color: var(--button-text);
 }
 
-.venue-card img {
+.venue-card img,
+.venue-image-placeholder {
     width: 100%;
     height: auto;
     aspect-ratio: var(--venue-card-image-ratio);
@@ -148,6 +211,14 @@
     border-radius: 8px;
     display: block;
     margin-bottom: 4px;
+}
+
+.venue-image-placeholder {
+    display: grid;
+    place-items: center;
+    background: var(--surface-color);
+    color: var(--info-color);
+    font-size: 2rem;
 }
 
 .venue-card h3 {
@@ -241,15 +312,13 @@
 
 /* --- Section headings --- */
 .section-title {
-    font-family: var(--global-font-family);
-    font-weight: 600;
-    font-size: clamp(1.1rem, 4vw, 1.6rem);
-    color: var(--text-color);
-    margin: 1.5rem 0 0.75rem 0;
-    padding-left: 0.5rem;
-    border-left: 4px solid var(--card-bg-color);
+    font-family:    var(--global-font-family);
+    font-weight:    500;
+    font-size:      clamp(1.1rem, 4vw, 1.6rem);
+    color:          var(--text-color);
+    margin:         1.5rem 0 0.75rem 0;
     letter-spacing: 0.05em;
-    user-select: none;
+    user-select:    none;
 }
 
 .section-title.grid-mode {
@@ -306,6 +375,35 @@
     cursor: pointer;
 }
 
+.venue-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    min-width: 180px;
+    padding: 0.3em 0.6em;
+    border-right: 1px solid #444;
+    color: var(--info-color);
+}
+
+.venue-search input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--button-text);
+    font: inherit;
+}
+
+.venue-search input::placeholder {
+    color: var(--info-color);
+    opacity: 0.8;
+}
+
+.venue-search:focus-within {
+    color: var(--primary-color);
+}
+
 .clear-filter-btn {
     margin-left: 0.8em;
     padding: 0.4em 0.8em;
@@ -350,7 +448,8 @@
     border-radius:      16px;
     padding:            16px;
     margin:             20px auto;
-    max-width:          35%;
+    width:              min(100%, 560px);
+    max-width:          none;
     transition:         transform 0.2s ease;
 
     /* Layout: content left, image right */
@@ -451,11 +550,11 @@
     .filter-form {
         margin: 0.8em 0;
         padding: 0 8px;
-        width: 50%;
+        width: 100%;
     }
 
     .filter-wrapper {
-        width: 50%;
+        width: 100%;
         flex-wrap: wrap;
         justify-content: center;
         padding: 6px 8px;
@@ -470,6 +569,13 @@
         padding: 4px 6px;
     }
 
+    .venue-search {
+        flex: 1 0 100%;
+        min-width: 0;
+        border-right: 0;
+        border-bottom: 1px solid #444;
+    }
+
     .clear-filter-btn {
         margin-left: 0;
         padding: 4px 8px;
@@ -478,7 +584,7 @@
     }
 
     .sticky-filter {
-        width: 50%;
+        width: 100%;
         padding: 6px 8px;
         border-radius: 0;
         justify-content: center;
@@ -487,16 +593,23 @@
 
 /* Stack venue info on small screens */
 @media (max-width: 480px) {
-    .venue-info {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
+    .venue-scroll-controls {
+        display: none;
     }
+}
 
-    .venue-info-item + .venue-info-item {
-        border-left: none;
-        padding-left: 0;
-    }
+.venue-empty-state {
+    padding: 32px 16px;
+    margin: 20px auto;
+    border: 1px dashed #555;
+    border-radius: 12px;
+    text-align: center;
+    color: var(--text-color);
+}
+
+.venue-empty-state .clear-filter-btn {
+    margin-left: 0;
+    border: 0;
 }
 
 /* Disable hover effects on touch devices */

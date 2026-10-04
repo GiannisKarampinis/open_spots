@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFilter,
   faRotateRight,
+  faMagnifyingGlass,
   faPenToSquare,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
@@ -136,16 +137,20 @@ export default function VenuesPage() {
   const [upcomingReservation, setUpcomingReservation] = useState(null);
   const [kind, setKind] = useState("");
   const [availability, setAvailability] = useState("");
+  const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   const fetchVenues = useCallback(async () => {
     try {
+      setIsLoading(true);
       setMessage("");
 
       const headers = await getOptionalAuthHeaders();
 
       const res = await axios.get("/api/v1/venues/", {
-        params: { kind, availability },
+        params: { kind, availability, search: searchQuery },
         headers,
         withCredentials: true,
       });
@@ -170,8 +175,15 @@ export default function VenuesPage() {
       );
 
       setMessage(t("Could not load venues."));
+    } finally {
+      setIsLoading(false);
     }
-  }, [kind, availability, t]);
+  }, [kind, availability, searchQuery, t]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setSearchQuery(search.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [search]);
 
   useEffect(() => {
     fetchVenues();
@@ -180,13 +192,16 @@ export default function VenuesPage() {
   const clearFilters = () => {
     setKind("");
     setAvailability("");
+    setSearch("");
+    setSearchQuery("");
   };
 
-  const hasFilters = Boolean(kind || availability);
+  const hasFilters = Boolean(kind || availability || search);
+  const hasVenues = Object.values(grouped).some((venues) => venues.length > 0);
 
   return (
     <div className="page-container">
-      <h2>{t("Explore & Reserve Your Perfect Spot")}</h2>
+      <h2>{t("Explore and reserve your perfect spot")}</h2>
 
       {message && (
         <div className="alert alert-danger mb-3 venue-load-error" role="alert">
@@ -202,6 +217,17 @@ export default function VenuesPage() {
         <div className="sticky-wrapper">
           <div className="filter-wrapper sticky-filter">
             <FontAwesomeIcon icon={faFilter} className="filter-icon" />
+
+            <label className="venue-search">
+              <FontAwesomeIcon icon={faMagnifyingGlass} aria-hidden="true" />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={t("Search venues")}
+                autoComplete="off"
+              />
+            </label>
 
             <select
               className="filter-menu"
@@ -239,6 +265,17 @@ export default function VenuesPage() {
       </div>
 
       <QuickReservationCard reservation={upcomingReservation} />
+
+      {!isLoading && !message && !hasVenues && (
+        <div className="venue-empty-state" role="status">
+          <p>{t("No venues available.")}</p>
+          {hasFilters && (
+            <button type="button" className="clear-filter-btn" onClick={clearFilters}>
+              {t("Clear")}
+            </button>
+          )}
+        </div>
+      )}
 
       <VenueSection title={t("Cafes & Bars")} venues={grouped.cafe_bar} />
 
