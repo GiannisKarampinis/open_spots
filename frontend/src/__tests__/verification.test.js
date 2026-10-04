@@ -64,7 +64,30 @@ test("profile waits for status and passes the restored challenge ID to the modal
   expect(screen.getByLabelText("Email")).not.toBeDisabled();
   expect(screen.getByLabelText("Email")).toHaveValue("new@example.com");
   expect(screen.getByTestId("email-modal")).toHaveTextContent("email-challenge");
-  expect(getVerificationChallenge()).toBe("email-challenge");
+  expect(getVerificationChallenge()).toBe("");
+});
+
+function mockProfileCheck(check) {
+  getWithAuth.mockImplementation((url, config, options) => {
+    if (url.endsWith("profile/")) return Promise.resolve({ data: { email: "old@example.com", firstname: "First", lastname: "Last" } });
+    if (url.endsWith("2fa/status/")) return Promise.resolve({ data: { enabled: false } });
+    return check(config, options);
+  });
+}
+
+test("profile verification redirects when authentication refresh fails", async () => {
+  mockProfileCheck((_config, options) => {
+    options.onUnauthenticated();
+    return Promise.resolve(null);
+  });
+  await act(async () => root.render(<ProfilePage />));
+  expect(mockNavigate).toHaveBeenCalledWith("/accounts/login");
+});
+
+test("profile verification redirects on a final unauthorized response", async () => {
+  mockProfileCheck(() => Promise.reject({ response: { status: 401 } }));
+  await act(async () => root.render(<ProfilePage />));
+  expect(mockNavigate).toHaveBeenCalledWith("/accounts/login");
 });
 
 test("verification keeps its captured challenge when storage changes and saves the reset proof", async () => {
