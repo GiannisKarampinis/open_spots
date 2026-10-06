@@ -195,6 +195,7 @@ export default function Layout() {
                   {t("My Reservations")}
                 </Link>
 
+                {/* Settings currently contains only the Dark Mode option.
                 <div className={`submenu ${settingsOpen ? "open" : ""}`}>
                   <button
                     className="submenu-btn"
@@ -217,6 +218,7 @@ export default function Layout() {
                     </div>
                   </div>
                 </div>
+                */}
 
                 <button className="logout-link" type="button" role="menuitem" onClick={logout}>
                   {t("Logout")}
