@@ -65,7 +65,7 @@ function QuickReservationCard({ reservation }) {
 
   return (
     <div className="quick-reservation-card">
-      <h3>{t("Your Next Reservation")}</h3>
+      <h3>{t("Next Reservation")}</h3>
 
       <div className="reservation-info">
         <strong>{venue.name}</strong>

@@ -442,110 +442,144 @@
     box-shadow: 0 0 15px 0 var(--venue-full-shadow);
 } */
 
-/* --- Upcoming reservation --- */
+/* --- Upcoming reservation: shares the ProfilePage surface and button palette. --- */
 .quick-reservation-card {
-    background:         var(--scroll-container-bg);
-    border-radius:      16px;
-    padding:            16px;
-    margin:             20px auto;
-    width:              min(100%, 560px);
-    max-width:          none;
-    transition:         transform 0.2s ease;
-
-    /* Layout: content left, image right */
-    display:            grid;
-    grid-template-columns: 1fr auto;
+    box-sizing: border-box;
+    width: min(560px, calc(100% - 32px));
+    margin: 24px auto 28px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 136px;
     grid-template-rows: auto auto auto;
-    column-gap:         16px;
-    row-gap:            10px;
-    align-items:        start;
+    gap: 12px 20px;
+    align-items: start;
+    border: 1px solid rgba(0, 86, 179, 0.1);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 4px 10px rgba(8, 58, 90, 0.04), 0 14px 36px rgba(8, 58, 90, 0.1);
+    color: var(--primary-hover);
+    font-family: var(--global-font-family);
 }
 
-.quick-reservation-card:hover {
-    transform:          translateY(-2px);
+.quick-reservation-card h3 {
+    grid-column: 1;
+    margin: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 86, 179, 0.08);
+    color: var(--primary-hover);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.4;
 }
 
-/* Keep your content blocks on the left column */
-.quick-reservation-card h3,
-.quick-reservation-card .reservation-info,
-.quick-reservation-card .reservation-actions {
-    grid-column:        1;
+.quick-reservation-card .reservation-info {
+    grid-column: 1;
+    min-width: 0;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
 }
 
-/* Image sits INSIDE card on the right, no absolute, no fixed width */
+.quick-reservation-card .reservation-info strong {
+    display: inline-block;
+    margin-bottom: 4px;
+    color: var(--surface-color);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
 .quick-reservation-card .venue-image {
-    grid-column:        2;
-    grid-row:           1 / -1;
-    height:             100%;
-    max-height:         140px;      /* prevents huge images making the card too tall */
-    width:              auto;       /* no fixed width */
-    aspect-ratio:       1 / 1;      /* stable thumbnail shape */
-    object-fit:         cover;
-    border-radius:      6px;        /* keep your original radius */
-    align-self:         stretch;
-    justify-self:       end;
+    grid-column: 2;
+    grid-row: 1 / 4;
+    width: 136px;
+    height: 100%;
+    min-height: 136px;
+    object-fit: cover;
+    border: 1px solid rgba(0, 86, 179, 0.08);
+    border-radius: 10px;
+    justify-self: end;
 }
 
-/* Actions layout (safe default) */
 .quick-reservation-card .reservation-actions {
-    display:            flex;
-    gap:                0.6em;
-    flex-wrap:          wrap;
-    align-items:        center;
+    grid-column: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
 }
 
-/* --- Buttons (carried over) --- */
+.quick-reservation-card .edit-btn,
+.quick-reservation-card .cancel-btn {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
 .quick-reservation-card .edit-btn {
-    background-color:   var(--primary-color);
-    color:              var(--button-text);
-    border-radius:      4px;
-    padding:            0.2em 0.5em;
-    text-decoration:    none;
-    display:            inline-flex;
-    align-items:        center;
-    gap:                0.35em;
-}
-
-.quick-reservation-card .edit-btn:hover {
-    background-color:   var(--primary-hover);
-    color:              var(--button-text);
+    background: rgba(0, 86, 179, 0.07);
+    border-color: rgba(0, 86, 179, 0.12);
+    color: var(--primary-hover);
 }
 
 .quick-reservation-card .cancel-btn {
-    background-color:   #f44336;
-    color:              var(--button-text);
-    border-radius:      4px;
-    padding:            0.2em 0.5em;
-    text-decoration:    none;
-    display:            inline-flex;
-    align-items:        center;
-    gap:                0.35em;
+    background: transparent;
+    border-color: rgba(180, 35, 47, 0.16);
+    color: #b4232f;
+}
+
+.quick-reservation-card .edit-btn:hover {
+    background: rgba(0, 86, 179, 0.12);
+    border-color: rgba(0, 86, 179, 0.22);
+    color: var(--primary-hover);
 }
 
 .quick-reservation-card .cancel-btn:hover {
-    background-color:   #c4352b;
-    color:              var(--button-text);
+    background: rgba(180, 35, 47, 0.06);
+    border-color: rgba(180, 35, 47, 0.28);
+    color: #b4232f;
+}
+
+.quick-reservation-card .edit-btn:focus-visible,
+.quick-reservation-card .cancel-btn:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+    .quick-reservation-card {
+        padding: 16px;
+        grid-template-columns: minmax(0, 1fr) 96px;
+        gap: 12px;
+    }
+
+    .quick-reservation-card .venue-image {
+        grid-row: 1 / 3;
+        width: 96px;
+        height: 100%;
+        min-height: 112px;
+    }
+
+    .quick-reservation-card .reservation-actions {
+        grid-column: 1 / -1;
+    }
+
 }
 
 /* --- Mobile --- */
 @media (max-width: 400px) {
-    /* No more padding-right hack needed (it was only for absolute image) */
-    .quick-reservation-card {
-        max-width: 100%;
-        grid-template-columns: 1fr;  /* stack */
-    }
-
-    .quick-reservation-card .venue-image {
-        grid-column: 1;
-        grid-row: auto;
-
-        width: 100%;
-        height: auto;
-        max-height: 220px;
-        aspect-ratio: 16 / 9; /* nicer wide preview on mobile */
-        justify-self: stretch;
-    }
-
     /* Your existing filter styling preserved */
     .filter-form {
         margin: 0.8em 0;
