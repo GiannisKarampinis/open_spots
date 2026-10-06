@@ -166,16 +166,6 @@ class DeviceSessionSerializer(serializers.ModelSerializer):
         return str(obj.id) == str(self.context.get("current_device_session_id") or "")
 
 
-class TwoFactorCodeSerializer(serializers.Serializer):
-    code = serializers.CharField(min_length=6, max_length=12, trim_whitespace=True)
-
-    def validate_code(self, value):
-        normalized = value.replace(" ", "")
-        if not normalized.isdigit():
-            raise serializers.ValidationError("Enter the numeric code from your authenticator app.")
-        return normalized
-
-
 class UserEmailUpdateSerializer(serializers.Serializer):
     email = serializers.EmailField()
     profile = serializers.DictField(required=False, write_only=True)

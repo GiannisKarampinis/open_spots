@@ -7,7 +7,7 @@ Read in this order:
 3. `accounts/api/verification.py`: signup, email/password changes, recovery,
    confirmation, and purpose-bound completion-token validation.
 4. `accounts/tasks.py`: queued recovery delivery, retry, and stale-job protection.
-5. `accounts/api/views.py`: login and atomic TOTP challenge consumption.
+5. `accounts/api/views.py`: login and token/session handling.
 6. `venues/api/verification.py`: venue proof issuance and application consumption.
 7. Frontend verification utilities, ProfilePage/EmailVerificationModal,
    VerifyEmailPage/PasswordResetPage, LoginPage, and ApplyVenuePage.
@@ -23,7 +23,7 @@ Celery eager mode in production. Migration 0013 renames a column, so coordinate
 deployment with any already-running challenge implementation.
 
 `/api/token/` now follows the protected login response contract: an HttpOnly
-refresh cookie and possible email/TOTP challenge, rather than a JSON refresh token.
+refresh cookie and possible email verification challenge, rather than a JSON refresh token.
 Existing legacy pending verification state is not migrated and must be restarted.
 
 Validation from the isolated commit contents: 19 frontend tests and production

@@ -61,7 +61,6 @@ class VerificationReason(models.TextChoices):
     EMAIL_UPDATE        = "email_update", "Email update"
     PASSWORD_CHANGE     = "password_change", "Password change"
     PASSWORD_RECOVERY   = "password_recovery", "Password recovery"
-    TWO_FACTOR_LOGIN    = "two_factor_login", "Two-factor login"
     VENUE_SIGNUP_EMAIL_VERIFY = "venue_email", "Venue email"
 
 
@@ -84,9 +83,6 @@ class VerificationChallenge(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(
-            fields=["user"], condition=models.Q(closed_at__isnull=True) & ~models.Q(reason=VerificationReason.TWO_FACTOR_LOGIN),
+            fields=["user"], condition=models.Q(closed_at__isnull=True),
             name="one_open_verification_per_user",
-        ), models.UniqueConstraint(
-            fields=["user"], condition=models.Q(closed_at__isnull=True, reason=VerificationReason.TWO_FACTOR_LOGIN),
-            name="one_open_login_challenge_per_user",
         )]

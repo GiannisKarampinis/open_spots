@@ -1,10 +1,11 @@
-import { rememberVerification, verificationConfig } from "../utils/verification";
+import { rememberVerification } from "../utils/verification";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import { postWithCsrf } from "../utils/csrf";
 import googleIcon from "../assets/google-icon.svg";
 import { storeAuthResponse } from "../utils/auth";
+import { getBackendBase } from "../utils/backendUrl";
 import "../styles/login1.css";
 import "../styles/feedback.css";
 
@@ -39,15 +40,11 @@ export default function LoginPage() {
   const [form, setForm] = useState({
     username: "",
     password: "",
-    code: "",
   });
 
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
-  const [twoFactorChallengeId, setTwoFactorChallengeId] = useState("");
-
   const nextFromQuery = new URLSearchParams(location.search).get("next");
   const nextFromState = location.state?.from;
   const nextFromStorage = sessionStorage.getItem("redirectAfterLogin");
@@ -56,9 +53,7 @@ export default function LoginPage() {
     nextFromQuery || nextFromState || nextFromStorage || ""
   );
 
-  const backendBase =
-    import.meta.env.VITE_BACKEND_URL ||
-    (window.location.port === "5173" ? "http://localhost:8000" : "");
+  const backendBase = getBackendBase();
 
   const googleLoginUrl = `${backendBase}/accounts/google/login/?process=login`;
 
@@ -87,31 +82,11 @@ export default function LoginPage() {
     setMessage("");
 
     try {
-      const res = requiresTwoFactor
-        ? await postWithCsrf(
-            "/api/v1/accounts/login/2fa/",
-            { code: form.code },
-            verificationConfig(twoFactorChallengeId)
-          )
-        : await postWithCsrf(
-            "/api/v1/accounts/login/",
-            {
-              username: form.username,
-              password: form.password,
-            }
-          );
-
-      if (res.data.requires_2fa) {
-        setTwoFactorChallengeId(res.data.challenge_id);
-        setRequiresTwoFactor(true);
-        setMessage(
-          res.data.detail || t("Enter the code from your authenticator app.")
-        );
-        return;
-      }
-
+      const res = await postWithCsrf("/api/v1/accounts/login/", {
+        username: form.username,
+        password: form.password,
+      });
       storeAuthResponse(res.data);
-      setTwoFactorChallengeId("");
 
       sessionStorage.removeItem("redirectAfterLogin");
 
@@ -151,7 +126,6 @@ export default function LoginPage() {
 
   const usernameErrors = fieldErrors(errors, "username");
   const passwordErrors = fieldErrors(errors, "password");
-  const codeErrors = fieldErrors(errors, "code");
   const nonFieldErrors = fieldErrors(errors, "non_field_errors");
   const detailErrors = fieldErrors(errors, "detail");
 
@@ -161,7 +135,6 @@ export default function LoginPage() {
     ...nonFieldErrors,
     ...usernameErrors,
     ...passwordErrors,
-    ...codeErrors,
   ];
 
   const clearFeedback = () => {
@@ -171,11 +144,7 @@ export default function LoginPage() {
 
   return (
     <div className="login-container">
-      <h2>
-        {requiresTwoFactor
-          ? t("Two-Factor Authentication")
-          : t("Welcome Back")}
-      </h2>
+      <h2>{t("Welcome Back")}</h2>
 
       {feedbackMessages.length > 0 && (
         <div
@@ -203,126 +172,75 @@ export default function LoginPage() {
         </div>
       )}
 
-      {!requiresTwoFactor && (
-        <>
-          <div className="google-login-container">
-            <a
-              className="google-login-link"
-              href={googleLoginUrl}
-              aria-label={t("Login with Google")}
-            >
-              <img
-                src={googleIcon}
-                alt={t("Google logo")}
-                className="google-icon"
-              />
-              {t("Login with Google")}
-            </a>
-          </div>
+      <div className="google-login-container">
+        <a
+          className="google-login-link"
+          href={googleLoginUrl}
+          aria-label={t("Login with Google")}
+        >
+          <img
+            src={googleIcon}
+            alt={t("Google logo")}
+            className="google-icon"
+          />
+          {t("Login with Google")}
+        </a>
+      </div>
 
-          <div className="divider">
-            <span>{t("or")}</span>
-          </div>
-        </>
-      )}
+      <div className="divider">
+        <span>{t("or")}</span>
+      </div>
 
       <form className="login-form" onSubmit={submit}>
-        {requiresTwoFactor ? (
-          <div>
-            <label htmlFor="login-code">{t("Authenticator code")}</label>
+        <div>
+          <label htmlFor="login-username">{t("Username")}</label>
 
-            <input
-              id="login-code"
-              name="code"
-              type="text"
-              inputMode="numeric"
-              value={form.code}
-              onChange={updateField}
-              aria-invalid={codeErrors.length > 0}
-              autoComplete="one-time-code"
-              required
-            />
-          </div>
-        ) : (
-          <>
-            <div>
-              <label htmlFor="login-username">{t("Username")}</label>
+          <input
+            id="login-username"
+            name="username"
+            type="text"
+            value={form.username}
+            onChange={updateField}
+            aria-invalid={usernameErrors.length > 0}
+            autoComplete="username"
+            required
+          />
+        </div>
 
-              <input
-                id="login-username"
-                name="username"
-                type="text"
-                value={form.username}
-                onChange={updateField}
-                aria-invalid={usernameErrors.length > 0}
-                autoComplete="username"
-                required
-              />
-            </div>
+        <div>
+          <label htmlFor="login-password">{t("Password")}</label>
 
-            <div>
-              <label htmlFor="login-password">{t("Password")}</label>
-
-              <input
-                id="login-password"
-                name="password"
-                type="password"
-                value={form.password}
-                onChange={updateField}
-                aria-invalid={passwordErrors.length > 0}
-                autoComplete="current-password"
-                required
-              />
-            </div>
-          </>
-        )}
+          <input
+            id="login-password"
+            name="password"
+            type="password"
+            value={form.password}
+            onChange={updateField}
+            aria-invalid={passwordErrors.length > 0}
+            autoComplete="current-password"
+            required
+          />
+        </div>
 
         <button className="btn primary-btn" type="submit" disabled={submitting}>
-          {submitting
-            ? t("Logging in...")
-            : requiresTwoFactor
-              ? t("Verify")
-              : t("Login")}
+          {submitting ? t("Logging in...") : t("Login")}
         </button>
-
-        {requiresTwoFactor && (
-          <button
-            className="btn secondary-btn"
-            type="button"
-            onClick={() => {
-              setRequiresTwoFactor(false);
-              setTwoFactorChallengeId("");
-              setForm((current) => ({
-                ...current,
-                code: "",
-              }));
-              clearFeedback();
-            }}
-            disabled={submitting}
-          >
-            {t("Back")}
-          </button>
-        )}
       </form>
 
-      {!requiresTwoFactor && (
-        <p className="auth-secondary-link">
-          <Link to="/accounts/password-recover">
-            {t("Forgot your password?")}
-          </Link>
-        </p>
-      )}
+      <p className="auth-secondary-link">
+        <Link to="/accounts/password-recover">
+          {t("Forgot your password?")}
+        </Link>
+      </p>
 
-      {!requiresTwoFactor && (
-        <p className="signup-prompt">
-          <Trans
-            i18nKey="Don't have an account? Sign up"
-            components={{
-              signupLink: <Link to="/accounts/signup" />,
-            }}
-          />
-        </p>
-      )}
+      <p className="signup-prompt">
+        <Trans
+          i18nKey="Don't have an account? Sign up"
+          components={{
+            signupLink: <Link to="/accounts/signup" />,
+          }}
+        />
+      </p>
     </div>
   );
 }

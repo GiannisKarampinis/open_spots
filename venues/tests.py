@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
+from accounts.models import DeviceSession
 
 from emails_manager.models import VenueEmailVerificationCode
 from venues.models import Reservation, Venue, WorkingDay
@@ -78,7 +79,9 @@ class VenuesAPITestCase(APITestCase):
         )
 
         self.client.login(username=stale_session_user.username, password="pass1234")
-        access = RefreshToken.for_user(owner).access_token
+        refresh = RefreshToken.for_user(owner)
+        refresh["device_session_id"] = str(DeviceSession.objects.create(user=owner).pk)
+        access = refresh.access_token
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
 
         response = self.client.get("/api/v1/venues/owned/")

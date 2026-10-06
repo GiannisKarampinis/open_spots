@@ -20,9 +20,8 @@ export default function SocialLoginCompletePage() {
           withCredentials: true,
         });
 
-        storeAuthResponse(res.data);
-
         if (active) {
+          storeAuthResponse(res.data);
           navigate(res.data.redirect_to || "/", { replace: true });
         }
       } catch (err) {

@@ -4,14 +4,17 @@ import { createRoot } from "react-dom/client";
 import { fireEvent, screen } from "@testing-library/dom";
 import axios from "axios";
 import { postWithCsrf } from "../utils/csrf";
-import { getWithAuth, clearStoredAuth, storeAuthResponse } from "../utils/auth";
+import { getWithAuth, postWithAuth, clearStoredAuth, storeAuthResponse } from "../utils/auth";
 import { getVerificationChallenge, rememberVerification, getResetToken } from "../utils/verification";
 import ProfilePage from "../pages/ProfilePage";
 import VerifyEmailPage from "../pages/VerifyEmailPage";
 import ApplyVenuePage from "../pages/ApplyVenuePage";
+import SocialLoginCompletePage from "../pages/SocialLoginCompletePage";
+import LoginPage from "../pages/LoginPage";
 
 jest.mock("axios", () => ({ get: jest.fn() }));
 jest.mock("../utils/csrf", () => ({ postWithCsrf: jest.fn() }));
+jest.mock("../utils/backendUrl", () => ({ getBackendBase: () => "" }));
 jest.mock("../utils/auth", () => ({ getWithAuth: jest.fn(), patchWithAuth: jest.fn(), postWithAuth: jest.fn(), storeAuthResponse: jest.fn(), clearStoredAuth: jest.fn() }));
 jest.mock("../styles/ProfilePage.css", () => ({}));
 jest.mock("../styles/auth.css", () => ({}));
@@ -19,8 +22,11 @@ jest.mock("../styles/apply_venue.css", () => ({}));
 jest.mock("../styles/partial_signup.css", () => ({}));
 jest.mock("../styles/verify_code.css", () => ({}));
 jest.mock("../styles/feedback.css", () => ({}));
+jest.mock("../styles/login1.css", () => ({}));
+jest.mock("../assets/google-icon.svg", () => "google-icon");
 const mockNavigate = jest.fn();
-jest.mock("react-router-dom", () => ({ useNavigate: () => mockNavigate, Link: ({ children }) => children }));
+let mockLocation = { search: "", state: null };
+jest.mock("react-router-dom", () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation, Link: ({ children }) => children }));
 jest.mock("react-i18next", () => {
   const t = (key) => key;
   return { useTranslation: () => ({ t }), Trans: () => null };
@@ -40,6 +46,7 @@ beforeEach(() => {
   global.IS_REACT_ACT_ENVIRONMENT = true;
   sessionStorage.clear();
   jest.clearAllMocks();
+  mockLocation = { search: "", state: null };
   jest.useFakeTimers();
   document.body.innerHTML = '<div id="root"></div>';
   root = createRoot(document.getElementById("root"));
@@ -55,7 +62,6 @@ test("profile waits for status and passes the restored challenge ID to the modal
   const pending = new Promise((resolve) => { finishStatus = resolve; });
   getWithAuth.mockImplementation((url) => {
     if (url.endsWith("profile/")) return Promise.resolve({ data: { email: "old@example.com", firstname: "First", lastname: "Last" } });
-    if (url.endsWith("2fa/status/")) return Promise.resolve({ data: { enabled: false } });
     return pending;
   });
   await act(async () => root.render(<ProfilePage />));
@@ -70,10 +76,30 @@ test("profile waits for status and passes the restored challenge ID to the modal
 function mockProfileCheck(check) {
   getWithAuth.mockImplementation((url, config, options) => {
     if (url.endsWith("profile/")) return Promise.resolve({ data: { email: "old@example.com", firstname: "First", lastname: "Last" } });
-    if (url.endsWith("2fa/status/")) return Promise.resolve({ data: { enabled: false } });
     return check(config, options);
   });
 }
+
+test("password login authenticates with username and password", async () => {
+  const result = { access: "login-token", redirect_to: "/" };
+  postWithCsrf.mockResolvedValue({ data: result });
+  await act(async () => root.render(<LoginPage />));
+  await act(async () => fireEvent.change(screen.getByLabelText("Username"), { target: { value: "member" } }));
+  await act(async () => fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password-123" } }));
+  await act(async () => fireEvent.submit(document.querySelector("form")));
+  expect(postWithCsrf).toHaveBeenCalledWith("/api/v1/accounts/login/", {
+    username: "member", password: "password-123",
+  });
+  expect(storeAuthResponse).toHaveBeenCalledWith(result);
+});
+
+test("Google login completes directly after the authenticated handoff", async () => {
+  const result = { access: "google-token", redirect_to: "/" };
+  axios.get.mockResolvedValue({ data: result });
+  await act(async () => root.render(<SocialLoginCompletePage />));
+  expect(storeAuthResponse).toHaveBeenCalledWith(result);
+  expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+});
 
 test("password verification clears authentication and redirects after success", async () => {
   rememberVerification({ challenge_id: "password-challenge" });

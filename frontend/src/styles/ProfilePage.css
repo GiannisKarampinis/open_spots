@@ -102,12 +102,6 @@
   box-shadow: 0 0 6px var(--error-color);
 }
 
-.profile-two-factor-btn {
-  width:      100%;
-  margin-top: 22px;
-  padding:    0.65rem 1rem;
-}
-
 .profile-section {
   display:      grid;
   gap:          18px;
@@ -121,11 +115,6 @@
   color: var(--profile-modal-heading);
   font-size: 1.25rem;
   font-weight: 700;
-}
-
-.profile-two-factor-section {
-  display: grid;
-  gap: 8px;
 }
 
 .profile-fields-form,

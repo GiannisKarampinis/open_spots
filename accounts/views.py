@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 
 from venues.models                  import Venue                                        #FIXME: circular import + a commented out email sending
 from rest_framework_simplejwt.tokens import RefreshToken
+from accounts.models import DeviceSession
 
 
 class CustomLoginView(LoginView):
@@ -38,6 +39,7 @@ class CustomLoginView(LoginView):
 
         # ✅ Generate JWT tokens and store in session
         refresh = RefreshToken.for_user(user)
+        refresh["device_session_id"] = str(DeviceSession.objects.create(user=user).pk)
         self.request.session['jwt_access'] = str(refresh.access_token)
         self.request.session['jwt_refresh'] = str(refresh)
 

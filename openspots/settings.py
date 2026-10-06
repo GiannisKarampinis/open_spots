@@ -79,8 +79,6 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'django_otp',
-    'django_otp.plugins.otp_totp',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -89,8 +87,8 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # api
-        'rest_framework.authentication.SessionAuthentication',  # web
+        'accounts.api.authentication.DeviceSessionJWTAuthentication',  # api
+        'rest_framework.authentication.SessionAuthentication',  # session-backed API calls
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -108,7 +106,6 @@ REST_FRAMEWORK = {
         'anon':                             os.getenv('API_THROTTLE_ANON', '100/minute'),
         'user':                             os.getenv('API_THROTTLE_USER', '500/minute'),
         'auth_login':                       os.getenv('API_THROTTLE_AUTH_LOGIN', '10/minute'),
-        'auth_2fa':                         os.getenv('API_THROTTLE_AUTH_2FA', '10/minute'),
         'auth_refresh':                     os.getenv('API_THROTTLE_AUTH_REFRESH', '30/minute'),
         'auth_register':                    os.getenv('API_THROTTLE_AUTH_REGISTER', '10/hour'),
         'auth_password':                    os.getenv('API_THROTTLE_AUTH_PASSWORD', '5/minute'),

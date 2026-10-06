@@ -75,8 +75,6 @@ def challenge_status(challenge):
 
 
 def send_challenge_code(challenge):
-    if challenge.reason == VerificationReason.TWO_FACTOR_LOGIN:
-        raise ValidationError({"detail": "Use your authenticator app for this challenge."})
     code = f"{secrets.randbelow(1_000_000):06d}"
     challenge.code_hash = make_password(code)
     challenge.last_sent_at = timezone.now()
@@ -129,24 +127,13 @@ def begin_challenge(user, reason, email, *, payload=None, existing_id=None, resu
         VerificationChallenge.objects.filter(user=user, closed_at__isnull=True, expires_at__lte=now).update(
             closed_at=now, payload={}, code_hash="", completion_token_hash="",
         )
-        active_query = VerificationChallenge.objects.filter(user=user, closed_at__isnull=True)
-        active_query = active_query.filter(reason=VerificationReason.TWO_FACTOR_LOGIN) if reason == VerificationReason.TWO_FACTOR_LOGIN else active_query.exclude(reason=VerificationReason.TWO_FACTOR_LOGIN)
-        active = active_query.first()
-        if active and reason == VerificationReason.TWO_FACTOR_LOGIN and (
-            active.payload.get("password_fingerprint") != fingerprint(user.password)
-            or active.payload.get("original_email") != user.email
-            or active.payload.get("device_id") != (payload or {}).get("device_id")
-        ):
-            close_challenge(active)
-            active = None
+        active = VerificationChallenge.objects.filter(user=user, closed_at__isnull=True).first()
         if active:
             if (resume or str(active.id) == str(existing_id)) and active.reason == reason and active.email == email and not active.verified_at:
                 active._code_sent = False
                 return active
             raise PendingVerification()
     duration = int(getattr(settings, "PASSWORD_CHANGE_PENDING_SECONDS", 600)) if reason == VerificationReason.PASSWORD_CHANGE else 1800
-    if reason == VerificationReason.TWO_FACTOR_LOGIN:
-        duration = int(getattr(settings, "TWO_FACTOR_PENDING_SECONDS", 300))
     pending = dict(payload or {})
     if user:
         pending["password_fingerprint"] = fingerprint(user.password)
@@ -156,12 +143,8 @@ def begin_challenge(user, reason, email, *, payload=None, existing_id=None, resu
         expires_at=now + timezone.timedelta(seconds=duration),
         code_expires_at=now, last_sent_at=now,
     )
-    if reason == VerificationReason.TWO_FACTOR_LOGIN:
-        challenge.code_expires_at = challenge.expires_at
-        challenge.save()
-    else:
-        send_challenge_code(challenge)
-    challenge._code_sent = reason != VerificationReason.TWO_FACTOR_LOGIN
+    send_challenge_code(challenge)
+    challenge._code_sent = True
     return challenge
 
 

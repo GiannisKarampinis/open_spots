@@ -60,18 +60,6 @@ class ChallengeConcurrencyTests(TransactionTestCase):
 
         self.assertEqual(sorted(self.run_race(confirm)), [200, 400])
 
-    def test_two_factor_login_challenge_can_only_be_consumed_once(self):
-        from django_otp.oath import totp
-        from django_otp.plugins.otp_totp.models import TOTPDevice
-        device = TOTPDevice.objects.create(user=self.user, confirmed=True)
-        challenge = begin_challenge(self.user, VerificationReason.TWO_FACTOR_LOGIN, self.user.email, payload={"device_id": device.pk})
-        code = str(totp(device.bin_key)).zfill(6)
-
-        def confirm():
-            return APIClient().post("/api/v1/accounts/login/2fa/", {"challenge_id": str(challenge.pk), "code": code}, format="json").status_code
-
-        self.assertEqual(sorted(self.run_race(confirm)), [200, 400])
-
     @patch("venues.api.verification.send_new_venue_application_email")
     @patch("accounts.services.challenges.send_email_with_template")
     def test_venue_proof_is_consumed_by_only_one_application(self, mail, notify):

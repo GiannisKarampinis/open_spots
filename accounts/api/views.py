@@ -1,5 +1,4 @@
 from accounts.models import VerificationReason
-import base64
 import logging
 
 from django.conf import settings
@@ -14,11 +13,9 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
-from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from .serializers import (
     DeviceSessionSerializer,
-    TwoFactorCodeSerializer,
     UserLoginSerializer,
     UserProfileSerializer,
     UserNavigationSerializer,
@@ -156,15 +153,17 @@ def _current_device_session_id(request):
         return None
 
 
-def _confirmed_totp_device(user):
-    return TOTPDevice.objects.filter(user=user, confirmed=True).order_by("-id").first()
-
-
-def _has_two_factor_enabled(user):
-    return _confirmed_totp_device(user) is not None
-
-
+@transaction.atomic
 def _login_response_for_user(request, user):
+    locked_user = User.objects.select_for_update().get(pk=user.pk)
+    if not locked_user.is_active or locked_user.password != user.password:
+        raise AuthenticationFailed("The account changed. Please log in again.")
+    user = locked_user
+    auth = getattr(request, "auth", None)
+    if auth and not DeviceSession.objects.filter(
+        pk=auth.get("device_session_id"), user=user, revoked_at__isnull=True,
+    ).exists():
+        raise AuthenticationFailed("Device session has been revoked. Please log in again.")
     user._current_device_session = _create_device_session(request, user)
     tokens = _tokens_for_user(user)
     security_logger.info(
@@ -184,11 +183,8 @@ def _login_response_for_user(request, user):
     # Server-side HTML adapters need a stable identity; this is not response data.
     response._authenticated_user_id = user.pk
     _set_refresh_cookie(response, tokens["refresh"])
+    response["Cache-Control"] = "no-store"
     return response
-
-
-def _totp_manual_key(device):
-    return base64.b32encode(device.bin_key).decode("ascii").rstrip("=")
 
 
 class LoginAPIView(CsrfProtectedAPIViewMixin, generics.GenericAPIView):
@@ -197,11 +193,15 @@ class LoginAPIView(CsrfProtectedAPIViewMixin, generics.GenericAPIView):
     permission_classes      = [permissions.AllowAny] # lets anyone call the endpoint, including users who haven't logged in-which is necessary for login.
     throttle_scope          = "auth_login"
 
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user            = serializer.validated_data["user"]
+        authenticated_user = serializer.validated_data["user"]
+        user = User.objects.select_for_update().get(pk=authenticated_user.pk)
+        if not user.is_active or user.password != authenticated_user.password:
+            raise AuthenticationFailed("The account changed. Please log in again.")
         is_google_user  = user.socialaccount_set.filter(provider="google").exists()
 
         if not user.email_verified and not is_google_user:
@@ -217,48 +217,6 @@ class LoginAPIView(CsrfProtectedAPIViewMixin, generics.GenericAPIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        device = _confirmed_totp_device(user)
-        if device:
-            challenge = begin_challenge(user, VerificationReason.TWO_FACTOR_LOGIN, user.email, payload={"device_id": device.pk}, resume=True)
-            security_logger.info("login_2fa_required user=%s ip=%s", user.pk, _client_ip(request))
-            return Response(
-                {
-                    "detail":       "Enter the code from your authenticator app.",
-                    "requires_2fa": True,
-                    "challenge_id": str(challenge.id),
-                },
-                status=status.HTTP_202_ACCEPTED,
-            )
-
-        return _login_response_for_user(request, user)
-
-
-class TwoFactorLoginVerifyAPIView(CsrfProtectedAPIViewMixin, generics.GenericAPIView):
-    serializer_class = TwoFactorCodeSerializer
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-    throttle_scope = "auth_2fa"
-
-    @transaction.atomic
-    def post(self, request, *args, **kwargs):
-        from .verification import challenge_user
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        challenge = get_challenge(request, lock=True)
-        if challenge.reason != VerificationReason.TWO_FACTOR_LOGIN:
-            return Response({"detail": "This challenge is not for two-factor login."}, status=400)
-        if challenge.attempts >= int(getattr(settings, "VERIFICATION_MAX_ATTEMPTS", 5)):
-            return Response({"detail": "Too many attempts. Wait for this login challenge to expire."}, status=429)
-        user = challenge_user(challenge)
-        if not user:
-            close_challenge(challenge)
-            return Response({"detail": "The account changed. Please log in again."}, status=400)
-        device = TOTPDevice.objects.select_for_update().filter(pk=challenge.payload.get("device_id"), user=user, confirmed=True).first()
-        if not device or not device.verify_token(serializer.validated_data["code"]):
-            challenge.attempts += 1
-            challenge.save(update_fields=["attempts"])
-            return Response({"detail": "Invalid two-factor code."}, status=status.HTTP_400_BAD_REQUEST)
-        close_challenge(challenge)
         return _login_response_for_user(request, user)
 
 
@@ -270,7 +228,10 @@ class CookieTokenRefreshAPIView(CsrfProtectedAPIViewMixin, generics.GenericAPIVi
 
     def post(self, request, *args, **kwargs):
         refresh = request.COOKIES.get(REFRESH_COOKIE_NAME)
-        device_session = _refresh_device_session(refresh)
+        try:
+            device_session = _refresh_device_session(refresh)
+        except AuthenticationFailed as exc:
+            return Response({"detail": str(exc.detail)}, status=status.HTTP_401_UNAUTHORIZED)
         serializer = self.get_serializer(data={"refresh": refresh})
         try:
             serializer.is_valid(raise_exception=True)
@@ -357,103 +318,12 @@ class DeviceSessionRevokeAPIView(generics.GenericAPIView):
         return Response({"detail": "Device session revoked."})
 
 
-class TwoFactorStatusAPIView(generics.GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        device = _confirmed_totp_device(request.user)
-        return Response({
-            "enabled": bool(device),
-            "confirmed_at": getattr(device, "confirmed_at", None),
-        })
-
-
-class TwoFactorSetupAPIView(generics.GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    throttle_scope = "auth_2fa"
-
-    @transaction.atomic
-    def post(self, request, *args, **kwargs):
-        User.objects.select_for_update().get(pk=request.user.pk)
-        if _has_two_factor_enabled(request.user):
-            return Response(
-                {"detail": "Two-factor authentication is already enabled. Disable it before starting a new setup."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        TOTPDevice.objects.filter(user=request.user, confirmed=False).delete()
-        device = TOTPDevice.objects.create(user=request.user, name="default", confirmed=False)
-        return Response({
-            "detail":           "Scan this authenticator URL and confirm with a generated code.",
-            "otp_auth_url":     device.config_url,
-            "manual_key":       _totp_manual_key(device),
-            "device_id":        device.id,
-        })
-
-
-class TwoFactorConfirmAPIView(generics.GenericAPIView):
-    serializer_class = TwoFactorCodeSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    throttle_scope = "auth_2fa"
-
-    @transaction.atomic
-    def post(self, request, *args, **kwargs):
-        User.objects.select_for_update().get(pk=request.user.pk)
-        if _has_two_factor_enabled(request.user):
-            return Response(
-                {"detail": "Two-factor authentication is already enabled. Disable it before starting a new setup."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        device = TOTPDevice.objects.filter(user=request.user, confirmed=False).order_by("-id").first()
-        if not device:
-            return Response({"detail": "No pending two-factor setup found."}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not device.verify_token(serializer.validated_data["code"]):
-            return Response({"detail": "Invalid two-factor code."}, status=status.HTTP_400_BAD_REQUEST)
-
-        device.confirmed = True
-        if hasattr(device, "confirmed_at"):
-            device.confirmed_at = timezone.now()
-            device.save(update_fields=["confirmed", "confirmed_at"])
-        else:
-            device.save(update_fields=["confirmed"])
-        TOTPDevice.objects.filter(user=request.user, confirmed=True).exclude(pk=device.pk).delete()
-        security_logger.warning("two_factor_enabled user=%s ip=%s", request.user.pk, _client_ip(request))
-        return Response({"detail": "Two-factor authentication enabled.", "enabled": True})
-
-
-class TwoFactorDisableAPIView(generics.GenericAPIView):
-    serializer_class = TwoFactorCodeSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    throttle_scope = "auth_2fa"
-
-    def post(self, request, *args, **kwargs):
-        device = _confirmed_totp_device(request.user)
-        if not device:
-            return Response({"detail": "Two-factor authentication is not enabled.", "enabled": False})
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        if not device.verify_token(serializer.validated_data["code"]):
-            return Response({"detail": "Invalid two-factor code."}, status=status.HTTP_400_BAD_REQUEST)
-
-        TOTPDevice.objects.filter(user=request.user).delete()
-        security_logger.warning("two_factor_disabled user=%s ip=%s", request.user.pk, _client_ip(request))
-        return Response({"detail": "Two-factor authentication disabled.", "enabled": False})
-
-
 class SocialLoginSessionAPIView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @transaction.atomic
     def get(self, request, *args, **kwargs):
-        user = request.user
-        if not user or not user.is_authenticated:
-            return Response({"detail": "No authenticated social login session found."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        return _login_response_for_user(request, user)
+        return _login_response_for_user(request, request.user)
 
 
 class NavigationUserAPIView(generics.RetrieveAPIView):

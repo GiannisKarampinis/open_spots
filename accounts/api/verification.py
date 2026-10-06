@@ -128,7 +128,7 @@ class CurrentVerificationAPIView(generics.GenericAPIView):
             user=request.user,
             closed_at__isnull=True,
             expires_at__gt=timezone.now(),
-        ).exclude(reason=VerificationReason.TWO_FACTOR_LOGIN).first()
+        ).first()
         response = Response(challenge_status(challenge) if challenge else {"pending": False})
         response["Cache-Control"] = "no-store" # Prevents caching of sensitive verification state.
         return response
@@ -219,13 +219,6 @@ class ConfirmVerificationAPIView(PublicChallengeView):
             user.email_verified = True
             user.save(update_fields=["email", "unverified_email", "email_verified"])
             close_challenge(challenge)
-            # Respect 2FA for signup; email verification must not bypass it.
-            from .views import _has_two_factor_enabled
-            if _has_two_factor_enabled(user):
-                payload = {"detail": "Email verified successfully. Please log in.", "user": UserNavigationSerializer(user).data, "redirect_to": "/accounts/login"}
-                if challenge.reason == VerificationReason.EMAIL_UPDATE:
-                    payload["profile"] = UserProfileSerializer(user).data
-                return Response(payload)
             response = _login_response_for_user(request, user)
             if challenge.reason == VerificationReason.EMAIL_UPDATE:
                 response.data["profile"] = UserProfileSerializer(user).data

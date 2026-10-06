@@ -1,10 +1,9 @@
 # Account verification challenges
 
-Signup, email changes, password changes, password recovery, 2FA login and the
+Signup, email changes, password changes, password recovery and the
 venue-email verification API now use `accounts.VerificationChallenge`.
 Ordinary login sessions, refresh tokens, visit tracking and legacy venue Django
-form verification remain separate. The 2FA/venue extension does not change legacy
-Django views.
+form verification remain separate.
 
 ## Request flow
 
@@ -29,8 +28,8 @@ for navigation and hidden fields to bind rendered forms to their challenge.
 ## One active flow per user
 
 A database constraint and user-row locks enforce one open account-verification
-challenge per user. A separate constraint allows one 2FA login challenge alongside
-it, so a pending account change cannot prevent the user from logging in.
+challenge per user. Ordinary login does not create a verification challenge for
+an already verified account.
 Starting a different flow returns 409. Use the pending verification UI to continue
 or cancel it. Expired challenges are closed when a new one starts. Repeating the
 same email request with its ID resumes it without sending another code; login with
@@ -52,7 +51,7 @@ stored as password hashes, and payloads are cleared on consumption/cancellation.
 ## Rollout and maintenance
 
 `/api/token/` is now an alias of the protected account login endpoint. It uses
-the login response contract, including email verification/TOTP challenges and an
+the login response contract, including email verification challenges and an
 HttpOnly refresh cookie, instead of returning an unrestricted JWT pair.
 Password recovery returns the same response on SMTP failure as for unknown
 accounts, and rolls back the failed real challenge so retry remains possible.
@@ -81,18 +80,6 @@ password recovery initial sends and resends use the background worker described 
 Tests: `python manage.py test accounts --settings=openspots.settings_test` and
 `npm test -- --runInBand` from `frontend`. The test settings use an in-memory
 database, local cache and captured email; they do not send real emails.
-
-## Two-factor login
-
-After a correct password, `/api/v1/accounts/login/` returns `requires_2fa` and a
-`challenge_id`. LoginPage keeps that ID in component state and sends it with the
-authenticator code to `/api/v1/accounts/login/2fa/`. Reloading requires entering
-the password again. Repeating login resumes a live challenge without resetting its
-attempt counter or expiry. The challenge is bound to the user, password fingerprint
-and TOTP device. Confirmation locks the challenge and device, verifies the TOTP,
-consumes the challenge and only then issues login tokens. Email-confirm/resend
-endpoints cannot be used to complete this purpose. The default lifetime is five
-minutes (`TWO_FACTOR_PENDING_SECONDS`); django-otp's device throttling also applies.
 
 ## Venue application email
 

@@ -19,7 +19,6 @@ User = get_user_model()
 class CsrfEnforcementTests(TestCase):
     csrf_protected_posts = (
         ("/api/v1/accounts/login/", {"username": "x", "password": "x"}),
-        ("/api/v1/accounts/login/2fa/", {"code": "000000"}),
         ("/api/token/refresh/", {}),
         ("/api/v1/accounts/logout/", {}),
         ("/api/v1/accounts/register/", {}),

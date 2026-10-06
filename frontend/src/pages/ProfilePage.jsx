@@ -77,10 +77,6 @@ export default function ProfilePage() {
   const [pendingEmailVerification, setPendingEmailVerification] = useState(null);
   const [checkingEmailVerification, setCheckingEmailVerification] = useState(true);
 
-  const [twoFactor, setTwoFactor] = useState({ enabled: null, loading: true });
-  const [twoFactorSetup, setTwoFactorSetup] = useState(null);
-  const [twoFactorCode, setTwoFactorCode] = useState("");
-  const [twoFactorSubmitting, setTwoFactorSubmitting] = useState(false);
 
   /* OK - REVIEWED */
   const emailDiffersFromVerified = form.email.trim().toLowerCase() !== (userEmailInfoFromServer.email || "").trim().toLowerCase();
@@ -136,30 +132,6 @@ export default function ProfilePage() {
   // navigate: It's function reference could theoretically change
   // if the router context or router instance changes.
   // During ordinary OpenSpots usage, it normally remains stable.
-
-  /* OK - REVIEWED */
-  useEffect(() => { /* TWO-FACTOR STATUS LOADING */
-    let cancelled = false;
-    setTwoFactor({ enabled: null, loading: true });
-
-    getWithAuth(
-      "/api/v1/accounts/2fa/status/",
-      {},
-      { onUnauthenticated: () => navigate("/accounts/login") }
-    ).then((res) => {
-        if (!cancelled) {
-          setTwoFactor({ enabled: res?.data?.enabled ?? null, loading: false });
-        }
-    }).catch(() => {
-        if (!cancelled) {
-          setTwoFactor({ enabled: null, loading: false });
-        }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [navigate]);
 
   /* OK - REVIEWED */
   useEffect(() => {
@@ -526,93 +498,6 @@ export default function ProfilePage() {
     }
   };
 
-  const startTwoFactorSetup = async () => {
-    if (twoFactorSubmitting) return;
-    setTwoFactorSubmitting(true);
-    setMessage("");
-
-    try {
-      const res = await postWithAuth(
-        "/api/v1/accounts/2fa/setup/",
-        {},
-        {},
-        { onUnauthenticated: () => navigate("/accounts/login") }
-      );
-
-      if (!res) return;
-
-      setTwoFactorSetup(res.data);
-      setTwoFactorCode("");
-      showSuccess(
-        t("Add this key to your authenticator app, then enter the generated code.")
-      );
-    } catch (err) {
-      showError(
-        err.response?.data?.detail || t("Could not start two-factor setup.")
-      );
-    } finally {
-      setTwoFactorSubmitting(false);
-    }
-  };
-
-  const confirmTwoFactor = async () => {
-    if (twoFactorSubmitting) return;
-    setTwoFactorSubmitting(true);
-    setMessage("");
-
-    try {
-      const res = await postWithAuth(
-        "/api/v1/accounts/2fa/confirm/",
-        { code: twoFactorCode },
-        {},
-        { onUnauthenticated: () => navigate("/accounts/login") }
-      );
-
-      if (!res) return;
-
-      setTwoFactor({ enabled: true, loading: false });
-      setTwoFactorSetup(null);
-      setTwoFactorCode("");
-      showSuccess(res.data.detail || t("Two-factor authentication enabled."));
-    } catch (err) {
-      showError(
-        err.response?.data?.detail ||
-          t("Could not confirm two-factor authentication.")
-      );
-    } finally {
-      setTwoFactorSubmitting(false);
-    }
-  };
-
-  const disableTwoFactor = async () => {
-    if (twoFactorSubmitting) return;
-    setTwoFactorSubmitting(true);
-    setMessage("");
-
-    try {
-      const res = await postWithAuth(
-        "/api/v1/accounts/2fa/disable/",
-        { code: twoFactorCode },
-        {},
-        { onUnauthenticated: () => navigate("/accounts/login") }
-      );
-
-      if (!res) return;
-
-      setTwoFactor({ enabled: false, loading: false });
-      setTwoFactorSetup(null);
-      setTwoFactorCode("");
-      showSuccess(res.data.detail || t("Two-factor authentication disabled."));
-    } catch (err) {
-      showError(
-        err.response?.data?.detail ||
-          t("Could not disable two-factor authentication.")
-      );
-    } finally {
-      setTwoFactorSubmitting(false);
-    }
-  };
-
   // OK - REVIEWED
   const getProfileFieldClass = (name) => {
     if (name === "username") return "profile-readonly-input";
@@ -757,80 +642,6 @@ export default function ProfilePage() {
         />
       )}
 
-      <section className="profile-page profile-two-factor-section" aria-labelledby="two-factor-heading">
-        <h3 id="two-factor-heading">{t("Two-Factor Authentication")}</h3>
-
-        <p>
-          {twoFactor.loading
-            ? t("Loading...")
-            : twoFactor.enabled === null
-              ? t("Could not load two-factor status.")
-              : twoFactor.enabled ? t("Enabled") : t("Disabled")}
-        </p>
-
-        {twoFactorSetup && (
-          <div className="profile-field">
-            <label htmlFor="two-factor-key">{t("Manual setup key")}</label>
-            <input
-              id="two-factor-key"
-              type="text"
-              value={twoFactorSetup.manual_key || ""}
-              readOnly
-            />
-          </div>
-        )}
-
-        {(twoFactorSetup || twoFactor.enabled) && (
-          <div className="profile-field">
-            <label htmlFor="two-factor-code">{t("Authenticator code")}</label>
-            <input
-              id="two-factor-code"
-              type="text"
-              inputMode="numeric"
-              value={twoFactorCode}
-              disabled={twoFactor.loading || twoFactor.enabled === null || twoFactorSubmitting}
-              onChange={(event) => setTwoFactorCode(event.target.value)}
-              autoComplete="one-time-code"
-            />
-          </div>
-        )}
-
-        {!twoFactor.enabled && !twoFactorSetup && (
-          <button
-            className="profile-button profile-button-primary profile-two-factor-btn"
-            type="button"
-            onClick={startTwoFactorSetup}
-            disabled={twoFactor.loading || twoFactor.enabled === null || twoFactorSubmitting}
-            aria-busy={twoFactor.loading || twoFactorSubmitting}
-          >
-            {t("Enable 2FA")}
-          </button>
-        )}
-
-        {twoFactorSetup && (
-          <button
-            className="profile-button profile-button-primary profile-two-factor-btn"
-            type="button"
-            onClick={confirmTwoFactor}
-            disabled={twoFactor.loading || twoFactor.enabled === null || twoFactorSubmitting}
-            aria-busy={twoFactorSubmitting}
-          >
-            {t("Confirm 2FA")}
-          </button>
-        )}
-
-        {twoFactor.enabled && (
-          <button
-            className="profile-button profile-button-danger profile-two-factor-btn"
-            type="button"
-            onClick={disableTwoFactor}
-            disabled={twoFactor.loading || twoFactor.enabled === null || twoFactorSubmitting}
-            aria-busy={twoFactorSubmitting}
-          >
-            {t("Disable 2FA")}
-          </button>
-        )}
-      </section>
     </div>
   );
 }
