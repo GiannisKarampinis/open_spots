@@ -22,6 +22,39 @@ class TwoFactorChallengeTests(APITestCase):
     def login(self):
         return self.client.post("/api/v1/accounts/login/", {"username": self.user.username, "password": "password-123"}, format="json")
 
+    def test_setup_rejects_enabled_user_without_changing_devices(self):
+        pending = TOTPDevice.objects.create(user=self.user, confirmed=False)
+        self.client.force_authenticate(user=self.user)
+        result = self.client.post("/api/v1/accounts/2fa/setup/", {}, format="json")
+        self.assertEqual(result.status_code, 400)
+        self.assertNotIn("manual_key", result.data)
+        self.assertNotIn("otp_auth_url", result.data)
+        self.assertEqual(set(TOTPDevice.objects.filter(user=self.user).values_list("pk", flat=True)), {self.device.pk, pending.pk})
+
+    def test_confirmation_cannot_replace_enabled_authenticator(self):
+        pending = TOTPDevice.objects.create(user=self.user, confirmed=False)
+        self.client.force_authenticate(user=self.user)
+        code = str(totp(pending.bin_key)).zfill(6)
+        result = self.client.post("/api/v1/accounts/2fa/confirm/", {"code": code}, format="json")
+        self.assertEqual(result.status_code, 400)
+        self.device.refresh_from_db()
+        pending.refresh_from_db()
+        self.assertTrue(self.device.confirmed)
+        self.assertFalse(pending.confirmed)
+
+    def test_disabled_user_can_set_up_and_confirm_authenticator(self):
+        self.device.delete()
+        self.client.force_authenticate(user=self.user)
+        setup = self.client.post("/api/v1/accounts/2fa/setup/", {}, format="json")
+        self.assertEqual(setup.status_code, 200)
+        pending = TOTPDevice.objects.get(pk=setup.data["device_id"])
+        self.assertFalse(pending.confirmed)
+        code = str(totp(pending.bin_key)).zfill(6)
+        result = self.client.post("/api/v1/accounts/2fa/confirm/", {"code": code}, format="json")
+        self.assertEqual(result.status_code, 200)
+        pending.refresh_from_db()
+        self.assertTrue(pending.confirmed)
+
     def confirm(self, identifier, code=None):
         code = code if code is not None else str(totp(self.device.bin_key)).zfill(6)
         return self.client.post("/api/v1/accounts/login/2fa/", {"code": code, "challenge_id": identifier}, format="json")

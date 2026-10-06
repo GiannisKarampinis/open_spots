@@ -372,14 +372,21 @@ class TwoFactorSetupAPIView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     throttle_scope = "auth_2fa"
 
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
+        User.objects.select_for_update().get(pk=request.user.pk)
+        if _has_two_factor_enabled(request.user):
+            return Response(
+                {"detail": "Two-factor authentication is already enabled. Disable it before starting a new setup."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         TOTPDevice.objects.filter(user=request.user, confirmed=False).delete()
         device = TOTPDevice.objects.create(user=request.user, name="default", confirmed=False)
         return Response({
-            "detail": "Scan this authenticator URL and confirm with a generated code.",
-            "otp_auth_url": device.config_url,
-            "manual_key": _totp_manual_key(device),
-            "device_id": device.id,
+            "detail":           "Scan this authenticator URL and confirm with a generated code.",
+            "otp_auth_url":     device.config_url,
+            "manual_key":       _totp_manual_key(device),
+            "device_id":        device.id,
         })
 
 
@@ -388,7 +395,14 @@ class TwoFactorConfirmAPIView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     throttle_scope = "auth_2fa"
 
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
+        User.objects.select_for_update().get(pk=request.user.pk)
+        if _has_two_factor_enabled(request.user):
+            return Response(
+                {"detail": "Two-factor authentication is already enabled. Disable it before starting a new setup."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
