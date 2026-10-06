@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
@@ -6,7 +6,6 @@ import {
   CircleMarker,
   MapContainer,
   Popup,
-  TileLayer,
   ZoomControl,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -25,6 +24,8 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import "../styles/venue_detail.css";
+
+const OpenFreeMapLayer = lazy(() => import("../components/venues/OpenFreeMapLayer"));
 
 const todayIso = () => {
   const date = new Date();
@@ -86,19 +87,9 @@ function MapPreview({ venue }) {
         className="venue-detail-map"
         aria-label={t("Venue map", { name: venue.name })}
       >
-        <TileLayer
-          attribution={
-            '&copy; <a href="https://www.openstreetmap.org/copyright">' +
-            'OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">' +
-            "CARTO</a>"
-          }
-          maxZoom={20}
-          subdomains="abcd"
-          url={
-            "https://{s}.basemaps.cartocdn.com/rastertiles/" +
-            "voyager/{z}/{x}/{y}{r}.png"
-          }
-        />
+        <Suspense fallback={null}>
+          <OpenFreeMapLayer />
+        </Suspense>
 
         <ZoomControl position="topright" />
 
