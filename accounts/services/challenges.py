@@ -51,7 +51,10 @@ def get_challenge(request, *, lock=False):
         pk=identifier, closed_at__isnull=True,
     ).first() if identifier else None
     if not challenge or challenge.expires_at <= timezone.now():
-        raise ValidationError({"detail": "Invalid or expired verification challenge. Please start again."})
+        raise ValidationError({
+            "detail": "Invalid or expired verification challenge. Please start again.",
+            "code": "verification_challenge_expired",
+        })
     return challenge
 
 
@@ -138,6 +141,7 @@ def begin_challenge(user, reason, email, *, payload=None, existing_id=None, resu
             active = None
         if active:
             if (resume or str(active.id) == str(existing_id)) and active.reason == reason and active.email == email and not active.verified_at:
+                active._code_sent = False
                 return active
             raise PendingVerification()
     duration = int(getattr(settings, "PASSWORD_CHANGE_PENDING_SECONDS", 600)) if reason == VerificationReason.PASSWORD_CHANGE else 1800
@@ -157,6 +161,7 @@ def begin_challenge(user, reason, email, *, payload=None, existing_id=None, resu
         challenge.save()
     else:
         send_challenge_code(challenge)
+    challenge._code_sent = reason != VerificationReason.TWO_FACTOR_LOGIN
     return challenge
 
 

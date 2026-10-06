@@ -22,7 +22,7 @@ class CustomUser(AbstractUser):
 
     @property
     def full_name_or_username(self):
-        full_name = self.get_full_name()
+        full_name = f"{self.firstname} {self.lastname}".strip()
         return full_name if full_name else self.username
     
     # FIXME - tsevre: Uncomment if phone number validation is needed.

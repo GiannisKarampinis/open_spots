@@ -98,6 +98,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 
+class UserNavigationSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["username", "full_name"]
+        read_only_fields = fields
+
+    def get_full_name(self, obj):
+        return f"{obj.firstname} {obj.lastname}".strip()
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
     firstname = PersonNameField(required=True)
     lastname = PersonNameField(required=True)
@@ -128,7 +140,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         ]
 
     def get_full_name(self, obj):
-        return obj.full_name_or_username
+        return f"{obj.firstname} {obj.lastname}".strip()
 
 
 class DeviceSessionSerializer(serializers.ModelSerializer):

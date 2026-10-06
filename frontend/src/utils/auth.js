@@ -24,7 +24,12 @@ export function storeAuthResponse(data) {
   }
 
   if (data.user) { /* optional property user */
-    currentUser = data.user;
+    // Keep only identity and display fields in the shared user cache.
+    currentUser = Object.fromEntries(
+      ["username", "full_name"]
+        .filter((field) => Object.prototype.hasOwnProperty.call(data.user, field))
+        .map((field) => [field, data.user[field]])
+    );
   }
 
   window.dispatchEvent(new Event("auth:changed"));

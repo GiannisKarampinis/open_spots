@@ -1,6 +1,6 @@
 import { VerificationReason } from "../utils/verificationReasons";
-import { rememberVerification, clearVerification, verificationConfig } from "../utils/verification";
-import { useEffect, useState } from "react";
+import { rememberVerification, verificationConfig } from "../utils/verification";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -54,12 +54,13 @@ export default function ProfilePage() {
   });
 
   /* OK - REVIEWED */
-  const [userInfo, setUserInfo] = useState({
+  const [userEmailInfoFromServer, setUserEmailInfoFromServer] = useState({
     email:            "",
     unverified_email: "",
     email_verified:   true,
   });
 
+  /* OK - REVIEWED */
   const [passwordForm, setPasswordForm] = useState({
     old_password:   "",
     new_password1:  "",
@@ -71,7 +72,7 @@ export default function ProfilePage() {
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [message, setMessage, messageType, setMessageType] = useToastMessage("success");
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving]   = useState(false);
+  const [isSavingAccountChanges, setIsSavingAccountChanges]   = useState(false);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [pendingEmailVerification, setPendingEmailVerification] = useState(null);
   const [checkingEmailVerification, setCheckingEmailVerification] = useState(true);
@@ -82,7 +83,7 @@ export default function ProfilePage() {
   const [twoFactorSubmitting, setTwoFactorSubmitting] = useState(false);
 
   /* OK - REVIEWED */
-  const emailDiffersFromVerified = form.email.trim().toLowerCase() !== (userInfo.email || "").trim().toLowerCase();
+  const emailDiffersFromVerified = form.email.trim().toLowerCase() !== (userEmailInfoFromServer.email || "").trim().toLowerCase();
 
   /* OK - REVIEWED */
   const hasProfileChanges =
@@ -113,17 +114,13 @@ export default function ProfilePage() {
         setForm(loadedForm);
         setSavedForm(loadedForm);
 
-        setUserInfo({
+        setUserEmailInfoFromServer({
           email:            profile.email || "",
           unverified_email: profile.unverified_email || "",
           email_verified:   profile.email_verified,
         });
-        // The following call is commented out because we only need in the
-        // navigation bar, the username which is readonly and is already
-        // stored in the auth response.
-        // Storing the entire profile here is redundant.
-        // We should enable it in the future if we need to access the profile in other parts of the app.
-        // storeAuthResponse({ user: profile });
+        // Refresh the navigation's full name and username from the loaded profile.
+        storeAuthResponse({ user: profile });
       }).catch(() => {
         if (!cancelled) navigate("/accounts/login");
       }).finally(() => {
@@ -166,6 +163,10 @@ export default function ProfilePage() {
 
   /* OK - REVIEWED */
   useEffect(() => {
+    /*
+      Exactly. Each execution of the effect function has its own scope and its own cancelled variable.
+      Its cleanup and request callbacks share that run’s variable. The next run creates a separate one.
+    */
     if (loading) return undefined;
 
     let cancelled = false;
@@ -191,16 +192,22 @@ export default function ProfilePage() {
       if (!cancelled) setCheckingEmailVerification(false);
     });
 
-    return () => {
+    return () => { /* CLEANUP FUNCTION */
+      /* Called when:
+        1. we leave the component (unmounts)
+        2. Before the effect runs again (dependencies change)
+      */
       cancelled = true;
     };
   }, [loading, navigate]);
 
+  /* OK - REVIEWED */
   const showSuccess = (text) => {
     setMessageType("success");
     setMessage(text);
   };
 
+  /* OK - REVIEWED */
   const showError = (text) => {
     setMessageType("error");
     setMessage(text);
@@ -298,16 +305,18 @@ export default function ProfilePage() {
     });
   };
 
+  /* OK - REVIEWED */
   const submitProfile = async (event) => {
-    event.preventDefault();
+    event.preventDefault(); /* stops the browser normal form submission,
+    which would usually navigate to another page or reload the current one. */
 
-    if (!hasProfileChanges || saving) return;
+    if (!hasProfileChanges || isSavingAccountChanges) return;
 
     const normalizedCurrentFormEmail = form.email.trim().toLowerCase();
-    const emailError      = validateEmail(normalizedCurrentFormEmail);
-    const firstnameError  = validateName(form.firstname);
-    const lastnameError   = validateName(form.lastname);
-    const phoneError      = validatePhone(form.phone_number);
+    const emailError                 = validateEmail(normalizedCurrentFormEmail);
+    const firstnameError             = validateName(form.firstname);
+    const lastnameError              = validateName(form.lastname);
+    const phoneError                 = validatePhone(form.phone_number);
 
     if (emailError || firstnameError || lastnameError || phoneError) {
       setProfileErrors({
@@ -320,28 +329,30 @@ export default function ProfilePage() {
     }
 
     setProfileErrors({});
-    setSaving(true);
+
+    setIsSavingAccountChanges(true);
     let profileSaved = false;
 
     try {
-      const savedEmail    = (userInfo.email || "").trim().toLowerCase();
-      const emailChanged  = normalizedCurrentFormEmail !== savedEmail;
-      const emailVerificationPending =
-        pendingEmailVerification?.email === normalizedCurrentFormEmail;
-      const profileFields = {
+      const currentVerifiedEmailFromServer  = (userEmailInfoFromServer.email || "").trim().toLowerCase();
+      const emailChanged                    = normalizedCurrentFormEmail !== currentVerifiedEmailFromServer;
+
+/* 1st block */
+      const profileNamesAndPhoneFields = {
         firstname:    form.firstname.trim(),
         lastname:     form.lastname.trim(),
         phone_number: form.phone_number,
       };
-      const profileChanged =
-        profileFields.firstname !== savedForm.firstname.trim() ||
-        profileFields.lastname !== savedForm.lastname.trim() ||
-        profileFields.phone_number.trim() !== savedForm.phone_number.trim();
 
-      if (profileChanged) {
+      const profileNamesAndPhoneChanged =
+        profileNamesAndPhoneFields.firstname           !==   savedForm.firstname.trim()      ||
+        profileNamesAndPhoneFields.lastname            !==   savedForm.lastname.trim()       ||
+        profileNamesAndPhoneFields.phone_number.trim() !==   savedForm.phone_number.trim();
+
+      if (profileNamesAndPhoneChanged) {
         const profileRes = await patchWithAuth(
           "/api/v1/accounts/profile/",
-          profileFields,
+          profileNamesAndPhoneFields,
           {},
           { onUnauthenticated: () => navigate("/accounts/login") }
         );
@@ -352,84 +363,116 @@ export default function ProfilePage() {
         storeAuthResponse({ user: profileRes.data });
         setSavedForm((current) => ({
           ...current,
-          firstname: profileRes.data.firstname || "",
-          lastname: profileRes.data.lastname || "",
+          firstname:    profileRes.data.firstname || "",
+          lastname:     profileRes.data.lastname || "",
           phone_number: profileRes.data.phone_number || "",
         }));
       }
 
+/* 2nd block */
+      const emailVerificationPending = pendingEmailVerification?.email === normalizedCurrentFormEmail; // Is there a pending verification process for that email?
+
       if (emailVerificationPending) {
-        if (profileChanged) showSuccess(t("Profile updated successfully."));
-        setShowEmailVerification(true);
+        if (profileNamesAndPhoneChanged) {
+          showSuccess(t("Profile updated successfully."));
+        }
+
+        setShowEmailVerification(true); /* opens the email verification modal */
+
         return;
       }
 
+/* 3rd block */
       if (emailChanged) {
-        const emailRes = await postWithAuth(
-          "/api/v1/accounts/email/update/",
-          { email: normalizedCurrentFormEmail },
-          verificationConfig(pendingEmailVerification?.challenge_id || ""),
-          { onUnauthenticated: () => navigate("/accounts/login") }
+        /* The next api call is ONLY a request for email change,
+           not an actual change */
+        const emailChallengeRes = await postWithAuth(
+            "/api/v1/accounts/email/update/",
+            { email: normalizedCurrentFormEmail },
+            verificationConfig(pendingEmailVerification?.challenge_id || ""),
+            { onUnauthenticated: () => navigate("/accounts/login") }
         );
 
-        if (!emailRes) return;
+        if (!emailChallengeRes) return;
 
-        rememberVerification(emailRes.data);
+        setForm((current) => ({
+          ...current,
+          email: normalizedCurrentFormEmail
+        }));
 
-        setForm((current) => ({ ...current, email: normalizedCurrentFormEmail }));
         setPendingEmailVerification({
-          challenge_id: emailRes.data.challenge_id,
-          pending: true,
-          reason: VerificationReason.EMAIL_UPDATE,
-          email: normalizedCurrentFormEmail,
+          challenge_id: emailChallengeRes.data.challenge_id,
+          pending:      true,
+          reason:       VerificationReason.EMAIL_UPDATE,
+          email:        normalizedCurrentFormEmail,
         });
+
         showSuccess(
-          emailRes.data.detail || t("Verification code sent to your new email.")
+          emailChallengeRes.data.detail || t("Verification code sent to your new email.")
         );
+
         setShowEmailVerification(true);
         return;
       }
 
-      if (profileChanged) showSuccess(t("Profile updated successfully."));
+      if (profileNamesAndPhoneChanged) showSuccess(t("Profile updated successfully."));
+
     } catch (err) {
-      const data = err.response?.data || {};
-      const fieldErrors = {};
+
+      const   data = err.response?.data || {};
+      const   fieldErrors = {};
       for (const field of ["email", "firstname", "lastname", "phone_number"]) {
         if (data[field]) fieldErrors[field] = Array.isArray(data[field]) ? data[field][0] : data[field];
       }
+
       setProfileErrors(fieldErrors);
+
       if (profileSaved) {
         showError(t("Profile details saved, but the email change could not be started."));
       } else if (!Object.keys(fieldErrors).length) {
         showError(data.detail || data.non_field_errors?.[0] || t("Could not update your profile."));
       }
+
     } finally {
-      setSaving(false);
+      setIsSavingAccountChanges(false);
     }
   };
 
+  /* OK - REVIEWED */
   const finishEmailVerification = (profile, detail) => {
+
     if (!profile) return;
-    setUserInfo({
-      email: profile.email || "",
+
+    setUserEmailInfoFromServer({
+      email:            profile.email || "",
       unverified_email: profile.unverified_email || "",
-      email_verified: profile.email_verified,
+      email_verified:   profile.email_verified,
     });
-    setPasswordErrors({});
+
+    setPasswordErrors({}); /* Clears any password errors that may have been set before the email verification modal was opened. */
+
     const updatedForm = {
-      firstname: profile.firstname || "",
-      lastname: profile.lastname || "",
-      username: profile.username || "",
-      email: profile.email || "",
+      firstname:    profile.firstname || "",
+      lastname:     profile.lastname || "",
+      username:     profile.username || "",
+      email:        profile.email || "",
       phone_number: profile.phone_number || "",
     };
+
     setForm(updatedForm);
     setSavedForm(updatedForm);
-    clearVerification(pendingEmailVerification?.challenge_id);
     setPendingEmailVerification(null);
     setShowEmailVerification(false);
     showSuccess(detail || t("Profile and email updated successfully."));
   };
+
+
+  const handleExpiredEmailVerification = useCallback(() => {
+    setPendingEmailVerification(null);
+    setShowEmailVerification(false);
+    setMessageType("error");
+    setMessage(t("Email verification expired. Please update your profile again to request a new code."));
+  }, [t, setMessage, setMessageType]);
 
   const submitPassword = async (event) => {
     event.preventDefault();
@@ -449,7 +492,7 @@ export default function ProfilePage() {
     }
 
     setPasswordErrors({});
-    setSaving(true);
+    setIsSavingAccountChanges(true);
 
     try {
       const res = await postWithAuth(
@@ -479,7 +522,7 @@ export default function ProfilePage() {
         showError(data.detail || data.non_field_errors?.[0] || t("Could not change your password."));
       }
     } finally {
-      setSaving(false);
+      setIsSavingAccountChanges(false);
     }
   };
 
@@ -632,10 +675,10 @@ export default function ProfilePage() {
           ))}
 
           <button
-            className="profile-button profile-button-primary profile-update-btn" type="submit" disabled={saving || !hasProfileChanges}
-            aria-busy={saving}
+            className="profile-button profile-button-primary profile-update-btn" type="submit" disabled={isSavingAccountChanges || !hasProfileChanges}
+            aria-busy={isSavingAccountChanges}
           >
-            {saving ? t("Updating...") : t("Update Profile")}
+            {isSavingAccountChanges ? t("Updating...") : t("Update Profile")}
           </button>
         </form>
 
@@ -669,17 +712,17 @@ export default function ProfilePage() {
                 <button
                   className="profile-button profile-button-primary profile-action-btn"
                   type="submit"
-                  disabled={saving}
-                  aria-busy={saving}
+                  disabled={isSavingAccountChanges}
+                  aria-busy={isSavingAccountChanges}
                 >
-                  {saving ? t("Saving...") : t("Save")}
+                  {isSavingAccountChanges ? t("Saving...") : t("Save")}
                 </button>
 
                 <button
                   className="profile-button profile-button-danger profile-action-btn"
                   type="button"
                   onClick={cancelEdit}
-                  disabled={saving}
+                  disabled={isSavingAccountChanges}
                 >
                   {t("Cancel")}
                 </button>
@@ -703,10 +746,11 @@ export default function ProfilePage() {
       {showEmailVerification && (
         <EmailVerificationModal
           challengeId={pendingEmailVerification?.challenge_id}
+          onExpired={handleExpiredEmailVerification}
           onCancelled={() => {
             setPendingEmailVerification(null);
             setShowEmailVerification(false);
-            setForm((current) => ({ ...current, email: userInfo.email }));
+            setForm((current) => ({ ...current, email: userEmailInfoFromServer.email }));
           }}
           onClose={() => setShowEmailVerification(false)}
           onVerified={finishEmailVerification}

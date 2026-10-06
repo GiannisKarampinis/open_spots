@@ -14,7 +14,7 @@ function formatSeconds(totalSeconds) {
   return `${minutes}:${seconds}`;
 }
 
-export default function EmailVerificationModal({ onClose, onVerified, onCancelled, challengeId }) {
+export default function EmailVerificationModal({ onClose, onVerified, onCancelled, onExpired, challengeId }) {
   const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
@@ -38,13 +38,18 @@ export default function EmailVerificationModal({ onClose, onVerified, onCancelle
         setTotal(Math.max(seconds, 1));
       })
       .catch((err) => {
+        if (!cancelled && err.response?.data?.code === "verification_challenge_expired") {
+          clearVerification(challengeId);
+          onExpired();
+          return;
+        }
         if (!cancelled) setMessage(err.response?.data?.detail || t("Could not load email verification."));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, [t, challengeId]);
+  }, [t, challengeId, onExpired]);
 
   useEffect(() => {
     if (remaining <= 0) return undefined;
@@ -82,8 +87,13 @@ export default function EmailVerificationModal({ onClose, onVerified, onCancelle
       const res = await postWithCsrf("/api/v1/accounts/verification/confirm/", { code }, verificationConfig(challengeId));
       clearVerification(challengeId);
       storeAuthResponse(res.data);
-      onVerified(res.data.user, res.data.detail);
+      onVerified(res.data.profile, res.data.detail);
     } catch (err) {
+      if (err.response?.data?.code === "verification_challenge_expired") {
+        clearVerification(challengeId);
+        onExpired();
+        return;
+      }
       setMessageType("error");
       setMessage(err.response?.data?.detail || t("Verification failed. Please check the code."));
     } finally {
@@ -104,6 +114,11 @@ export default function EmailVerificationModal({ onClose, onVerified, onCancelle
       setMessageType("success");
       setMessage(res.data.detail || t("Verification code resent."));
     } catch (err) {
+      if (err.response?.data?.code === "verification_challenge_expired") {
+        clearVerification(challengeId);
+        onExpired();
+        return;
+      }
       setResendAfter(Number(err.response?.data?.retry_after || 0));
       setMessageType("error");
       setMessage(err.response?.data?.detail || t("Could not resend the verification code."));
@@ -119,6 +134,11 @@ export default function EmailVerificationModal({ onClose, onVerified, onCancelle
       clearVerification(challengeId);
       onCancelled();
     } catch (err) {
+      if (err.response?.data?.code === "verification_challenge_expired") {
+        clearVerification(challengeId);
+        onExpired();
+        return;
+      }
       setMessageType("error");
       setMessage(err.response?.data?.detail || t("Could not cancel verification."));
     } finally {

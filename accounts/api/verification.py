@@ -17,7 +17,7 @@ from accounts.services.challenges import (
 )
 from openspots.security import CsrfProtectedAPIViewMixin
 from .serializers import (
-    UserRegistrationSerializer, UserProfileSerializer, UserEmailUpdateSerializer,
+    UserRegistrationSerializer, UserProfileSerializer, UserNavigationSerializer, UserEmailUpdateSerializer,
     UserPasswordChangeSerializer, UserPasswordRecoverySerializer, UserPasswordResetSerializer,
     VerificationCodeSerializer,
 )
@@ -51,7 +51,7 @@ class RegisterAPIView(PublicChallengeView):
         return Response({
             "detail": "Account created. Please check your email for the verification code.",
             "requires_verification": True, "challenge_id": str(challenge.id),
-            "user": UserProfileSerializer(user).data,
+            "user": UserNavigationSerializer(user).data,
         }, status=status.HTTP_201_CREATED)
 
 
@@ -66,8 +66,9 @@ class EmailUpdateAPIView(generics.GenericAPIView):
         challenge = begin_challenge(
             request.user, VerificationReason.EMAIL_UPDATE, serializer.validated_data["email"],
             existing_id=challenge_id(request),
+            resume=True,
         )
-        code_sent = str(challenge.id) != str(challenge_id(request))
+        code_sent = challenge._code_sent
         return Response({
             "detail": "Verification code sent to your new email." if code_sent else "Email verification is already pending.",
             "code_sent": code_sent,
@@ -221,8 +222,13 @@ class ConfirmVerificationAPIView(PublicChallengeView):
             # Respect 2FA for signup; email verification must not bypass it.
             from .views import _has_two_factor_enabled
             if _has_two_factor_enabled(user):
-                return Response({"detail": "Email verified successfully. Please log in.", "user": UserProfileSerializer(user).data, "redirect_to": "/accounts/login"})
+                payload = {"detail": "Email verified successfully. Please log in.", "user": UserNavigationSerializer(user).data, "redirect_to": "/accounts/login"}
+                if challenge.reason == VerificationReason.EMAIL_UPDATE:
+                    payload["profile"] = UserProfileSerializer(user).data
+                return Response(payload)
             response = _login_response_for_user(request, user)
+            if challenge.reason == VerificationReason.EMAIL_UPDATE:
+                response.data["profile"] = UserProfileSerializer(user).data
             response.data["detail"] = "Email verified successfully."
             return response
         if challenge.reason == VerificationReason.PASSWORD_CHANGE:

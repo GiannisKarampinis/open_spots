@@ -21,6 +21,7 @@ from .serializers import (
     TwoFactorCodeSerializer,
     UserLoginSerializer,
     UserProfileSerializer,
+    UserNavigationSerializer,
 )
 from ..services.challenges import begin_challenge, get_challenge, close_challenge
 from accounts.models import DeviceSession
@@ -176,10 +177,12 @@ def _login_response_for_user(request, user):
     response = Response(
         {
             "access": tokens["access"],
-            "user": UserProfileSerializer(user).data,
+            "user": UserNavigationSerializer(user).data,
             "redirect_to": _default_redirect_for_user(user),
         }
     )
+    # Server-side HTML adapters need a stable identity; this is not response data.
+    response._authenticated_user_id = user.pk
     _set_refresh_cookie(response, tokens["refresh"])
     return response
 
@@ -437,6 +440,14 @@ class SocialLoginSessionAPIView(generics.GenericAPIView):
             return Response({"detail": "No authenticated social login session found."}, status=status.HTTP_401_UNAUTHORIZED)
 
         return _login_response_for_user(request, user)
+
+
+class NavigationUserAPIView(generics.RetrieveAPIView):
+    serializer_class = UserNavigationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
 
 
 class ProfileAPIView(generics.RetrieveUpdateAPIView):

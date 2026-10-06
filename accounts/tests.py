@@ -190,6 +190,9 @@ class AccountsAPITestCase(APITestCase):
         }
         response = self.client.post(self.register_url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["user"]["email"], "newapiuser@example.com")
-        self.assertEqual(response.data["user"]["username"], "newapiuser")
-        self.assertFalse(response.data["user"].get("email_verified", True))
+        self.assertEqual(response.data["user"], {
+            "username": "newapiuser", "full_name": "New User",
+        })
+        registered_user = get_user_model().objects.get(username="newapiuser")
+        self.assertEqual(registered_user.email, "newapiuser@example.com")
+        self.assertFalse(registered_user.email_verified)

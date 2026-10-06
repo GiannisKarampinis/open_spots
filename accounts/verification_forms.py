@@ -90,7 +90,7 @@ def confirm_code_view(request):
         if result.data.get("reset_token"):
             return credential_cookie(redirect("password_reset"), RESET_COOKIE, result.data["reset_token"])
         if result.data.get("access"):
-            user = get_user_model().objects.get(pk=result.data["user"]["id"])
+            user = get_user_model().objects.get(pk=result._authenticated_user_id)
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         if result.data.get("session_invalidated"):
             logout(request)

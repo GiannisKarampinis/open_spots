@@ -40,6 +40,48 @@ class VerificationChallengeTests(APITestCase):
     def confirm(self, code=None):
         return self.post("verification/confirm", {"code": self.code if code is None else code})
 
+    def test_expired_email_challenge_returns_restart_code_for_all_modal_actions(self):
+        challenge = self.start(VerificationReason.EMAIL_UPDATE, email="new@example.com")
+        VerificationChallenge.objects.filter(pk=challenge.pk).update(
+            expires_at=timezone.now() - timezone.timedelta(seconds=1),
+        )
+        responses = [self.client.get(BASE + "verification/status/")]
+        responses.extend(self.post("verification/" + action, {"code": self.code})
+                         for action in ("confirm", "resend", "cancel"))
+        for response in responses:
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.data["code"], "verification_challenge_expired")
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "user@example.com")
+
+    def test_email_update_retry_without_challenge_id_resumes_after_lost_response(self):
+        self.client.force_authenticate(self.user)
+        first = self.post("email/update", {"email": "new@example.com"})
+        self.assertEqual(first.status_code, 200)
+        self.assertTrue(first.data["code_sent"])
+        original_code_hash = VerificationChallenge.objects.get(pk=first.data["challenge_id"]).code_hash
+        retry = self.post("email/update", {"email": "NEW@example.com"})
+        self.assertEqual(retry.status_code, 200)
+        self.assertEqual(retry.data["challenge_id"], first.data["challenge_id"])
+        self.assertFalse(retry.data["code_sent"])
+        self.assertEqual(retry.data["detail"], "Email verification is already pending.")
+        self.assertEqual(self.mail.call_count, 1)
+        self.assertEqual(VerificationChallenge.objects.get(pk=first.data["challenge_id"]).code_hash, original_code_hash)
+        self.assertEqual(VerificationChallenge.objects.filter(user=self.user, closed_at__isnull=True).count(), 1)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "user@example.com")
+
+    def test_email_update_retry_does_not_resume_a_different_email_or_user(self):
+        self.client.force_authenticate(self.user)
+        first = self.post("email/update", {"email": "new@example.com"})
+        other_email = self.post("email/update", {"email": "different@example.com"})
+        self.assertEqual(other_email.status_code, 409)
+        other_user = User.objects.create_user(username="other-challenge-user", email="other@example.com", password="password", email_verified=True)
+        self.client.force_authenticate(other_user)
+        other = self.post("email/update", {"email": "new@example.com"})
+        self.assertEqual(other.status_code, 200)
+        self.assertNotEqual(other.data["challenge_id"], first.data["challenge_id"])
+
     def test_recovery_delivery_failure_has_uniform_response_and_can_retry(self):
         self.mail.side_effect = RuntimeError("SMTP unavailable")
         known = self.post("password/recover", {"email": self.user.email})

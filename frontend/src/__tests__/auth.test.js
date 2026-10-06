@@ -70,7 +70,27 @@ describe("refreshAccessToken", () => {
     });
 
     expect(getAccessToken()).toBe("memory-only-access");
-    expect(getCurrentUser()).toEqual({ id: 1, username: "apiuser" });
+    expect(getCurrentUser()).toEqual({ username: "apiuser" });
+  });
+
+  test("excludes private profile fields and unexpected secrets from the shared user cache", () => {
+    storeAuthResponse({
+      user: {
+        id: 1,
+        username: "apiuser",
+        full_name: "API User",
+        email: "user@example.com",
+        phone_number: "+306912345678",
+        unverified_email: "pending@example.com",
+        email_verified: true,
+        password: "must-not-be-cached",
+      },
+    });
+
+    expect(getCurrentUser()).toEqual({
+      username: "apiuser",
+      full_name: "API User",
+    });
   });
 
   test("does not clear a valid session when the retried request returns a non-401 error", async () => {
@@ -88,6 +108,6 @@ describe("refreshAccessToken", () => {
     });
 
     expect(getAccessToken()).toBe("rotated-access");
-    expect(getCurrentUser()).toEqual({ id: 1, username: "apiuser" });
+    expect(getCurrentUser()).toEqual({ username: "apiuser" });
   });
 });

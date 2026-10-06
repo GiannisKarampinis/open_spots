@@ -68,7 +68,7 @@ export default function Layout() {
     const syncAuth = () => setUser(getCurrentUser());
     window.addEventListener("auth:changed", syncAuth);
 
-    getWithAuth("/api/v1/accounts/profile/")
+    getWithAuth("/api/v1/accounts/navigation/")
       .then((res) => {
         if (cancelled || !res) return;
         storeAuthResponse({ user: res.data });
@@ -140,7 +140,9 @@ export default function Layout() {
     navigate("/accounts/login");
   };
 
-  const displayName = user?.full_name || user?.username || user?.email;
+  const displayName = user?.full_name
+    ? `${user.full_name} (${user.username})`
+    : user?.username;
 
   return (
     <>
