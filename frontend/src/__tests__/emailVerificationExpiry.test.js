@@ -14,7 +14,11 @@ jest.mock("react-i18next", () => {
   return { useTranslation: () => ({ t }), Trans: () => null };
 });
 jest.mock("../components/ToastProvider", () => ({
-  useToastMessage: () => ["", jest.fn(), "error", jest.fn()],
+  useToastMessage: () => {
+    const [message, setMessage] = require("react").useState("");
+    const [type, setType] = require("react").useState("error");
+    return [message, setMessage, type, setType];
+  },
 }));
 
 const expiredError = { response: { data: { code: "verification_challenge_expired" } } };
@@ -66,4 +70,40 @@ test("keeps a code-expired challenge available for resending", async () => {
   expect(onExpired).not.toHaveBeenCalled();
   expect(getVerificationChallenge()).toBe("expired-id");
   expect(screen.getByText("Resend Code")).not.toBeDisabled();
+});
+
+test("successful modal verification returns the profile to its parent", async () => {
+  axios.get.mockResolvedValue({ data: { remaining_seconds: 60 } });
+  const profile = { email: "new@example.com" };
+  postWithCsrf.mockResolvedValue({ data: { profile, detail: "Verified" } });
+  const onVerified = jest.fn();
+  await act(async () => root.render(<EmailVerificationModal challengeId="expired-id"
+    onExpired={onExpired} onVerified={onVerified} onClose={jest.fn()} onCancelled={jest.fn()} />));
+  await act(async () => fireEvent.change(screen.getByLabelText("Enter 6-digit code"), { target: { value: "123456" } }));
+  await act(async () => fireEvent.submit(screen.getByText("Verify Email").closest("form")));
+  expect(onVerified).toHaveBeenCalledWith(profile, "Verified");
+  expect(getVerificationChallenge()).toBe("");
+});
+
+test("resending clears the entered code and enforces the new cooldown", async () => {
+  axios.get.mockResolvedValue({ data: { remaining_seconds: 0, resend_after_seconds: 0 } });
+  postWithCsrf.mockResolvedValue({ data: { remaining_seconds: 600, resend_after_seconds: 60 } });
+  await renderModal();
+  await act(async () => fireEvent.change(screen.getByLabelText("Enter 6-digit code"), { target: { value: "a1234567" } }));
+  expect(screen.getByLabelText("Enter 6-digit code")).toHaveValue("123456");
+  await act(async () => fireEvent.click(screen.getByText("Resend Code")));
+  expect(screen.getByLabelText("Enter 6-digit code")).toHaveValue("");
+  expect(screen.getByText("Resend available in {{time}}")).toBeDisabled();
+  expect(screen.getByText("Verify Email")).not.toBeDisabled();
+});
+
+test("invalid codes preserve the challenge and allow another attempt", async () => {
+  axios.get.mockResolvedValue({ data: { remaining_seconds: 60 } });
+  postWithCsrf.mockRejectedValue({ response: { data: { detail: "Invalid verification code." } } });
+  await renderModal();
+  await act(async () => fireEvent.change(screen.getByLabelText("Enter 6-digit code"), { target: { value: "123456" } }));
+  await act(async () => fireEvent.submit(screen.getByText("Verify Email").closest("form")));
+  expect(onExpired).not.toHaveBeenCalled();
+  expect(getVerificationChallenge()).toBe("expired-id");
+  expect(screen.getByText("Verify Email")).not.toBeDisabled();
 });

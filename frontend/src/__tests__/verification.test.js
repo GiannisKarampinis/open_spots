@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { fireEvent, screen } from "@testing-library/dom";
 import axios from "axios";
 import { postWithCsrf } from "../utils/csrf";
-import { getWithAuth } from "../utils/auth";
+import { getWithAuth, clearStoredAuth, storeAuthResponse } from "../utils/auth";
 import { getVerificationChallenge, rememberVerification, getResetToken } from "../utils/verification";
 import ProfilePage from "../pages/ProfilePage";
 import VerifyEmailPage from "../pages/VerifyEmailPage";
@@ -74,6 +74,42 @@ function mockProfileCheck(check) {
     return check(config, options);
   });
 }
+
+test("password verification clears authentication and redirects after success", async () => {
+  rememberVerification({ challenge_id: "password-challenge" });
+  axios.get.mockResolvedValue({ data: { reason: VerificationReason.PASSWORD_CHANGE, remaining_seconds: 600 } });
+  postWithCsrf.mockResolvedValue({ data: { session_invalidated: true, redirect_to: "/accounts/login" } });
+  await act(async () => root.render(<VerifyEmailPage />));
+  await act(async () => fireEvent.change(screen.getByPlaceholderText("Enter 6-digit code"), { target: { value: "123456" } }));
+  await act(async () => fireEvent.submit(screen.getByText("Verify").closest("form")));
+  expect(clearStoredAuth).toHaveBeenCalledTimes(1);
+  expect(getVerificationChallenge()).toBe("");
+  await act(async () => jest.advanceTimersByTime(700));
+  expect(mockNavigate).toHaveBeenCalledWith("/accounts/login");
+});
+
+test("signup verification stores authentication and follows the server redirect", async () => {
+  rememberVerification({ challenge_id: "signup-challenge" });
+  axios.get.mockResolvedValue({ data: { reason: VerificationReason.SIGNUP, remaining_seconds: 600 } });
+  const result = { access: "access-token", user: { username: "member" }, redirect_to: "/venues/my-reservations" };
+  postWithCsrf.mockResolvedValue({ data: result });
+  await act(async () => root.render(<VerifyEmailPage />));
+  await act(async () => fireEvent.change(screen.getByPlaceholderText("Enter 6-digit code"), { target: { value: "123456" } }));
+  await act(async () => fireEvent.submit(screen.getByText("Verify").closest("form")));
+  expect(storeAuthResponse).toHaveBeenCalledWith(result);
+  await act(async () => jest.advanceTimersByTime(700));
+  expect(mockNavigate).toHaveBeenCalledWith(result.redirect_to);
+});
+
+test("completed recovery resumes the password reset page with its stored proof", async () => {
+  const { rememberResetToken } = require("../utils/verification");
+  rememberResetToken("existing-proof", "recovery-challenge");
+  axios.get.mockResolvedValue({ data: { verified: true, reason: VerificationReason.PASSWORD_RECOVERY } });
+  await act(async () => root.render(<VerifyEmailPage />));
+  expect(mockNavigate).toHaveBeenCalledWith("/accounts/reset-password");
+  expect(getResetToken()).toBe("existing-proof");
+  expect(postWithCsrf).not.toHaveBeenCalled();
+});
 
 test("profile verification redirects when authentication refresh fails", async () => {
   mockProfileCheck((_config, options) => {
