@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCalendarDays, faUsers, faPenToSquare, faXmark, faClockRotateLeft, faBan } from "@fortawesome/free-solid-svg-icons";
 import { getWithAuth, postWithAuth } from "../utils/auth";
 import "../styles/my_reservations.css";
 
@@ -46,35 +48,36 @@ function ReservationList({ reservations, onCancel }) {
 
         return (
           <li className="reservation-card" key={reservation.id}>
-            <div className="reservation-info">
-              <strong>
+            <div className="reservation-card-header">
+              <strong className="reservation-card-title">
                 {t("Reservation at")}: {venueName}
               </strong>
-              <br />
+            </div>
 
+            <div className="reservation-info">
+              <div className="reservation-details">
               <span>
-                📅 {t("Date")}: {reservation.date}{" "}
+                <FontAwesomeIcon icon={faCalendarDays} aria-hidden="true" /> {t("Date")}: {reservation.date}{" "}
                 {String(reservation.time || "").slice(0, 5)}
               </span>
               <br />
 
               <span>
-                👥 {t("Guests")}: {reservation.guests}
+                <FontAwesomeIcon icon={faUsers} aria-hidden="true" /> {t("Guests")}: {reservation.guests}
               </span>
               <br />
 
               <span className={`status-badge ${reservation.status}`}>
                 {t("Status")}: {getStatusLabel(reservation.status, t)}
               </span>
-            </div>
-
+              </div>
             {reservation.status !== "cancelled" && isUpcoming(reservation) && (
               <div className="reservation-actions">
                 <Link
                   to={`/venues/reservations/${reservation.id}/edit`}
                   className="edit-btn"
                 >
-                  ✎ {t("Edit")}
+                  <FontAwesomeIcon icon={faPenToSquare} aria-hidden="true" /> {t("Edit")}
                 </Link>
 
                 <button
@@ -82,10 +85,13 @@ function ReservationList({ reservations, onCancel }) {
                   className="cancel-btn"
                   onClick={() => onCancel(reservation.id)}
                 >
-                  × {t("Cancel")}
+                  <FontAwesomeIcon icon={faXmark} aria-hidden="true" /> {t("Cancel")}
                 </button>
               </div>
             )}
+            </div>
+
+
           </li>
         );
       })}
@@ -159,9 +165,9 @@ export default function MyReservationsPage() {
   };
 
   const tabs = [
-    ["upcoming", `📅 ${t("Upcoming")}`],
-    ["past", `↺ ${t("Past")}`],
-    ["cancelled", `⊘ ${t("Cancelled")}`],
+    ["upcoming", t("Upcoming"), faCalendarDays],
+    ["past", t("Past"), faClockRotateLeft],
+    ["cancelled", t("Cancelled"), faBan],
   ];
 
   return (
@@ -171,13 +177,14 @@ export default function MyReservationsPage() {
       {message && <p className="auth-message error">{message}</p>}
 
       <div className="tabs">
-        {tabs.map(([id, label]) => (
+        {tabs.map(([id, label, icon]) => (
           <button
             key={id}
             className={`tab-button ${activeTab === id ? "active" : ""}`}
             type="button"
             onClick={() => setActiveTab(id)}
           >
+            <FontAwesomeIcon icon={icon} aria-hidden="true" />
             {label}
           </button>
         ))}
