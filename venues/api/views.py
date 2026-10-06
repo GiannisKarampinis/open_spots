@@ -664,8 +664,10 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({"error": "Invalid date format"}, status=status.HTTP_400_BAD_REQUEST)
 
         slots = venue.get_available_time_slots(selected_date)
+        now = timezone.localtime(timezone.now(), timezone.get_default_timezone())
         payload = [
             {
+                "starts_at": timezone.make_aware(datetime.combine(slot["slot_date"], slot["time"]), timezone.get_default_timezone()).isoformat(),
                 "time": slot["time"].strftime("%H:%M"),
                 "slot_date": slot["slot_date"].isoformat(),
                 "is_next_day": slot["is_next_day"],
@@ -675,6 +677,7 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
                 "is_available": slot["is_available"],
             }
             for slot in slots
+            if (slot["slot_date"], slot["time"]) >= (now.date(), now.time())
         ]
         return Response({"business_date": selected_date.isoformat(), "slots": payload})
 

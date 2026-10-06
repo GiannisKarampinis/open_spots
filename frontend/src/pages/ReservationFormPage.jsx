@@ -9,6 +9,8 @@ import {
 } from "../utils/auth";
 import "../styles/make_reservation.css";
 import "../styles/edit_reservation.css";
+import useReservationClock from "../hooks/useReservationClock";
+import { isReservationUpcoming } from "../utils/reservationTime";
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
@@ -123,6 +125,12 @@ export default function ReservationFormPage({ mode = "create" }) {
   const [venue, setVenue] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [slots, setSlots] = useState([]);
+  const [slotRequest, setSlotRequest] = useState({ key: "", loading: true, failed: false });
+  const slotVenueId = mode === "edit" ? venue?.id : venueId;
+  const slotRequestKey = `${slotVenueId || ""}:${form.date}`;
+  const slotsLoading = slotRequest.loading || slotRequest.key !== slotRequestKey;
+  const now = useReservationClock(slots);
+  const visibleSlots = slots.filter((slot) => isReservationUpcoming(slot, now));
   const [message, setMessage] = useToastMessage("error");
   const [submitting, setSubmitting] = useState(false);
 
@@ -193,6 +201,9 @@ export default function ReservationFormPage({ mode = "create" }) {
 
     let cancelled = false;
 
+    setSlots([]);
+    setSlotRequest({ key: slotRequestKey, loading: true, failed: false });
+
     getWithAuth(
       `/api/v1/venues/${id}/slots/`,
       { params: { date: form.date } },
@@ -201,16 +212,22 @@ export default function ReservationFormPage({ mode = "create" }) {
       .then((res) => {
         if (!cancelled && res) {
           setSlots((res.data.slots || []).filter((slot) => slot.is_available));
+          setSlotRequest({ key: slotRequestKey, loading: false, failed: false });
+        } else if (!cancelled) {
+          setSlotRequest({ key: slotRequestKey, loading: false, failed: true });
         }
       })
       .catch(() => {
-        if (!cancelled) setSlots([]);
+        if (!cancelled) {
+          setSlots([]);
+          setSlotRequest({ key: slotRequestKey, loading: false, failed: true });
+        }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [form.date, mode, navigate, venue?.id, venueId]);
+  }, [form.date, mode, navigate, venue?.id, venueId, slotRequestKey]);
 
   const updateField = (event) => {
     setForm((current) => ({
@@ -373,12 +390,16 @@ export default function ReservationFormPage({ mode = "create" }) {
           </label>
         </p>
 
-        <p>
+        <div className="reservation-time-field">
           <label>
             {t("Time")}
             <div className="venue-detail-slots time-slot-container">
-              {slots.length ? (
-                slots.map((slot) => (
+              {slotsLoading ? (
+                <span role="status">{t("Loading...")}</span>
+              ) : slotRequest.failed ? (
+                <span role="alert">{t("Could not load available times. Please try again.")}</span>
+              ) : visibleSlots.length ? (
+                visibleSlots.map((slot) => (
                   <button
                     type="button"
                     key={`${slot.slot_date}-${slot.time}`}
@@ -395,11 +416,11 @@ export default function ReservationFormPage({ mode = "create" }) {
                   </button>
                 ))
               ) : (
-                <p>{t("No available times for this date.")}</p>
+                <span>{t("No available times for this date.")}</span>
               )}
             </div>
           </label>
-        </p>
+        </div>
 
         <p>
           <label>
@@ -469,10 +490,12 @@ export default function ReservationFormPage({ mode = "create" }) {
           </label>
         </p>
 
+        <div className="reservation-form-actions" style={mode === "edit" ? undefined : { display: "contents" }}>
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           disabled={submitting}
+          aria-busy={submitting}
         >
           {submitting
             ? t("Saving...")
@@ -493,6 +516,7 @@ export default function ReservationFormPage({ mode = "create" }) {
           {" "}
           {t("Back")}
         </button>
+        </div>
       </form>
     </div>
   );

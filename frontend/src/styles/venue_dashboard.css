@@ -987,8 +987,8 @@
 
 #requests .table-responsive .paginate_button,
 #history .table-responsive .paginate_button,
-#requests .table-responsive tbody .btn,
-#history .table-responsive tbody .btn {
+#requests .table-responsive tbody .btn:not(.btn-accept-reservation):not(.btn-reject-reservation),
+#history .table-responsive tbody .btn:not(.btn-accept-reservation):not(.btn-reject-reservation) {
   background-color: var(--data-control-button-color);
   border-color: var(--data-control-button-color);
   color: var(--button-text);
@@ -996,8 +996,8 @@
 
 #requests .table-responsive .paginate_button:hover:not(:disabled),
 #history .table-responsive .paginate_button:hover:not(:disabled),
-#requests .table-responsive tbody .btn:hover,
-#history .table-responsive tbody .btn:hover {
+#requests .table-responsive tbody .btn:not(.btn-accept-reservation):not(.btn-reject-reservation):hover,
+#history .table-responsive tbody .btn:not(.btn-accept-reservation):not(.btn-reject-reservation):hover {
   background-color: var(--primary-hover);
   border-color: var(--primary-hover);
   color: var(--button-text);
@@ -1140,4 +1140,35 @@
   .venue-dashboard-message__timer {
     animation: none;
   }
+}
+
+/* Keep reservation decisions distinct from the neutral table controls. */
+#venue-dashboard .btn.btn-accept-reservation,
+#reservationDetailsModal .btn.btn-accept-reservation {
+  background: #28a745;
+  color: #fff;
+  border-color: #28a745;
+}
+
+#venue-dashboard .btn.btn-reject-reservation,
+#reservationDetailsModal .btn.btn-reject-reservation {
+  background: #dc3545;
+  color: #fff;
+  border-color: #dc3545;
+}
+
+#venue-dashboard .btn.btn-accept-reservation:hover:not(:disabled),
+#reservationDetailsModal .btn.btn-accept-reservation:hover:not(:disabled) {
+  background: #218838;
+  border-color: #218838;
+}
+
+#venue-dashboard .btn.btn-reject-reservation:hover:not(:disabled),
+#reservationDetailsModal .btn.btn-reject-reservation:hover:not(:disabled) {
+  background: #c82333;
+  border-color: #c82333;
+}
+
+#venue-dashboard .table-responsive .table tbody tr.unseen-reservation > td {
+  color: #fff;
 }
