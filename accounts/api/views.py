@@ -200,7 +200,7 @@ class LoginAPIView(CsrfProtectedAPIViewMixin, generics.GenericAPIView):
 
         authenticated_user = serializer.validated_data["user"]
         user = User.objects.select_for_update().get(pk=authenticated_user.pk)
-        if not user.is_active or user.password != authenticated_user.password:
+        if not user.is_active or user.password != authenticated_user.password: # they are hashes, not text passwords
             raise AuthenticationFailed("The account changed. Please log in again.")
         is_google_user  = user.socialaccount_set.filter(provider="google").exists()
 

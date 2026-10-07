@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useToastMessage } from "../components/ToastProvider";
 import {
@@ -121,6 +121,10 @@ export default function ReservationFormPage({ mode = "create" }) {
   const { t } = useTranslation();
   const { venueId, reservationId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const loginPath = `/accounts/login?next=${encodeURIComponent(
+    `${location.pathname}${location.search}`
+  )}`;
 
   const [venue, setVenue] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -142,7 +146,7 @@ export default function ReservationFormPage({ mode = "create" }) {
         const res = await getWithAuth(
           `/api/v1/reservations/${reservationId}/`,
           {},
-          { onUnauthenticated: () => navigate("/accounts/login") }
+          { onUnauthenticated: () => navigate(loginPath) }
         );
 
         if (!res || cancelled) return;
@@ -174,7 +178,7 @@ export default function ReservationFormPage({ mode = "create" }) {
         const res = await getWithAuth(
           `/api/v1/venues/${venueId}/`,
           {},
-          { onUnauthenticated: () => navigate("/accounts/login") }
+          { onUnauthenticated: () => navigate(loginPath) }
         );
 
         if (!res || cancelled) return;
@@ -207,7 +211,7 @@ export default function ReservationFormPage({ mode = "create" }) {
     getWithAuth(
       `/api/v1/venues/${id}/slots/`,
       { params: { date: form.date } },
-      { onUnauthenticated: () => navigate("/accounts/login") }
+      { onUnauthenticated: () => navigate(loginPath) }
     )
       .then((res) => {
         if (!cancelled && res) {
@@ -279,14 +283,14 @@ export default function ReservationFormPage({ mode = "create" }) {
           `/api/v1/reservations/${reservationId}/`,
           basePayload,
           {},
-          { onUnauthenticated: () => navigate("/accounts/login") }
+          { onUnauthenticated: () => navigate(loginPath) }
         );
       } else {
         res = await postWithAuth(
           "/api/v1/reservations/",
           createPayload,
           {},
-          { onUnauthenticated: () => navigate("/accounts/login") }
+          { onUnauthenticated: () => navigate(loginPath) }
         );
       }
 

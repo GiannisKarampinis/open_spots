@@ -1,8 +1,7 @@
 import "./App.css";
 import Layout from "./layouts/Layout";
 
-import { useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import VenuesPage from "./pages/VenuesPage";
 import VenueDetailPage from "./pages/VenueDetailPage";
@@ -22,33 +21,9 @@ import ReservationFormPage from "./pages/ReservationFormPage";
 import ConfirmCancelPage from "./pages/ConfirmCancelPage";
 import SocialLoginCompletePage from "./pages/SocialLoginCompletePage";
 
-function RememberLastPage() {
-  const location = useLocation();
-
-  useEffect(() => {
-    const path = `${location.pathname}${location.search}`;
-
-    const isAuthPage =
-      path.startsWith("/accounts/login") ||
-      path.startsWith("/accounts/signup") ||
-      path.startsWith("/accounts/password-recover") ||
-      path.startsWith("/accounts/reset-password") ||
-      path.startsWith("/accounts/verify-email") ||
-      path.startsWith("/accounts/social-login-complete");
-
-    if (!isAuthPage) {
-      sessionStorage.setItem("redirectAfterLogin", path);
-    }
-  }, [location]);
-
-  return null;
-}
-
 export default function App() {
   return (
     <>
-      <RememberLastPage />
-
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<VenuesPage />} />
