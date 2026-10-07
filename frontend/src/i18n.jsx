@@ -270,10 +270,8 @@ const resources = {
       "Party Size:": "Party Size:",
       "Message": "Message",
       "About Us": "About Us",
-      "By developing real-time booking technology, we redefine reservations for hospitality venues. Our mission is simple: make bookings seamless for customers, while structured, reliable, and measurable for businesses.":
-        "By developing real-time booking technology, we redefine reservations for hospitality venues. Our mission is simple: make bookings seamless for customers, while structured, reliable, and measurable for businesses.",
-      "OpenSpots is designed to manage reservations for on-site experiences — giving businesses full visibility over availability, demand, and customer flow, while offering customers a smooth way to secure their spot.":
-        "OpenSpots is designed to manage reservations for on-site experiences — giving businesses full visibility over availability, demand, and customer flow, while offering customers a smooth way to secure their spot.",
+      "By developing real-time booking technology, we redefine reservations for hospitality venues. Our mission is simple: make bookings seamless for customers, while structured, reliable, and measurable for businesses. OpenSpots is designed to manage reservations for on-site experiences, giving businesses control over availability, demand, and customer interaction, while offering guests a smooth way to secure their spot.":
+        "By developing real-time booking technology, we redefine reservations for hospitality venues. Our mission is simple: make bookings seamless for customers, while structured, reliable, and measurable for businesses. OpenSpots is designed to manage reservations for on-site experiences, giving businesses control over availability, demand, and customer interaction, while offering guests a smooth way to secure their spot.",
       "Our Core Principles": "Our Core Principles",
       "Real-time availability": "Real-time availability",
       "management": "management",
@@ -287,10 +285,8 @@ const resources = {
       "insight": "insight",
       "Converting booking activity into clear, usable information that supports forecasting, performance analysis, and smarter business decisions.":
         "Converting booking activity into clear, usable information that supports forecasting, performance analysis, and smarter business decisions.",
-      "At OpenSpots, we see bookings not simply as confirmations, but as a critical layer of business infrastructure — connecting physical spaces with digital access in a controlled and measurable way.":
-        "At OpenSpots, we see bookings not simply as confirmations, but as a critical layer of business infrastructure — connecting physical spaces with digital access in a controlled and measurable way.",
-      "Our objective is to provide a stable, adaptable, and modern system that supports growth while maintaining operational clarity.":
-        "Our objective is to provide a stable, adaptable, and modern system that supports growth while maintaining operational clarity.",
+      "At OpenSpots, we see bookings not simply as confirmations, but as a critical layer of business infrastructure, connecting physical spaces with digital access in a controlled and measurable way. Our objective is to provide a stable, adaptable, and modern system that supports growth while maintaining operational clarity.":
+        "At OpenSpots, we see bookings not simply as confirmations, but as a critical layer of business infrastructure, connecting physical spaces with digital access in a controlled and measurable way. Our objective is to provide a stable, adaptable, and modern system that supports growth while maintaining operational clarity.",
       "Verify Your Email": "Verify Your Email",
       "Please enter the 6-digit code we sent to email.": "Please enter the 6-digit code we sent to <strong>{{email}}</strong>.",
       "Please enter the 6-digit code we sent to your email address.": "Please enter the 6-digit code we sent to your email address.",
@@ -855,9 +851,8 @@ const resources = {
       "Party Size:": "Αριθμός ατόμων:",
       "Message": "Μήνυμα",
       "About Us": "Σχετικά με εμάς",
-      "By developing real-time booking technology, we redefine reservations for hospitality venues. Our mission is simple: make bookings seamless for customers, while structured, reliable, and measurable for businesses.":"Αναπτύσσοντας τεχνολογία κρατήσεων σε πραγματικό χρόνο, επαναπροσδιορίζουμε τις κρατήσεις για χώρους φιλοξενίας. Η αποστολή μας είναι απλή: να κάνουμε τις κρατήσεις εύκολες για τους πελάτες και ταυτόχρονα οργανωμένες, αξιόπιστες και μετρήσιμες για τις επιχειρήσεις.",
-      "OpenSpots is designed to manage reservations for on-site experiences — giving businesses full visibility over availability, demand, and customer flow, while offering customers a smooth way to secure their spot.":
-        "Το OpenSpots έχει σχεδιαστεί για τη διαχείριση κρατήσεων σε χώρους φυσικής παρουσίας, δίνοντας στις επιχειρήσεις πλήρη εικόνα της διαθεσιμότητας, της ζήτησης και της ροής πελατών, ενώ προσφέρει στους πελάτες έναν εύκολο τρόπο να εξασφαλίσουν τη θέση τους.",
+      "By developing real-time booking technology, we redefine reservations for hospitality venues. Our mission is simple: make bookings seamless for customers, while structured, reliable, and measurable for businesses. OpenSpots is designed to manage reservations for on-site experiences, giving businesses control over availability, demand, and customer interaction, while offering guests a smooth way to secure their spot.":
+        "Αναπτύσσοντας τεχνολογία κρατήσεων σε πραγματικό χρόνο, επαναπροσδιορίζουμε τις κρατήσεις για χώρους φιλοξενίας. Η αποστολή μας είναι απλή: να κάνουμε τις κρατήσεις εύκολες για τους πελάτες και ταυτόχρονα οργανωμένες, αξιόπιστες και μετρήσιμες για τις επιχειρήσεις. Το OpenSpots έχει σχεδιαστεί για τη διαχείριση κρατήσεων σε χώρους φυσικής παρουσίας, δίνοντας στις επιχειρήσεις πλήρη εικόνα της διαθεσιμότητας, της ζήτησης και της ροής πελατών, ενώ προσφέρει στους πελάτες έναν εύκολο τρόπο να εξασφαλίσουν τη θέση τους.",
       "Our Core Principles": "Οι βασικές μας αρχές",
       "Real-time availability": "Διαχείρηση διαθεσιμότητας",
       "management": "σε πραγματικό χρόνο",
@@ -871,10 +866,8 @@ const resources = {
       "insight": "πληροφόρηση",
       "Converting booking activity into clear, usable information that supports forecasting, performance analysis, and smarter business decisions.":
         "Μετατρέπουμε τη δραστηριότητα των κρατήσεων σε ξεκάθαρη και χρήσιμη πληροφορία που υποστηρίζει προβλέψεις, ανάλυση απόδοσης και πιο έξυπνες επιχειρηματικές αποφάσεις.",
-      "At OpenSpots, we see bookings not simply as confirmations, but as a critical layer of business infrastructure — connecting physical spaces with digital access in a controlled and measurable way.":
-        "Στο OpenSpots, βλέπουμε τις κρατήσεις όχι απλώς ως επιβεβαιώσεις, αλλά ως ένα κρίσιμο επίπεδο επιχειρηματικής υποδομής, συνδέοντας τους φυσικούς χώρους με την ψηφιακή πρόσβαση με ελεγχόμενο και μετρήσιμο τρόπο.",
-      "Our objective is to provide a stable, adaptable, and modern system that supports growth while maintaining operational clarity.":
-        "Στόχος μας είναι να προσφέρουμε ένα σταθερό, προσαρμόσιμο και σύγχρονο σύστημα που υποστηρίζει την ανάπτυξη, διατηρώντας παράλληλα λειτουργική σαφήνεια.",
+      "At OpenSpots, we see bookings not simply as confirmations, but as a critical layer of business infrastructure, connecting physical spaces with digital access in a controlled and measurable way. Our objective is to provide a stable, adaptable, and modern system that supports growth while maintaining operational clarity.":
+        "Στο OpenSpots, βλέπουμε τις κρατήσεις όχι απλώς ως επιβεβαιώσεις, αλλά ως ένα κρίσιμο επίπεδο επιχειρηματικής υποδομής, συνδέοντας τους φυσικούς χώρους με την ψηφιακή πρόσβαση με ελεγχόμενο και μετρήσιμο τρόπο. Στόχος μας είναι να προσφέρουμε ένα σταθερό, προσαρμόσιμο και σύγχρονο σύστημα που υποστηρίζει την ανάπτυξη, διατηρώντας παράλληλα λειτουργική σαφήνεια.",
         "Verify Your Email": "Επαλήθευση email",
       "Please enter the 6-digit code we sent to email.": "Πληκτρολόγησε τον 6ψήφιο κωδικό που στείλαμε στο <strong>{{email}}</strong>.",
       "Please enter the 6-digit code we sent to your email address.": "Πληκτρολόγησε τον 6ψήφιο κωδικό που στείλαμε στο email σου.",
