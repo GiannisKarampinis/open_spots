@@ -1,3 +1,4 @@
+import FormSelect from "../components/FormSelect";
 import { getRequiredFieldErrors, passwordsMatch } from "../utils/formValidation";
 import { useCallback, useEffect, useRef, useState }   from "react";
 import { useNavigate }        from "react-router-dom";
@@ -347,7 +348,9 @@ export default function ApplyVenuePage() {
 
       <form id="apply-venue-form" className="openspots-form-fields" onSubmit={submit} autoComplete="off" noValidate>
       
-        <div className="section-body openspots-form-fields">
+        <fieldset className="apply-form-group">
+          <legend>{t("Owner")}</legend>
+          <div className="openspots-form-fields">
           {fields.slice(0, 3).map(([name, label, type]) => (
             <div className="openspots-form-field" key={name}>
               <label htmlFor={name}>
@@ -408,7 +411,34 @@ export default function ApplyVenuePage() {
 
           </div>
 
-          {fields.slice(3).map(([name, label, type]) => (
+          {fields.slice(3, 6).map(([name, label, type]) => (
+            <div className={`openspots-form-field${name === "password2" ? " apply-confirm-password-field" : ""}`} key={name}>
+              <label htmlFor={name}>
+                {t(label)}
+                {requiredFields.includes(name) && <span className="text-danger">*</span>}
+              </label>
+
+              <input
+                id={name}
+                name={name}
+                type={type}
+                autoComplete={type === "password" ? "new-password" : "off"}
+                value={form[name]}
+                onChange={updateField}
+                required={requiredFields.includes(name)}
+                aria-invalid={fieldErrors(errors, name).length > 0}
+              />
+
+              <ul className="errorlist">{renderErrors(name)}</ul>
+            </div>
+          ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="apply-form-group">
+          <legend>{t("Venue information")}</legend>
+          <div className="openspots-form-fields">
+          {fields.slice(6).map(([name, label, type]) => (
             <div className="openspots-form-field" key={name}>
               <label htmlFor={name}>
                 {t(label)}
@@ -429,7 +459,6 @@ export default function ApplyVenuePage() {
               <ul className="errorlist">{renderErrors(name)}</ul>
             </div>
           ))}
-        </div>
 
         <div className="openspots-form-field">
           <label htmlFor="venue_type">
@@ -437,20 +466,24 @@ export default function ApplyVenuePage() {
             <span className="text-danger">*</span>
           </label>
 
-          <select
+          <FormSelect
             id="venue_type"
             name="venue_type"
             value={form.venue_type}
             onChange={updateField}
-          >
-            <option value="restaurant">{t("Restaurant")}</option>
-            <option value="cafe">{t("Cafe")}</option>
-            <option value="bar">{t("Bar")}</option>
-            <option value="beach_bar">{t("Beach Bar")}</option>
-            <option value="other">{t("Other")}</option>
-          </select>
+            disabled={submitting}
+            invalid={fieldErrors(errors, "venue_type").length > 0}
+            describedBy="venue-type-errors"
+            options={[
+              { value: "restaurant", label: t("Restaurant") },
+              { value: "cafe", label: t("Cafe") },
+              { value: "bar", label: t("Bar") },
+              { value: "beach_bar", label: t("Beach Bar") },
+              { value: "other", label: t("Other") },
+            ]}
+          />
 
-          <ul className="errorlist">{renderErrors("venue_type")}</ul>
+          <ul id="venue-type-errors" className="errorlist">{renderErrors("venue_type")}</ul>
         </div>
 
         <div className="openspots-form-field apply-location-field">
@@ -503,6 +536,9 @@ export default function ApplyVenuePage() {
 
           <ul className="errorlist">{renderErrors("description")}</ul>
         </div>
+
+          </div>
+        </fieldset>
 
         {submissionError && (
           <div className="alert alert-error apply-submission-error" role="alert">

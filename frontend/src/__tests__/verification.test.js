@@ -424,3 +424,22 @@ test("venue password confirmation follows backend trimming", async () => {
   expect(screen.queryByText("Password fields did not match.")).toBeNull();
   expect(document.getElementById("admin-email-errors")).toHaveTextContent("You must verify this email before submitting the application.");
 });
+
+
+test("venue dropdown offers styled options and updates selection with mouse and keyboard", async () => {
+  await act(async () => root.render(<ApplyVenuePage />));
+  const dropdown = screen.getByRole("combobox", { name: /Venue type/ });
+  await act(async () => fireEvent.click(dropdown));
+  expect(screen.getByRole("listbox")).toHaveClass("openspots-form-select-menu");
+  await act(async () => fireEvent.click(screen.getByRole("option", { name: "Cafe" })));
+  expect(dropdown).toHaveTextContent("Cafe");
+  expect(screen.queryByRole("listbox")).toBeNull();
+  await act(async () => fireEvent.keyDown(dropdown, { key: "ArrowDown" }));
+  await act(async () => fireEvent.keyDown(dropdown, { key: "End" }));
+  await act(async () => fireEvent.keyDown(dropdown, { key: "Enter" }));
+  expect(dropdown).toHaveTextContent("Other");
+  expect(document.querySelector('input[name="venue_type"]')).toHaveValue("other");
+  await act(async () => fireEvent.click(dropdown));
+  await act(async () => fireEvent.keyDown(dropdown, { key: "Escape" }));
+  expect(dropdown).toHaveAttribute("aria-expanded", "false");
+});
