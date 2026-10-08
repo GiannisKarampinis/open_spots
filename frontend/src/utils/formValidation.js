@@ -19,3 +19,7 @@ export function getRequiredFieldErrors(
 
   return errors;
 }
+
+export function passwordsMatch(password, confirmation) {
+  return password.trim() === confirmation.trim();
+}

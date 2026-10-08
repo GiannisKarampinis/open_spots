@@ -1,4 +1,4 @@
-import { getRequiredFieldErrors } from "../utils/formValidation";
+import { getRequiredFieldErrors, passwordsMatch } from "../utils/formValidation";
 import { useCallback, useEffect, useRef, useState }   from "react";
 import { useNavigate }        from "react-router-dom";
 import { useTranslation }     from "react-i18next";
@@ -261,7 +261,7 @@ export default function ApplyVenuePage() {
       return;
     }
 
-    if (form.password.trim() !== form.password2.trim()) {
+    if (!passwordsMatch(form.password, form.password2)) {
       setErrors({
         password2: [t("Password fields did not match.")],
       });

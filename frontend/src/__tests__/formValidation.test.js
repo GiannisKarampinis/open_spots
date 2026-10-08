@@ -1,4 +1,4 @@
-import { validateReservationForm, getRequiredFieldErrors } from "../utils/formValidation.js";
+import { validateReservationForm, getRequiredFieldErrors, passwordsMatch } from "../utils/formValidation.js";
 
 describe("validateReservationForm", () => {
   test("returns false if any field is empty", () => {
@@ -25,5 +25,17 @@ describe("getRequiredFieldErrors", () => {
     const form = { name: " Alex ", password: "  My passphrase!  ", guests: 0 };
     expect(getRequiredFieldErrors(form, ["name", "password", "guests"])).toEqual({});
     expect(form.password).toBe("  My passphrase!  ");
+  });
+});
+
+
+describe("passwordsMatch", () => {
+  test("ignores outer whitespace like the backend", () => {
+    expect(passwordsMatch("  My passphrase!  ", "My passphrase!")).toBe(true);
+  });
+
+  test("preserves internal spaces and letter case", () => {
+    expect(passwordsMatch("My passphrase!", "Mypassphrase!")).toBe(false);
+    expect(passwordsMatch("My passphrase!", "my passphrase!")).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { getRequiredFieldErrors } from "../utils/formValidation";
+import { getRequiredFieldErrors, passwordsMatch } from "../utils/formValidation";
 import { VerificationReason } from "../utils/verificationReasons";
 import { rememberVerification, verificationConfig } from "../utils/verification";
 import { useCallback, useEffect, useState } from "react";
@@ -465,7 +465,7 @@ export default function ProfilePage() {
       return;
     }
 
-    if (passwordForm.new_password1.trim() !== passwordForm.new_password2.trim()) {
+    if (!passwordsMatch(passwordForm.new_password1, passwordForm.new_password2)) {
       setPasswordErrors({ new_password2: t("The new passwords do not match.") });
       return;
     }

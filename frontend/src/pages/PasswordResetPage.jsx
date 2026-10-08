@@ -1,4 +1,4 @@
-import { getRequiredFieldErrors } from "../utils/formValidation";
+import { getRequiredFieldErrors, passwordsMatch } from "../utils/formValidation";
 import { getVerificationChallenge, getResetToken, clearVerification, verificationConfig } from "../utils/verification";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -42,7 +42,7 @@ export default function PasswordResetPage() {
       return;
     }
 
-    if (form.new_password1.trim() !== form.new_password2.trim()) {
+    if (!passwordsMatch(form.new_password1, form.new_password2)) {
       setType("error");
       setMessage(t("Passwords do not match."));
       return;
