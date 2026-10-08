@@ -364,12 +364,14 @@ def _upcoming_reservation_payload(request):
     if not user.is_authenticated:
         return None
 
+    now = timezone.localtime(timezone.now(), timezone.get_default_timezone())
+
     reservation = (
         Reservation.objects
         .filter(
             user=user,
-            date__gte=timezone.localdate(),
         )
+        .filter(Q(date__gt=now.date()) | Q(date=now.date(), time__gte=now.time()))
         .exclude(status__in=["cancelled", "rejected"])
         .select_related("venue")
         .order_by("date", "time")
@@ -383,6 +385,7 @@ def _upcoming_reservation_payload(request):
 
     return {
         "id": reservation.id,
+        "starts_at": reservation.starts_at.isoformat(),
         "date": reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
         "time": reservation.time.strftime("%H:%M") if reservation.time else None,
         "table_number": getattr(reservation, "table_number", None),
@@ -726,14 +729,16 @@ class ReservationViewSet(viewsets.ModelViewSet):
         reservation = serializer.save(user=self.request.user)
         transaction.on_commit(lambda: send_reservation_notification(reservation))
 
-    def partial_update(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         reservation = self.get_object()
+        if not reservation.is_upcoming():
+            return Response({"detail": "Past reservations cannot be edited."}, status=status.HTTP_400_BAD_REQUEST)
         if reservation.status == "cancelled":
             return Response({"detail": "Cancelled reservations cannot be edited."}, status=status.HTTP_400_BAD_REQUEST)
         if reservation.user != request.user and not request.user.is_superuser:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer = self.get_serializer(reservation, data=request.data, partial=True)
+        serializer = self.get_serializer(reservation, data=request.data, partial=kwargs.pop("partial", False))
         serializer.is_valid(raise_exception=True)
         venue = serializer.validated_data.get("venue", reservation.venue)
         reservation_date = serializer.validated_data.get("date", reservation.date)

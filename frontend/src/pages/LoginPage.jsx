@@ -14,6 +14,7 @@ function getErrorMessage(value) {
   return typeof message === "string" && message.trim() ? message : "";
 }
 
+/* FIXME: REVIEW THIS */
 function getSafeRedirectPath(path) {
   if (typeof path !== "string" || !path) return "";
 
@@ -120,6 +121,7 @@ export default function LoginPage() {
     setMessage("");
   };
 
+  /* OK - REVIEWED */
   return (
     <div className="login-container">
       <h2>{t("Welcome Back")}</h2>

@@ -1,9 +1,9 @@
 .about {
     max-width:      960px;
-    margin:         60px auto;
-    line-height:    1.6;
+    margin:         40px auto;
+    line-height:    1.4;
     font-family:    var(--global-font-family);
-    font-size:      24px;
+    font-size:      16px;
 }
 
 .about h2 {
@@ -42,12 +42,13 @@
     align-items:    center;
     text-align:     center;
 
-    font-size:      16px;
+    font-size:      14px;
 }
 
 .about h4 {
-    font-size:      22px;
+    font-size:      20px;
     font-style:     bold;
+    margin:         10px 0;
 }
 
 

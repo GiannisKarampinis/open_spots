@@ -439,21 +439,28 @@ export default function ProfilePage() {
     showSuccess(detail || t("Profile and email updated successfully."));
   };
 
-
-  const handleExpiredEmailVerification = useCallback(() => {
-    setPendingEmailVerification(null);
-    setShowEmailVerification(false);
-    setMessageType("error");
-    setMessage(t("Email verification expired. Please update your profile again to request a new code."));
+  /* FIXME: Learn more about useCallback */
+  const handleExpiredEmailVerification = useCallback(
+      () => {
+        setPendingEmailVerification(null);
+        setShowEmailVerification(false);
+        setMessageType("error");
+        setMessage(t("Email verification expired. Please try again.")
+    );
   }, [t, setMessage, setMessageType]);
 
+  /* OK - REVIEWED */
   const submitPassword = async (event) => {
     event.preventDefault();
 
     const requiredErrors = {};
     for (const [field] of passwordFields) {
-      if (!passwordForm[field]) requiredErrors[field] = t("This field is required.");
+      if (!passwordForm[field]) { /* If that field has no value, 
+                                     adds a translated error under its name. */
+        requiredErrors[field] = t("This field is required.");
+      }
     }
+
     if (Object.keys(requiredErrors).length) {
       setPasswordErrors(requiredErrors);
       return;
@@ -483,17 +490,24 @@ export default function ProfilePage() {
       );
 
       rememberVerification(res.data);
-      navigate("/accounts/verify-email");
+      
+      navigate("/accounts/verify-email");/* FIXME: Review the verify-email flow */
+    
     } catch (err) {
       const data = err.response?.data || {};
       const fieldErrors = {};
       for (const field of ["old_password", "new_password1", "new_password2"]) {
-        if (data[field]) fieldErrors[field] = Array.isArray(data[field]) ? data[field][0] : data[field];
+        if (data[field]) {
+          fieldErrors[field] = Array.isArray(data[field]) ? data[field][0] : data[field];
+        }
       }
+      
       setPasswordErrors(fieldErrors);
+      
       if (!Object.keys(fieldErrors).length) {
         showError(data.detail || data.non_field_errors?.[0] || t("Could not change your password."));
       }
+    
     } finally {
       setIsSavingAccountChanges(false);
     }

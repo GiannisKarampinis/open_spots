@@ -149,6 +149,7 @@ def _parse_positive_int(value, default, *, maximum=None):
 def _reservation_payload(reservation, *, include_details=True):
     payload = {
         "id":               reservation.id,
+        "starts_at":        reservation.starts_at.isoformat(),
         "customer_name":    reservation.full_name,
         "date":             reservation.date.strftime("%Y-%m-%d") if reservation.date else None,
         "time":             reservation.time.strftime("%H:%M") if reservation.time else None,
@@ -188,25 +189,25 @@ def _reservation_payload(reservation, *, include_details=True):
 def _dashboard_reservations_queryset(venue, bucket):
     # THIS FUNCTION DOES NOT HIT THE DATABASE
 
-    today        = get_today()
+    now = timezone.localtime(timezone.now(), timezone.get_default_timezone())
+    upcoming = Q(date__gt=now.date()) | Q(date=now.date(), time__gte=now.time())
     reservations = venue.reservations.all() # In Django QuerySets are lazy evaluated, so this doesn't hit the database yet.
 
     if bucket == "requests":
-        return reservations.filter(date__gte=today, status="pending").order_by("date", "time", "id")
+        return reservations.filter(upcoming, status="pending").order_by("date", "time", "id")
     
     if bucket == "arrivals":
-        return reservations.filter(date__gte=today, status__in=["accepted", "rejected", "cancelled"]).order_by("date", "time", "id")
+        return reservations.filter(upcoming, status__in=["accepted", "rejected", "cancelled"]).order_by("date", "time", "id")
     
     if bucket == "history":
-        return reservations.filter(date__lt=today).order_by("-date", "-time", "-id")
+        return reservations.exclude(upcoming).order_by("-date", "-time", "-id")
     
     return Reservation.objects.none()
 
 
 # OK - REVIEWED
 def _dashboard_reservation_counts(venue):
-    today = get_today()
-    upcoming = venue.reservations.filter(date__gte=today, status="pending")
+    upcoming = _dashboard_reservations_queryset(venue, "requests")
 
     return {
         "unseen_requests": upcoming.filter(seen=False).count(),

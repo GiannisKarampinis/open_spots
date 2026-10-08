@@ -5,15 +5,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarDays, faUsers, faPenToSquare, faXmark, faClockRotateLeft, faBan } from "@fortawesome/free-solid-svg-icons";
 import { getWithAuth, postWithAuth } from "../utils/auth";
 import "../styles/my_reservations.css";
-
-function isUpcoming(reservation) {
-  if (typeof reservation.is_upcoming === "boolean") {
-    return reservation.is_upcoming;
-  }
-
-  const dt = new Date(`${reservation.date}T${reservation.time || "00:00"}`);
-  return dt >= new Date();
-}
+import { isReservationUpcoming } from "../utils/reservationTime";
+import useReservationClock from "../hooks/useReservationClock";
 
 function getStatusLabel(status, t) {
   if (!status) return "";
@@ -31,7 +24,7 @@ function getStatusLabel(status, t) {
   return labels[normalized] || status.charAt(0).toUpperCase() + status.slice(1);
 }
 
-function ReservationList({ reservations, onCancel }) {
+function ReservationList({ reservations, onCancel, now }) {
   const { t } = useTranslation();
 
   if (!reservations.length) {
@@ -71,7 +64,7 @@ function ReservationList({ reservations, onCancel }) {
                 {t("Status")}: {getStatusLabel(reservation.status, t)}
               </span>
               </div>
-            {reservation.status !== "cancelled" && isUpcoming(reservation) && (
+            {reservation.status !== "cancelled" && isReservationUpcoming(reservation, now) && (
               <div className="reservation-actions">
                 <Link
                   to={`/venues/reservations/${reservation.id}/edit`}
@@ -104,6 +97,7 @@ export default function MyReservationsPage() {
   const navigate = useNavigate();
 
   const [reservations, setReservations] = useState([]);
+  const now = useReservationClock(reservations);
   const [activeTab, setActiveTab] = useState("upcoming");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -130,17 +124,17 @@ export default function MyReservationsPage() {
     () => ({
       upcoming: reservations.filter(
         (reservation) =>
-          reservation.status !== "cancelled" && isUpcoming(reservation)
+          reservation.status !== "cancelled" && isReservationUpcoming(reservation, now)
       ),
       past: reservations.filter(
         (reservation) =>
-          reservation.status !== "cancelled" && !isUpcoming(reservation)
+          reservation.status !== "cancelled" && !isReservationUpcoming(reservation, now)
       ),
       cancelled: reservations.filter(
         (reservation) => reservation.status === "cancelled"
       ),
     }),
-    [reservations]
+    [reservations, now]
   );
 
   const cancelReservation = async (id) => {
@@ -197,6 +191,7 @@ export default function MyReservationsPage() {
           <ReservationList
             reservations={grouped[activeTab]}
             onCancel={cancelReservation}
+            now={now}
           />
         )}
       </div>

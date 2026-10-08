@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -14,6 +14,8 @@ import {
 import VenueSection from "../components/venues/VenueSection";
 import { mediaUrl } from "../utils/media";
 import { getAccessToken, refreshAccessToken } from "../utils/auth";
+import { isReservationUpcoming } from "../utils/reservationTime";
+import useReservationClock from "../hooks/useReservationClock";
 
 function formatReservationDate(value, locale = "en") {
   if (!value) return "";
@@ -54,10 +56,16 @@ function getReservationVenueImage(reservation) {
   return mediaUrl(image);
 }
 
-function QuickReservationCard({ reservation }) {
+function QuickReservationCard({ reservation, onExpired }) {
   const { t, i18n } = useTranslation();
+  const reservations = useMemo(() => reservation ? [reservation] : [], [reservation]);
+  const now = useReservationClock(reservations);
+  const expired = Boolean(reservation?.starts_at) && !isReservationUpcoming(reservation, now);
+  useEffect(() => {
+    if (expired) onExpired();
+  }, [expired, onExpired]);
 
-  if (!reservation) return null;
+  if (!isReservationUpcoming(reservation, now)) return null;
 
   const venue = reservation.venue || {};
   const imageSrc = getReservationVenueImage(reservation);
@@ -201,7 +209,7 @@ export default function VenuesPage() {
 
   return (
     <div className="page-container">
-      <h2>{t("Explore and reserve your perfect spot")}</h2>
+      <h2>{t("See the spot, make the move.")}</h2>
 
       {message && (
         <div className="alert alert-danger mb-3 venue-load-error" role="alert">
@@ -264,7 +272,7 @@ export default function VenuesPage() {
         </div>
       </div>
 
-      <QuickReservationCard reservation={upcomingReservation} />
+      <QuickReservationCard reservation={upcomingReservation} onExpired={fetchVenues} />
 
       {!isLoading && !message && !hasVenues && (
         <div className="venue-empty-state" role="status">

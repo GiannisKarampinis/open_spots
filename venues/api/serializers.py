@@ -141,6 +141,7 @@ class ReservationSerializer(serializers.ModelSerializer):
     venue_name = serializers.CharField(source="venue.name", read_only=True)
     venue_location = serializers.CharField(source="venue.location", read_only=True)
     is_upcoming = serializers.SerializerMethodField()
+    starts_at = serializers.DateTimeField(read_only=True)
     user_id = serializers.IntegerField(source="user.id", read_only=True)
 
     class Meta:
@@ -152,6 +153,7 @@ class ReservationSerializer(serializers.ModelSerializer):
             "venue_name",
             "venue_location",
             "is_upcoming",
+            "starts_at",
             "firstname",
             "lastname",
             "email",

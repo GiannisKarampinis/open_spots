@@ -1509,9 +1509,6 @@ export default function VenueDashboardPage() {
 		history: { start: "", end: "" },
 	});
 	const today = toLocalYmd(new Date());
-	const yesterdayDate = new Date();
-	yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-	const yesterday = toLocalYmd(yesterdayDate);
 
 	const [reservationTables, setReservationTables] = useState({
 		requests: { ...emptyReservationTable },
@@ -1690,6 +1687,21 @@ export default function VenueDashboardPage() {
 		fetchReservationBucket("arrivals");
 		fetchReservationBucket("history");
 	};
+
+	useEffect(() => {
+		const refresh = () => realtimeRefreshRef.current();
+		const now = Date.now();
+		const next = [...reservationTables.requests.rows, ...reservationTables.arrivals.rows]
+			.map((row) => Date.parse(row.starts_at))
+			.filter((start) => Number.isFinite(start) && start >= now)
+			.sort((a, b) => a - b)[0];
+		const timer = next === undefined ? null : window.setTimeout(refresh, Math.min(next - now + 1, 2147483647));
+		window.addEventListener("focus", refresh);
+		return () => {
+			window.clearTimeout(timer);
+			window.removeEventListener("focus", refresh);
+		};
+	}, [reservationTables.requests.rows, reservationTables.arrivals.rows]);
 
 	useEffect(() => subscribeToVenueNotifications({
 		venueId,
@@ -2057,7 +2069,7 @@ export default function VenueDashboardPage() {
 					<DateRangePicker
 						value={dateRanges.history}
 						onChange={(range) => updateDateRange("history", range)}
-						maxDate={yesterday}
+						maxDate={today}
 						showQuickDateButtons_Past
 					/>
 					<ReservationsTable

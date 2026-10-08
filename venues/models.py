@@ -429,13 +429,15 @@ class Reservation(models.Model):
         return f"{self.full_name} - {self.date} at {self.time} ({self.venue.name})"
 
 
-    def is_upcoming(self):
-        reservation_datetime = timezone.make_aware(
+    @property
+    def starts_at(self):
+        return timezone.make_aware(
             datetime.combine(self.date, self.time),
-            timezone.get_current_timezone()
+            timezone.get_default_timezone()
         )
-        
-        return reservation_datetime >= timezone.now()
+
+    def is_upcoming(self):
+        return self.starts_at >= timezone.now()
 
     def save(self, *args, editor=None, **kwargs):
         self._editor = editor  # Store editor for potential use in signals
