@@ -1,3 +1,4 @@
+import { getRequiredFieldErrors } from "../utils/formValidation";
 import { getVerificationChallenge, getResetToken, clearVerification, verificationConfig } from "../utils/verification";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -30,7 +31,12 @@ export default function PasswordResetPage() {
   const submit = async (event) => {
     event.preventDefault();
 
-    if (!form.new_password1.trim() || !form.new_password2.trim()) {
+    const requiredErrors = getRequiredFieldErrors(
+      form,
+      ["new_password1", "new_password2"],
+      t("This field is required.")
+    );
+    if (Object.keys(requiredErrors).length) {
       setType("error");
       setMessage(t("This field is required."));
       return;

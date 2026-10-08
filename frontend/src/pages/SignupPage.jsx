@@ -1,3 +1,4 @@
+import { getRequiredFieldErrors } from "../utils/formValidation";
 import { rememberVerification } from "../utils/verification";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -65,11 +66,14 @@ export default function SignupPage() {
     setErrors({});
     setMessage("");
 
-    const hasMissingRequiredField = Object.values(form).some(
-      (value) => String(value).trim() === ""
+    const requiredErrors = getRequiredFieldErrors(
+      form,
+      Object.keys(initialForm),
+      t("This field is required.")
     );
 
-    if (hasMissingRequiredField) {
+    if (Object.keys(requiredErrors).length) {
+      setErrors(requiredErrors);
       setMessageType("error");
       setMessage(t(REQUIRED_FIELDS_MESSAGE));
       return;

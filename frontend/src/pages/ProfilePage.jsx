@@ -1,3 +1,4 @@
+import { getRequiredFieldErrors } from "../utils/formValidation";
 import { VerificationReason } from "../utils/verificationReasons";
 import { rememberVerification, verificationConfig } from "../utils/verification";
 import { useCallback, useEffect, useState } from "react";
@@ -453,13 +454,11 @@ export default function ProfilePage() {
   const submitPassword = async (event) => {
     event.preventDefault();
 
-    const requiredErrors = {};
-    for (const [field] of passwordFields) {
-      if (!passwordForm[field].trim()) { /* If that field has no value, 
-                                     adds a translated error under its name. */
-        requiredErrors[field] = t("This field is required.");
-      }
-    }
+    const requiredErrors = getRequiredFieldErrors(
+      passwordForm,
+      passwordFields.map(([name]) => name),
+      t("This field is required.")
+    );
 
     if (Object.keys(requiredErrors).length) {
       setPasswordErrors(requiredErrors);

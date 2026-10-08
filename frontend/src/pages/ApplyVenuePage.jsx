@@ -1,3 +1,4 @@
+import { getRequiredFieldErrors } from "../utils/formValidation";
 import { useCallback, useEffect, useRef, useState }   from "react";
 import { useNavigate }        from "react-router-dom";
 import { useTranslation }     from "react-i18next";
@@ -23,6 +24,20 @@ const initialForm = {
   description:     "",
   phone:           "",
 };
+
+const requiredFields = [
+  "admin_firstname",
+  "admin_lastname",
+  "admin_username",
+  "admin_email",
+  "admin_phone",
+  "password",
+  "password2",
+  "venue_name",
+  "venue_type",
+  "phone",
+  "location",
+];
 
 function fieldErrors(errors, name) {
   const value = errors?.[name];
@@ -231,21 +246,16 @@ export default function ApplyVenuePage() {
 
   
 
-  
+
   const submit = async (event) => {
     event.preventDefault();
 
-    const requiredErrors = {};
-    const requiredFields = [
-      ...fields.filter(([, , , required]) => required).map(([name]) => name),
-      "admin_email",
-      "location",
-    ];
-    for (const name of requiredFields) {
-      const value = form[name];
-      const empty = !value.trim();
-      if (empty) requiredErrors[name] = [t("This field is required.")];
-    }
+    const requiredErrors = getRequiredFieldErrors(
+      form,
+      requiredFields,
+      t("This field is required.")
+    );
+    
     if (Object.keys(requiredErrors).length) {
       setErrors(requiredErrors);
       return;
@@ -311,14 +321,14 @@ export default function ApplyVenuePage() {
   };
 
   const fields = [
-    ["admin_firstname", "First name",       "text",       true],
-    ["admin_lastname",  "Last name",        "text",       true],
-    ["admin_username",  "Username",         "text",       true],
-    ["admin_phone",     "Owner phone",      "text",       true],
-    ["password",        "Password",         "password",   true],
-    ["password2",       "Confirm password", "password",   true],
-    ["venue_name",      "Venue name",       "text",       true],
-    ["phone",           "Venue phone",      "text",       true],
+    ["admin_firstname", "First name",       "text"],
+    ["admin_lastname",  "Last name",        "text"],
+    ["admin_username",  "Username",         "text"],
+    ["admin_phone",     "Owner phone",      "text"],
+    ["password",        "Password",         "password"],
+    ["password2",       "Confirm password", "password"],
+    ["venue_name",      "Venue name",       "text"],
+    ["phone",           "Venue phone",      "text"],
   ];
 
   return (
@@ -338,11 +348,11 @@ export default function ApplyVenuePage() {
       <form id="apply-venue-form" className="openspots-form-fields" onSubmit={submit} autoComplete="off" noValidate>
       
         <div className="section-body openspots-form-fields">
-          {fields.slice(0, 3).map(([name, label, type, required]) => (
+          {fields.slice(0, 3).map(([name, label, type]) => (
             <div className="openspots-form-field" key={name}>
               <label htmlFor={name}>
                 {t(label)}
-                {required && <span className="text-danger">*</span>}
+                {requiredFields.includes(name) && <span className="text-danger">*</span>}
               </label>
 
               <input
@@ -352,7 +362,7 @@ export default function ApplyVenuePage() {
                 autoComplete={type === "password" ? "new-password" : "off"}
                 value={form[name]}
                 onChange={updateField}
-                required={required}
+                required={requiredFields.includes(name)}
                 aria-invalid={fieldErrors(errors, name).length > 0}
               />
 
@@ -398,11 +408,11 @@ export default function ApplyVenuePage() {
 
           </div>
 
-          {fields.slice(3).map(([name, label, type, required]) => (
+          {fields.slice(3).map(([name, label, type]) => (
             <div className="openspots-form-field" key={name}>
               <label htmlFor={name}>
                 {t(label)}
-                {required && <span className="text-danger">*</span>}
+                {requiredFields.includes(name) && <span className="text-danger">*</span>}
               </label>
 
               <input
@@ -412,7 +422,7 @@ export default function ApplyVenuePage() {
                 autoComplete={type === "password" ? "new-password" : "off"}
                 value={form[name]}
                 onChange={updateField}
-                required={required}
+                required={requiredFields.includes(name)}
                 aria-invalid={fieldErrors(errors, name).length > 0}
               />
 
