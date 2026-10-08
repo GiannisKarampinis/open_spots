@@ -5,7 +5,7 @@
 
 .apply-container .form-intro {
   margin: 12px 0 0;
-  color: var(--profile-modal-value-text);
+  color: var(--openspots-form-value-text);
   font-size: 0.87rem;
   line-height: 1.5;
 }
@@ -15,7 +15,7 @@
   grid-column: 1 / -1;
 }
 
-.apply-container .profile-field {
+.apply-container .openspots-form-field {
   min-width: 0;
   align-content: start;
 }
@@ -47,20 +47,20 @@
   padding: 0.65rem 1rem;
 }
 
-.apply-container .profile-field select,
-.apply-container .profile-field textarea {
+.apply-container .openspots-form-field select,
+.apply-container .openspots-form-field textarea {
   font: inherit;
   font-size: 1rem;
   outline: none;
 }
 
-.apply-container .profile-field select:focus,
-.apply-container .profile-field textarea:focus {
+.apply-container .openspots-form-field select:focus,
+.apply-container .openspots-form-field textarea:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(53, 122, 232, 0.2);
 }
 
-.apply-container .profile-field textarea {
+.apply-container .openspots-form-field textarea {
   height: auto;
   min-height: 120px;
   padding: 12px 15px;
@@ -79,9 +79,9 @@
   z-index: 10;
   max-height: 220px;
   overflow: auto;
-  border: 1px solid var(--profile-modal-border);
+  border: 1px solid var(--openspots-form-border);
   border-radius: 6px;
-  background: var(--profile-modal-surface);
+  background: var(--openspots-form-surface);
   box-shadow: 0 10px 24px rgba(0, 24, 50, 0.18);
 }
 
@@ -91,7 +91,7 @@
   padding: 10px 12px;
   border: 0;
   background: transparent;
-  color: var(--profile-modal-value-text);
+  color: var(--openspots-form-value-text);
   font: inherit;
   text-align: left;
   cursor: pointer;

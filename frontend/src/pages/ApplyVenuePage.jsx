@@ -277,7 +277,7 @@ export default function ApplyVenuePage() {
   ];
 
   return (
-    <section className="profile-page profile-section apply-container" aria-labelledby="apply-venue-heading">
+    <section className="openspots-form-panel openspots-form-section apply-container" aria-labelledby="apply-venue-heading">
       <div className="form-header">  
         <h3 id="apply-venue-heading">{t("Apply to Register Your Venue")}</h3>
         <p className="form-intro">
@@ -297,10 +297,10 @@ export default function ApplyVenuePage() {
         </div>
       )}
 
-      <form id="apply-venue-form" className="profile-fields-form" onSubmit={submit} noValidate>
-        <div className="section-body profile-fields-form">
+      <form id="apply-venue-form" className="openspots-form-fields" onSubmit={submit} noValidate>
+        <div className="section-body openspots-form-fields">
           {fields.slice(0, 3).map(([name, label, type, required]) => (
-            <div className="profile-field" key={name}>
+            <div className="openspots-form-field" key={name}>
               <label htmlFor={name}>
                 {t(label)}
                 {required && <span className="text-danger">*</span>}
@@ -320,7 +320,7 @@ export default function ApplyVenuePage() {
             </div>
           ))}
 
-          <div className="profile-field email-verify-wrapper">
+          <div className="openspots-form-field email-verify-wrapper">
             <label htmlFor="admin_email">
               {t("Admin email")}
               <span className="text-danger">*</span>
@@ -339,7 +339,7 @@ export default function ApplyVenuePage() {
 
               <button
                 type="button"
-                className="profile-button profile-button-primary"
+                className="openspots-form-button openspots-form-button-primary"
                 onClick={sendCode}
                 disabled={sendingCode || verifying || submitting || emailVerified}
               >
@@ -366,7 +366,7 @@ export default function ApplyVenuePage() {
 
               <button
                 type="button"
-                className="profile-button profile-button-primary"
+                className="openspots-form-button openspots-form-button-primary"
                 onClick={verifyCode}
                 disabled={verifying || sendingCode || submitting || emailVerified || !venueChallengeId}
               >
@@ -378,7 +378,7 @@ export default function ApplyVenuePage() {
           </div>
 
           {fields.slice(3).map(([name, label, type, required]) => (
-            <div className="profile-field" key={name}>
+            <div className="openspots-form-field" key={name}>
               <label htmlFor={name}>
                 {t(label)}
                 {required && <span className="text-danger">*</span>}
@@ -399,7 +399,7 @@ export default function ApplyVenuePage() {
           ))}
         </div>
 
-        <div className="profile-field">
+        <div className="openspots-form-field">
           <label htmlFor="venue_type">
             {t("Venue type")}
             <span className="text-danger">*</span>
@@ -421,7 +421,7 @@ export default function ApplyVenuePage() {
           <ul className="errorlist">{renderErrors("venue_type")}</ul>
         </div>
 
-        <div className="profile-field apply-location-field">
+        <div className="openspots-form-field apply-location-field">
           <label htmlFor="location">
             {t("Location")}
             <span className="text-danger">*</span>
@@ -458,7 +458,7 @@ export default function ApplyVenuePage() {
           <ul className="errorlist">{renderErrors("location")}</ul>
         </div>
 
-        <div className="profile-field apply-description-field">
+        <div className="openspots-form-field apply-description-field">
           <label htmlFor="description">{t("Description")}</label>
 
           <textarea
@@ -475,7 +475,7 @@ export default function ApplyVenuePage() {
         <button
           id="submitApplicationBtn"
           type="submit"
-          className="profile-button profile-button-primary profile-update-btn"
+          className="openspots-form-button openspots-form-button-primary openspots-form-submit"
           disabled={submitting || !emailVerified}
         >
           {submitting ? t("Submitting...") : t("Submit Application")}

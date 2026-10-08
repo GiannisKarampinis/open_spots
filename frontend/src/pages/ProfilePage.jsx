@@ -510,7 +510,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="profile-page">
+      <div className="openspots-form-panel">
         <p>{t("Loading profile...")}</p>
       </div>
     );
@@ -519,14 +519,14 @@ export default function ProfilePage() {
   return (
     <div >
       {/* aria-labelledby is used for the accessibility (screen reader support) */}
-      <section className="profile-page profile-section" aria-labelledby="profile-heading">
+      <section className="openspots-form-panel openspots-form-section" aria-labelledby="profile-heading">
         <h3 id="profile-heading">{t("Profile")}</h3>
 
         {/* noValidate means that will disable browser's automatic validation */}
-        <form className="profile-fields-form" onSubmit={submitProfile} noValidate>
+        <form className="openspots-form-fields" onSubmit={submitProfile} noValidate>
           {editableFields.map(([name, label, type]) => (
             // key is not exposed in HTML, React uses key internally to identify mapped elements between renders.
-            <div className="profile-field" key={name}>
+            <div className="openspots-form-field" key={name}>
 
               {/*
                 htmlFor is used to associate the label with the input field:
@@ -561,7 +561,7 @@ export default function ProfilePage() {
           ))}
 
           <button
-            className="profile-button profile-button-primary profile-update-btn" type="submit" disabled={isSavingAccountChanges || !hasProfileChanges}
+            className="openspots-form-button openspots-form-button-primary openspots-form-submit" type="submit" disabled={isSavingAccountChanges || !hasProfileChanges}
             aria-busy={isSavingAccountChanges}
           >
             {isSavingAccountChanges ? t("Updating...") : t("Update Profile")}
@@ -569,8 +569,8 @@ export default function ProfilePage() {
         </form>
 
         {isEditingPassword ? (
-            <form className="profile-password-form profile-field" onSubmit={submitPassword} noValidate>
-              <div className="profile-password-inputs">
+            <form className="profile-password-form openspots-form-field" onSubmit={submitPassword} noValidate>
+              <div className="openspots-form-inputs">
                 {passwordFields.map(([name, placeholder]) => (
                   <div className="profile-password-field" key={name}>
                     <input
@@ -596,7 +596,7 @@ export default function ProfilePage() {
 
               <div className="profile-form-actions profile-password-actions">
                 <button
-                  className="profile-button profile-button-primary profile-action-btn"
+                  className="openspots-form-button openspots-form-button-primary profile-action-btn"
                   type="submit"
                   disabled={isSavingAccountChanges}
                   aria-busy={isSavingAccountChanges}
@@ -605,7 +605,7 @@ export default function ProfilePage() {
                 </button>
 
                 <button
-                  className="profile-button profile-button-danger profile-action-btn"
+                  className="openspots-form-button profile-button-danger profile-action-btn"
                   type="button"
                   onClick={cancelEdit}
                   disabled={isSavingAccountChanges}
