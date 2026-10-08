@@ -79,3 +79,71 @@
   background: rgba(0, 86, 179, 0.05);
 }
 .email-verification-modal .auth-message.error { color: var(--error-color); }
+
+.email-verification-cancel {
+  width: auto;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--error-color);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--error-color);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.email-verification-cancel:not(:disabled):hover {
+  border-color: var(--error-color);
+  background: rgba(255, 77, 79, 0.08);
+}
+.email-verification-cancel:focus-visible {
+  outline: 2px solid var(--error-color);
+  outline-offset: 3px;
+}
+.email-verification-cancel:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.email-verification-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 12px;
+}
+.email-verification-actions > button {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.email-verification-resend {
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--openspots-form-border);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.email-verification-resend:not(:disabled):hover {
+  border-color: var(--primary-color);
+  background: rgba(53, 122, 232, 0.08);
+  color: var(--link-hover);
+}
+.email-verification-resend:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 3px;
+}
+
+.email-verification-form button {
+  background: var(--surface-gradient);
+  transition: filter 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
+}
+.email-verification-form button:not(:disabled):hover {
+  filter: brightness(1.3);
+  box-shadow: 0 3px 8px rgba(8, 58, 90, 0.3);
+}
+.email-verification-form button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 3px;
+}

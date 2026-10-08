@@ -85,6 +85,7 @@ export default function EmailVerificationModal({ onClose, onVerified, onCancelle
         <VerificationCodeForm code={code} updateCode={updateCode} submit={submit}
           loading={loading} submitting={submitting} resending={resending} remaining={remaining}
           className="email-verification-form" verifyLabel="Verify Email" />
+        <div className="email-verification-actions">
         <button className="email-verification-resend" type="button" onClick={resend} disabled={loading || submitting || resending || resendAfter > 0}>
           {resending
             ? t("Sending...")
@@ -92,9 +93,10 @@ export default function EmailVerificationModal({ onClose, onVerified, onCancelle
               ? t("Resend available in {{time}}", { time: formatSeconds(resendAfter) })
               : t("Resend Code")}
         </button>
-        <button type="button" onClick={cancelVerification} disabled={loading || submitting || resending}>
+        <button className="email-verification-cancel" type="button" onClick={cancelVerification} disabled={loading || submitting || resending}>
           {t("Cancel verification")}
         </button>
+        </div>
         {!loading && (
           <div className="email-verification-countdown">
             {remaining > 0 ? (

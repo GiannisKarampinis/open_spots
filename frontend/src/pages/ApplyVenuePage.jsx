@@ -251,21 +251,21 @@ export default function ApplyVenuePage() {
   const submit = async (event) => {
     event.preventDefault();
 
+    /* OK - REVIEWED */
     const requiredErrors = getRequiredFieldErrors(
       form,
       requiredFields,
       t("This field is required.")
     );
     
+    /* OK - REVIEWED */
     if (Object.keys(requiredErrors).length) {
       setErrors(requiredErrors);
       return;
     }
 
     if (!passwordsMatch(form.password, form.password2)) {
-      setErrors({
-        password2: [t("Password fields did not match.")],
-      });
+      setErrors({password2: [t("Password fields did not match.")],});
       return;
     }
 

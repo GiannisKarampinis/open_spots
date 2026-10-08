@@ -347,10 +347,6 @@ export default function ProfilePage() {
       const emailVerificationPending = pendingEmailVerification?.email === normalizedCurrentFormEmail; // Is there a pending verification process for that email?
 
       if (emailVerificationPending) {
-        if (profileNamesAndPhoneChanged) {
-          showSuccess(t("Profile updated successfully."));
-        }
-
         setShowEmailVerification(true); /* opens the email verification modal */
 
         return;
@@ -380,10 +376,6 @@ export default function ProfilePage() {
           reason:       VerificationReason.EMAIL_UPDATE,
           email:        normalizedCurrentFormEmail,
         });
-
-        showSuccess(
-          emailChallengeRes.data.detail || t("Verification code sent to your new email.")
-        );
 
         setShowEmailVerification(true);
         return;
