@@ -30,7 +30,13 @@ export default function PasswordResetPage() {
   const submit = async (event) => {
     event.preventDefault();
 
-    if (form.new_password1 !== form.new_password2) {
+    if (!form.new_password1.trim() || !form.new_password2.trim()) {
+      setType("error");
+      setMessage(t("This field is required."));
+      return;
+    }
+
+    if (form.new_password1.trim() !== form.new_password2.trim()) {
       setType("error");
       setMessage(t("Passwords do not match."));
       return;

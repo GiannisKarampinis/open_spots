@@ -243,9 +243,7 @@ export default function ApplyVenuePage() {
     ];
     for (const name of requiredFields) {
       const value = form[name];
-      const empty = name === "password" || name === "password2"
-        ? !value
-        : !value.trim();
+      const empty = !value.trim();
       if (empty) requiredErrors[name] = [t("This field is required.")];
     }
     if (Object.keys(requiredErrors).length) {
@@ -253,7 +251,7 @@ export default function ApplyVenuePage() {
       return;
     }
 
-    if (form.password !== form.password2) {
+    if (form.password.trim() !== form.password2.trim()) {
       setErrors({
         password2: [t("Password fields did not match.")],
       });

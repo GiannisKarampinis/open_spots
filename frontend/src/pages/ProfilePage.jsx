@@ -455,7 +455,7 @@ export default function ProfilePage() {
 
     const requiredErrors = {};
     for (const [field] of passwordFields) {
-      if (!passwordForm[field]) { /* If that field has no value, 
+      if (!passwordForm[field].trim()) { /* If that field has no value, 
                                      adds a translated error under its name. */
         requiredErrors[field] = t("This field is required.");
       }
@@ -466,7 +466,7 @@ export default function ProfilePage() {
       return;
     }
 
-    if (passwordForm.new_password1 !== passwordForm.new_password2) {
+    if (passwordForm.new_password1.trim() !== passwordForm.new_password2.trim()) {
       setPasswordErrors({ new_password2: t("The new passwords do not match.") });
       return;
     }

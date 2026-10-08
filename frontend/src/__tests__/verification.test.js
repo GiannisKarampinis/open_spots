@@ -278,8 +278,11 @@ test("venue verification failure stays in the modal until the code is edited", a
 });
 
 
-test("empty venue passwords show required errors before password comparison", async () => {
+test.each(["", "   "])("empty venue passwords (%j) show required errors before comparison", async (value) => {
   await act(async () => root.render(<ApplyVenuePage />));
+  await act(async () => {
+    for (const name of ["password", "password2"]) fireEvent.change(document.getElementById(name), { target: { value } });
+  });
   await act(async () => fireEvent.submit(document.getElementById("apply-venue-form")));
   for (const name of ["password", "password2"]) {
     const input = document.getElementById(name);
@@ -406,4 +409,18 @@ test("selecting a location clears its validation error and leaving cancels a sea
     await act(async () => jest.advanceTimersByTime(300));
     expect(global.fetch).toHaveBeenCalledTimes(1);
   } finally { global.fetch = previousFetch; }
+});
+
+
+test("venue password confirmation follows backend trimming", async () => {
+  await act(async () => root.render(<ApplyVenuePage />));
+  await act(async () => {
+    const values = { admin_firstname: "Alex", admin_lastname: "Owner", admin_username: "owner",
+      admin_email: "owner@example.com", admin_phone: "2101234567", venue_name: "Cafe",
+      phone: "2101234568", location: "Athens", password: "  Example passphrase 42!  ", password2: "Example passphrase 42!" };
+    for (const [name, value] of Object.entries(values)) fireEvent.change(document.getElementById(name), { target: { value } });
+    fireEvent.submit(document.getElementById("apply-venue-form"));
+  });
+  expect(screen.queryByText("Password fields did not match.")).toBeNull();
+  expect(document.getElementById("admin-email-errors")).toHaveTextContent("You must verify this email before submitting the application.");
 });
