@@ -16,6 +16,7 @@ jest.mock("axios", () => ({ get: jest.fn() }));
 jest.mock("../utils/csrf", () => ({ postWithCsrf: jest.fn() }));
 jest.mock("../utils/backendUrl", () => ({ getBackendBase: () => "" }));
 jest.mock("../utils/auth", () => ({ getWithAuth: jest.fn(), patchWithAuth: jest.fn(), postWithAuth: jest.fn(), storeAuthResponse: jest.fn(), clearStoredAuth: jest.fn() }));
+jest.mock("../styles/openspots-forms-style.css", () => ({}));
 jest.mock("../styles/ProfilePage.css", () => ({}));
 jest.mock("../styles/auth.css", () => ({}));
 jest.mock("../styles/apply_venue.css", () => ({}));

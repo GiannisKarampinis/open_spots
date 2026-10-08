@@ -6,6 +6,7 @@ import ReservationFormPage from "../pages/ReservationFormPage";
 import { isReservationUpcoming } from "../utils/reservationTime";
 
 jest.mock("../utils/auth", () => ({ getWithAuth: jest.fn(), postWithAuth: jest.fn() }));
+jest.mock("../styles/openspots-forms-style.css", () => ({}));
 jest.mock("../styles/my_reservations.css", () => ({}));
 jest.mock("../styles/make_reservation.css", () => ({}));
 jest.mock("../styles/edit_reservation.css", () => ({}));

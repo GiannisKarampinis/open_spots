@@ -8,6 +8,7 @@ import {
   postWithAuth,
 } from "../utils/auth";
 import "../styles/make_reservation.css";
+import "../styles/openspots-forms-style.css";
 import "../styles/edit_reservation.css";
 import useReservationClock from "../hooks/useReservationClock";
 import { isReservationUpcoming } from "../utils/reservationTime";

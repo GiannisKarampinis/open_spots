@@ -1,27 +1,26 @@
-import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { postWithCsrf } from "../utils/csrf";
+import { useRef, useState }   from "react";
+import { useNavigate }        from "react-router-dom";
+import { useTranslation }     from "react-i18next";
+import { postWithCsrf }       from "../utils/csrf";
 import { verificationConfig } from "../utils/verification";
-import { useToastMessage } from "../components/ToastProvider";
+import { useToastMessage }    from "../components/ToastProvider";
+import "../styles/openspots-forms-style.css";
 import "../styles/apply_venue.css";
-import "../styles/partial_signup.css";
-import "../styles/verify_code.css";
 import "../styles/feedback.css";
 
 const initialForm = {
   admin_firstname: "",
-  admin_lastname: "",
-  admin_username: "",
-  admin_email: "",
-  admin_phone: "",
-  password: "",
-  password2: "",
-  venue_name: "",
-  venue_type: "restaurant",
-  location: "",
-  description: "",
-  phone: "",
+  admin_lastname:  "",
+  admin_username:  "",
+  admin_email:     "",
+  admin_phone:     "",
+  password:        "",
+  password2:       "",
+  venue_name:      "",
+  venue_type:      "restaurant",
+  location:        "",
+  description:     "",
+  phone:           "",
 };
 
 function fieldErrors(errors, name) {
@@ -267,27 +266,24 @@ export default function ApplyVenuePage() {
   };
 
   const fields = [
-    ["admin_firstname", "First name", "text", true],
-    ["admin_lastname", "Last name", "text", true],
-    ["admin_username", "Username", "text", true],
-    ["admin_phone", "Owner phone", "text", true],
-    ["password", "Password", "password", true],
-    ["password2", "Confirm password", "password", true],
-    ["venue_name", "Venue name", "text", true],
-    ["phone", "Venue phone", "text", true],
+    ["admin_firstname", "First name",       "text",       true],
+    ["admin_lastname",  "Last name",        "text",       true],
+    ["admin_username",  "Username",         "text",       true],
+    ["admin_phone",     "Owner phone",      "text",       true],
+    ["password",        "Password",         "password",   true],
+    ["password2",       "Confirm password", "password",   true],
+    ["venue_name",      "Venue name",       "text",       true],
+    ["phone",           "Venue phone",      "text",       true],
   ];
 
   return (
-    <div className="apply-container">
-      <div className="form-header">
-        <h2>{t("Apply to Register Your Venue")}</h2>
-
+    <section className="profile-page profile-section apply-container" aria-labelledby="apply-venue-heading">
+      <div className="form-header">  
+        <h3 id="apply-venue-heading">{t("Apply to Register Your Venue")}</h3>
         <p className="form-intro">
           {t("Fields marked with")}{" "}
           <span className="text-danger">*</span>{" "}
-          {t(
-            "are required. You must also verify your admin email before submitting the application."
-          )}
+          {t("are required. You must also verify your admin email before submitting the application.")}
         </p>
       </div>
 
@@ -301,10 +297,10 @@ export default function ApplyVenuePage() {
         </div>
       )}
 
-      <form id="apply-venue-form" onSubmit={submit} noValidate>
-        <div className="section-body">
+      <form id="apply-venue-form" className="profile-fields-form" onSubmit={submit} noValidate>
+        <div className="section-body profile-fields-form">
           {fields.slice(0, 3).map(([name, label, type, required]) => (
-            <div className="form-group" key={name}>
+            <div className="profile-field" key={name}>
               <label htmlFor={name}>
                 {t(label)}
                 {required && <span className="text-danger">*</span>}
@@ -324,7 +320,7 @@ export default function ApplyVenuePage() {
             </div>
           ))}
 
-          <div className="form-group email-verify-wrapper">
+          <div className="profile-field email-verify-wrapper">
             <label htmlFor="admin_email">
               {t("Admin email")}
               <span className="text-danger">*</span>
@@ -343,6 +339,7 @@ export default function ApplyVenuePage() {
 
               <button
                 type="button"
+                className="profile-button profile-button-primary"
                 onClick={sendCode}
                 disabled={sendingCode || verifying || submitting || emailVerified}
               >
@@ -363,11 +360,13 @@ export default function ApplyVenuePage() {
                   setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
                 }
                 placeholder={t("Enter 6-digit code")}
+                aria-label={t("Enter 6-digit code")}
                 disabled={emailVerified || sendingCode || verifying || submitting}
               />
 
               <button
                 type="button"
+                className="profile-button profile-button-primary"
                 onClick={verifyCode}
                 disabled={verifying || sendingCode || submitting || emailVerified || !venueChallengeId}
               >
@@ -379,7 +378,7 @@ export default function ApplyVenuePage() {
           </div>
 
           {fields.slice(3).map(([name, label, type, required]) => (
-            <div className="form-group" key={name}>
+            <div className="profile-field" key={name}>
               <label htmlFor={name}>
                 {t(label)}
                 {required && <span className="text-danger">*</span>}
@@ -400,7 +399,7 @@ export default function ApplyVenuePage() {
           ))}
         </div>
 
-        <div className="form-group">
+        <div className="profile-field">
           <label htmlFor="venue_type">
             {t("Venue type")}
             <span className="text-danger">*</span>
@@ -422,7 +421,7 @@ export default function ApplyVenuePage() {
           <ul className="errorlist">{renderErrors("venue_type")}</ul>
         </div>
 
-        <div className="form-group" style={{ position: "relative" }}>
+        <div className="profile-field apply-location-field">
           <label htmlFor="location">
             {t("Location")}
             <span className="text-danger">*</span>
@@ -459,7 +458,7 @@ export default function ApplyVenuePage() {
           <ul className="errorlist">{renderErrors("location")}</ul>
         </div>
 
-        <div className="form-group">
+        <div className="profile-field apply-description-field">
           <label htmlFor="description">{t("Description")}</label>
 
           <textarea
@@ -476,12 +475,12 @@ export default function ApplyVenuePage() {
         <button
           id="submitApplicationBtn"
           type="submit"
-          className="btn primary-btn mt-3"
+          className="profile-button profile-button-primary profile-update-btn"
           disabled={submitting || !emailVerified}
         >
           {submitting ? t("Submitting...") : t("Submit Application")}
         </button>
       </form>
-    </div>
+    </section>
   );
 }

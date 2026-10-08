@@ -11,6 +11,7 @@ import {
 } from "../utils/auth";
 import EmailVerificationModal from "../components/EmailVerificationModal";
 import { useToastMessage } from "../components/ToastProvider";
+import "../styles/openspots-forms-style.css";
 import "../styles/ProfilePage.css";
 
 /* OK - REVIEWED */

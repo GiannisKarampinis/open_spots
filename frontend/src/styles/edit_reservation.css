@@ -120,8 +120,6 @@
     box-shadow: 0 0 6px var(--success-color);
 }
 
-
-
 /* Fade animation */
 @keyframes fadeIn {
     from { opacity: 0; }
@@ -139,7 +137,7 @@
     }
 }
 
-/* ProfilePage-inspired reservation editing. */
+/* Edit Reservation layout and specialized controls. */
 #reservationForm.reservation-form-page-edit {
   box-sizing: border-box;
   width: min(640px, calc(100% - 32px));
@@ -147,10 +145,8 @@
   margin: 20px auto;
   padding: 20px;
   border: 1px solid rgba(0, 86, 179, 0.14);
-  border-radius: 10px;
   background: rgba(255, 255, 255, 0.94);
   color: var(--primary-hover);
-  font-family: var(--global-font-family);
   box-shadow: 0 6px 24px rgba(8, 58, 90, 0.05);
 }
 
@@ -190,13 +186,10 @@
 #reservationForm.reservation-form-page-edit input,
 #reservationForm.reservation-form-page-edit select,
 #reservationForm.reservation-form-page-edit textarea {
-  box-sizing: border-box;
-  width: 100%;
   min-height: 38px;
   margin-top: 4px;
   padding: 8px 11px;
   border: 1px solid rgba(0, 86, 179, 0.14);
-  border-radius: 6px;
   background: rgba(255, 255, 255, 0.78);
   color: var(--text-color);
   font-family: inherit;
@@ -213,8 +206,6 @@
 #reservationForm.reservation-form-page-edit select:focus,
 #reservationForm.reservation-form-page-edit textarea:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(53, 122, 232, 0.2);
 }
 
 #reservationForm.reservation-form-page-edit .time-slot-container {
@@ -293,11 +284,6 @@
 #reservationForm.reservation-form-page-edit button:focus-visible {
   outline: 3px solid var(--primary-color);
   outline-offset: 3px;
-}
-
-#reservationForm.reservation-form-page-edit button:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
 }
 
 @media (max-width: 576px) {
