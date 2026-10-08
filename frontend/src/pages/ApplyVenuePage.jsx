@@ -1,8 +1,9 @@
-import { useRef, useState }   from "react";
+import { useCallback, useEffect, useRef, useState }   from "react";
 import { useNavigate }        from "react-router-dom";
 import { useTranslation }     from "react-i18next";
 import { postWithCsrf }       from "../utils/csrf";
 import { verificationConfig } from "../utils/verification";
+import EmailVerificationModal from "../components/EmailVerificationModal";
 import { useToastMessage }    from "../components/ToastProvider";
 import "../styles/openspots-forms-style.css";
 import "../styles/apply_venue.css";
@@ -67,16 +68,26 @@ export default function ApplyVenuePage() {
 
   const timerRef = useRef(null);
   const abortRef = useRef(null);
+  const locationRequestRef = useRef(0);
+  const verificationRef = useRef({ email: "", challengeId: "" });
+  const verifyButtonRef = useRef(null);
+
+  useEffect(() => () => {
+    window.clearTimeout(timerRef.current);
+    abortRef.current?.abort();
+    locationRequestRef.current += 1;
+    verificationRef.current = { email: "", challengeId: "" };
+  }, []);
 
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
-  const [message, setMessage, messageType, setMessageType] = useToastMessage("success");
+  const [, setMessage] = useToastMessage("success");
+  const [submissionError, setSubmissionError] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
   const [venueChallengeId, setVenueChallengeId] = useState("");
   const [verificationToken, setVerificationToken] = useState("");
-  const [code, setCode] = useState("");
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
-  const [verifying, setVerifying] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
 
@@ -94,70 +105,79 @@ export default function ApplyVenuePage() {
       non_field_errors: undefined,
     }));
 
-    setMessage("");
+    setSubmissionError("");
 
     if (name === "admin_email") {
+      verificationRef.current = { email: "", challengeId: "" };
       setEmailVerified(false);
       setVenueChallengeId("");
       setVerificationToken("");
-      setCode("");
+      setShowEmailVerification(false);
     }
   };
 
+  const setFieldError = (name, message) => {
+    setErrors((current) => ({ ...current, [name]: message ? [message] : undefined }));
+  };
+
   const sendCode = async () => {
+    setFieldError("admin_email", "");
     if (!form.admin_email) {
-      setMessageType("error");
-      setMessage(t("Enter admin email first."));
+      setFieldError("admin_email", t("Enter admin email first."));
+      return;
+    }
+
+    if (venueChallengeId) {
+      setShowEmailVerification(true);
       return;
     }
 
     setSendingCode(true);
-    setMessage("");
+    setSubmissionError("");
 
     try {
       const res = await postWithCsrf("/api/v1/venues/verification/send/", {
         email: form.admin_email,
       }, verificationConfig(venueChallengeId));
+      verificationRef.current = { email: form.admin_email, challengeId: res.data.challenge_id };
       setVenueChallengeId(res.data.challenge_id);
       setVerificationToken("");
 
-      setMessageType("success");
-      setMessage(res.data.detail || t("Code sent. Check your inbox."));
+      setShowEmailVerification(true);
     } catch (err) {
-      setMessageType("error");
-      setMessage(err.response?.data?.detail || t("Failed to send code."));
+      setFieldError("admin_email", err.response?.data?.detail || fieldErrors(err.response?.data, "email")[0] || t("Failed to send code."));
       if (err.response?.status === 400) setVenueChallengeId("");
     } finally {
       setSendingCode(false);
     }
   };
 
-  const verifyCode = async () => {
-    if (!/^\d{6}$/.test(code)) {
-      setMessageType("error");
-      setMessage(t("Enter a valid 6-digit code."));
+  const resetEmailVerification = useCallback(() => {
+    verificationRef.current = { email: "", challengeId: "" };
+    setEmailVerified(false);
+    setVerificationToken("");
+    setVenueChallengeId("");
+    setShowEmailVerification(false);
+  }, []);
+
+  const handleExpiredVerification = useCallback(() => {
+    resetEmailVerification();
+    setErrors((current) => ({ ...current, admin_email: [t("Email verification expired. Please try again.")] }));
+  }, [resetEmailVerification, t]);
+
+  const finishEmailVerification = (data) => {
+    const current = verificationRef.current;
+    if (current.email !== form.admin_email || current.challengeId !== venueChallengeId) return;
+    if (!data.verification_token || data.email?.trim().toLowerCase() !== current.email.trim().toLowerCase()) {
+      resetEmailVerification();
+      setFieldError("admin_email", t("You must verify this email before submitting the application."));
       return;
     }
-
-    setVerifying(true);
-    setMessage("");
-
-    try {
-      const res = await postWithCsrf("/api/v1/venues/verification/confirm/", {
-        code,
-      }, verificationConfig(venueChallengeId));
-
-      setVerificationToken(res.data.verification_token);
-      setEmailVerified(true);
-      setMessageType("success");
-      setMessage(res.data.detail || t("Email verified"));
-    } catch (err) {
-      setEmailVerified(false);
-      setMessageType("error");
-      setMessage(err.response?.data?.detail || t("Verification failed."));
-    } finally {
-      setVerifying(false);
-    }
+    setVerificationToken(data.verification_token);
+    setEmailVerified(true);
+    setShowEmailVerification(false);
+    setFieldError("admin_email", "");
+    setMessage(data.detail || t("Email verified"));
   };
 
   const searchLocation = (value) => {
@@ -168,12 +188,15 @@ export default function ApplyVenuePage() {
       },
     });
 
+    window.clearTimeout(timerRef.current);
+    abortRef.current?.abort();
+    const requestId = ++locationRequestRef.current;
+    setSuggestions([]);
+
     if (value.trim().length < 3) {
       setSuggestions([]);
       return;
     }
-
-    window.clearTimeout(timerRef.current);
 
     timerRef.current = window.setTimeout(async () => {
       try {
@@ -198,15 +221,37 @@ export default function ApplyVenuePage() {
           },
         });
 
-        setSuggestions(res.ok ? await res.json() : []);
+        const results = res.ok ? await res.json() : [];
+        if (requestId === locationRequestRef.current) setSuggestions(results);
       } catch {
         // Request was probably aborted.
       }
     }, 250);
   };
 
+  
+
+  
   const submit = async (event) => {
     event.preventDefault();
+
+    const requiredErrors = {};
+    const requiredFields = [
+      ...fields.filter(([, , , required]) => required).map(([name]) => name),
+      "admin_email",
+      "location",
+    ];
+    for (const name of requiredFields) {
+      const value = form[name];
+      const empty = name === "password" || name === "password2"
+        ? !value
+        : !value.trim();
+      if (empty) requiredErrors[name] = [t("This field is required.")];
+    }
+    if (Object.keys(requiredErrors).length) {
+      setErrors(requiredErrors);
+      return;
+    }
 
     if (form.password !== form.password2) {
       setErrors({
@@ -216,14 +261,13 @@ export default function ApplyVenuePage() {
     }
 
     if (!emailVerified) {
-      setMessageType("error");
-      setMessage(t("You must verify this email before submitting the application."));
+      setFieldError("admin_email", t("You must verify this email before submitting the application."));
       return;
     }
 
     setSubmitting(true);
     setErrors({});
-    setMessage("");
+    setSubmissionError("");
 
     try {
       const payload = {
@@ -242,22 +286,25 @@ export default function ApplyVenuePage() {
       const data = err.response?.data || {};
 
       if (data.verification_required) {
+        verificationRef.current = { email: "", challengeId: "" };
         setEmailVerified(false);
         setVenueChallengeId("");
         setVerificationToken("");
-        setCode("");
+        setShowEmailVerification(false);
       }
 
       if (typeof data === "object") {
         setErrors(data);
       }
 
-      setMessageType("error");
-      setMessage(firstApiError(data, t));
+      setSubmissionError(firstApiError(data, t));
     } finally {
       setSubmitting(false);
     }
   };
+
+
+
 
   const renderErrors = (name) => {
     return fieldErrors(errors, name).map((error) => (
@@ -278,26 +325,20 @@ export default function ApplyVenuePage() {
 
   return (
     <section className="openspots-form-panel openspots-form-section apply-container" aria-labelledby="apply-venue-heading">
+      {/* OK - REVIEWED */}
       <div className="form-header">  
         <h3 id="apply-venue-heading">{t("Apply to Register Your Venue")}</h3>
+        
         <p className="form-intro">
           {t("Fields marked with")}{" "}
           <span className="text-danger">*</span>{" "}
           {t("are required. You must also verify your admin email before submitting the application.")}
         </p>
+      
       </div>
 
-      {message && (
-        <div
-          className={`alert alert-${
-            messageType === "success" ? "success" : "error"
-          }`}
-        >
-          {message}
-        </div>
-      )}
-
-      <form id="apply-venue-form" className="openspots-form-fields" onSubmit={submit} noValidate>
+      <form id="apply-venue-form" className="openspots-form-fields" onSubmit={submit} autoComplete="off" noValidate>
+      
         <div className="section-body openspots-form-fields">
           {fields.slice(0, 3).map(([name, label, type, required]) => (
             <div className="openspots-form-field" key={name}>
@@ -310,6 +351,7 @@ export default function ApplyVenuePage() {
                 id={name}
                 name={name}
                 type={type}
+                autoComplete={type === "password" ? "new-password" : "off"}
                 value={form[name]}
                 onChange={updateField}
                 required={required}
@@ -328,20 +370,23 @@ export default function ApplyVenuePage() {
 
             <div className="email-verify-row">
               <input
+                aria-invalid={fieldErrors(errors, "admin_email").length > 0}
+                aria-describedby="admin-email-errors"
                 id="admin_email"
                 name="admin_email"
                 type="email"
                 value={form.admin_email}
                 onChange={updateField}
-                disabled={sendingCode || verifying || submitting}
+                disabled={sendingCode || submitting || showEmailVerification}
                 required
               />
 
               <button
                 type="button"
                 className="openspots-form-button openspots-form-button-primary"
+                ref={verifyButtonRef}
                 onClick={sendCode}
-                disabled={sendingCode || verifying || submitting || emailVerified}
+                disabled={sendingCode || submitting || showEmailVerification || emailVerified}
               >
                 {emailVerified
                   ? t("Verified")
@@ -351,30 +396,8 @@ export default function ApplyVenuePage() {
               </button>
             </div>
 
-            <div className="email-code-row">
-              <input
-                type="text"
-                inputMode="numeric"
-                value={code}
-                onChange={(event) =>
-                  setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
-                }
-                placeholder={t("Enter 6-digit code")}
-                aria-label={t("Enter 6-digit code")}
-                disabled={emailVerified || sendingCode || verifying || submitting}
-              />
+            <ul id="admin-email-errors" className="errorlist" aria-live="polite">{renderErrors("admin_email")}</ul>
 
-              <button
-                type="button"
-                className="openspots-form-button openspots-form-button-primary"
-                onClick={verifyCode}
-                disabled={verifying || sendingCode || submitting || emailVerified || !venueChallengeId}
-              >
-                {verifying ? t("Verifying...") : t("Verify")}
-              </button>
-            </div>
-
-            <ul className="errorlist">{renderErrors("admin_email")}</ul>
           </div>
 
           {fields.slice(3).map(([name, label, type, required]) => (
@@ -388,6 +411,7 @@ export default function ApplyVenuePage() {
                 id={name}
                 name={name}
                 type={type}
+                autoComplete={type === "password" ? "new-password" : "off"}
                 value={form[name]}
                 onChange={updateField}
                 required={required}
@@ -442,10 +466,10 @@ export default function ApplyVenuePage() {
                   type="button"
                   key={item.place_id}
                   onClick={() => {
-                    setForm((current) => ({
-                      ...current,
-                      location: item.display_name,
-                    }));
+                    window.clearTimeout(timerRef.current);
+                    abortRef.current?.abort();
+                    locationRequestRef.current += 1;
+                    updateField({ target: { name: "location", value: item.display_name } });
                     setSuggestions([]);
                   }}
                 >
@@ -472,6 +496,12 @@ export default function ApplyVenuePage() {
           <ul className="errorlist">{renderErrors("description")}</ul>
         </div>
 
+        {submissionError && (
+          <div className="alert alert-error apply-submission-error" role="alert">
+            {submissionError}
+          </div>
+        )}
+
         <button
           id="submitApplicationBtn"
           type="submit"
@@ -481,6 +511,18 @@ export default function ApplyVenuePage() {
           {submitting ? t("Submitting...") : t("Submit Application")}
         </button>
       </form>
+      {showEmailVerification && (
+        <EmailVerificationModal
+          returnFocusRef={verifyButtonRef}
+          verificationType="venue"
+          venueEmail={form.admin_email}
+          challengeId={venueChallengeId}
+          onVerified={finishEmailVerification}
+          onClose={() => setShowEmailVerification(false)}
+          onCancelled={resetEmailVerification}
+          onExpired={handleExpiredVerification}
+        />
+      )}
     </section>
   );
 }

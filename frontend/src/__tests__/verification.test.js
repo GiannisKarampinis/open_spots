@@ -17,6 +17,7 @@ jest.mock("../utils/csrf", () => ({ postWithCsrf: jest.fn() }));
 jest.mock("../utils/backendUrl", () => ({ getBackendBase: () => "" }));
 jest.mock("../utils/auth", () => ({ getWithAuth: jest.fn(), patchWithAuth: jest.fn(), postWithAuth: jest.fn(), storeAuthResponse: jest.fn(), clearStoredAuth: jest.fn() }));
 jest.mock("../styles/openspots-forms-style.css", () => ({}));
+jest.mock("../styles/email-verification-modal.css", () => ({}));
 jest.mock("../styles/ProfilePage.css", () => ({}));
 jest.mock("../styles/auth.css", () => ({}));
 jest.mock("../styles/apply_venue.css", () => ({}));
@@ -39,7 +40,9 @@ jest.mock("../components/ToastProvider", () => ({
     return [message, setMessage, type, setType];
   },
 }));
-jest.mock("../components/EmailVerificationModal", () => ({ challengeId }) => <div data-testid="email-modal">{challengeId}</div>);
+jest.mock("../components/EmailVerificationModal", () => (props) => props.verificationType === "venue"
+  ? require("react").createElement(jest.requireActual("../components/EmailVerificationModal").default, props)
+  : <div data-testid="email-modal">{props.challengeId}</div>);
 
 let root;
 beforeEach(() => {
@@ -47,6 +50,7 @@ beforeEach(() => {
   global.IS_REACT_ACT_ENVIRONMENT = true;
   sessionStorage.clear();
   jest.clearAllMocks();
+  axios.get.mockResolvedValue({ data: { email: "owner@example.com", remaining_seconds: 600, resend_after_seconds: 0 } });
   mockLocation = { search: "", state: null };
   jest.useFakeTimers();
   document.body.innerHTML = '<div id="root"></div>';
@@ -184,15 +188,22 @@ test("venue submission uses its own challenge and proof, not the account challen
   rememberVerification({ challenge_id: "unrelated-account-challenge" });
   postWithCsrf.mockImplementation((url) => Promise.resolve({ data:
     url.endsWith("send/") ? { challenge_id: "venue-challenge" }
-      : url.endsWith("confirm/") ? { verification_token: "venue-proof" } : {}
+      : url.endsWith("confirm/") ? { verification_token: "venue-proof", email: "owner@example.com" } : {}
   }));
   await act(async () => root.render(<ApplyVenuePage />));
-  expect(screen.getByRole("button", { name: "Verify", exact: true })).toBeDisabled();
+  expect(screen.queryByRole("dialog")).toBeNull();
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
   await act(async () => fireEvent.change(screen.getByPlaceholderText("Enter 6-digit code"), { target: { value: "123456" } }));
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify", exact: true })));
+  await act(async () => fireEvent.submit(screen.getByRole("dialog").querySelector("form")));
   expect(postWithCsrf).toHaveBeenCalledWith("/api/v1/venues/verification/confirm/", { code: "123456" }, expect.objectContaining({ headers: { "X-Verification-Challenge": "venue-challenge" } }));
+  await act(async () => {
+    for (const [name, value] of Object.entries({
+      admin_firstname: "Alex", admin_lastname: "Owner", admin_username: "venueowner",
+      admin_phone: "2101234567", password: "Example-password-42", password2: "Example-password-42",
+      venue_name: "Example Venue", phone: "2101234568", location: "Athens",
+    })) fireEvent.change(document.getElementById(name), { target: { value } });
+  });
   await act(async () => fireEvent.submit(document.getElementById("apply-venue-form")));
   expect(postWithCsrf).toHaveBeenCalledWith("/api/v1/venues/apply/", expect.objectContaining({ admin_email: "owner@example.com", verification_token: "venue-proof" }), expect.objectContaining({ headers: { "X-Verification-Challenge": "venue-challenge" } }));
   expect(getVerificationChallenge()).toBe("unrelated-account-challenge");
@@ -203,13 +214,20 @@ test("expired venue proof allows reverification without losing application field
     if (url.endsWith("apply/")) return Promise.reject({ response: { status: 400, data: {
       verification_required: true, admin_email: "Verify this email before submitting the application.",
     } } });
-    return Promise.resolve({ data: url.endsWith("send/") ? { challenge_id: "venue-challenge" } : { verification_token: "venue-proof" } });
+    return Promise.resolve({ data: url.endsWith("send/") ? { challenge_id: "venue-challenge" } : { verification_token: "venue-proof", email: "owner@example.com" } });
   });
   await act(async () => root.render(<ApplyVenuePage />));
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
   await act(async () => fireEvent.change(screen.getByPlaceholderText("Enter 6-digit code"), { target: { value: "123456" } }));
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify", exact: true })));
+  await act(async () => fireEvent.submit(screen.getByRole("dialog").querySelector("form")));
+  await act(async () => {
+    for (const [name, value] of Object.entries({
+      admin_firstname: "Alex", admin_lastname: "Owner", admin_username: "venueowner",
+      admin_phone: "2101234567", password: "Example-password-42", password2: "Example-password-42",
+      venue_name: "Example Venue", phone: "2101234568", location: "Athens",
+    })) fireEvent.change(document.getElementById(name), { target: { value } });
+  });
   await act(async () => fireEvent.submit(document.getElementById("apply-venue-form")));
   expect(document.getElementById("admin_email")).toHaveValue("owner@example.com");
   expect(screen.getByRole("button", { name: "Submit Application" })).toBeDisabled();
@@ -219,14 +237,173 @@ test("expired venue proof allows reverification without losing application field
 });
 
 test("editing the venue email discards verification and requires a new challenge", async () => {
-  postWithCsrf.mockImplementation((url) => Promise.resolve({ data: url.endsWith("send/") ? { challenge_id: "venue-challenge" } : { verification_token: "venue-proof" } }));
+  postWithCsrf.mockImplementation((url) => Promise.resolve({ data: url.endsWith("send/") ? { challenge_id: "venue-challenge" } : { verification_token: "venue-proof", email: "owner@example.com" } }));
   await act(async () => root.render(<ApplyVenuePage />));
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
   await act(async () => fireEvent.change(screen.getByPlaceholderText("Enter 6-digit code"), { target: { value: "123456" } }));
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify", exact: true })));
+  await act(async () => fireEvent.submit(screen.getByRole("dialog").querySelector("form")));
   expect(screen.getByRole("button", { name: "Submit Application" })).not.toBeDisabled();
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "different@example.com" } }));
   expect(screen.getByRole("button", { name: "Submit Application" })).toBeDisabled();
-  expect(screen.getByRole("button", { name: "Verify", exact: true })).toBeDisabled();
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+
+test("missing venue email shows an inline error and clears when edited", async () => {
+  await act(async () => root.render(<ApplyVenuePage />));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  const email = document.getElementById("admin_email");
+  expect(document.getElementById("admin-email-errors")).toHaveTextContent("Enter admin email first.");
+  expect(email).toHaveAttribute("aria-invalid", "true");
+  expect(postWithCsrf).not.toHaveBeenCalled();
+  await act(async () => fireEvent.change(email, { target: { value: "owner@example.com" } }));
+  expect(document.getElementById("admin-email-errors")).toBeEmptyDOMElement();
+  expect(email).toHaveAttribute("aria-invalid", "false");
+});
+
+test("venue verification failure stays in the modal until the code is edited", async () => {
+  postWithCsrf.mockImplementation((url) => url.endsWith("send/")
+    ? Promise.resolve({ data: { challenge_id: "venue-challenge" } })
+    : Promise.reject({ response: { data: { detail: "Incorrect verification code." } } }));
+  await act(async () => root.render(<ApplyVenuePage />));
+  await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  const code = screen.getByPlaceholderText("Enter 6-digit code");
+  await act(async () => fireEvent.change(code, { target: { value: "123456" } }));
+  await act(async () => fireEvent.submit(screen.getByRole("dialog").querySelector("form")));
+  expect(screen.getByRole("alert")).toHaveTextContent("Incorrect verification code.");
+  await act(async () => fireEvent.change(code, { target: { value: "654321" } }));
+  expect(screen.queryByText("Incorrect verification code.")).toBeNull();
+});
+
+
+test("empty venue passwords show required errors before password comparison", async () => {
+  await act(async () => root.render(<ApplyVenuePage />));
+  await act(async () => fireEvent.submit(document.getElementById("apply-venue-form")));
+  for (const name of ["password", "password2"]) {
+    const input = document.getElementById(name);
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input.parentElement.querySelector(".errorlist")).toHaveTextContent("This field is required.");
+  }
+  expect(screen.queryByText("Password fields did not match.")).toBeNull();
+  expect(postWithCsrf).not.toHaveBeenCalled();
+});
+
+
+test("venue modal reopens its challenge and resends through the venue endpoint", async () => {
+  rememberVerification({ challenge_id: "account-challenge" });
+  postWithCsrf.mockResolvedValue({ data: { challenge_id: "venue-challenge", remaining_seconds: 600 } });
+  await act(async () => root.render(<ApplyVenuePage />));
+  await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Close" })));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  expect(postWithCsrf).toHaveBeenCalledTimes(1);
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Resend Code" })));
+  expect(postWithCsrf).toHaveBeenLastCalledWith("/api/v1/venues/verification/send/", { email: "owner@example.com" }, expect.objectContaining({ headers: { "X-Verification-Challenge": "venue-challenge" } }));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Cancel verification" })));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(document.getElementById("admin_email")).toHaveValue("owner@example.com");
+  expect(screen.getByRole("button", { name: "Submit Application" })).toBeDisabled();
+  expect(getVerificationChallenge()).toBe("account-challenge");
+  expect(storeAuthResponse).not.toHaveBeenCalled();
+});
+
+
+test("venue send-code field errors are shown beneath the email", async () => {
+  postWithCsrf.mockRejectedValue({ response: { status: 400, data: { email: ["Enter a valid email address."] } } });
+  await act(async () => root.render(<ApplyVenuePage />));
+  await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "bad-email" } }));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  expect(document.getElementById("admin-email-errors")).toHaveTextContent("Enter a valid email address.");
+});
+
+test("venue dialog focuses the code, traps Tab, and restores focus after Escape", async () => {
+  postWithCsrf.mockResolvedValue({ data: { challenge_id: "venue-challenge" } });
+  await act(async () => root.render(<ApplyVenuePage />));
+  await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
+  const opener = screen.getByRole("button", { name: "Verify Email" });
+  await act(async () => fireEvent.click(opener));
+  expect(document.activeElement).toBe(screen.getByPlaceholderText("Enter 6-digit code"));
+  const last = screen.getByRole("button", { name: "Cancel verification" });
+  last.focus();
+  await act(async () => fireEvent.keyDown(last, { key: "Tab" }));
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Close" }));
+  await act(async () => fireEvent.keyDown(document.activeElement, { key: "Escape" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(document.activeElement).toBe(opener);
+});
+
+test("venue confirmation cannot be closed mid-request or verify a changed email", async () => {
+  let finish;
+  postWithCsrf.mockImplementation((url) => url.endsWith("send/")
+    ? Promise.resolve({ data: { challenge_id: "venue-challenge" } })
+    : new Promise((resolve) => { finish = resolve; }));
+  await act(async () => root.render(<ApplyVenuePage />));
+  await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  await act(async () => fireEvent.change(screen.getByPlaceholderText("Enter 6-digit code"), { target: { value: "123456" } }));
+  await act(async () => fireEvent.submit(screen.getByRole("dialog").querySelector("form")));
+  expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
+  await act(async () => fireEvent.keyDown(document.activeElement, { key: "Escape" }));
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  // Simulate an external edit despite the disabled email field.
+  await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "different@example.com" } }));
+  await act(async () => finish({ data: { email: "owner@example.com", verification_token: "old-proof" } }));
+  expect(screen.getByRole("button", { name: "Submit Application" })).toBeDisabled();
+  expect(document.getElementById("admin_email")).toHaveValue("different@example.com");
+});
+
+test("clearing location cancels a scheduled search", async () => {
+  const previousFetch = global.fetch;
+  global.fetch = jest.fn();
+  try {
+    await act(async () => root.render(<ApplyVenuePage />));
+    const location = document.getElementById("location");
+    await act(async () => fireEvent.change(location, { target: { value: "Athens" } }));
+    await act(async () => fireEvent.change(location, { target: { value: "" } }));
+    await act(async () => jest.advanceTimersByTime(300));
+    expect(global.fetch).not.toHaveBeenCalled();
+  } finally { global.fetch = previousFetch; }
+});
+
+test("obsolete location results cannot return after clearing the field", async () => {
+  const previousFetch = global.fetch;
+  let finish;
+  global.fetch = jest.fn(() => new Promise((resolve) => { finish = resolve; }));
+  try {
+    await act(async () => root.render(<ApplyVenuePage />));
+    const location = document.getElementById("location");
+    await act(async () => fireEvent.change(location, { target: { value: "Athens" } }));
+    await act(async () => jest.advanceTimersByTime(300));
+    const signal = global.fetch.mock.calls[0][1].signal;
+    await act(async () => fireEvent.change(location, { target: { value: "" } }));
+    expect(signal.aborted).toBe(true);
+    await act(async () => finish({ ok: true, json: async () => [{ place_id: 1, display_name: "Old Athens result" }] }));
+    expect(screen.queryByText("Old Athens result")).toBeNull();
+  } finally { global.fetch = previousFetch; }
+});
+
+
+test("selecting a location clears its validation error and leaving cancels a search", async () => {
+  const previousFetch = global.fetch;
+  global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => [{ place_id: 1, display_name: "Athens, Greece" }] });
+  try {
+    await act(async () => root.render(<ApplyVenuePage />));
+    await act(async () => fireEvent.submit(document.getElementById("apply-venue-form")));
+    const location = document.getElementById("location");
+    expect(location.parentElement.querySelector(".errorlist")).toHaveTextContent("This field is required.");
+    await act(async () => fireEvent.change(location, { target: { value: "Athens" } }));
+    await act(async () => jest.advanceTimersByTime(300));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Athens, Greece" })));
+    expect(location).toHaveValue("Athens, Greece");
+    expect(location.parentElement.querySelector(".errorlist")).toBeEmptyDOMElement();
+    expect(screen.queryByRole("button", { name: "Athens, Greece" })).toBeNull();
+    await act(async () => fireEvent.change(location, { target: { value: "Piraeus" } }));
+    await act(async () => root.render(null));
+    await act(async () => jest.advanceTimersByTime(300));
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  } finally { global.fetch = previousFetch; }
 });

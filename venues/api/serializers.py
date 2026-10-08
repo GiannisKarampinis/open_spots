@@ -4,6 +4,8 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
+from accounts.api.serializers import PersonNameField, phone_number_validator
+
 from venues.models import Reservation, Review, Venue, VenueApplication
 
 User = get_user_model()
@@ -186,6 +188,10 @@ class ReservationSerializer(serializers.ModelSerializer):
 
 
 class VenueApplicationSerializer(serializers.ModelSerializer):
+    admin_firstname = PersonNameField(required=True)
+    admin_lastname = PersonNameField(required=True)
+    admin_phone = serializers.CharField(required=True, allow_blank=False, validators=[phone_number_validator])
+    phone = serializers.CharField(required=True, allow_blank=False, max_length=20, validators=[phone_number_validator])
     admin_username = serializers.CharField()
     admin_email = serializers.EmailField()
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])

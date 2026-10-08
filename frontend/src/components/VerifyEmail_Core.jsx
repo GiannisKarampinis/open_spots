@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { postWithCsrf } from "../utils/csrf";
@@ -14,11 +14,15 @@ export function formatSeconds(totalSeconds) {
 export function VerificationCodeForm({ code, updateCode, submit, loading, submitting,
   resending, remaining, className, verifyLabel }) {
   const { t } = useTranslation();
+  const inputRef = useRef(null);
+  useEffect(() => {
+    if (!loading) inputRef.current?.focus();
+  }, [loading]);
   return <form className={className} onSubmit={submit}>
-    <input type="text" inputMode="numeric" autoComplete="one-time-code"
+    <input ref={inputRef} type="text" inputMode="numeric" autoComplete="one-time-code"
       maxLength={CODE_LENGTH} pattern="\d{6}" value={code} onChange={updateCode}
       placeholder={t("Enter 6-digit code")} aria-label={t("Enter 6-digit code")}
-      autoFocus disabled={loading} required />
+      disabled={loading} required />
     <button type="submit" disabled={loading || submitting || resending || remaining <= 0}>
       {submitting ? t("Verifying...") : t(verifyLabel)}
     </button>
@@ -28,8 +32,16 @@ export function VerificationCodeForm({ code, updateCode, submit, loading, submit
 // Wrappers own layout and what happens after verification; this component owns
 // the challenge requests and the state shared by both verification interfaces.
 export default function VerifyEmail_Core({ challengeId, onVerified, onCancelled,
-  onExpired, onStatus, statusError, initialMessageType = "success", children }) {
+  onExpired, onStatus, statusError, initialMessageType = "success",
+  confirmUrl = "/api/v1/accounts/verification/confirm/",
+  resendUrl = "/api/v1/accounts/verification/resend/", resendPayload,
+  inlineMessages = false, children }) {
   const { t } = useTranslation();
+  const lifecycleRef = useRef(0);
+  useEffect(() => {
+    lifecycleRef.current += 1;
+    return () => { lifecycleRef.current += 1; };
+  }, [challengeId]);
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
@@ -39,7 +51,19 @@ export default function VerifyEmail_Core({ challengeId, onVerified, onCancelled,
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
-  const [message, setMessage, messageType, setMessageType] = useToastMessage(initialMessageType);
+  const [toastMessage, setToastMessage, toastType, setToastType] = useToastMessage(initialMessageType);
+  const [inlineMessage, setInlineMessage] = useState("");
+  const [inlineType, setInlineType] = useState(initialMessageType);
+  const message = inlineMessages ? inlineMessage : toastMessage;
+  const messageType = inlineMessages ? inlineType : toastType;
+  const setMessage = useCallback((value) => {
+    if (inlineMessages) setInlineMessage(value);
+    else setToastMessage(value);
+  }, [inlineMessages, setToastMessage]);
+  const setMessageType = useCallback((value) => {
+    if (inlineMessages) setInlineType(value);
+    else setToastType(value);
+  }, [inlineMessages, setToastType]);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,18 +123,20 @@ export default function VerifyEmail_Core({ challengeId, onVerified, onCancelled,
     }
     setSubmitting(true);
     setMessage("");
+    const lifecycle = lifecycleRef.current;
     try {
-      const res = await postWithCsrf("/api/v1/accounts/verification/confirm/", { code }, verificationConfig(challengeId));
+      const res = await postWithCsrf(confirmUrl, { code }, verificationConfig(challengeId));
+      if (lifecycle !== lifecycleRef.current) return;
       onVerified(res.data, reason);
     } catch (err) {
-      handleError(err, "Verification failed. Please check the code.");
+      if (lifecycle === lifecycleRef.current) handleError(err, "Verification failed. Please check the code.");
     } finally { setSubmitting(false); }
   };
   const resend = async () => {
     setResending(true);
     setMessage("");
     try {
-      const res = await postWithCsrf("/api/v1/accounts/verification/resend/", {}, verificationConfig(challengeId));
+      const res = await postWithCsrf(resendUrl, resendPayload || {}, verificationConfig(challengeId));
       const seconds = Number(res.data.remaining_seconds || 600);
       setRemaining(seconds);
       setResendAfter(Number(res.data.resend_after_seconds || 0));

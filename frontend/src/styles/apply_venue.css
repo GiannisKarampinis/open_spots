@@ -112,3 +112,8 @@
     min-height: 40px;
   }
 }
+
+.apply-container .apply-submission-error {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+}

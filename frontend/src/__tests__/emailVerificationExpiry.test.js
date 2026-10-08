@@ -1,3 +1,4 @@
+jest.mock("../styles/email-verification-modal.css", () => ({}));
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { fireEvent, screen } from "@testing-library/dom";
