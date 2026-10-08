@@ -523,11 +523,15 @@ export default function ApplyVenuePage() {
           <ul className="errorlist">{renderErrors("location")}</ul>
         </div>
 
-        <div className="openspots-form-field apply-description-field">
-          <label htmlFor="description">{t("Description")}</label>
+        <div className="openspots-form-field apply-notes-field">
+          <label htmlFor="application-notes">{t("Application notes")}</label>
+          <p id="application-notes-help" className="apply-field-help">
+            {t("Tell our reviewers anything that may help us assess your venue application.")}
+          </p>
 
           <textarea
-            id="description"
+            id="application-notes"
+            aria-describedby="application-notes-help"
             name="description"
             rows="5"
             value={form.description}

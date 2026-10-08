@@ -11,7 +11,7 @@
 }
 
 .apply-container .section-body,
-.apply-container .apply-description-field {
+.apply-container .apply-notes-field {
   grid-column: 1 / -1;
 }
 
@@ -207,3 +207,10 @@
 .apply-container .openspots-form-select-menu li { min-height: 44px; padding: 11px 12px; border-radius: 5px; cursor: pointer; }
 .apply-container .openspots-form-select-menu li.active { background: rgba(53, 122, 232, 0.12); }
 .apply-container .openspots-form-select-menu li[aria-selected="true"] { background: var(--surface-gradient); color: var(--button-text); }
+
+.apply-container .apply-field-help {
+  margin: 0 0 4px;
+  color: var(--openspots-form-value-text);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}

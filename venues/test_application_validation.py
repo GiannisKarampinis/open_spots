@@ -36,3 +36,25 @@ class VenueApplicationValidationTests(TestCase):
         self.assertEqual(application.owner_user.firstname, "Alex")
         self.assertEqual(application.owner_user.phone_number, "+306991234567")
         self.assertTrue(application.owner_user.check_password(self.payload["password"]))
+
+    def test_application_notes_are_not_published_when_approved(self):
+        from unittest.mock import patch
+        from django.contrib import admin
+        from django.test import RequestFactory
+        from venues.admin import VenueApplicationAdmin
+        from venues.models import Venue, VenueApplication
+
+        serializer = VenueApplicationSerializer(data={**self.payload, "description": "Notes for the reviewers."})
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        application = serializer.save()
+        model_admin = VenueApplicationAdmin(VenueApplication, admin.site)
+        request = RequestFactory().post("/admin/venues/venueapplication/")
+        request.user = application.owner_user
+        with patch.object(model_admin, "message_user"):
+            model_admin.mark_as_approved(request, VenueApplication.objects.filter(pk=application.pk))
+        application.refresh_from_db()
+        self.assertEqual(application.status, "approved")
+        self.assertEqual(application.description, "Notes for the reviewers.")
+        self.assertEqual(Venue.objects.get(owner=application.owner_user).description, "")
+        form = model_admin.get_form(request)
+        self.assertEqual(form.base_fields["description"].label, "Application notes")

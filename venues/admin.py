@@ -27,6 +27,12 @@ class VenueApplicationAdmin(admin.ModelAdmin):
     ordering      = ("-submitted_at",)
     actions       = ["mark_as_approved"]  # , "mark_as_rejected"]
 
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "description":
+            kwargs["label"] = "Application notes"
+            kwargs["help_text"] = "Information for reviewing this application; it is not published as the venue description."
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
     @admin.action(description="Approve applications (create owner + venue)")
     def mark_as_approved(self, request, queryset):
         approved = 0
@@ -108,7 +114,6 @@ class VenueApplicationAdmin(admin.ModelAdmin):
                         name        = app.venue_name,
                         kind        = app.venue_type,
                         location    = app.location,
-                        description = app.description, # FIXME: This should be removed?
                         email       = email,
                         phone       = app.phone,
                         owner       = user,
