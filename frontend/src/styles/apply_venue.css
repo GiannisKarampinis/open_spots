@@ -67,41 +67,6 @@
   resize: vertical;
 }
 
-.apply-container .apply-location-field {
-  position: relative;
-}
-
-.apply-container .location-suggestions {
-  position: absolute;
-  top: calc(100% - 0.85rem);
-  left: 0;
-  right: 0;
-  z-index: 10;
-  max-height: 220px;
-  overflow: auto;
-  border: 1px solid var(--openspots-form-border);
-  border-radius: 6px;
-  background: var(--openspots-form-surface);
-  box-shadow: 0 10px 24px rgba(0, 24, 50, 0.18);
-}
-
-.apply-container .location-suggestions button {
-  display: block;
-  width: 100%;
-  padding: 10px 12px;
-  border: 0;
-  background: transparent;
-  color: var(--openspots-form-value-text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.apply-container .location-suggestions button:hover,
-.apply-container .location-suggestions button:focus-visible {
-  background: rgba(53, 122, 232, 0.12);
-}
-
 @media (max-width: 560px) {
   .apply-container .email-verify-row,
   .apply-container .email-code-row {

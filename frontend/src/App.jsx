@@ -14,7 +14,6 @@ import AboutPage from "./pages/AboutPage";
 import PasswordRecoverPage from "./pages/PasswordRecoverPage";
 import PasswordResetPage from "./pages/PasswordResetPage";
 import ApplyVenuePage from "./pages/ApplyVenuePage";
-import ApplicationSubmittedPage from "./pages/ApplicationSubmittedPage";
 import ReservationPendingPage from "./pages/ReservationPendingPage";
 import MyReservationsPage from "./pages/MyReservationsPage";
 import ReservationFormPage from "./pages/ReservationFormPage";
@@ -34,10 +33,6 @@ export default function App() {
 
           <Route path="/venues/about" element={<AboutPage />} />
           <Route path="/venues/apply-venue" element={<ApplyVenuePage />} />
-          <Route
-            path="/venues/application-submitted"
-            element={<ApplicationSubmittedPage />}
-          />
 
           <Route path="/venues/reservation-pending" element={<ReservationPendingPage />} />
           <Route path="/venues/my-reservations" element={<MyReservationsPage />} />

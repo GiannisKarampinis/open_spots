@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
+import { VerificationType } from "../constants";
 import { clearVerification } from "../utils/verification";
 import { Trans, useTranslation } from "react-i18next";
 import { storeAuthResponse } from "../utils/auth";
 import "../styles/email-verification-modal.css";
 import VerifyEmail_Core, { VerificationCodeForm, formatSeconds } from "./VerifyEmail_Core";
 
-export default function EmailVerificationModal({ onClose, onVerified, onCancelled, onExpired, challengeId, verificationType = "account", venueEmail, returnFocusRef }) {
+export default function EmailVerificationModal({ onClose, onVerified, onCancelled, onExpired, challengeId, verificationType = VerificationType.ACCOUNT, venueEmail, returnFocusRef }) {
   const { t } = useTranslation();
   const dialogRef = useRef(null);
   const busyRef = useRef(false);
@@ -49,7 +50,7 @@ export default function EmailVerificationModal({ onClose, onVerified, onCancelle
     };
   }, [returnFocusRef]);
 
-  const isVenue = verificationType === "venue";
+  const isVenue = verificationType === VerificationType.VENUE;
   const finishVerification = (data) => {
     if (isVenue) {
       onVerified(data);

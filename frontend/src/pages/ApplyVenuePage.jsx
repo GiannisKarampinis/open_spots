@@ -1,7 +1,8 @@
 import FormSelect from "../components/FormSelect";
+import { VerificationType } from "../constants";
 import { getRequiredFieldErrors, passwordsMatch } from "../utils/formValidation";
 import { useCallback, useEffect, useRef, useState }   from "react";
-import { useNavigate }        from "react-router-dom";
+import { Link }               from "react-router-dom";
 import { useTranslation }     from "react-i18next";
 import { postWithCsrf }       from "../utils/csrf";
 import { verificationConfig } from "../utils/verification";
@@ -10,6 +11,7 @@ import { useToastMessage }    from "../components/ToastProvider";
 import "../styles/openspots-forms-style.css";
 import "../styles/apply_venue.css";
 import "../styles/feedback.css";
+import "../styles/auth.css";
 
 const initialForm = {
   admin_firstname: "",
@@ -80,18 +82,11 @@ function firstApiError(data, t) {
 
 export default function ApplyVenuePage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
-  const timerRef = useRef(null);
-  const abortRef = useRef(null);
-  const locationRequestRef = useRef(0);
   const verificationRef = useRef({ email: "", challengeId: "" });
   const verifyButtonRef = useRef(null);
 
   useEffect(() => () => {
-    window.clearTimeout(timerRef.current);
-    abortRef.current?.abort();
-    locationRequestRef.current += 1;
     verificationRef.current = { email: "", challengeId: "" };
   }, []);
 
@@ -105,7 +100,7 @@ export default function ApplyVenuePage() {
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
+  const [applicationSubmitted, setApplicationSubmitted] = useState(false);
 
   const updateField = (event) => {
     const { name, value } = event.target;
@@ -168,6 +163,7 @@ export default function ApplyVenuePage() {
     }
   };
 
+  /* OK - REVIEWED - FIXME: Learn more about useCallback */
   const resetEmailVerification = useCallback(() => {
     verificationRef.current = { email: "", challengeId: "" };
     setEmailVerified(false);
@@ -176,78 +172,39 @@ export default function ApplyVenuePage() {
     setShowEmailVerification(false);
   }, []);
 
+  /* OK - REVIEWED by Codex - tsevre make a test in here */
   const handleExpiredVerification = useCallback(() => {
     resetEmailVerification();
-    setErrors((current) => ({ ...current, admin_email: [t("Email verification expired. Please try again.")] }));
+    setErrors(
+      (current) => ({ 
+        ...current, 
+        admin_email: [t("Email verification expired. Please try again.")] 
+      })
+    );
   }, [resetEmailVerification, t]);
 
+  /* OK - REVIEWED */
   const finishEmailVerification = (data) => {
     const current = verificationRef.current;
-    if (current.email !== form.admin_email || current.challengeId !== venueChallengeId) return;
+    
+    if (current.email !== form.admin_email || current.challengeId !== venueChallengeId) return; /* It ignores
+    an outdated verification result if the user has changed the email or started a new verification challenge. */
+
     if (!data.verification_token || data.email?.trim().toLowerCase() !== current.email.trim().toLowerCase()) {
       resetEmailVerification();
       setFieldError("admin_email", t("You must verify this email before submitting the application."));
       return;
     }
+
     setVerificationToken(data.verification_token);
     setEmailVerified(true);
     setShowEmailVerification(false);
     setFieldError("admin_email", "");
+    
     setMessage(data.detail || t("Email verified"));
   };
 
-  const searchLocation = (value) => {
-    updateField({
-      target: {
-        name: "location",
-        value,
-      },
-    });
-
-    window.clearTimeout(timerRef.current);
-    abortRef.current?.abort();
-    const requestId = ++locationRequestRef.current;
-    setSuggestions([]);
-
-    if (value.trim().length < 3) {
-      setSuggestions([]);
-      return;
-    }
-
-    timerRef.current = window.setTimeout(async () => {
-      try {
-        if (abortRef.current) {
-          abortRef.current.abort();
-        }
-
-        abortRef.current = new AbortController();
-
-        const url = new URL("https://nominatim.openstreetmap.org/search");
-
-        url.searchParams.set("format", "json");
-        url.searchParams.set("addressdetails", "1");
-        url.searchParams.set("limit", "6");
-        url.searchParams.set("countrycodes", "gr");
-        url.searchParams.set("q", value);
-
-        const res = await fetch(url.toString(), {
-          signal: abortRef.current.signal,
-          headers: {
-            Accept: "application/json",
-          },
-        });
-
-        const results = res.ok ? await res.json() : [];
-        if (requestId === locationRequestRef.current) setSuggestions(results);
-      } catch {
-        // Request was probably aborted.
-      }
-    }, 250);
-  };
-
   
-
-
   const submit = async (event) => {
     event.preventDefault();
 
@@ -264,33 +221,39 @@ export default function ApplyVenuePage() {
       return;
     }
 
+    /* OK - REVIEWED */
     if (!passwordsMatch(form.password, form.password2)) {
       setErrors({password2: [t("Password fields did not match.")],});
       return;
     }
 
+    /* ΟK - REVIEWED */
     if (!emailVerified) {
       setFieldError("admin_email", t("You must verify this email before submitting the application."));
       return;
     }
 
     setSubmitting(true);
+    
     setErrors({});
     setSubmissionError("");
 
     try {
+      /* OK - REVIEWED */
       const payload = {
         ...form,
-        verification_token: verificationToken,
+        verification_token: verificationToken, // this comes from the finishEmailVerification which is called earlier.
       };
+      delete payload.password2; // backend requires only one password field
 
-      delete payload.password2;
-
+      /* Stopped in here - we must review the verification flow first */
       await postWithCsrf("/api/v1/venues/apply/", payload, verificationConfig(venueChallengeId));
+      
       setVerificationToken("");
       setVenueChallengeId("");
 
-      navigate("/venues/application-submitted");
+      setApplicationSubmitted(true);
+    
     } catch (err) {
       const data = err.response?.data || {};
 
@@ -307,6 +270,7 @@ export default function ApplyVenuePage() {
       }
 
       setSubmissionError(firstApiError(data, t));
+    
     } finally {
       setSubmitting(false);
     }
@@ -331,6 +295,20 @@ export default function ApplyVenuePage() {
     ["venue_name",      "Venue name",       "text"],
     ["phone",           "Venue phone",      "text"],
   ];
+
+  if (applicationSubmitted) {
+    return (
+      <div className="auth-container" role="status">
+        <h2>{t("Thank you!")}</h2>
+        <p>
+          {t("Your application has been submitted. We will review it and contact you shortly.")}
+        </p>
+        <Link className="auth-submit" to="/">
+          {t("Back to Venues")}
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <section className="openspots-form-panel openspots-form-section apply-container" aria-labelledby="apply-venue-heading">
@@ -395,7 +373,7 @@ export default function ApplyVenuePage() {
               <button
                 type="button"
                 className="openspots-form-button openspots-form-button-primary"
-                ref={verifyButtonRef}
+                ref={verifyButtonRef} /* attaches a reference to the button so that we can return focus to it after the modal closes */
                 onClick={sendCode}
                 disabled={sendingCode || submitting || showEmailVerification || emailVerified}
               >
@@ -486,7 +464,7 @@ export default function ApplyVenuePage() {
           <ul id="venue-type-errors" className="errorlist">{renderErrors("venue_type")}</ul>
         </div>
 
-        <div className="openspots-form-field apply-location-field">
+        <div className="openspots-form-field">
           <label htmlFor="location">
             {t("Location")}
             <span className="text-danger">*</span>
@@ -496,29 +474,9 @@ export default function ApplyVenuePage() {
             id="location"
             name="location"
             value={form.location}
-            onChange={(event) => searchLocation(event.target.value)}
+            onChange={updateField}
             required
           />
-
-          {suggestions.length > 0 && (
-            <div className="location-suggestions">
-              {suggestions.map((item) => (
-                <button
-                  type="button"
-                  key={item.place_id}
-                  onClick={() => {
-                    window.clearTimeout(timerRef.current);
-                    abortRef.current?.abort();
-                    locationRequestRef.current += 1;
-                    updateField({ target: { name: "location", value: item.display_name } });
-                    setSuggestions([]);
-                  }}
-                >
-                  {item.display_name}
-                </button>
-              ))}
-            </div>
-          )}
 
           <ul className="errorlist">{renderErrors("location")}</ul>
         </div>
@@ -559,18 +517,23 @@ export default function ApplyVenuePage() {
           {submitting ? t("Submitting...") : t("Submit Application")}
         </button>
       </form>
-      {showEmailVerification && (
+      
+      {/* FIXME: How the backend handles email verification */}
+      {showEmailVerification && venueChallengeId && (
         <EmailVerificationModal
-          returnFocusRef={verifyButtonRef}
-          verificationType="venue"
-          venueEmail={form.admin_email}
-          challengeId={venueChallengeId}
-          onVerified={finishEmailVerification}
-          onClose={() => setShowEmailVerification(false)}
-          onCancelled={resetEmailVerification}
-          onExpired={handleExpiredVerification}
+          returnFocusRef    = {verifyButtonRef} /* It tells the modal where to return 
+          keyboard focus when it closes. Passing it to the modal lets the modal 
+          call .focus() on that button when it closes. */
+          verificationType  = {VerificationType.VENUE}
+          venueEmail        = {form.admin_email}
+          challengeId       = {venueChallengeId}
+          onVerified        = {finishEmailVerification}
+          onClose           = {() => setShowEmailVerification(false)}
+          onCancelled       = {resetEmailVerification}
+          onExpired         = {handleExpiredVerification}
         />
       )}
+
     </section>
   );
 }

@@ -40,7 +40,7 @@ jest.mock("../components/ToastProvider", () => ({
     return [message, setMessage, type, setType];
   },
 }));
-jest.mock("../components/EmailVerificationModal", () => (props) => props.verificationType === "venue"
+jest.mock("../components/EmailVerificationModal", () => (props) => props.verificationType === require("../constants").VerificationType.VENUE
   ? require("react").createElement(jest.requireActual("../components/EmailVerificationModal").default, props)
   : <div data-testid="email-modal">{props.challengeId}</div>);
 
@@ -358,59 +358,6 @@ test("venue confirmation cannot be closed mid-request or verify a changed email"
   expect(screen.getByRole("button", { name: "Submit Application" })).toBeDisabled();
   expect(document.getElementById("admin_email")).toHaveValue("different@example.com");
 });
-
-test("clearing location cancels a scheduled search", async () => {
-  const previousFetch = global.fetch;
-  global.fetch = jest.fn();
-  try {
-    await act(async () => root.render(<ApplyVenuePage />));
-    const location = document.getElementById("location");
-    await act(async () => fireEvent.change(location, { target: { value: "Athens" } }));
-    await act(async () => fireEvent.change(location, { target: { value: "" } }));
-    await act(async () => jest.advanceTimersByTime(300));
-    expect(global.fetch).not.toHaveBeenCalled();
-  } finally { global.fetch = previousFetch; }
-});
-
-test("obsolete location results cannot return after clearing the field", async () => {
-  const previousFetch = global.fetch;
-  let finish;
-  global.fetch = jest.fn(() => new Promise((resolve) => { finish = resolve; }));
-  try {
-    await act(async () => root.render(<ApplyVenuePage />));
-    const location = document.getElementById("location");
-    await act(async () => fireEvent.change(location, { target: { value: "Athens" } }));
-    await act(async () => jest.advanceTimersByTime(300));
-    const signal = global.fetch.mock.calls[0][1].signal;
-    await act(async () => fireEvent.change(location, { target: { value: "" } }));
-    expect(signal.aborted).toBe(true);
-    await act(async () => finish({ ok: true, json: async () => [{ place_id: 1, display_name: "Old Athens result" }] }));
-    expect(screen.queryByText("Old Athens result")).toBeNull();
-  } finally { global.fetch = previousFetch; }
-});
-
-
-test("selecting a location clears its validation error and leaving cancels a search", async () => {
-  const previousFetch = global.fetch;
-  global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => [{ place_id: 1, display_name: "Athens, Greece" }] });
-  try {
-    await act(async () => root.render(<ApplyVenuePage />));
-    await act(async () => fireEvent.submit(document.getElementById("apply-venue-form")));
-    const location = document.getElementById("location");
-    expect(location.parentElement.querySelector(".errorlist")).toHaveTextContent("This field is required.");
-    await act(async () => fireEvent.change(location, { target: { value: "Athens" } }));
-    await act(async () => jest.advanceTimersByTime(300));
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Athens, Greece" })));
-    expect(location).toHaveValue("Athens, Greece");
-    expect(location.parentElement.querySelector(".errorlist")).toBeEmptyDOMElement();
-    expect(screen.queryByRole("button", { name: "Athens, Greece" })).toBeNull();
-    await act(async () => fireEvent.change(location, { target: { value: "Piraeus" } }));
-    await act(async () => root.render(null));
-    await act(async () => jest.advanceTimersByTime(300));
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-  } finally { global.fetch = previousFetch; }
-});
-
 
 test("venue password confirmation follows backend trimming", async () => {
   await act(async () => root.render(<ApplyVenuePage />));
