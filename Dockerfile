@@ -20,6 +20,7 @@ FROM python:3.12-slim
 
 # Set working directory inside container
 WORKDIR /app
+ENV STATIC_ROOT=/app/staticfiles MEDIA_ROOT=/app/media
 
 # Install system dependencies (added gettext for translations)
 RUN apt-get update && apt-get install -y --no-install-recommends\
@@ -29,11 +30,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends\
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
-COPY . .
+COPY backend .
 
 COPY --from=frontend-builder /app/frontend/dist ./staticfiles/react-app
 

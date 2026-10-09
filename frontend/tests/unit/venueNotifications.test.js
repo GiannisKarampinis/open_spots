@@ -1,7 +1,7 @@
 import {
 	subscribeToVenueNotifications,
 	venueNotificationsUrl,
-} from "../utils/venueNotifications";
+} from "../../src/utils/venueNotifications";
 
 class MockWebSocket {
 	static CLOSED = 3;

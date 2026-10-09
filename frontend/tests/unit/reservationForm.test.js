@@ -1,20 +1,21 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { screen } from "@testing-library/dom";
-import { getWithAuth } from "../utils/auth";
-import ReservationFormPage from "../pages/ReservationFormPage";
-import { isReservationUpcoming } from "../utils/reservationTime";
+import { getWithAuth } from "../../src/utils/auth";
+import ReservationFormPage from "../../src/pages/ReservationFormPage";
+import { isReservationUpcoming } from "../../src/utils/reservationTime";
 
-jest.mock("../utils/auth", () => ({ getWithAuth: jest.fn(), postWithAuth: jest.fn() }));
-jest.mock("../styles/openspots-forms-style.css", () => ({}));
-jest.mock("../styles/my_reservations.css", () => ({}));
-jest.mock("../styles/make_reservation.css", () => ({}));
-jest.mock("../styles/edit_reservation.css", () => ({}));
-jest.mock("../components/ToastProvider", () => ({
+jest.mock("../../src/utils/auth", () => ({ getWithAuth: jest.fn(), postWithAuth: jest.fn() }));
+jest.mock("../../src/styles/openspots-forms-style.css", () => ({}));
+jest.mock("../../src/styles/my_reservations.css", () => ({}));
+jest.mock("../../src/styles/make_reservation.css", () => ({}));
+jest.mock("../../src/styles/edit_reservation.css", () => ({}));
+jest.mock("../../src/components/ToastProvider", () => ({
   useToastMessage: () => require("react").useState(""),
 }));
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({ useNavigate: () => mockNavigate,
+  useLocation: () => ({ pathname: "/venues/reservations/7/edit", search: "" }),
   useParams: () => ({ reservationId: "7" }), Link: ({ children }) => <a>{children}</a> }));
 jest.mock("react-i18next", () => {
   const t = (key) => key;

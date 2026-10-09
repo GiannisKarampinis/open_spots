@@ -1,4 +1,4 @@
-import { fetchAvailability } from "../utils/api.js";
+import { fetchAvailability } from "../../src/utils/api.js";
 
 global.fetch = jest.fn(() =>
   Promise.resolve({

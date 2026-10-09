@@ -7,7 +7,7 @@ import {
   refreshAccessToken,
   requestWithAuth,
   storeAuthResponse,
-} from "../utils/auth";
+} from "../../src/utils/auth";
 
 jest.mock("axios", () => {
   const mockAxios = jest.fn();

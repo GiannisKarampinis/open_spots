@@ -1,20 +1,20 @@
-jest.mock("../styles/email-verification-modal.css", () => ({}));
+jest.mock("../../src/styles/email-verification-modal.css", () => ({}));
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { fireEvent, screen } from "@testing-library/dom";
 import axios from "axios";
-import { postWithCsrf } from "../utils/csrf";
-import { rememberVerification, getVerificationChallenge } from "../utils/verification";
-import EmailVerificationModal from "../components/EmailVerificationModal";
+import { postWithCsrf } from "../../src/utils/csrf";
+import { rememberVerification, getVerificationChallenge } from "../../src/utils/verification";
+import EmailVerificationModal from "../../src/components/EmailVerificationModal";
 
 jest.mock("axios", () => ({ get: jest.fn() }));
-jest.mock("../utils/csrf", () => ({ postWithCsrf: jest.fn() }));
-jest.mock("../utils/auth", () => ({ storeAuthResponse: jest.fn() }));
+jest.mock("../../src/utils/csrf", () => ({ postWithCsrf: jest.fn() }));
+jest.mock("../../src/utils/auth", () => ({ storeAuthResponse: jest.fn() }));
 jest.mock("react-i18next", () => {
   const t = (key) => key;
   return { useTranslation: () => ({ t }), Trans: () => null };
 });
-jest.mock("../components/ToastProvider", () => ({
+jest.mock("../../src/components/ToastProvider", () => ({
   useToastMessage: () => {
     const [message, setMessage] = require("react").useState("");
     const [type, setType] = require("react").useState("error");

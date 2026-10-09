@@ -34,3 +34,7 @@ env
 htmlcov/
 frontend/playwright-report/
 frontend/test-results/
+
+.venv/
+.venv-test/
+.python-runtime/

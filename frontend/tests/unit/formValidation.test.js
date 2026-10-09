@@ -1,4 +1,4 @@
-import { validateReservationForm, getRequiredFieldErrors, passwordsMatch } from "../utils/formValidation.js";
+import { validateReservationForm, getRequiredFieldErrors, passwordsMatch } from "../../src/utils/formValidation.js";
 
 describe("validateReservationForm", () => {
   test("returns false if any field is empty", () => {

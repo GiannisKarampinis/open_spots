@@ -66,18 +66,18 @@ This removes SMTP latency from recovery responses, not every possible timing sig
 Venue submission authorization errors include `verification_required`; React
 discards expired credentials and allows reverification without clearing form data.
 
-Apply `python manage.py migrate` before deploying the new API/frontend together.
+Apply `python backend/manage.py migrate` before deploying the new API/frontend together.
 Existing session-based pending verifications are not converted; users must start
 them again. Old `EmailVerificationCode` records are no longer accepted by account
 verification endpoints. The old model remains for migration compatibility.
 
 Celery Beat schedules cleanup daily. Restart the workers and Beat with the new
-code when deploying. You can also run `python manage.py purge_verification_challenges`
+code when deploying. You can also run `python backend/manage.py purge_verification_challenges`
 manually to remove expired/closed records, including decoy challenges. The command
 does not remove active challenges. Other verification flows deliver synchronously;
 password recovery initial sends and resends use the background worker described above.
 
-Tests: `python manage.py test accounts --settings=openspots.settings_test` and
+Tests: `python backend/manage.py test accounts --settings=openspots.settings_test` and
 `npm test -- --runInBand` from `frontend`. The test settings use an in-memory
 database, local cache and captured email; they do not send real emails.
 

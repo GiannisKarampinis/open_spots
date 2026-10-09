@@ -87,10 +87,10 @@ services:
     # Run the ASGI server (Daphne) in the container.
     command:                    daphne -b 0.0.0.0 -p 8000 openspots.asgi:application
     volumes:
-      - ./:/app
+      - ./backend:/app
       - static_data:/app/staticfiles
       - media_data:/app/media
-      - ./locale:/app/locale
+      - ./backend/locale:/app/locale
     networks:                   [appnet]
     expose:
       - "8000"
@@ -131,7 +131,7 @@ services:
     volumes:
       - static_data:/app/staticfiles
       - media_data:/app/media
-      - ./locale:/app/locale
+      - ./backend/locale:/app/locale
     networks:                   [appnet]
 
   celery:
@@ -159,8 +159,8 @@ services:
         condition:              service_healthy
     command:                    celery -A openspots worker -l info --uid=65534 --gid=65534
     volumes:
-      - ./:/app
-      - ./locale:/app/locale
+      - ./backend:/app
+      - ./backend/locale:/app/locale
     networks:                   [appnet]
     restart:                    unless-stopped
 
@@ -190,9 +190,9 @@ services:
     command: >
       sh -c "mkdir -p /app/celerybeat && chown -R 65534:65534 /app/celerybeat && celery -A openspots beat -l info --schedule=/app/celerybeat/celerybeat-schedule --uid=65534 --gid=65534"
     volumes:
-      - ./:/app
+      - ./backend:/app
       - celerybeat_data:/app/celerybeat
-      - ./locale:/app/locale
+      - ./backend/locale:/app/locale
     networks:                   [appnet]
     restart:                    unless-stopped
 
@@ -233,13 +233,13 @@ volumes:
   #   host-permission/performance issues (especially on Windows/WSL).
   # - For faster code iteration, consider using an overlay `compose.dev.yml`
   #   that bind-mounts the source code into the `web` service (e.g.
-  #   `- ./:/app`) while leaving DB/Redis on named volumes. This gives
+  #   `- ./backend:/app`) while leaving DB/Redis on named volumes. This gives
   #   hot-reload without converting the DB to a host mount.
   # Example overlay (compose.dev.yml):
   #
   # services:
   #   web:
   #     volumes:
-  #       - ./:/app:delegated
+  #       - ./backend:/app:delegated
   #
   # Use `docker compose -f compose.yml -f compose.dev.yml up` to enable.

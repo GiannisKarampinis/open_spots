@@ -10,6 +10,20 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      DJANGO_SECRET_KEY: ci-only-test-secret
+      DJANGO_DEBUG: "True"
+      SECURE_SSL_REDIRECT: "0"
+      SESSION_COOKIE_SECURE: "0"
+      CSRF_COOKIE_SECURE: "0"
+      TEST_USE_POSTGRES: "1"
+      POSTGRES_DB: openspots
+      POSTGRES_USER: openspots
+      POSTGRES_PASSWORD: openspots
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      DJANGO_SETTINGS_MODULE: openspots.settings_test
+
     services:
       postgres:
         image: postgres:15
@@ -32,20 +46,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install backend dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r backend/requirements.txt
 
       - name: Run Django unit & integration tests
-        env:
-          DATABASE_URL: postgres://openspots:openspots@localhost:5432/openspots
+        working-directory: backend
         run: |
-          python backend/manage.py migrate
-          python backend/manage.py check
-          pytest backend/ --disable-warnings
+          python manage.py migrate
+          python manage.py check
+          python manage.py test accounts venues emails_manager tests
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

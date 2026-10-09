@@ -1,15 +1,15 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { fireEvent, screen } from "@testing-library/dom";
-import { getWithAuth } from "../utils/auth";
-import MyReservationsPage from "../pages/MyReservationsPage";
-import { isReservationUpcoming } from "../utils/reservationTime";
+import { getWithAuth } from "../../src/utils/auth";
+import MyReservationsPage from "../../src/pages/MyReservationsPage";
+import { isReservationUpcoming } from "../../src/utils/reservationTime";
 
-jest.mock("../utils/auth", () => ({ getWithAuth: jest.fn(), postWithAuth: jest.fn() }));
-jest.mock("../styles/my_reservations.css", () => ({}));
-jest.mock("../styles/make_reservation.css", () => ({}));
-jest.mock("../styles/edit_reservation.css", () => ({}));
-jest.mock("../components/ToastProvider", () => ({
+jest.mock("../../src/utils/auth", () => ({ getWithAuth: jest.fn(), postWithAuth: jest.fn() }));
+jest.mock("../../src/styles/my_reservations.css", () => ({}));
+jest.mock("../../src/styles/make_reservation.css", () => ({}));
+jest.mock("../../src/styles/edit_reservation.css", () => ({}));
+jest.mock("../../src/components/ToastProvider", () => ({
   useToastMessage: () => require("react").useState(""),
 }));
 const mockNavigate = jest.fn();

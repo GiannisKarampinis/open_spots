@@ -1,31 +1,31 @@
-import { VerificationReason } from "../utils/verificationReasons";
+import { VerificationReason } from "../../src/utils/verificationReasons";
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { fireEvent, screen } from "@testing-library/dom";
 import axios from "axios";
-import { postWithCsrf } from "../utils/csrf";
-import { getWithAuth, postWithAuth, clearStoredAuth, storeAuthResponse } from "../utils/auth";
-import { getVerificationChallenge, rememberVerification, getResetToken } from "../utils/verification";
-import ProfilePage from "../pages/ProfilePage";
-import VerifyEmailPage from "../pages/VerifyEmailPage";
-import ApplyVenuePage from "../pages/ApplyVenuePage";
-import SocialLoginCompletePage from "../pages/SocialLoginCompletePage";
-import LoginPage from "../pages/LoginPage";
+import { postWithCsrf } from "../../src/utils/csrf";
+import { getWithAuth, postWithAuth, clearStoredAuth, storeAuthResponse } from "../../src/utils/auth";
+import { getVerificationChallenge, rememberVerification, getResetToken } from "../../src/utils/verification";
+import ProfilePage from "../../src/pages/ProfilePage";
+import VerifyEmailPage from "../../src/pages/VerifyEmailPage";
+import ApplyVenuePage from "../../src/pages/ApplyVenuePage";
+import SocialLoginCompletePage from "../../src/pages/SocialLoginCompletePage";
+import LoginPage from "../../src/pages/LoginPage";
 
 jest.mock("axios", () => ({ get: jest.fn() }));
-jest.mock("../utils/csrf", () => ({ postWithCsrf: jest.fn() }));
-jest.mock("../utils/backendUrl", () => ({ getBackendBase: () => "" }));
-jest.mock("../utils/auth", () => ({ getWithAuth: jest.fn(), patchWithAuth: jest.fn(), postWithAuth: jest.fn(), storeAuthResponse: jest.fn(), clearStoredAuth: jest.fn() }));
-jest.mock("../styles/openspots-forms-style.css", () => ({}));
-jest.mock("../styles/email-verification-modal.css", () => ({}));
-jest.mock("../styles/ProfilePage.css", () => ({}));
-jest.mock("../styles/auth.css", () => ({}));
-jest.mock("../styles/apply_venue.css", () => ({}));
-jest.mock("../styles/partial_signup.css", () => ({}));
-jest.mock("../styles/verify_code.css", () => ({}));
-jest.mock("../styles/feedback.css", () => ({}));
-jest.mock("../styles/login1.css", () => ({}));
-jest.mock("../assets/google-icon.svg", () => "google-icon");
+jest.mock("../../src/utils/csrf", () => ({ postWithCsrf: jest.fn() }));
+jest.mock("../../src/utils/backendUrl", () => ({ getBackendBase: () => "" }));
+jest.mock("../../src/utils/auth", () => ({ getWithAuth: jest.fn(), patchWithAuth: jest.fn(), postWithAuth: jest.fn(), storeAuthResponse: jest.fn(), clearStoredAuth: jest.fn() }));
+jest.mock("../../src/styles/openspots-forms-style.css", () => ({}));
+jest.mock("../../src/styles/email-verification-modal.css", () => ({}));
+jest.mock("../../src/styles/ProfilePage.css", () => ({}));
+jest.mock("../../src/styles/auth.css", () => ({}));
+jest.mock("../../src/styles/apply_venue.css", () => ({}));
+jest.mock("../../src/styles/partial_signup.css", () => ({}));
+jest.mock("../../src/styles/verify_code.css", () => ({}));
+jest.mock("../../src/styles/feedback.css", () => ({}));
+jest.mock("../../src/styles/login1.css", () => ({}));
+jest.mock("../../src/assets/google-icon.svg", () => "google-icon");
 const mockNavigate = jest.fn();
 let mockLocation = { search: "", state: null };
 jest.mock("react-router-dom", () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation, Link: ({ children }) => children }));
@@ -33,15 +33,15 @@ jest.mock("react-i18next", () => {
   const t = (key) => key;
   return { useTranslation: () => ({ t }), Trans: () => null };
 });
-jest.mock("../components/ToastProvider", () => ({
+jest.mock("../../src/components/ToastProvider", () => ({
   useToastMessage: () => {
     const [message, setMessage] = require("react").useState("");
     const [type, setType] = require("react").useState("success");
     return [message, setMessage, type, setType];
   },
 }));
-jest.mock("../components/EmailVerificationModal", () => (props) => props.verificationType === require("../constants").VerificationType.VENUE
-  ? require("react").createElement(jest.requireActual("../components/EmailVerificationModal").default, props)
+jest.mock("../../src/components/EmailVerificationModal", () => (props) => props.verificationType === require("../../src/constants").VerificationType.VENUE
+  ? require("react").createElement(jest.requireActual("../../src/components/EmailVerificationModal").default, props)
   : <div data-testid="email-modal">{props.challengeId}</div>);
 
 let root;
@@ -133,7 +133,7 @@ test("signup verification stores authentication and follows the server redirect"
 });
 
 test("completed recovery resumes the password reset page with its stored proof", async () => {
-  const { rememberResetToken } = require("../utils/verification");
+  const { rememberResetToken } = require("../../src/utils/verification");
   rememberResetToken("existing-proof", "recovery-challenge");
   axios.get.mockResolvedValue({ data: { verified: true, reason: VerificationReason.PASSWORD_RECOVERY } });
   await act(async () => root.render(<VerifyEmailPage />));

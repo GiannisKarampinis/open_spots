@@ -16,6 +16,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from django.utils.translation import gettext_lazy as _
 
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -364,7 +365,7 @@ STATICFILES_DIRS = [
     BASE_DIR / "legacy" / "static",  # Your project-level static files folder (optional if used)
 ]
 
-STATIC_ROOT = Path(os.getenv('STATIC_ROOT', BASE_DIR / "staticfiles"))
+STATIC_ROOT = Path(os.getenv('STATIC_ROOT', BASE_DIR.parent / "staticfiles"))
 
 
 # Default primary key field type
@@ -375,7 +376,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 MEDIA_URL = os.getenv('MEDIA_URL', '/media/')
-MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', BASE_DIR / 'media'))
+MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', BASE_DIR.parent / 'media'))
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST          = 'smtp.gmail.com'

@@ -1,6 +1,7 @@
 FROM python:3.12-slim
 
 WORKDIR /app
+ENV STATIC_ROOT=/app/staticfiles MEDIA_ROOT=/app/media
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -8,10 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gettext \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY backend .
 
 EXPOSE 8000
 

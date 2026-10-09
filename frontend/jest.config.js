@@ -5,6 +5,6 @@ module.exports = {
     "^.+\\.[tj]sx?$": "babel-jest",
   },
   moduleFileExtensions: ["js", "jsx", "json"],
-  testMatch: ["**/__tests__/**/*.test.js"],
+  testMatch: ["<rootDir>/tests/unit/**/*.test.js"],
   moduleDirectories: ["node_modules", "src"],
 };
