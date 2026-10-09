@@ -8,7 +8,7 @@
 - `backend/tests/`: cross-app tests; `scaffolding/` preserves older examples.
 - `frontend/src/`: React application.
 - `frontend/tests/unit/`: Jest tests; `frontend/tests/e2e/`: Playwright tests.
-- `docs/`, `nginx/`, `prometheus/`: documentation and infrastructure.
+- `nginx/`, `prometheus/`: infrastructure configuration.
 
 ## Development
 
