@@ -1,11 +1,11 @@
 from django import forms
-from .models import Reservation, VenueApplication, Venue
-from .utils import generate_time_choices
+from venues.models import Reservation, VenueApplication, Venue
+from venues.utils import generate_time_choices
 from django.utils.timezone import now
 from datetime import datetime
 from django.utils.translation import gettext_lazy as _
-from .models import Review
-from .models import WorkingDay
+from venues.models import Review
+from venues.models import WorkingDay
 from django.forms import modelformset_factory
 
 

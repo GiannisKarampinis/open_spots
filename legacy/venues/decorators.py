@@ -1,7 +1,7 @@
 from functools import wraps
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseForbidden
-from .models import Venue, Reservation
+from venues.models import Venue, Reservation
 
 def venue_admin_required(view_func):
     """

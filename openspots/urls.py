@@ -38,9 +38,9 @@ urlpatterns = [
 ]
 
 urlpatterns += i18n_patterns(
-    path("accounts/", include("accounts.urls")),
+    path("accounts/", include("legacy.accounts.urls")),
     path("accounts/", include("allauth.urls")),
-    path("venues/", include("venues.urls")),
+    path("venues/", include("legacy.venues.urls")),
     prefix_default_language=False,
 )
 

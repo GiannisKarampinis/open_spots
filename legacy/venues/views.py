@@ -13,10 +13,10 @@ from django.http                     import HttpResponse, Http404, JsonResponse,
 from django.template.loader          import render_to_string
 from django.db                       import transaction, IntegrityError
 from django.urls                     import reverse
-from .models                         import Venue, VenueUpdateRequest, VenueVisit, Reservation, VenueImage, VenueMenuImage
+from venues.models                         import Venue, VenueUpdateRequest, VenueVisit, Reservation, VenueImage, VenueMenuImage
 from emails_manager.models           import VenueEmailVerificationCode
 from .forms                          import ReservationForm, VenueApplicationForm, ArrivalStatusForm, ReviewForm
-from .utils                          import *
+from venues.utils                          import *
 from .decorators                     import venue_admin_required
 from venues.services.emails          import send_reservation_notification, send_new_venue_application_email, send_venue_verification_code
 from django.http                     import JsonResponse
@@ -1447,8 +1447,8 @@ def ajax_verify_venue_code(request):
 ###########################################################################################
 
 ###########################################################################################
-from .models import Venue, WorkingDay
-from .utils  import user_can_manage_venue  # your existing helper
+from venues.models import Venue, WorkingDay
+from venues.utils  import user_can_manage_venue  # your existing helper
 
 def ensure_working_days_exist(venue):
     existing = set(venue.working_days.values_list("weekday", flat=True))

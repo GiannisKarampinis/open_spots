@@ -267,9 +267,10 @@ ROOT_URLCONF = 'openspots.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [ BASE_DIR / "templates"],
+        'DIRS': [ BASE_DIR / "legacy" / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
+            'libraries': {'date_filters': 'legacy.templatetags.date_filters'},
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
@@ -359,7 +360,8 @@ USE_TZ = True
 STATIC_URL = os.getenv('STATIC_URL', '/static/')
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static",  # Your project-level static files folder (optional if used)
+    BASE_DIR / "static",
+    BASE_DIR / "legacy" / "static",  # Your project-level static files folder (optional if used)
 ]
 
 STATIC_ROOT = Path(os.getenv('STATIC_ROOT', BASE_DIR / "staticfiles"))

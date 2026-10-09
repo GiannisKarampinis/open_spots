@@ -28,3 +28,9 @@ celerybeat-schedule
 
 
 env
+
+.coverage
+.coverage.*
+htmlcov/
+frontend/playwright-report/
+frontend/test-results/

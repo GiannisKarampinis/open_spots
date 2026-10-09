@@ -24,7 +24,7 @@ class CustomLoginView(LoginView):
 
         if not user.email_verified and not is_google_user:
             from accounts.services.challenges import begin_challenge
-            from accounts.verification_forms import credential_cookie, CHALLENGE_COOKIE
+            from legacy.accounts.verification_forms import credential_cookie, CHALLENGE_COOKIE
             from rest_framework.exceptions import APIException
             try:
                 challenge = begin_challenge(user, VerificationReason.SIGNUP, user.unverified_email or user.email, resume=True)

@@ -16,7 +16,7 @@ from accounts.api.views import (
     ConfirmVerificationAPIView, ResendVerificationAPIView,
     CancelVerificationAPIView,
 )
-from accounts.forms import (
+from legacy.accounts.forms import (
     CustomUserCreationForm, EmailEditForm, PhoneEditForm, PasswordChangeRequestForm,
     PasswordResetRequestForm, PasswordResetForm,
 )
