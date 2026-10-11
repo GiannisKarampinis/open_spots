@@ -36,8 +36,7 @@
 }
 
 .apply-container .email-verify-wrapper button {
-  min-width: 100px;
-  padding: 0.65rem 1rem;
+  height: 46px;
 }
 
 .apply-container .openspots-form-field select,
@@ -66,13 +65,11 @@
     grid-template-columns: 1fr;
   }
 
-  .apply-container .email-verify-wrapper button {
-    min-height: 40px;
-  }
 }
 
 .apply-container .apply-submission-error {
   grid-column: 1 / -1;
+  text-align: right;
   overflow-wrap: anywhere;
 }
 
@@ -81,6 +78,7 @@
   min-width: 0;
   margin: 0;
   padding: 16px;
+  background: var(--openspots-form-group-background);
   border: 1px solid var(--openspots-form-border);
   border-radius: 8px;
 }

@@ -1,13 +1,13 @@
 import FormSelect from "../components/FormSelect";
 import { VerificationType } from "../constants";
-import { getRequiredFieldErrors, passwordsMatch } from "../utils/formValidation";
+import { getRequiredFieldErrors, passwordsMatch, PASSWORD_REQUIREMENTS_MESSAGE } from "../utils/formValidation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { postWithCsrf } from "../utils/csrf";
 import { verificationConfig } from "../utils/verification";
+import { isVenueErrorPreviewEnabled } from "../utils/venueErrorPreview";
 import EmailVerificationModal from "../components/EmailVerificationModal";
-import { useToastMessage } from "../components/ToastProvider";
 import "../styles/openspots-forms-style.css";
 import "../styles/apply_venue.css";
 import "../styles/feedback.css";
@@ -70,8 +70,20 @@ function firstApiError(data, t) {
   return t("Could not submit the application.");
 }
 
+function previewFieldErrors(t) {
+  return {
+    ...getRequiredFieldErrors(initialForm, Object.keys(initialForm), t("This field is required.")),
+    venue_type: [t("This field is required.")],
+    admin_email: [t("You must verify this email before submitting the application.")],
+    password: [t(PASSWORD_REQUIREMENTS_MESSAGE)],
+    password2: [t("Password fields did not match.")],
+    description: [t("Please correct the highlighted fields.")],
+  };
+}
+
 export default function ApplyVenuePage() {
   const { t } = useTranslation();
+  const errorPreview = isVenueErrorPreviewEnabled();
 
   const verificationRef = useRef({ email: "", challengeId: "" });
   const verifyButtonRef = useRef(null);
@@ -83,9 +95,10 @@ export default function ApplyVenuePage() {
   }, []);
 
   const [form, setForm] = useState(initialForm);
-  const [errors, setErrors] = useState({});
-  const [, setMessage] = useToastMessage("success");
-  const [submissionError, setSubmissionError] = useState("");
+  const [errors, setErrors] = useState(() => errorPreview ? previewFieldErrors(t) : {});
+  const [submissionError, setSubmissionError] = useState(() => errorPreview
+    ? t("Could not submit the application. Check your internet connection and try again.")
+    : "");
   const [emailVerified, setEmailVerified] = useState(false);
   const [venueChallengeId, setVenueChallengeId] = useState("");
   const [verificationToken, setVerificationToken] = useState("");
@@ -137,8 +150,11 @@ export default function ApplyVenuePage() {
   };
 
 
-
   const sendCode = async () => {
+    if (errorPreview) {
+      setAdminEmailError(t("Too many verification requests. Please try again in about an hour."));
+      return;
+    }
     setAdminEmailError("");
     if (!form.admin_email) {
       setAdminEmailError(t("Enter admin email first."));
@@ -163,7 +179,9 @@ export default function ApplyVenuePage() {
 
       setShowEmailVerification(true);
     } catch (err) {
-      setAdminEmailError(err.response?.data?.detail || fieldErrors(err.response?.data, "email")[0] || t("Failed to send code."));
+      setAdminEmailError(err.response?.status === 429
+        ? t("Too many verification requests. Please try again in about an hour.")
+        : err.response?.data?.detail || fieldErrors(err.response?.data, "email")[0] || t("Failed to send code."));
       if (err.response?.status === 400) setVenueChallengeId("");
     } finally {
       setSendingCode(false);
@@ -208,12 +226,16 @@ export default function ApplyVenuePage() {
     setShowEmailVerification(false);
     setAdminEmailError("");
 
-    setMessage(data.detail || t("Email verified"));
   };
 
 
   const submit = async (event) => {
     event.preventDefault();
+    if (errorPreview) {
+      setErrors(previewFieldErrors(t));
+      setSubmissionError(t("Could not submit the application. Check your internet connection and try again."));
+      return;
+    }
     if (submitting) return;
 
     /* OK - REVIEWED */
@@ -222,6 +244,10 @@ export default function ApplyVenuePage() {
       requiredFields,
       t("This field is required.")
     );
+
+    if (!emailVerified && !requiredErrors.admin_email) {
+      requiredErrors.admin_email = [t("You must verify this email before submitting the application.")];
+    }
 
     /* OK - REVIEWED */
     if (Object.keys(requiredErrors).length) {
@@ -277,18 +303,21 @@ export default function ApplyVenuePage() {
       }
 
       if (typeof data === "object") {
-        setErrors(data);
+        setErrors(fieldErrors(data, "password").length
+          ? { ...data, password: [t(PASSWORD_REQUIREMENTS_MESSAGE)] }
+          : data);
         setFocusErrors(true);
       }
 
-      setSubmissionError(firstApiError(data, t));
+      const networkFailure = !err.response && ["ERR_NETWORK", "ECONNABORTED", "ETIMEDOUT"].includes(err.code);
+      setSubmissionError(networkFailure
+        ? t("Could not submit the application. Check your internet connection and try again.")
+        : firstApiError(data, t));
 
     } finally {
       setSubmitting(false);
     }
   };
-
-
 
 
   const renderErrors = (name) => {
@@ -392,12 +421,12 @@ export default function ApplyVenuePage() {
 
                 <button
                   type="button"
-                  className="openspots-form-button openspots-form-button-primary"
+                  className={`openspots-form-button openspots-form-button-primary openspots-form-action${emailVerified ? " openspots-form-button-verified" : ""}`}
                   ref={verifyButtonRef} /* attaches a reference to the button so that we can return focus to it after the modal closes */
                   onClick={sendCode}
                   disabled={sendingCode || submitting || showEmailVerification || emailVerified}
                 >
-                  {emailVerified ? t("Verified") : sendingCode ? t("Sending...") : t("Verify Email")}
+                  {emailVerified ? t("Verified") : sendingCode ? t("Sending...") : t("Verify")}
                 </button>
               </div>
 
@@ -534,21 +563,23 @@ export default function ApplyVenuePage() {
             3. Click Submit Application.
           The failed request should display the fallback submission error. Restore the network afterward. 
         */}
-        {submissionError && (
-          <div className="alert alert-error apply-submission-error" role="alert">
-            {submissionError}
-          </div>
-        )}
-
         {/* OK - REVIEWED */}
         <button
           id="submitApplicationBtn"
           type="submit"
           className="openspots-form-button openspots-form-button-primary openspots-form-submit"
-          disabled={submitting || !emailVerified}
+          aria-describedby="application-submission-errors"
+          disabled={submitting}
         >
           {submitting ? t("Submitting...") : t("Submit Application")}
         </button>
+        <ul
+          id="application-submission-errors"
+          className="openspots-form-errorlist apply-submission-error"
+          role="alert"
+        >
+          {submissionError && <li>{submissionError}</li>}
+        </ul>
       </form>
 
       {/* FIXME: How the backend handles email verification */}

@@ -5,6 +5,7 @@
 
 .openspots-form-panel {
   --openspots-form-surface: rgba(255, 255, 255, 0.94);
+  --openspots-form-group-background: #f8fafc;
   --openspots-form-field: rgba(255, 255, 255, 0.78);
   --openspots-form-text: var(--primary-hover);
   --openspots-form-value-text: var(--text-color);
@@ -46,6 +47,11 @@
 .openspots-form-button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.openspots-form-button.openspots-form-button-verified {
+  background: var(--success-color);
+  opacity: 1;
 }
 
 .openspots-form-button[aria-busy="true"] {
@@ -127,9 +133,16 @@
 .openspots-form-submit {
   grid-column: 1 / -1;
   justify-self: end;
-  min-width: 160px;
+}
+
+.openspots-form-action,
+.openspots-form-submit {
   padding: 0.65rem 1rem;
   font-size: 0.95rem;
+}
+
+.openspots-form-submit {
+  min-width: 160px;
 }
 
 .openspots-form-field {
