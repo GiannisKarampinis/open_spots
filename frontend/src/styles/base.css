@@ -166,6 +166,9 @@ body.dark-theme .main-nav a {
 .language-dropdown option {
     background-color: var(--background-color);
     color: var(--text-color);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 400;
 }
 
 .dashboard-link {
@@ -582,13 +585,67 @@ ul.errorlist {
   letter-spacing: 1px;
 }
 
-#language-select {
-  background: var(--text-color);
-  color: var(--button-text);
-  border: none;
-  padding: 5px;
+.language-menu .openspots-form-select {
+  position: relative;
+}
+
+.language-menu .openspots-form-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 5px;
-  font-size: 14px;
+  background: transparent;
+  color: var(--button-text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.language-menu .openspots-form-select-trigger:focus-visible {
+  outline: 2px solid var(--button-text);
+  outline-offset: 3px;
+}
+
+.language-menu .openspots-form-select-arrow {
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.language-menu .openspots-form-select-menu {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  margin: 0;
+  padding: 3px;
+  list-style: none;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 8px;
+  background: var(--background-color);
+  color: var(--text-color);
+  box-shadow: 0 10px 24px rgba(0, 24, 50, 0.18);
+}
+
+.language-menu .openspots-form-select-menu li {
+  min-height: 32px;
+  padding: 6px;
+  border-radius: 5px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.language-menu .openspots-form-select-menu li.active {
+  background: rgba(53, 122, 232, 0.12);
 }
 
 

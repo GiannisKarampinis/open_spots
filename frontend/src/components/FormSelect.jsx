@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-export default function FormSelect({ id, name, value, options, onChange, disabled = false, invalid = false, describedBy }) {
+export default function FormSelect({ id, name, value, options, onChange, disabled = false, invalid = false, describedBy, ariaLabel }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const rootRef = useRef(null);
@@ -69,6 +69,7 @@ export default function FormSelect({ id, name, value, options, onChange, disable
         className="openspots-form-select-trigger" disabled={disabled}
         aria-expanded={open} aria-controls={listId} aria-haspopup="listbox"
         aria-invalid={invalid} aria-describedby={describedBy}
+        aria-label={ariaLabel}
         aria-activedescendant={open ? `${id}-option-${active}` : undefined}
         onKeyDown={onKeyDown} onClick={() => { setActive(selected); setOpen(!open); }}>
         <span>{options[selected].label}</span>

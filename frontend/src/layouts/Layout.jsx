@@ -5,6 +5,7 @@ import  { getCurrentUser, getWithAuth, logoutSession, storeAuthResponse } from "
 import  "../styles/base.css";
 import  { useTranslation } from "react-i18next";
 import  i18n        from "../i18n.jsx";
+import FormSelect from "../components/FormSelect";
 
 // LOGO SVG COMPONENT
 
@@ -156,14 +157,16 @@ export default function Layout() {
           <Link to="/venues/about" className="nav-link">{t("About")}</Link>
           <span className="separator">|</span>
 
-          <select
-            onChange  = {handleLanguageChange}
-            value     = {i18n.language?.startsWith("el") ? "el" : "en"}
-            className = "language-dropdown"
-          >
-            <option value="en">EN</option>
-            <option value="el">GR</option>
-          </select>
+          <div className="language-menu">
+            <FormSelect
+              id="language-select"
+              name="language"
+              ariaLabel={t("Language")}
+              onChange={handleLanguageChange}
+              value={i18n.language?.startsWith("el") ? "el" : "en"}
+              options={[{ value: "en", label: "EN" }, { value: "el", label: "GR" }]}
+            />
+          </div>
 
           {authLoading ? null : user ? (
             <>
