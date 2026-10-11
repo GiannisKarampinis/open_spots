@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
+    "django_prometheus",
 ]
 
 REST_FRAMEWORK = {
@@ -247,9 +248,11 @@ LOGOUT_REDIRECT_URL = f"{FRONTEND_URL}/accounts/login"
 ACCOUNT_LOGOUT_REDIRECT_URL = f"{FRONTEND_URL}/accounts/login"
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',  
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'openspots.security.StrictCORSMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -260,6 +263,8 @@ MIDDLEWARE = [
     'accounts.middleware.ThreadLocalMiddleware',
     'openspots.security.SecurityHeadersMiddleware',
     'openspots.security.SecurityEventLoggingMiddleware',
+
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 

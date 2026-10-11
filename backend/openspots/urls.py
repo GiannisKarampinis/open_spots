@@ -4,12 +4,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
 from django.urls import path, include, re_path
-from .views import csrf_token, serve_react_app
+from .views import csrf_token, serve_react_app, health_check
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from rest_framework.permissions import AllowAny
 from accounts.api.views import CookieTokenRefreshAPIView, LoginAPIView
+from django_prometheus.exports import ExportToDjangoView
 
 urlpatterns = [
+    path("metrics/", ExportToDjangoView, name="prometheus-metrics"),
+    path("api/v1/health/", health_check, name="health-check"),
     path("i18n/", include("django.conf.urls.i18n")),
 
     path("admin/", admin.site.urls),
@@ -47,7 +50,7 @@ urlpatterns += i18n_patterns(
 if settings.SERVE_REACT_APP:
     urlpatterns += [
         re_path(
-            r"^(?!api/|static/|media/|i18n/|admin/).*$",
+            r"^(?!api/|static/|media/|i18n/|admin/|metrics(?:/|$)).*$",
             serve_react_app,
             name="react-app",
         ),

@@ -3,6 +3,12 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["prometheus:9090"]
+
+  # Docker / infrastructure
   - job_name: "node_exporter"
     static_configs:
       - targets: ["node_exporter:9100"]
@@ -19,9 +25,35 @@ scrape_configs:
     static_configs:
       - targets: ["redis_exporter:9121"]
 
-  # Flower metrics: ΔΕΝ είναι πάντα διαθέσιμα by default.
-  # Θα το κρατήσουμε σαν target, αλλά αν δεν εκθέτει /metrics, απλά δεν θα scrape-άρει.
+  # Celery / Flower
   - job_name: "flower"
     metrics_path: /metrics
     static_configs:
       - targets: ["flower:5555"]
+
+  # Django REST Framework backend
+  # Requires a working /metrics endpoint in Django.
+  - job_name: "django"
+    metrics_path: /metrics/
+    static_configs:
+      - targets: ["web:8000"]
+
+  # HTTP availability monitoring
+  - job_name: "blackbox_http"
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - http://web:8000/
+          - http://web:8000/api/v1/
+          - http://nginx/
+        labels:
+          environment: development
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox_exporter:9115

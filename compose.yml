@@ -57,20 +57,15 @@ services:
       retries:                  10
     restart:                    unless-stopped
 
-  web: # Django API/backend only. Vite runs on the host at port 5173.
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
+  web: # frontend (Django ASGI via Daphne)
+    # Built from the repository `Dockerfile`. Exposes internal port 8000
+    # to the other services on the `appnet` network. Environment variables
+    # (DB/Redis/Celery connection info) are passed in so the app can connect
+    # to the services started by Compose.
+    build: .
     env_file: .env
     environment:
       DJANGO_RUNNING_IN_DOCKER: "1"
-      DJANGO_DEBUG:             ${DJANGO_DEBUG:-True}
-      SECURE_SSL_REDIRECT:      ${SECURE_SSL_REDIRECT:-0}
-      SERVE_REACT_APP:          "False"
-      SITE_URL:                 ${SITE_URL:-http://localhost:8000}
-      FRONTEND_URL:             ${FRONTEND_URL:-http://localhost:5173}
-      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
-      SECURITY_ALLOWED_CORS_ORIGINS: ${SECURITY_ALLOWED_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
       POSTGRES_DB:              ${POSTGRES_DB:-openspots}
       POSTGRES_USER:            ${POSTGRES_USER:-openspots}
       POSTGRES_PASSWORD:        ${POSTGRES_PASSWORD:-openspots}
@@ -79,6 +74,7 @@ services:
       REDIS_URL:                ${REDIS_URL:-redis://redis:6379/0}
       CELERY_BROKER_URL:        ${CELERY_BROKER_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND:    ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      SECURE_SSL_REDIRECT:      "False"
     depends_on:
       db:
         condition:              service_healthy
@@ -87,10 +83,10 @@ services:
     # Run the ASGI server (Daphne) in the container.
     command:                    daphne -b 0.0.0.0 -p 8000 openspots.asgi:application
     volumes:
-      - ./backend:/app
+      # `static_data` and `media_data` are named volumes shared with `nginx`.
       - static_data:/app/staticfiles
       - media_data:/app/media
-      - ./backend/locale:/app/locale
+      - ./locale:/app/locale
     networks:                   [appnet]
     expose:
       - "8000"
@@ -131,16 +127,14 @@ services:
     volumes:
       - static_data:/app/staticfiles
       - media_data:/app/media
-      - ./backend/locale:/app/locale
+      - ./locale:/app/locale
     networks:                   [appnet]
 
   celery:
     # Celery worker: processes asynchronous tasks enqueued by the app.
     # Runs as an unprivileged user inside the container (uid/gid 65534)
     # to avoid writing files as root on mounted volumes.
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
+    build: .
     env_file: .env
     environment:
       DJANGO_RUNNING_IN_DOCKER: "1"
@@ -159,8 +153,7 @@ services:
         condition:              service_healthy
     command:                    celery -A openspots worker -l info --uid=65534 --gid=65534
     volumes:
-      - ./backend:/app
-      - ./backend/locale:/app/locale
+      - ./locale:/app/locale
     networks:                   [appnet]
     restart:                    unless-stopped
 
@@ -169,9 +162,7 @@ services:
     # It stores its persistent schedule in `/app/celerybeat/celerybeat-schedule`.
     # The startup command ensures the directory exists and is writable by
     # the unprivileged user used inside the container.
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
+    build: .
     env_file: .env
     environment:
       POSTGRES_DB:              ${POSTGRES_DB:-openspots}
@@ -190,9 +181,8 @@ services:
     command: >
       sh -c "mkdir -p /app/celerybeat && chown -R 65534:65534 /app/celerybeat && celery -A openspots beat -l info --schedule=/app/celerybeat/celerybeat-schedule --uid=65534 --gid=65534"
     volumes:
-      - ./backend:/app
       - celerybeat_data:/app/celerybeat
-      - ./backend/locale:/app/locale
+      - ./locale:/app/locale
     networks:                   [appnet]
     restart:                    unless-stopped
 
@@ -200,7 +190,6 @@ services:
     # Lightweight reverse proxy that serves static/media from the
     # shared named volumes and proxies requests to `web`.
     image:                      nginx:1.27-alpine
-    profiles:                   ["proxy"]
     depends_on:
       - web
     ports:
@@ -233,13 +222,13 @@ volumes:
   #   host-permission/performance issues (especially on Windows/WSL).
   # - For faster code iteration, consider using an overlay `compose.dev.yml`
   #   that bind-mounts the source code into the `web` service (e.g.
-  #   `- ./backend:/app`) while leaving DB/Redis on named volumes. This gives
+  #   `- ./:/app`) while leaving DB/Redis on named volumes. This gives
   #   hot-reload without converting the DB to a host mount.
   # Example overlay (compose.dev.yml):
   #
   # services:
   #   web:
   #     volumes:
-  #       - ./backend:/app:delegated
+  #       - ./:/app:delegated
   #
   # Use `docker compose -f compose.yml -f compose.dev.yml up` to enable.
