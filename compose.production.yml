@@ -51,6 +51,15 @@ services:
       - /dev/disk/:/dev/disk:ro
     networks: [appnet]
     restart: unless-stopped
+  
+  docker-exporter:
+    image: ghcr.io/davidborzek/docker-exporter:latest
+    user: "0:0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - appnet
+    restart: unless-stopped
 
   postgres_exporter:
     image: prometheuscommunity/postgres-exporter:v0.17.1

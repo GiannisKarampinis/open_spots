@@ -34,6 +34,7 @@ env
 htmlcov/
 frontend/playwright-report/
 frontend/test-results/
+test-reports/
 
 .venv/
 .venv-test/

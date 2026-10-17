@@ -12,6 +12,11 @@ scrape_configs:
   - job_name: "node_exporter"
     static_configs:
       - targets: ["node_exporter:9100"]
+    
+  - job_name: "docker_exporter"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["docker-exporter:8080"]
 
   - job_name: "cadvisor"
     static_configs:
@@ -46,7 +51,7 @@ scrape_configs:
     static_configs:
       - targets:
           - http://web:8000/
-          - http://web:8000/api/v1/
+          - http://web:8000/api/v1/health/
           - http://nginx/
         labels:
           environment: development

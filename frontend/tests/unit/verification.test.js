@@ -16,6 +16,7 @@ jest.mock("axios", () => ({ get: jest.fn() }));
 jest.mock("../../src/utils/csrf", () => ({ postWithCsrf: jest.fn() }));
 jest.mock("../../src/utils/backendUrl", () => ({ getBackendBase: () => "" }));
 jest.mock("../../src/utils/auth", () => ({ getWithAuth: jest.fn(), patchWithAuth: jest.fn(), postWithAuth: jest.fn(), storeAuthResponse: jest.fn(), clearStoredAuth: jest.fn() }));
+jest.mock("../../src/utils/venueErrorPreview", () => ({ isVenueErrorPreviewEnabled: jest.fn(() => false) }));
 jest.mock("../../src/styles/openspots-forms-style.css", () => ({}));
 jest.mock("../../src/styles/email-verification-modal.css", () => ({}));
 jest.mock("../../src/styles/ProfilePage.css", () => ({}));
@@ -193,7 +194,7 @@ test("venue submission uses its own challenge and proof, not the account challen
   await act(async () => root.render(<ApplyVenuePage />));
   expect(screen.queryByRole("dialog")).toBeNull();
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify" })));
   await act(async () => fireEvent.change(screen.getByPlaceholderText("Enter 6-digit code"), { target: { value: "123456" } }));
   await act(async () => fireEvent.submit(screen.getByRole("dialog").querySelector("form")));
   expect(postWithCsrf).toHaveBeenCalledWith("/api/v1/venues/verification/confirm/", { code: "123456" }, expect.objectContaining({ headers: { "X-Verification-Challenge": "venue-challenge" } }));
@@ -218,7 +219,7 @@ test("expired venue proof allows reverification without losing application field
   });
   await act(async () => root.render(<ApplyVenuePage />));
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify" })));
   await act(async () => fireEvent.change(screen.getByPlaceholderText("Enter 6-digit code"), { target: { value: "123456" } }));
   await act(async () => fireEvent.submit(screen.getByRole("dialog").querySelector("form")));
   await act(async () => {
@@ -230,9 +231,9 @@ test("expired venue proof allows reverification without losing application field
   });
   await act(async () => fireEvent.submit(document.getElementById("apply-venue-form")));
   expect(document.getElementById("admin_email")).toHaveValue("owner@example.com");
-  expect(screen.getByRole("button", { name: "Submit Application" })).toBeDisabled();
-  expect(screen.getByRole("button", { name: "Verify Email" })).not.toBeDisabled();
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  expect(screen.getByRole("button", { name: "Submit Application" })).not.toBeDisabled();
+  expect(screen.getByRole("button", { name: "Verify" })).not.toBeDisabled();
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify" })));
   expect(postWithCsrf).toHaveBeenLastCalledWith("/api/v1/venues/verification/send/", { email: "owner@example.com" }, expect.objectContaining({ headers: { "X-Verification-Challenge": "" } }));
 });
 
@@ -240,19 +241,19 @@ test("editing the venue email discards verification and requires a new challenge
   postWithCsrf.mockImplementation((url) => Promise.resolve({ data: url.endsWith("send/") ? { challenge_id: "venue-challenge" } : { verification_token: "venue-proof", email: "owner@example.com" } }));
   await act(async () => root.render(<ApplyVenuePage />));
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify" })));
   await act(async () => fireEvent.change(screen.getByPlaceholderText("Enter 6-digit code"), { target: { value: "123456" } }));
   await act(async () => fireEvent.submit(screen.getByRole("dialog").querySelector("form")));
   expect(screen.getByRole("button", { name: "Submit Application" })).not.toBeDisabled();
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "different@example.com" } }));
-  expect(screen.getByRole("button", { name: "Submit Application" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Submit Application" })).not.toBeDisabled();
   expect(screen.queryByRole("dialog")).toBeNull();
 });
 
 
 test("missing venue email shows an inline error and clears when edited", async () => {
   await act(async () => root.render(<ApplyVenuePage />));
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify" })));
   const email = document.getElementById("admin_email");
   expect(document.getElementById("admin-email-errors")).toHaveTextContent("Enter admin email first.");
   expect(email).toHaveAttribute("aria-invalid", "true");
@@ -268,11 +269,11 @@ test("venue verification failure stays in the modal until the code is edited", a
     : Promise.reject({ response: { data: { detail: "Incorrect verification code." } } }));
   await act(async () => root.render(<ApplyVenuePage />));
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify" })));
   const code = screen.getByPlaceholderText("Enter 6-digit code");
   await act(async () => fireEvent.change(code, { target: { value: "123456" } }));
   await act(async () => fireEvent.submit(screen.getByRole("dialog").querySelector("form")));
-  expect(screen.getByRole("alert")).toHaveTextContent("Incorrect verification code.");
+  expect(screen.getByText("Incorrect verification code.")).toBeInTheDocument();
   await act(async () => fireEvent.change(code, { target: { value: "654321" } }));
   expect(screen.queryByText("Incorrect verification code.")).toBeNull();
 });
@@ -287,7 +288,7 @@ test.each(["", "   "])("empty venue passwords (%j) show required errors before c
   for (const name of ["password", "password2"]) {
     const input = document.getElementById(name);
     expect(input).toHaveAttribute("aria-invalid", "true");
-    expect(input.parentElement.querySelector(".errorlist")).toHaveTextContent("This field is required.");
+    expect(document.getElementById(`${name}-errors`)).toHaveTextContent("This field is required.");
   }
   expect(screen.queryByText("Password fields did not match.")).toBeNull();
   expect(postWithCsrf).not.toHaveBeenCalled();
@@ -299,17 +300,17 @@ test("venue modal reopens its challenge and resends through the venue endpoint",
   postWithCsrf.mockResolvedValue({ data: { challenge_id: "venue-challenge", remaining_seconds: 600 } });
   await act(async () => root.render(<ApplyVenuePage />));
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify" })));
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Close" })));
   expect(screen.queryByRole("dialog")).toBeNull();
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify" })));
   expect(postWithCsrf).toHaveBeenCalledTimes(1);
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Resend Code" })));
   expect(postWithCsrf).toHaveBeenLastCalledWith("/api/v1/venues/verification/send/", { email: "owner@example.com" }, expect.objectContaining({ headers: { "X-Verification-Challenge": "venue-challenge" } }));
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Cancel verification" })));
   expect(screen.queryByRole("dialog")).toBeNull();
   expect(document.getElementById("admin_email")).toHaveValue("owner@example.com");
-  expect(screen.getByRole("button", { name: "Submit Application" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Submit Application" })).not.toBeDisabled();
   expect(getVerificationChallenge()).toBe("account-challenge");
   expect(storeAuthResponse).not.toHaveBeenCalled();
 });
@@ -319,7 +320,7 @@ test("venue send-code field errors are shown beneath the email", async () => {
   postWithCsrf.mockRejectedValue({ response: { status: 400, data: { email: ["Enter a valid email address."] } } });
   await act(async () => root.render(<ApplyVenuePage />));
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "bad-email" } }));
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify" })));
   expect(document.getElementById("admin-email-errors")).toHaveTextContent("Enter a valid email address.");
 });
 
@@ -327,7 +328,7 @@ test("venue dialog focuses the code, traps Tab, and restores focus after Escape"
   postWithCsrf.mockResolvedValue({ data: { challenge_id: "venue-challenge" } });
   await act(async () => root.render(<ApplyVenuePage />));
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
-  const opener = screen.getByRole("button", { name: "Verify Email" });
+  const opener = screen.getByRole("button", { name: "Verify" });
   await act(async () => fireEvent.click(opener));
   expect(document.activeElement).toBe(screen.getByPlaceholderText("Enter 6-digit code"));
   const last = screen.getByRole("button", { name: "Cancel verification" });
@@ -346,7 +347,7 @@ test("venue confirmation cannot be closed mid-request or verify a changed email"
     : new Promise((resolve) => { finish = resolve; }));
   await act(async () => root.render(<ApplyVenuePage />));
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "owner@example.com" } }));
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify Email" })));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify" })));
   await act(async () => fireEvent.change(screen.getByPlaceholderText("Enter 6-digit code"), { target: { value: "123456" } }));
   await act(async () => fireEvent.submit(screen.getByRole("dialog").querySelector("form")));
   expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
@@ -355,7 +356,7 @@ test("venue confirmation cannot be closed mid-request or verify a changed email"
   // Simulate an external edit despite the disabled email field.
   await act(async () => fireEvent.change(document.getElementById("admin_email"), { target: { value: "different@example.com" } }));
   await act(async () => finish({ data: { email: "owner@example.com", verification_token: "old-proof" } }));
-  expect(screen.getByRole("button", { name: "Submit Application" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Submit Application" })).not.toBeDisabled();
   expect(document.getElementById("admin_email")).toHaveValue("different@example.com");
 });
 

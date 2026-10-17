@@ -1,10 +1,12 @@
+from datetime import date, time
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
-from accounts.models import DeviceSession
+from accounts.models import DeviceSession, VerificationChallenge, VerificationReason
 
-from emails_manager.models import VenueEmailVerificationCode
 from venues.models import Reservation, Venue, WorkingDay
 
 User = get_user_model()
@@ -92,7 +94,8 @@ class VenuesAPITestCase(APITestCase):
     def test_venue_slots_endpoint_returns_slots(self):
         response = self.client.get(f"{self.detail_url}slots/?date=2030-01-01")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, list)
+        self.assertEqual(response.data["business_date"], "2030-01-01")
+        self.assertIsInstance(response.data["slots"], list)
 
     def test_create_reservation_requires_authentication(self):
         payload = {
@@ -135,8 +138,8 @@ class VenuesAPITestCase(APITestCase):
             lastname="Doe",
             email="jane.doe@example.com",
             phone="+1234567890",
-            date="2030-01-01",
-            time="18:00",
+            date=date(2030, 1, 1),
+            time=time(18, 0),
             guests=2,
         )
         detail_url = f"/api/v1/reservations/{reservation.id}/"
@@ -145,31 +148,62 @@ class VenuesAPITestCase(APITestCase):
         self.assertEqual(response.data["id"], reservation.id)
         self.assertEqual(response.data["venue_id"], self.venue.id)
 
-    def test_send_venue_verification_code_sets_session(self):
-        response = self.client.post(self.send_venue_code_url, {"email": "owner@example.com"}, format="json")
+    def test_send_venue_verification_code_creates_challenge(self):
+        with (
+            patch("accounts.services.challenges.send_email_with_template"),
+            patch("accounts.services.challenges.secrets.randbelow", return_value=123456),
+        ):
+            response = self.client.post(
+                self.send_venue_code_url,
+                {"email": "owner@example.com"},
+                format="json",
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        session = self.client.session
-        self.assertEqual(session["venue_pending_email"], "owner@example.com")
-        self.assertFalse(session["venue_email_verified"])
+        challenge = VerificationChallenge.objects.get(pk=response.data["challenge_id"])
+        self.assertEqual(challenge.email, "owner@example.com")
+        self.assertEqual(challenge.reason, VerificationReason.VENUE_SIGNUP_EMAIL_VERIFY)
 
-    def test_verify_venue_code_marks_email_verified(self):
-        code_obj = VenueEmailVerificationCode.objects.create(email="owner@example.com", code="123456")
-        session = self.client.session
-        session["venue_pending_email"] = "owner@example.com"
-        session.save()
-        response = self.client.post(self.verify_venue_code_url, {"code": "123456"}, format="json")
+    def test_verify_venue_code_returns_verification_proof(self):
+        with (
+            patch("accounts.services.challenges.send_email_with_template"),
+            patch("accounts.services.challenges.secrets.randbelow", return_value=123456),
+        ):
+            start_response = self.client.post(
+                self.send_venue_code_url,
+                {"email": "owner@example.com"},
+                format="json",
+            )
+        challenge_id = start_response.data["challenge_id"]
+        self.client.credentials(HTTP_X_VERIFICATION_CHALLENGE=challenge_id)
+        response = self.client.post(
+            self.verify_venue_code_url,
+            {"code": "123456"},
+            format="json",
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        session = self.client.session
-        self.assertTrue(session["venue_email_verified"])
-        self.assertEqual(session["venue_verified_email"], "owner@example.com")
+        self.assertEqual(response.data["email"], "owner@example.com")
+        self.assertTrue(response.data["verification_token"])
+        challenge = VerificationChallenge.objects.get(pk=challenge_id)
+        self.assertIsNotNone(challenge.verified_at)
+        self.assertEqual(challenge.code_hash, "")
 
     def test_apply_venue_requires_verified_email(self):
-        self.client.post(self.send_venue_code_url, {"email": "owner@example.com"}, format="json")
-        code_obj = VenueEmailVerificationCode.objects.filter(email="owner@example.com").first()
-        session = self.client.session
-        session["venue_pending_email"] = "owner@example.com"
-        session.save()
-        self.client.post(self.verify_venue_code_url, {"code": code_obj.code}, format="json")
+        with (
+            patch("accounts.services.challenges.send_email_with_template"),
+            patch("accounts.services.challenges.secrets.randbelow", return_value=123456),
+        ):
+            start_response = self.client.post(
+                self.send_venue_code_url,
+                {"email": "owner@example.com"},
+                format="json",
+            )
+        challenge_id = start_response.data["challenge_id"]
+        self.client.credentials(HTTP_X_VERIFICATION_CHALLENGE=challenge_id)
+        verification_response = self.client.post(
+            self.verify_venue_code_url,
+            {"code": "123456"},
+            format="json",
+        )
         application_payload = {
             "venue_name": "New Venue",
             "venue_type": "restaurant",
@@ -182,6 +216,7 @@ class VenuesAPITestCase(APITestCase):
             "admin_lastname": "Example",
             "admin_phone": "+1234567890",
             "password": "StrongPass123",
+            "verification_token": verification_response.data["verification_token"],
         }
         response = self.client.post(self.apply_venue_url, application_payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -212,8 +247,8 @@ class VenuesAPITestCase(APITestCase):
             lastname="Doe",
             email="jane.doe@example.com",
             phone="+1234567890",
-            date="2030-01-01",
-            time="18:00",
+            date=date(2030, 1, 1),
+            time=time(18, 0),
             guests=2,
         )
         cancel_url = f"/api/v1/reservations/{reservation.id}/cancel/"
@@ -238,8 +273,8 @@ class VenuesAPITestCase(APITestCase):
             lastname="Doe",
             email="jane.doe@example.com",
             phone="+1234567890",
-            date="2030-01-01",
-            time="18:00",
+            date=date(2030, 1, 1),
+            time=time(18, 0),
             guests=2,
         )
         self.client.login(username="venueowner", password="pass1234")
@@ -264,8 +299,8 @@ class VenuesAPITestCase(APITestCase):
             lastname="Doe",
             email="jane.doe@example.com",
             phone="+1234567890",
-            date="2030-01-01",
-            time="18:00",
+            date=date(2030, 1, 1),
+            time=time(18, 0),
             guests=2,
             status="accepted",
         )
@@ -291,8 +326,8 @@ class VenuesAPITestCase(APITestCase):
             lastname="Doe",
             email="jane.doe@example.com",
             phone="+1234567890",
-            date="2030-01-01",
-            time="18:00",
+            date=date(2030, 1, 1),
+            time=time(18, 0),
             guests=2,
             status="accepted",
             arrival_status="checked_in",
@@ -320,8 +355,8 @@ class VenuesAPITestCase(APITestCase):
             lastname="Doe",
             email="jane.doe@example.com",
             phone="+1234567890",
-            date="2030-01-01",
-            time="18:00",
+            date=date(2030, 1, 1),
+            time=time(18, 0),
             guests=2,
             status="pending",
         )
@@ -352,8 +387,8 @@ class VenuesAPITestCase(APITestCase):
             lastname="Doe",
             email="jane.doe@example.com",
             phone="+1234567890",
-            date="2030-01-01",
-            time="18:00",
+            date=date(2030, 1, 1),
+            time=time(18, 0),
             guests=2,
             status="pending",
         )
@@ -388,8 +423,8 @@ class VenuesAPITestCase(APITestCase):
                 lastname="Doe",
                 email=f"jane{index}@example.com",
                 phone="+1234567890",
-                date="2030-01-01",
-                time="18:00",
+                date=date(2030, 1, index + 1),
+                time=time(18, 0),
                 guests=2,
                 status="pending",
             )
@@ -404,7 +439,7 @@ class VenuesAPITestCase(APITestCase):
         self.assertEqual(response.data["count"], 12)
         self.assertEqual(len(response.data["results"]), 10)
         self.assertNotIn("email", response.data["results"][0])
-        self.assertNotIn("special_requests", response.data["results"][0])
+        self.assertIsInstance(response.data["results"][0]["special_requests"], bool)
 
     def test_reservation_details_returns_sensitive_fields_on_demand(self):
         owner = User.objects.create_user(
@@ -422,8 +457,8 @@ class VenuesAPITestCase(APITestCase):
             lastname="Doe",
             email="jane.doe@example.com",
             phone="+1234567890",
-            date="2030-01-01",
-            time="18:00",
+            date=date(2030, 1, 1),
+            time=time(18, 0),
             guests=2,
             special_requests="Window table",
             allergies="Peanuts",
@@ -436,7 +471,7 @@ class VenuesAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["customer_name"], "Jane Doe")
         self.assertEqual(response.data["email"], "jane.doe@example.com")
-        self.assertEqual(response.data["special_requests"], "Window table")
+        self.assertTrue(response.data["special_requests"])
         self.assertEqual(response.data["allergies"], "Peanuts")
         self.assertEqual(response.data["comments"], "Anniversary")
 
@@ -461,8 +496,11 @@ class VenuesAPITestCase(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(0, response.data["updated_weekdays"])
-        self.assertIn(1, response.data["updated_weekdays"])
+        response_days = {day["weekday"]: day for day in response.data["working_days"]}
+        self.assertIn(0, response_days)
+        self.assertIn(1, response_days)
+        self.assertEqual(response_days[0]["open_time"], "08:00")
+        self.assertTrue(response_days[1]["is_closed"])
         monday = WorkingDay.objects.get(venue=self.venue, weekday=0)
         tuesday = WorkingDay.objects.get(venue=self.venue, weekday=1)
         self.assertEqual(monday.open_time.strftime("%H:%M"), "08:00")

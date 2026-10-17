@@ -38,6 +38,19 @@ npm run dev
 
 ## Validation
 
+Install the tracked pre-commit hook once per clone to run the local checks
+automatically before every commit:
+
+```sh
+git config core.hooksPath .githooks
+```
+
+The hook runs Django system checks and tests, frontend Jest tests, and the
+frontend production build. It blocks the commit if a check fails and writes the
+latest Markdown report to `test-reports/pre-commit-latest.md`. Playwright E2E
+tests are not run by the hook because they require a separately configured
+backend and test fixtures; run them separately or use the CI workflow.
+
 ```sh
 python backend/manage.py check --settings=openspots.settings_test
 cd backend
