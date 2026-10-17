@@ -76,6 +76,21 @@ function formatDuration(milliseconds) {
   return `${(milliseconds / 1000).toFixed(1)}s`;
 }
 
+function formatTimestamp(date) {
+  const pad = (value) => String(value).padStart(2, "0");
+  const localTime = [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join("-") + ` ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  const offsetMinutes = -date.getTimezoneOffset();
+  const offsetSign = offsetMinutes >= 0 ? "+" : "-";
+  const offsetHours = pad(Math.floor(Math.abs(offsetMinutes) / 60));
+  const offsetRemainder = pad(Math.abs(offsetMinutes) % 60);
+
+  return `${localTime} (local, UTC${offsetSign}${offsetHours}:${offsetRemainder})`;
+}
+
 async function main() {
   const django = [
     "--settings=openspots.settings_test",
@@ -131,8 +146,8 @@ async function main() {
   const lines = [
     "# Pre-commit validation report",
     "",
-    `- Started: ${startedAt.toISOString()}`,
-    `- Finished: ${finishedAt.toISOString()}`,
+    `- Started: ${formatTimestamp(startedAt)}`,
+    `- Finished: ${formatTimestamp(finishedAt)}`,
     `- Overall: **${failed ? "FAIL" : "PASS"}**`,
     "",
     "| Check | Result | Duration | Command |",
