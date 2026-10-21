@@ -5,10 +5,10 @@ module.exports = defineConfig({
   timeout: 30 * 1000,
   retries: 0,
 
-  reporter: [['html', { open: 'never' }]],
+  reporter: [['html', { open: 'always' }]],
 
   use: {
-    baseURL: 'http://127.0.0.1:8000/venues',
+    baseURL: process.env.E2E_BASE_URL || 'http://127.0.0.1:8001/venues',
     headless: true,
     viewport: { width: 1280, height: 720 },
 

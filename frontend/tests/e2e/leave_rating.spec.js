@@ -1,9 +1,11 @@
 import { test, expect } from "@playwright/test";
 
+const venueId = 1;
+
 test.beforeEach(async ({ request }) => {
   const res = await request.post("/venues/test-utils/delete-review/", {
     form: {
-      venue_id: "1",
+      venue_id: String(venueId),
       username: "test_user1",
     },
   });
@@ -12,14 +14,14 @@ test.beforeEach(async ({ request }) => {
 
 test("user can leave a review", async ({ page }) => {
   // Go to venue page and login
-  await page.goto("/venues/venue/1");
+  await page.goto(`/venues/venue/${venueId}`);
   await page.getByRole('link', { name: 'Log in to reserve' }).click();
   await page.fill('input[name="username"]', "test_user1");
   await page.fill('input[name="password"]', "pass_word1!");
   await page.getByRole("button", { name: "Login" }).click();
 
   // Reload venue page after login
-  await page.goto("/venues/venue/1");
+  await page.goto(`/venues/venue/${venueId}`);
 
   // Click Reviews tab and leave a rating
   await page.locator('#tabs').getByText('Reviews').click();

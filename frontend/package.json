@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "jest",
     "test:e2e": "playwright test",
+    "e2e:setup": "node scripts/setup-e2e.js",
     "test:ci": "node scripts/test-ci.js"
   },
   "keywords": [],

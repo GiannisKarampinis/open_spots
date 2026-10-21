@@ -91,7 +91,7 @@ services:
     expose:
       - "8000"
     ports:
-      - "8000:8000"
+      - "${OPENSPOTS_WEB_PORT:-8000}:8000"
     restart:                    unless-stopped
 
   release:

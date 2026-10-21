@@ -61,7 +61,26 @@ npm run build
 npm run test:e2e
 ```
 
-Playwright requires a running backend and its test users/fixtures. The existing
+Playwright runs against its own isolated Docker database and port so it does not
+depend on or modify the normal development database. From `frontend/`, prepare
+the stack and fixtures once:
+
+```sh
+npm run e2e:setup
+```
+
+Then run the browser tests or open Playwright UI:
+
+```sh
+npm run test:e2e -- --project=chromium
+npm run test:e2e -- --ui --project=chromium
+```
+
+The E2E seed command is restricted to the isolated test mode. The existing
 browser tests target Django template routes. Backend tests default to SQLite;
 set `TEST_USE_POSTGRES=1` with PostgreSQL credentials for database concurrency
 checks. CI uses PostgreSQL and the same Django test runner.
+
+Playwright creates an HTML report under `frontend/playwright-report/` and opens
+it automatically when the test run finishes. To open the most recent report
+again, run `npx playwright show-report` from `frontend/`.

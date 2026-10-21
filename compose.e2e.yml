@@ -1,0 +1,8 @@
+services:
+  web:
+    environment:
+      DJANGO_DEBUG: "True"
+      E2E_TEST_MODE: "1"
+      SECURE_SSL_REDIRECT: "0"
+      SESSION_COOKIE_SECURE: "0"
+      CSRF_COOKIE_SECURE: "0"
