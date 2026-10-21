@@ -300,6 +300,28 @@ class VerificationChallengeTests(APITestCase):
         self.assertEqual(self.post("register", payload).status_code, 400)
         self.assertTrue(User.objects.filter(pk=challenge.user_id).exists())
 
+    def test_html_signup_creates_user_and_starts_verification(self):
+        browser = Client(enforce_csrf_checks=True)
+        browser.get("/accounts/signup/")
+        response = browser.post("/accounts/signup/", {
+            "username": "html-signup-user",
+            "email": "html-signup@example.com",
+            "firstname": "HTML",
+            "lastname": "Signup",
+            "phone_number": "+306912345678",
+            "password1": "new-password-456",
+            "password2": "new-password-456",
+            "csrfmiddlewaretoken": browser.cookies["csrftoken"].value,
+        })
+
+        self.assertEqual(response.status_code, 302, response.content.decode())
+        self.assertEqual(response["Location"], "/accounts/confirm-code/")
+        user = User.objects.get(username="html-signup-user")
+        self.assertTrue(user.check_password("new-password-456"))
+        self.assertTrue(VerificationChallenge.objects.filter(
+            user=user, reason=VerificationReason.SIGNUP, closed_at__isnull=True,
+        ).exists())
+
     def test_signup_delivery_failure_rolls_back_user(self):
         self.mail.side_effect = RuntimeError("mail failed")
         result = self.post("register", {"username": "new-user", "email": "new@example.com", "firstname": "New", "lastname": "User", "phone_number": "+306912345678", "password": "new-password-456", "password2": "new-password-456"})

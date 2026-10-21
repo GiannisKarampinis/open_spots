@@ -35,7 +35,9 @@ def credential_cookie(response, key, value):
 def dispatch(request, view, *, data=None, authenticated=False):
     request.META["HTTP_X_VERIFICATION_CHALLENGE"] = request.POST.get("challenge_id") or request.COOKIES.get(CHALLENGE_COOKIE, "")
     if data is not None:
-        request._post = data
+        request._body = data.urlencode().encode(request.encoding or "utf-8")
+        request.META["CONTENT_TYPE"] = "application/x-www-form-urlencoded"
+        request.META["CONTENT_LENGTH"] = str(len(request._body))
     return view.as_view(authentication_classes=[SessionAuthentication] if authenticated else [])(request)
 
 

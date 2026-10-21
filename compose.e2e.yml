@@ -3,6 +3,8 @@ services:
     environment:
       DJANGO_DEBUG: "True"
       E2E_TEST_MODE: "1"
+      EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+      API_THROTTLE_AUTH_REGISTER: 1000/hour
       SECURE_SSL_REDIRECT: "0"
       SESSION_COOKIE_SECURE: "0"
       CSRF_COOKIE_SECURE: "0"

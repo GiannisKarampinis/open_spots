@@ -2,10 +2,16 @@ import { test, expect } from "@playwright/test";
 
 const venueId = 1;
 
-function getTomorrowDate() {
+function getTomorrow() {
   const date = new Date();
   date.setDate(date.getDate() + 1);
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
+  return date;
+}
+
+function formatDateForRequest(date) {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
 test.use({
@@ -13,24 +19,17 @@ test.use({
 });
 
 test.beforeEach(async ({ request }) => {
-  try {
-    const res = await request.post("/venues/test-utils/delete-reservation/", {
-      form: {
-        user: "test_user1",
-        name: "Jim Booki",
-        date: getTomorrowDate(),
-        time: "19:00",
-        venue_id: String(venueId),
-      },
-    });
+  const res = await request.post("/venues/test-utils/delete-reservation/", {
+    form: {
+      user: "test_user1",
+      name: "Jim Booki",
+      date: formatDateForRequest(getTomorrow()),
+      time: "19:00",
+      venue_id: String(venueId),
+    },
+  });
 
-    const data = await res.json();
-    expect(res.ok()).toBeTruthy();
-    // Optional but very helpful:
-    console.log("deleted:", data.deleted);
-  } catch {
-      // Reservation might not exist, so ignore the error and continue with the test.
-  }
+  expect(res.ok()).toBeTruthy();
 });
 
 test("user can make a reservation", async ({ page }) => {
@@ -60,10 +59,16 @@ test("user can make a reservation", async ({ page }) => {
   await dateTimeButton.click();
 
 
-  const reservationDate = getTomorrowDate();
-  await page.fill('input[name="date"]', reservationDate);
+  const reservationDate = getTomorrow();
+  await page.locator(".flatpickr-alt").click();
+  const dateLabel = reservationDate.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  await page.locator(`.flatpickr-day[aria-label="${dateLabel}"]`).click();
 
-  await page.getByText('07:00 PM').click();
+  await page.locator("#time-slot-container").getByText("19:00", { exact: true }).click();
   await page.getByRole('spinbutton', { name: 'Number of guests:' }).click();
   await page.fill('input[name="guests"]', "3");
 
@@ -72,7 +77,6 @@ test("user can make a reservation", async ({ page }) => {
   await expect(AdditionalNotesButton).not.toHaveClass(/disabled/);
   await AdditionalNotesButton.click();
 
-  await page.getByLabel('Special requests:').selectOption('vegetarian');
   await page.getByRole('textbox', { name: 'Allergies:' }).click();
   await page.getByRole('textbox', { name: 'Allergies:' }).fill('Nuts');
 
