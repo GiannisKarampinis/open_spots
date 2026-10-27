@@ -34,7 +34,7 @@ test.beforeEach(async ({ request }) => {
   expect(res.ok()).toBeTruthy();
 });
 
-test("user can make a reservation", async ({ page }) => {
+test("user can book, keep, then cancel a reservation", async ({ page }) => {
   // Go to venue page and login
   await page.goto(`/venues/venue/${venueId}`);
   await page.getByRole('link', { name: 'Log in to reserve' }).click();
@@ -82,10 +82,31 @@ test("user can make a reservation", async ({ page }) => {
   await page.getByRole('textbox', { name: 'Allergies:' }).click();
   await page.getByRole('textbox', { name: 'Allergies:' }).fill('Nuts');
 
-  // Wait for success message on the same page
   await page.getByTestId('submit-reservation').click();
 
   await expect(page.locator("text=Reservation Pending")).toBeVisible();
+
+  await page.goto("/venues/my-reservations/");
+  const reservationCard = page.locator("#upcoming .reservation-card").filter({ hasText: "Playwright Test Venue" });
+  await expect(reservationCard).toContainText("19:00");
+
+  await page.goto("/venues/");
+  await page.locator(".quick-reservation-card .cancel-btn").click();
+  await expect(page).toHaveURL(/\/venues\/reservation\/\d+\/cancel\/$/);
+  await expect(page.getByRole("heading", { name: "Cancel Reservation" })).toBeVisible();
+
+  await page.getByRole("link", { name: "No, go back" }).click();
+  await expect(page).toHaveURL(/\/venues\/my-reservations\/$/);
+  await expect(page.locator("#upcoming .reservation-card").filter({ hasText: "Playwright Test Venue" })).toBeVisible();
+
+  await page.locator("#upcoming .reservation-card").filter({ hasText: "Playwright Test Venue" })
+    .getByRole("button", { name: "Cancel" }).click();
+  await expect(page).toHaveURL(/\/venues\/my-reservations\/$/);
+
+  await page.locator('.tab-button[data-tab="cancelled"]').click();
+  const cancelledCard = page.locator("#cancelled .reservation-card").filter({ hasText: "Playwright Test Venue" });
+  await expect(cancelledCard).toContainText("Cancelled");
+  await expect(cancelledCard.getByRole("button", { name: "Cancel" })).toHaveCount(0);
 });
 
 test("a stale unavailable time cannot be used to create a reservation", async ({ page }) => {

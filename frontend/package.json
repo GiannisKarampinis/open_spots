@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "jest",
     "test:e2e": "playwright test",
+    "test:e2e:react-smoke": "playwright test --config=playwright.react-smoke.config.js",
     "e2e:setup": "node scripts/setup-e2e.js",
     "test:ci": "node scripts/test-ci.js"
   },
