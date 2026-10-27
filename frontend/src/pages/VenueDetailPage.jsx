@@ -25,7 +25,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "../styles/venue_detail.css";
 
-const OpenFreeMapLayer = lazy(() => import("../components/venues/OpenFreeMapLayer"));
+const VenueMapLayer = lazy(() => import("../components/venues/VenueMapLayer"));
 
 const todayIso = () => {
   const date = new Date();
@@ -88,7 +88,7 @@ function MapPreview({ venue }) {
         aria-label={t("Venue map", { name: venue.name })}
       >
         <Suspense fallback={null}>
-          <OpenFreeMapLayer />
+          <VenueMapLayer />
         </Suspense>
 
         <ZoomControl position="topright" />

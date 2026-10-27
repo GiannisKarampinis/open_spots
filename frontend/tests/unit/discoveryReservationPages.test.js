@@ -40,7 +40,7 @@ jest.mock("react-leaflet", () => {
     ZoomControl: Stub,
   };
 });
-jest.mock("../../src/components/venues/OpenFreeMapLayer", () => () => null);
+jest.mock("../../src/components/venues/VenueMapLayer", () => () => null);
 jest.mock("../../src/components/ToastProvider", () => ({
   useToastMessage: () => {
     const [message, setMessage] = require("react").useState("");
