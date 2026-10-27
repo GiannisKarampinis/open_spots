@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("employee dashboard loads", async ({ page }) => {
+test("valid credentials log the seeded user in", async ({ page }) => {
   await page.goto("/accounts/login");
   await page.fill('input[name="username"]', "test_user1");
   await page.fill('input[name="password"]', "pass_word1!");

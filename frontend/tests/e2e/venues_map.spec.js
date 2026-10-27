@@ -20,5 +20,5 @@ test("venue detail renders its map and map controls when coordinates are availab
   await expect(page.locator(".leaflet-control-zoom-in")).toBeVisible();
   await expect(page.locator(".leaflet-control-zoom-out")).toBeVisible();
   await page.locator(".leaflet-control-zoom-in").click();
-  await expect(page.locator(".leaflet-marker-icon")).toBeVisible();
+  await expect(map.locator(".leaflet-interactive")).toBeVisible();
 });
