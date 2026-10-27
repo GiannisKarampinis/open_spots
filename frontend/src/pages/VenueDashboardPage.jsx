@@ -1547,7 +1547,6 @@ export default function VenueDashboardPage() {
 			}
 
 			setDashboard(res.data); /* Stores the backend response and re-render */
-			setMessage("");         /* Clears any previous error messages */
 
 		} catch (err) {
 
@@ -1874,7 +1873,7 @@ export default function VenueDashboardPage() {
 				},
 			}));
 		} catch (err) {
-			if (import.meta.env.DEV) {
+			if (process.env.NODE_ENV !== "production") {
  	 			console.error("Could not update venue availability:", err);
 			}
 			setMessage(err.response?.data?.detail || "Could not update venue availability.");
@@ -2094,6 +2093,7 @@ export default function VenueDashboardPage() {
 						grouping={grouping}
 						onGroupingChange={(event) => {
 							setGrouping(event.target.value);
+							setMessage("");
 							fetchDashboard(event.target.value);
 						}}
 					/>
