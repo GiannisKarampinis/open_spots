@@ -324,6 +324,23 @@ test("venue send-code field errors are shown beneath the email", async () => {
   expect(document.getElementById("admin-email-errors")).toHaveTextContent("Enter a valid email address.");
 });
 
+test("expired venue challenge closes the dialog and requires a fresh email verification", async () => {
+  axios.get.mockRejectedValue({ response: { data: { code: "verification_challenge_expired" } } });
+  postWithCsrf.mockResolvedValue({ data: { challenge_id: "venue-challenge" } });
+  await act(async () => root.render(<ApplyVenuePage />));
+  await act(async () => fireEvent.change(document.getElementById("admin_email"), {
+    target: { value: "owner@example.com" },
+  }));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Verify" })));
+
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(document.getElementById("admin-email-errors")).toHaveTextContent(
+    "Email verification expired. Please try again.",
+  );
+  expect(screen.getByRole("button", { name: "Verify" })).not.toBeDisabled();
+  expect(postWithCsrf).toHaveBeenCalledTimes(1);
+});
+
 test("venue dialog focuses the code, traps Tab, and restores focus after Escape", async () => {
   postWithCsrf.mockResolvedValue({ data: { challenge_id: "venue-challenge" } });
   await act(async () => root.render(<ApplyVenuePage />));

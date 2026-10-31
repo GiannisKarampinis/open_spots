@@ -14,8 +14,11 @@ jest.mock("../../src/utils/venueErrorPreview", () => ({ isVenueErrorPreviewEnabl
 jest.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key) => key }) }));
 jest.mock("react-router-dom", () => ({ Link: ({ children }) => <a>{children}</a> }));
 jest.mock("../../src/components/ToastProvider", () => ({ useToastMessage: () => ["", jest.fn()] }));
-jest.mock("../../src/components/EmailVerificationModal", () => ({ onVerified, venueEmail }) => (
-  <button onClick={() => onVerified({ email: venueEmail, verification_token: "proof" })}>Complete verification</button>
+jest.mock("../../src/components/EmailVerificationModal", () => ({ onVerified, onExpired, venueEmail }) => (
+  <>
+    <button onClick={() => onVerified({ email: venueEmail, verification_token: "proof" })}>Complete verification</button>
+    <button onClick={onExpired}>Expire verification</button>
+  </>
 ));
 
 let root;
@@ -78,6 +81,28 @@ test("replaces the technical throttle response with a friendly verification mess
   expect(document.getElementById("admin_email")).toHaveAttribute("aria-invalid", "true");
 });
 
+test("clears field and non-field errors when the user edits a field", async () => {
+  await verify();
+  await fillForm();
+  postWithCsrf.mockRejectedValueOnce({ response: { data: {
+    venue_name: ["This venue name is unavailable."],
+    non_field_errors: ["An application already exists."],
+  } } });
+  await submit();
+  expect(document.getElementById("venue_name-errors")).toHaveTextContent("This venue name is unavailable.");
+  expect(screen.getByRole("alert")).toHaveTextContent("An application already exists.");
+
+  await change("venue_name", "Another Cafe");
+  expect(document.getElementById("venue_name-errors")).toBeEmptyDOMElement();
+  expect(screen.getByRole("alert")).toBeEmptyDOMElement();
+
+  postWithCsrf.mockRejectedValueOnce({ response: { data: {
+    non_field_errors: ["The application could not be resubmitted."],
+  } } });
+  await submit();
+  expect(screen.getByRole("alert")).toHaveTextContent("The application could not be resubmitted.");
+});
+
 test("locks all form controls during submission and restores them after a network failure", async () => {
   await verify();
   await fillForm();
@@ -90,6 +115,16 @@ test("locks all form controls during submission and restores them after a networ
   await act(async () => rejectRequest(new Error("Offline")));
   expect(document.getElementById("admin_firstname")).not.toBeDisabled();
   expect(screen.getByRole("alert")).toHaveTextContent("Could not submit the application.");
+});
+
+test("shows the offline fallback when the application request fails at the network layer", async () => {
+  await verify();
+  await fillForm();
+  postWithCsrf.mockRejectedValueOnce({ code: "ERR_NETWORK" });
+  await submit();
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Could not submit the application. Check your internet connection and try again.",
+  );
 });
 
 test("shows a general correction message and focuses the backend-invalid field", async () => {
@@ -119,6 +154,44 @@ test("shows one requirements message for multiple password validation failures",
   expect(errors).toHaveTextContent("Use a password with at least 8 characters that is not commonly used or entirely numeric.");
   expect(document.getElementById("password")).toHaveFocus();
   expect(document.getElementById("password")).toHaveAttribute("aria-invalid", "true");
+});
+
+test("resets verification and reports expiry when the modal says the challenge expired", async () => {
+  await change("admin_email", "owner@example.com");
+  postWithCsrf.mockResolvedValueOnce({ data: { challenge_id: "expired-challenge" } });
+  await act(async () => fireEvent.click(screen.getByText("Verify")));
+  await act(async () => fireEvent.click(screen.getByText("Expire verification")));
+
+  expect(screen.queryByText("Complete verification")).toBeNull();
+  expect(document.getElementById("admin-email-errors")).toHaveTextContent(
+    "Email verification expired. Please try again.",
+  );
+  expect(screen.getByRole("button", { name: "Verify" })).not.toBeDisabled();
+  expect(screen.getByRole("button", { name: "Submit Application" })).not.toBeDisabled();
+  expect(postWithCsrf).toHaveBeenCalledTimes(1);
+});
+
+test("successful verified submission shows the confirmation and omits the repeated password", async () => {
+  await verify();
+  await fillForm();
+  postWithCsrf.mockResolvedValueOnce({ data: { detail: "Application accepted." } });
+  await submit();
+
+  expect(postWithCsrf).toHaveBeenLastCalledWith(
+    "/api/v1/venues/apply/",
+    expect.objectContaining({
+      admin_email: "owner@example.com",
+      verification_token: "proof",
+      password: "Strong-password-42",
+    }),
+    expect.objectContaining({ headers: { "X-Verification-Challenge": "challenge" } }),
+  );
+  const submittedPayload = postWithCsrf.mock.calls[postWithCsrf.mock.calls.length - 1][1];
+  expect(submittedPayload).not.toHaveProperty("password2");
+  expect(screen.getByRole("status")).toHaveTextContent("Thank you!");
+  expect(screen.getByRole("status")).toHaveTextContent(
+    "Your application has been submitted. We will review it and contact you shortly.",
+  );
 });
 
 test("previews all error areas without sending verification or application requests", async () => {
