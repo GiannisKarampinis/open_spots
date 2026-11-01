@@ -224,6 +224,81 @@ test("cancel confirmation can return to reservations or cancel the loaded reserv
   expect(mockNavigate).toHaveBeenCalledWith("/venues/my-reservations");
 });
 
+test("cancel confirmation displays loading until the reservation request resolves", async () => {
+  let resolveReservation;
+  getWithAuth.mockReturnValue(new Promise((resolve) => {
+    resolveReservation = resolve;
+  }));
+  await renderPage(<ConfirmCancelPage />);
+
+  expect(screen.getByText("Loading...")).toBeInTheDocument();
+  await act(async () => resolveReservation({
+    data: { venue_id: 7, date: "2030-01-02", time: "18:30:45" },
+  }));
+
+  expect(screen.queryByText("Loading...")).toBeNull();
+  expect(screen.getByText("Venue #7")).toBeInTheDocument();
+  expect(screen.getByText("2030-01-02")).toBeInTheDocument();
+  expect(screen.getByText("18:30")).toBeInTheDocument();
+  expect(getWithAuth).toHaveBeenCalledWith(
+    "/api/v1/reservations/12/",
+    {},
+    expect.objectContaining({ onUnauthenticated: expect.any(Function) }),
+  );
+});
+
+test("cancel confirmation reports reservation load failures", async () => {
+  getWithAuth.mockRejectedValue(new Error("Request failed"));
+  await renderPage(<ConfirmCancelPage />);
+
+  expect(await screen.findByText("Could not load reservation.")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+  expect(postWithAuth).not.toHaveBeenCalled();
+});
+
+test("cancel confirmation redirects unauthenticated users back to login", async () => {
+  getWithAuth.mockImplementation((url, config, options) => {
+    options.onUnauthenticated();
+    return Promise.resolve(null);
+  });
+  window.history.replaceState({}, "", "/venues/reservation/12/cancel");
+  await renderPage(<ConfirmCancelPage />);
+
+  expect(mockNavigate).toHaveBeenCalledWith(
+    "/accounts/login?next=/venues/reservation/12/cancel",
+  );
+  expect(screen.getByText("Loading...")).toBeInTheDocument();
+});
+
+test("cancel confirmation returns to reservations without posting a cancellation", async () => {
+  getWithAuth.mockResolvedValue({ data: { venue_name: "Cafe Ada", date: "2030-01-02", time: "18:30" } });
+  await renderPage(<ConfirmCancelPage />);
+  await screen.findByText(/Cafe Ada/);
+
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Go back" })));
+
+  expect(mockNavigate).toHaveBeenCalledWith("/venues/my-reservations");
+  expect(postWithAuth).not.toHaveBeenCalled();
+});
+
+test("cancel confirmation reports cancellation failures and stays on the page", async () => {
+  getWithAuth.mockResolvedValue({ data: { venue_name: "Cafe Ada", date: "2030-01-02", time: "18:30" } });
+  postWithAuth.mockRejectedValue(new Error("Request failed"));
+  await renderPage(<ConfirmCancelPage />);
+  await screen.findByText(/Cafe Ada/);
+
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Cancel" })));
+
+  expect(postWithAuth).toHaveBeenCalledWith(
+    "/api/v1/reservations/12/cancel/",
+    {},
+    {},
+    expect.objectContaining({ onUnauthenticated: expect.any(Function) }),
+  );
+  expect(screen.getByText("Could not cancel reservation.")).toBeInTheDocument();
+  expect(mockNavigate).not.toHaveBeenCalledWith("/venues/my-reservations");
+});
+
 test("profile saves edited details and validates password confirmation before starting verification", async () => {
   const profile = {
     username: "ada",
