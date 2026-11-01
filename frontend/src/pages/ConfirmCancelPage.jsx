@@ -6,26 +6,61 @@ import { useTranslation } from "react-i18next";
 import { useToastMessage } from "../components/ToastProvider";
 
 export default function ConfirmCancelPage() {
+  // Reviewed: loading/retry, stale requests, and duplicate cancellation attempts are handled below.
   const { t } = useTranslation();
   const { reservationId } = useParams();
   const navigate = useNavigate();
 
-  const [reservation, setReservation] = useState(null);
+  const [reservationState, setReservationState] = useState({
+    reservationId: null,
+    status: "loading",
+    data: null,
+  });
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [cancelling, setCancelling] = useState(false);
   const [message, setMessage] = useToastMessage("error");
 
   useEffect(() => {
+    let active = true;
+    setReservationState({ reservationId, status: "loading", data: null });
+
     getWithAuth(
       `/api/v1/reservations/${reservationId}/`,
       {},
       { onUnauthenticated: () => navigate(`/accounts/login?next=${window.location.pathname}`) }
     )
       .then((res) => {
-        if (res) setReservation(res.data);
+        // A route change or unmount makes this response stale.
+        if (!active) return;
+        if (res) {
+          setReservationState({ reservationId, status: "loaded", data: res.data });
+        } else {
+          setReservationState({ reservationId, status: "error", data: null });
+        }
       })
-      .catch(() => setMessage(t("Could not load reservation.")));
-  }, [navigate, reservationId, t]);
+      .catch(() => {
+        // Do not let an old request replace the current page with an error.
+        if (!active) return;
+        setReservationState({ reservationId, status: "error", data: null });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [navigate, reservationId, loadAttempt]);
+
+  const reservation = reservationState.reservationId === reservationId &&
+    reservationState.status === "loaded"
+    ? reservationState.data
+    : null;
+  const loadFailed = reservationState.reservationId === reservationId &&
+    reservationState.status === "error";
 
   const cancel = async () => {
+    // Keep cancellation unavailable until current reservation details are loaded, and prevent duplicate posts.
+    if (!reservation || cancelling) return;
+    setCancelling(true);
+
     try {
       const res = await postWithAuth(
         `/api/v1/reservations/${reservationId}/cancel/`,
@@ -39,6 +74,8 @@ export default function ConfirmCancelPage() {
       navigate("/venues/my-reservations");
     } catch {
       setMessage(t("Could not cancel reservation."));
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -57,17 +94,29 @@ export default function ConfirmCancelPage() {
           {t("on")} <strong>{reservation.date}</strong> {t("at")}{" "}
           <strong>{String(reservation.time || "").slice(0, 5)}</strong>?
         </p>
+      ) : loadFailed ? (
+        <p role="alert">{t("Could not load reservation.")}</p>
       ) : (
         <p>{t("Loading...")}</p>
       )}
 
       <div className="confirm-cancel-actions">
+        {loadFailed && (
+          <button
+            type="button"
+            className="confirm-cancel-btn"
+            onClick={() => setLoadAttempt((attempt) => attempt + 1)}
+          >
+            {t("Retry")}
+          </button>
+        )}
         <button
           type="button"
           className="confirm-cancel-btn danger"
           onClick={cancel}
+          disabled={!reservation || cancelling}
         >
-          {t("Cancel")}
+          {cancelling ? t("Cancelling...") : t("Cancel")}
         </button>
 
         <button

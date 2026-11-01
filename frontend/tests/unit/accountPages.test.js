@@ -49,11 +49,12 @@ jest.mock("react-i18next", () => ({
   Trans: ({ children }) => children || null,
 }));
 const mockNavigate = jest.fn();
+let mockReservationId = "12";
 let mockLocation = { search: "", state: null, pathname: "/accounts/login" };
 jest.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
-  useParams: () => ({ reservationId: "12" }),
+  useParams: () => ({ reservationId: mockReservationId }),
   Link: ({ children, to }) => <a href={to}>{children}</a>,
 }));
 
@@ -73,6 +74,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   sessionStorage.clear();
   mockNavigate.mockReset();
+  mockReservationId = "12";
   mockLocation = { search: "", state: null, pathname: "/accounts/login" };
 });
 
@@ -232,11 +234,13 @@ test("cancel confirmation displays loading until the reservation request resolve
   await renderPage(<ConfirmCancelPage />);
 
   expect(screen.getByText("Loading...")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
   await act(async () => resolveReservation({
     data: { venue_id: 7, date: "2030-01-02", time: "18:30:45" },
   }));
 
   expect(screen.queryByText("Loading...")).toBeNull();
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled();
   expect(screen.getByText("Venue #7")).toBeInTheDocument();
   expect(screen.getByText("2030-01-02")).toBeInTheDocument();
   expect(screen.getByText("18:30")).toBeInTheDocument();
@@ -251,9 +255,55 @@ test("cancel confirmation reports reservation load failures", async () => {
   getWithAuth.mockRejectedValue(new Error("Request failed"));
   await renderPage(<ConfirmCancelPage />);
 
-  expect(await screen.findByText("Could not load reservation.")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+  expect(await screen.findByRole("alert")).toHaveTextContent("Could not load reservation.");
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Retry" })).toBeEnabled();
   expect(postWithAuth).not.toHaveBeenCalled();
+});
+
+test("retry loads the reservation again after a failed request", async () => {
+  getWithAuth
+    .mockRejectedValueOnce(new Error("Temporary request failure"))
+    .mockResolvedValueOnce({ data: {
+      venue_name: "Cafe Ada",
+      date: "2030-01-02",
+      time: "18:30",
+    } });
+  await renderPage(<ConfirmCancelPage />);
+  expect(await screen.findByRole("alert")).toHaveTextContent("Could not load reservation.");
+
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Retry" })));
+
+  expect(await screen.findByText(/Cafe Ada/)).toBeInTheDocument();
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled();
+  expect(getWithAuth).toHaveBeenCalledTimes(2);
+});
+
+test("late reservation responses from a previous route do not replace the current reservation", async () => {
+  let resolveFirst;
+  let resolveSecond;
+  getWithAuth
+    .mockReturnValueOnce(new Promise((resolve) => { resolveFirst = resolve; }))
+    .mockReturnValueOnce(new Promise((resolve) => { resolveSecond = resolve; }));
+  await renderPage(<ConfirmCancelPage />);
+
+  mockReservationId = "34";
+  await act(async () => root.render(<ConfirmCancelPage />));
+  await act(async () => resolveSecond({ data: {
+    venue_name: "Current Venue",
+    date: "2030-02-03",
+    time: "19:00",
+  } }));
+  await act(async () => resolveFirst({ data: {
+    venue_name: "Stale Venue",
+    date: "2030-01-02",
+    time: "18:30",
+  } }));
+
+  expect(screen.getByText(/Current Venue/)).toBeInTheDocument();
+  expect(screen.queryByText(/Stale Venue/)).toBeNull();
+  expect(getWithAuth).toHaveBeenNthCalledWith(2, "/api/v1/reservations/34/", {}, expect.any(Object));
 });
 
 test("cancel confirmation redirects unauthenticated users back to login", async () => {
@@ -267,7 +317,8 @@ test("cancel confirmation redirects unauthenticated users back to login", async 
   expect(mockNavigate).toHaveBeenCalledWith(
     "/accounts/login?next=/venues/reservation/12/cancel",
   );
-  expect(screen.getByText("Loading...")).toBeInTheDocument();
+  expect(screen.getByRole("alert")).toHaveTextContent("Could not load reservation.");
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
 });
 
 test("cancel confirmation returns to reservations without posting a cancellation", async () => {
@@ -297,6 +348,23 @@ test("cancel confirmation reports cancellation failures and stays on the page", 
   );
   expect(screen.getByText("Could not cancel reservation.")).toBeInTheDocument();
   expect(mockNavigate).not.toHaveBeenCalledWith("/venues/my-reservations");
+});
+
+test("cancel confirmation disables repeated submission while cancellation is pending", async () => {
+  getWithAuth.mockResolvedValue({ data: { venue_name: "Cafe Ada", date: "2030-01-02", time: "18:30" } });
+  let resolveCancellation;
+  postWithAuth.mockReturnValue(new Promise((resolve) => {
+    resolveCancellation = resolve;
+  }));
+  await renderPage(<ConfirmCancelPage />);
+  await screen.findByText(/Cafe Ada/);
+
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Cancel" })));
+  expect(screen.getByRole("button", { name: "Cancelling..." })).toBeDisabled();
+  expect(postWithAuth).toHaveBeenCalledTimes(1);
+
+  await act(async () => resolveCancellation({ data: {} }));
+  expect(mockNavigate).toHaveBeenCalledWith("/venues/my-reservations");
 });
 
 test("profile saves edited details and validates password confirmation before starting verification", async () => {
