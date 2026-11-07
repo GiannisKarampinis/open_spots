@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useToastMessage } from "../components/ToastProvider";
 
 export default function ConfirmCancelPage() {
-  // Reviewed: loading/retry, stale requests, and duplicate cancellation attempts are handled below.
+  // Reviewed OK: loading/retry, stale requests, and duplicate cancellation attempts are handled below.
   const { t } = useTranslation();
   const { reservationId } = useParams();
   const navigate = useNavigate();

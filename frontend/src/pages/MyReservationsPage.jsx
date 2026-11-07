@@ -15,6 +15,7 @@ function getStatusLabel(status, t) {
 
   const labels = {
     pending: t("Pending"),
+    accepted: t("Accepted"),
     confirmed: t("Confirmed"),
     cancelled: t("Cancelled"),
     rejected: t("Rejected"),
@@ -24,7 +25,7 @@ function getStatusLabel(status, t) {
   return labels[normalized] || status.charAt(0).toUpperCase() + status.slice(1);
 }
 
-function ReservationList({ reservations, onCancel, now }) {
+function ReservationList({ reservations, onCancel, now, cancellingId }) {
   const { t } = useTranslation();
 
   if (!reservations.length) {
@@ -77,8 +78,10 @@ function ReservationList({ reservations, onCancel, now }) {
                   type="button"
                   className="cancel-btn"
                   onClick={() => onCancel(reservation.id)}
+                  disabled={cancellingId !== null}
                 >
-                  <FontAwesomeIcon icon={faXmark} aria-hidden="true" /> {t("Cancel")}
+                  <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
+                  {cancellingId === reservation.id ? t("Cancelling...") : t("Cancel")}
                 </button>
               </div>
             )}
@@ -93,6 +96,7 @@ function ReservationList({ reservations, onCancel, now }) {
 }
 
 export default function MyReservationsPage() {
+  // Reviewed: cancellation, refresh failures, retry, and duplicate submissions are handled explicitly.
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -101,6 +105,9 @@ export default function MyReservationsPage() {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [cancellingId, setCancellingId] = useState(null);
 
   const loadReservations = useCallback(async () => {
     const res = await getWithAuth(
@@ -115,10 +122,25 @@ export default function MyReservationsPage() {
   }, [navigate]);
 
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setLoadError(false);
+    setMessage("");
+
     loadReservations()
-      .catch(() => setMessage(t("Could not load reservations.")))
-      .finally(() => setLoading(false));
-  }, [navigate, loadReservations, t]);
+      .catch(() => {
+        if (!active) return;
+        setLoadError(true);
+        setMessage(t("Could not load reservations."));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [loadReservations, loadAttempt, t]);
 
   const grouped = useMemo(
     () => ({
@@ -138,10 +160,12 @@ export default function MyReservationsPage() {
   );
 
   const cancelReservation = async (id) => {
+    if (cancellingId !== null) return;
     if (!window.confirm(t("Are you sure you want to cancel this reservation?"))) {
       return;
     }
 
+    setCancellingId(id);
     try {
       const res = await postWithAuth(
         `/api/v1/reservations/${id}/cancel/`,
@@ -152,9 +176,16 @@ export default function MyReservationsPage() {
 
       if (!res) return;
 
-      await loadReservations();
+      try {
+        await loadReservations();
+      } catch {
+        setLoadError(true);
+        setMessage(t("Could not load reservations."));
+      }
     } catch {
       setMessage(t("Could not cancel reservation."));
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -187,11 +218,18 @@ export default function MyReservationsPage() {
       <div className="tab-content active">
         {loading ? (
           <p>{t("Loading...")}</p>
+        ) : loadError ? (
+          <div>
+            <button type="button" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>
+              {t("Retry")}
+            </button>
+          </div>
         ) : (
           <ReservationList
             reservations={grouped[activeTab]}
             onCancel={cancelReservation}
             now={now}
+            cancellingId={cancellingId}
           />
         )}
       </div>

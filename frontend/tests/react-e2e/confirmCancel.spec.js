@@ -21,19 +21,23 @@ async function loginAndGetAccessToken(page) {
   return access;
 }
 
+function authHeaders(access) {
+  return { Authorization: "Bearer " + access };
+}
+
 async function createReservation(request, access, workerIndex) {
   const date = new Date();
-  const dateOffset = 365 + (Math.floor(Date.now() / 60_000) % 360) + workerIndex * 400;
+  const dateOffset = 400 + Math.floor(Math.random() * 5_000) + workerIndex * 400;
   date.setDate(date.getDate() + dateOffset);
   const dateString = [
     date.getFullYear(),
     String(date.getMonth() + 1).padStart(2, "0"),
     String(date.getDate()).padStart(2, "0"),
   ].join("-");
-  const minute = (Math.floor(Date.now() / 1000) + workerIndex * 7) % 60;
+  const minute = Math.floor(Math.random() * 60);
   const time = `18:${String(minute).padStart(2, "0")}:00`;
   const response = await request.post(`${apiBaseUrl}/api/v1/reservations/`, {
-    headers: { Authorization: `Bearer ${access}` },
+    headers: authHeaders(access),
     data: {
       venue_id: 1,
       firstname: "E2E",
@@ -48,15 +52,14 @@ async function createReservation(request, access, workerIndex) {
   const status = response.status();
   const body = await response.text();
   expect(status, body).toBe(201);
-  const reservation = JSON.parse(body);
-  return reservation;
+  return JSON.parse(body);
 }
 
 async function deleteReservation(request, access, reservationId) {
   if (!reservationId) return;
   const response = await request.delete(
     `${apiBaseUrl}/api/v1/reservations/${reservationId}/`,
-    { headers: { Authorization: `Bearer ${access}` } },
+    { headers: authHeaders(access) },
   );
   expect(response.ok(), await response.text()).toBeTruthy();
 }
@@ -79,7 +82,7 @@ test("user confirms cancellation and the reservation is cancelled in the API", a
 
     const response = await request.get(
       `${apiBaseUrl}/api/v1/reservations/${reservation.id}/`,
-      { headers: { Authorization: `Bearer ${access}` } },
+      { headers: authHeaders(access) },
     );
     expect(response.ok()).toBeTruthy();
     expect((await response.json()).status).toBe("cancelled");
@@ -102,7 +105,7 @@ test("a reservation deleted after confirmation is shown cannot be cancelled", as
 
     const deletion = await request.delete(
       `${apiBaseUrl}/api/v1/reservations/${reservation.id}/`,
-      { headers: { Authorization: `Bearer ${access}` } },
+      { headers: authHeaders(access) },
     );
     expect(deletion.ok(), await deletion.text()).toBeTruthy();
     reservationExists = false;
@@ -114,5 +117,57 @@ test("a reservation deleted after confirmation is shown cannot be cancelled", as
     if (reservationExists) {
       await deleteReservation(request, access, reservation.id);
     }
+  }
+});
+
+test("my reservations cancels an upcoming reservation and lists it under Cancelled", async ({
+  page,
+  request,
+}, testInfo) => {
+  const access = await loginAndGetAccessToken(page);
+  const reservation = await createReservation(request, access, testInfo.workerIndex);
+
+  try {
+    await page.goto("/venues/my-reservations");
+    const reservationCard = page.locator(".reservation-card").filter({
+      hasText: reservation.venue_name,
+    }).filter({ hasText: reservation.date });
+    await expect(reservationCard).toContainText(reservation.date);
+    await expect(reservationCard.getByRole("button", { name: "Cancel" })).toBeVisible();
+
+    page.once("dialog", (dialog) => dialog.accept());
+    await reservationCard.getByRole("button", { name: "Cancel" }).click();
+
+    await page.getByRole("button", { name: "Cancelled" }).click();
+    const cancelledCard = page.locator(".reservation-card").filter({
+      hasText: reservation.venue_name,
+    }).filter({ hasText: reservation.date });
+    await expect(cancelledCard).toContainText("Status: Cancelled");
+    await expect(cancelledCard.getByRole("button", { name: "Cancel" })).toHaveCount(0);
+  } finally {
+    await deleteReservation(request, access, reservation.id);
+  }
+});
+
+test("my reservations leaves a reservation active when cancellation is declined", async ({
+  page,
+  request,
+}, testInfo) => {
+  const access = await loginAndGetAccessToken(page);
+  const reservation = await createReservation(request, access, testInfo.workerIndex);
+
+  try {
+    await page.goto("/venues/my-reservations");
+    const reservationCard = page.locator(".reservation-card").filter({
+      hasText: reservation.venue_name,
+    }).filter({ hasText: reservation.date });
+    await expect(reservationCard.getByRole("button", { name: "Cancel" })).toBeVisible();
+
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await reservationCard.getByRole("button", { name: "Cancel" }).click();
+
+    await expect(reservationCard).toContainText("Status: Pending");
+  } finally {
+    await deleteReservation(request, access, reservation.id);
   }
 });

@@ -186,6 +186,119 @@ test("my reservations switches tabs and confirms cancellation before refreshing"
   expect(getWithAuth).toHaveBeenCalledTimes(2);
 });
 
+test("my reservations shows translated accepted status", async () => {
+  const acceptedReservation = {
+    id: 31,
+    venue_name: "Accepted Bistro",
+    date: "2099-05-01",
+    time: "18:30:00",
+    starts_at: "2099-05-01T18:30:00Z",
+    guests: 2,
+    status: "accepted",
+  };
+  getWithAuth.mockResolvedValue({ data: [acceptedReservation] });
+  await renderPage(<MyReservationsPage />);
+
+  expect(await screen.findByText("Status: Accepted")).toBeInTheDocument();
+});
+
+test("my reservations retries after the initial list request fails", async () => {
+  getWithAuth
+    .mockRejectedValueOnce(new Error("Temporary request failure"))
+    .mockResolvedValueOnce({ data: [{
+      id: 32,
+      venue_name: "Recovered Bistro",
+      date: "2099-05-01",
+      time: "18:30:00",
+      starts_at: "2099-05-01T18:30:00Z",
+      guests: 2,
+      status: "pending",
+    }] });
+  await renderPage(<MyReservationsPage />);
+
+  expect(await screen.findByText("Could not load reservations.")).toBeInTheDocument();
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Retry" })));
+
+  expect(await screen.findByText(/Recovered Bistro/)).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+  expect(getWithAuth).toHaveBeenCalledTimes(2);
+});
+
+test("my reservations distinguishes cancellation success from a failed list refresh", async () => {
+  const upcoming = {
+    id: 33,
+    venue_name: "Refresh Failure Bistro",
+    date: "2099-05-01",
+    time: "18:30:00",
+    starts_at: "2099-05-01T18:30:00Z",
+    guests: 2,
+    status: "pending",
+  };
+  getWithAuth
+    .mockResolvedValueOnce({ data: [upcoming] })
+    .mockRejectedValueOnce(new Error("Refresh failed"));
+  postWithAuth.mockResolvedValue({ data: { ...upcoming, status: "cancelled" } });
+  window.confirm = jest.fn(() => true);
+  await renderPage(<MyReservationsPage />);
+  await screen.findByText(/Refresh Failure Bistro/);
+
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Cancel" })));
+
+  expect(screen.getByText("Could not load reservations.")).toBeInTheDocument();
+  expect(screen.queryByText("Could not cancel reservation.")).toBeNull();
+  expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+  expect(postWithAuth).toHaveBeenCalledTimes(1);
+});
+
+test("my reservations prevents duplicate cancellation while the request is pending", async () => {
+  const upcoming = {
+    id: 34,
+    venue_name: "Pending Bistro",
+    date: "2099-05-01",
+    time: "18:30:00",
+    starts_at: "2099-05-01T18:30:00Z",
+    guests: 2,
+    status: "pending",
+  };
+  getWithAuth.mockResolvedValue({ data: [upcoming] });
+  let resolveCancellation;
+  postWithAuth.mockReturnValue(new Promise((resolve) => {
+    resolveCancellation = resolve;
+  }));
+  window.confirm = jest.fn(() => true);
+  await renderPage(<MyReservationsPage />);
+  await screen.findByText(/Pending Bistro/);
+  const cancelButton = screen.getByRole("button", { name: "Cancel" });
+
+  await act(async () => fireEvent.click(cancelButton));
+  expect(screen.getByRole("button", { name: "Cancelling..." })).toBeDisabled();
+  expect(postWithAuth).toHaveBeenCalledTimes(1);
+
+  await act(async () => resolveCancellation({ data: {} }));
+  expect(getWithAuth).toHaveBeenCalledTimes(2);
+});
+
+test("declining the cancellation prompt leaves the reservation unchanged", async () => {
+  getWithAuth.mockResolvedValue({ data: [{
+    id: 35,
+    venue_name: "Unchanged Bistro",
+    date: "2099-05-01",
+    time: "18:30:00",
+    starts_at: "2099-05-01T18:30:00Z",
+    guests: 2,
+    status: "pending",
+  }] });
+  window.confirm = jest.fn(() => false);
+  await renderPage(<MyReservationsPage />);
+  await screen.findByText(/Unchanged Bistro/);
+
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Cancel" })));
+
+  expect(postWithAuth).not.toHaveBeenCalled();
+  expect(getWithAuth).toHaveBeenCalledTimes(1);
+  expect(screen.getByText("Status: Pending")).toBeInTheDocument();
+});
+
 test("reservation form creates a booking with selected slot and submitted guest details", async () => {
   getWithAuth.mockImplementation((url) => {
     if (url === "/api/v1/venues/7/") {

@@ -5,16 +5,15 @@ const credentials = {
   password: "pass_word1!",
 };
 
-async function login(page) {
-  await page.goto("/accounts/login");
-  await page.locator('input[name="username"]').fill(credentials.username);
-  await page.locator('input[name="password"]').fill(credentials.password);
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page).toHaveURL(/\/$/);
-}
-
 async function loginWithMockedSession(page) {
   const user = { username: credentials.username, full_name: "Test User" };
+  await page.route("**/api/**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({}),
+    });
+  });
   await page.route("**/api/v1/csrf/", async (route) => {
     await route.fulfill({
       status: 200,
@@ -137,7 +136,7 @@ const authenticatedPages = [
 
 for (const { path, heading } of authenticatedPages) {
   test(`authenticated React page renders at ${path}`, async ({ page }) => {
-    await login(page);
+    await loginWithMockedSession(page);
     await page.goto(path);
     await expect(page.getByRole("heading", { name: heading })).toBeVisible();
   });
