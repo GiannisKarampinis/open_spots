@@ -34,6 +34,21 @@ for (const { path, heading } of publicPages) {
   });
 }
 
+test("legacy password recovery submits the email and redirects to verification", async ({ page }) => {
+  await page.route("**/api/v1/accounts/password/recover/", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ challenge_id: "e2e-recovery", detail: "If the email exists, a verification code has been sent." }),
+    });
+  });
+
+  await page.goto("/accounts/password-recover/");
+  await page.locator('input[type="email"]').fill("ada@example.com");
+  await page.getByRole("button", { name: "Send Verification Code" }).click();
+  await expect(page).toHaveURL(/\/accounts\/confirm-code\/$/);
+});
+
 test("legacy profile page renders for the signed-in user", async ({ page }) => {
   await login(page);
   await page.goto("/accounts/profile/");

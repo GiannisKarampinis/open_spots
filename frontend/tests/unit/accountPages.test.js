@@ -178,6 +178,41 @@ test("password recovery submits the email and continues to verification", async 
   expect(mockNavigate).toHaveBeenCalledWith("/accounts/verify-email");
 });
 
+test("password recovery does not navigate without a challenge id", async () => {
+  postWithCsrf.mockResolvedValue({ data: { detail: "Unexpected response." } });
+  await renderPage(<PasswordRecoverPage />);
+
+  await act(async () => {
+    fireEvent.change(screen.getByLabelText(/Email/), { target: { value: "ada@example.com" } });
+    fireEvent.submit(document.querySelector("form"));
+  });
+
+  expect(screen.getByText("Could not start password recovery.")).toBeInTheDocument();
+  expect(mockNavigate).not.toHaveBeenCalled();
+});
+
+test("password recovery clears pending redirects when the page unmounts", async () => {
+  jest.useFakeTimers();
+  postWithCsrf.mockResolvedValue({ data: { challenge_id: "recovery-challenge" } });
+  await renderPage(<PasswordRecoverPage />);
+
+  await act(async () => {
+    fireEvent.change(screen.getByLabelText(/Email/), { target: { value: "ada@example.com" } });
+    fireEvent.submit(document.querySelector("form"));
+  });
+
+  await act(async () => {
+    root.unmount();
+    root = null;
+  });
+
+  await act(async () => {
+    jest.advanceTimersByTime(2000);
+  });
+
+  expect(mockNavigate).not.toHaveBeenCalled();
+});
+
 test("password reset blocks mismatched passwords and submits matching passwords with proof", async () => {
   jest.useFakeTimers();
   rememberVerification({ challenge_id: "reset-challenge" });

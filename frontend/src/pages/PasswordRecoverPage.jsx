@@ -1,5 +1,5 @@
 import { rememberVerification } from "../utils/verification";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useToastMessage } from "../components/ToastProvider";
@@ -9,13 +9,23 @@ import { postWithCsrf } from "../utils/csrf";
 export default function PasswordRecoverPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const redirectTimeoutRef = useRef(null);
 
   const [email, setEmail] = useState("");
   const [message, setMessage] = useToastMessage("auto");
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const submit = async (event) => {
     event.preventDefault();
+    if (submitting) return;
 
     setSubmitting(true);
     setMessage("");
@@ -25,13 +35,19 @@ export default function PasswordRecoverPage() {
         email,
       });
 
-      rememberVerification(res.data);
+      const data = res?.data ?? {};
+      if (!data.challenge_id) {
+        setMessage(t("Could not start password recovery."));
+        return;
+      }
+
+      rememberVerification(data);
       setMessage(
-        res.data.detail ||
+        data.detail ||
           t("If the email exists, a verification code has been sent.")
       );
 
-      setTimeout(() => {
+      redirectTimeoutRef.current = setTimeout(() => {
         navigate("/accounts/verify-email");
       }, 700);
     } catch (err) {

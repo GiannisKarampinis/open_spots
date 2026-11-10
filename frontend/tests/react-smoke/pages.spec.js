@@ -107,6 +107,21 @@ for (const { path, heading } of publicPages) {
   });
 }
 
+test("React password recovery form submits and navigates to verification", async ({ page }) => {
+  await page.route("**/api/v1/accounts/password/recover/", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ challenge_id: "smoke-recovery", detail: "Verification code sent." }),
+    });
+  });
+
+  await page.goto("/accounts/password-recover");
+  await page.getByLabel("Email").fill("ada@example.com");
+  await page.getByRole("button", { name: "Send Verification Code" }).click();
+  await page.waitForURL(/\/accounts\/verify-email$/);
+});
+
 const authenticatedPages = [
   {
     path: "/accounts/profile",
