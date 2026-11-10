@@ -127,6 +127,9 @@ export default function MyReservationsPage() {
     setLoadError(false);
     setMessage("");
 
+    // Fetch reservations and handle stale/unmounted requests safely.
+    // If the request fails after this effect was cleaned up, ignore it.
+    // Otherwise surface the error and stop the loading spinner.
     loadReservations()
       .catch(() => {
         if (!active) return;
@@ -137,6 +140,8 @@ export default function MyReservationsPage() {
         if (active) setLoading(false);
       });
 
+    // Cleanup prevents state updates from a stale request when the component
+    // unmounts or before the effect reruns due to dependency changes.
     return () => {
       active = false;
     };
@@ -159,14 +164,20 @@ export default function MyReservationsPage() {
     [reservations, now]
   );
 
+  // Cancel a reservation, preventing duplicate actions while one cancel request is in flight.
   const cancelReservation = async (id) => {
+    // Ignore repeated clicks while another cancellation is already pending.
     if (cancellingId !== null) return;
+
+    // Confirm before making the destructive request.
     if (!window.confirm(t("Are you sure you want to cancel this reservation?"))) {
       return;
     }
 
+    // Mark the specific reservation as being cancelled to disable the button immediately.
     setCancellingId(id);
     try {
+      // Send the cancel request to the backend.
       const res = await postWithAuth(
         `/api/v1/reservations/${id}/cancel/`,
         {},
@@ -174,17 +185,22 @@ export default function MyReservationsPage() {
         { onUnauthenticated: () => navigate("/accounts/login?next=/venues/my-reservations") }
       );
 
+      // If the request was rejected/unauthorized, do not continue to refresh the list.
       if (!res) return;
 
       try {
+        // Refresh the reservation list so the UI reflects the cancelled state.
         await loadReservations();
       } catch {
+        // Refresh can fail after a successful cancel request; show a load error.
         setLoadError(true);
         setMessage(t("Could not load reservations."));
       }
     } catch {
+      // The cancellation request itself failed, so show an error message.
       setMessage(t("Could not cancel reservation."));
     } finally {
+      // Always clear the in-flight cancellation marker, regardless of success/failure.
       setCancellingId(null);
     }
   };
