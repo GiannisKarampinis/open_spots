@@ -133,6 +133,34 @@ test("signup verification stores authentication and follows the server redirect"
   expect(mockNavigate).toHaveBeenCalledWith(result.redirect_to);
 });
 
+test("verification page blocks render when no challenge is stored", async () => {
+  sessionStorage.clear();
+  await act(async () => root.render(<VerifyEmailPage />));
+  expect(axios.get).not.toHaveBeenCalled();
+  expect(screen.getByText("No pending verification was found. Please sign up or log in again.")).toBeInTheDocument();
+});
+
+test("verification page clears stale post-success redirects on unmount", async () => {
+  rememberVerification({ challenge_id: "resend-challenge" });
+  axios.get.mockResolvedValue({ data: { reason: VerificationReason.SIGNUP, remaining_seconds: 600 } });
+  postWithCsrf.mockResolvedValue({ data: { access: "access-token", user: { username: "member" }, redirect_to: "/venues/my-reservations" } });
+  await act(async () => root.render(<VerifyEmailPage />));
+  await act(async () => {
+    fireEvent.change(screen.getByPlaceholderText("Enter 6-digit code"), { target: { value: "123456" } });
+    fireEvent.submit(screen.getByText("Verify").closest("form"));
+  });
+
+  await act(async () => {
+    root.unmount();
+  });
+
+  await act(async () => {
+    jest.advanceTimersByTime(2000);
+  });
+
+  expect(mockNavigate).not.toHaveBeenCalledWith("/venues/my-reservations");
+});
+
 test("completed recovery resumes the password reset page with its stored proof", async () => {
   const { rememberResetToken } = require("../../src/utils/verification");
   rememberResetToken("existing-proof", "recovery-challenge");

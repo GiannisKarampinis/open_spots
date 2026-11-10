@@ -1,6 +1,6 @@
 import { VerificationReason } from "../utils/verificationReasons";
 import { getVerificationChallenge, getResetToken, clearVerification, rememberResetToken } from "../utils/verification";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import { clearStoredAuth, storeAuthResponse } from "../utils/auth";
@@ -11,8 +11,19 @@ import "../styles/auth.css";
 export default function VerifyEmailPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const redirectTimeoutRef = useRef(null);
   const [challengeId] = useState(getVerificationChallenge);
   const [, setMessage, , setMessageType] = useToastMessage("success");
+
+  useEffect(() => {
+    return () => {
+      // Prevent stale redirects if the user leaves this page before the success timer fires.
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleStatus = useCallback((data) => {
     if (data.verified && data.reason === VerificationReason.PASSWORD_RECOVERY && getResetToken()) {
       navigate("/accounts/reset-password");
@@ -20,14 +31,21 @@ export default function VerifyEmailPage() {
     }
     return false;
   }, [navigate]);
+
   const finishVerification = (data, reason) => {
+    if (!challengeId) {
+      setMessageType("error");
+      setMessage(t("No pending verification was found. Please sign up or log in again."));
+      return;
+    }
+
     if (data.reset_token) rememberResetToken(data.reset_token, challengeId);
     else clearVerification(challengeId);
     if (data.access || data.user) storeAuthResponse(data);
     else if (data.session_invalidated) clearStoredAuth();
     setMessageType("success");
     setMessage(data.detail || t("Email verified successfully."));
-    setTimeout(() => navigate(data.redirect_to ||
+    redirectTimeoutRef.current = setTimeout(() => navigate(data.redirect_to ||
       (reason === VerificationReason.PASSWORD_RECOVERY ? "/accounts/reset-password" : "/")), 700);
   };
   return <VerifyEmail_Core challengeId={challengeId} onVerified={finishVerification}

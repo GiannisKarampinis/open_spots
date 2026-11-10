@@ -67,6 +67,16 @@ export default function VerifyEmail_Core({ challengeId, onVerified, onCancelled,
 
   useEffect(() => {
     let cancelled = false;
+
+    if (!challengeId) {
+      setMessageType("error");
+      setMessage(statusError ? t(statusError) : t("No pending verification was found. Please sign up or log in again."));
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     axios.get("/api/v1/accounts/verification/status/", verificationConfig(challengeId))
       .then((res) => {
         if (cancelled || onStatus?.(res.data)) return;
@@ -116,6 +126,11 @@ export default function VerifyEmail_Core({ challengeId, onVerified, onCancelled,
   };
   const submit = async (event) => {
     event.preventDefault();
+    if (!challengeId) {
+      setMessageType("error");
+      setMessage(statusError ? t(statusError) : t("No pending verification was found. Please sign up or log in again."));
+      return;
+    }
     if (code.length !== CODE_LENGTH) {
       setMessageType("error");
       setMessage(t("Enter the 6-digit verification code."));
@@ -133,6 +148,11 @@ export default function VerifyEmail_Core({ challengeId, onVerified, onCancelled,
     } finally { setSubmitting(false); }
   };
   const resend = async () => {
+    if (!challengeId) {
+      setMessageType("error");
+      setMessage(statusError ? t(statusError) : t("No pending verification was found. Please sign up or log in again."));
+      return;
+    }
     setResending(true);
     setMessage("");
     try {
@@ -150,6 +170,11 @@ export default function VerifyEmail_Core({ challengeId, onVerified, onCancelled,
     } finally { setResending(false); }
   };
   const cancelVerification = async () => {
+    if (!challengeId) {
+      clearVerification();
+      onCancelled();
+      return;
+    }
     setSubmitting(true);
     try {
       await postWithCsrf("/api/v1/accounts/verification/cancel/", {}, verificationConfig(challengeId));
