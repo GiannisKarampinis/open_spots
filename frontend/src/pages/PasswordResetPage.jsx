@@ -1,6 +1,6 @@
 import { getRequiredFieldErrors, passwordsMatch } from "../utils/formValidation";
 import { getVerificationChallenge, getResetToken, clearVerification, verificationConfig } from "../utils/verification";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "../styles/password_reset.css";
@@ -10,6 +10,7 @@ import { useToastMessage } from "../components/ToastProvider";
 export default function PasswordResetPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const redirectTimeoutRef = useRef(null);
 
   const [challengeId] = useState(getVerificationChallenge);
   const [resetToken] = useState(getResetToken);
@@ -21,6 +22,15 @@ export default function PasswordResetPage() {
   const [message, setMessage, type, setType] = useToastMessage("success");
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    return () => {
+      // Prevent stale redirects if the user leaves this page before the success timer fires.
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const updateField = (event) => {
     setForm((current) => ({
       ...current,
@@ -30,6 +40,14 @@ export default function PasswordResetPage() {
 
   const submit = async (event) => {
     event.preventDefault();
+
+    // Ignore duplicate clicks and reject missing verification state before hitting the API.
+    if (submitting) return;
+    if (!challengeId || !resetToken) {
+      setType("error");
+      setMessage(t("Invalid or expired password recovery authorization."));
+      return;
+    }
 
     const requiredErrors = getRequiredFieldErrors(
       form,
@@ -58,18 +76,25 @@ export default function PasswordResetPage() {
         verificationConfig(challengeId)
       );
 
+      // Only clear verification after the server confirms the reset succeeded.
       clearVerification(challengeId);
       setType("success");
       setMessage(res.data.detail || t("Password reset successful."));
 
-      setTimeout(() => {
+      redirectTimeoutRef.current = setTimeout(() => {
         navigate("/accounts/login");
       }, 900);
     } catch (err) {
+      const data = err.response?.data || {};
+      const firstError =
+        data.detail ||
+        data.new_password1?.[0] ||
+        data.new_password2?.[0] ||
+        data.non_field_errors?.[0] ||
+        t("Could not reset your password.");
+
       setType("error");
-      setMessage(
-        err.response?.data?.detail || t("Could not reset your password.")
-      );
+      setMessage(firstError);
     } finally {
       setSubmitting(false);
     }

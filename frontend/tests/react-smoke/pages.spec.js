@@ -122,6 +122,30 @@ test("React password recovery form submits and navigates to verification", async
   await page.waitForURL(/\/accounts\/verify-email$/);
 });
 
+test("React password reset form submits valid credentials and redirects to login", async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem("openSpots.verificationChallenge", "smoke-reset");
+    sessionStorage.setItem("openSpots.verificationResetToken", "smoke-reset-token");
+  });
+
+  await page.route("**/api/v1/accounts/password/reset/", async (route) => {
+    const body = JSON.parse(route.request().postData());
+    expect(body.reset_token).toBe("smoke-reset-token");
+    expect(route.request().headers()["x-verification-challenge"]).toBe("smoke-reset");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ detail: "Password reset successful." }),
+    });
+  });
+
+  await page.goto("/accounts/reset-password");
+  await page.locator('input[name="new_password1"]').fill("Strong-password-42");
+  await page.locator('input[name="new_password2"]').fill("Strong-password-42");
+  await page.getByRole("button", { name: "Change Password" }).click();
+  await page.waitForURL(/\/accounts\/login$/);
+});
+
 const authenticatedPages = [
   {
     path: "/accounts/profile",

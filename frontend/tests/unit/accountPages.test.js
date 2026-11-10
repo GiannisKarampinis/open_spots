@@ -213,6 +213,40 @@ test("password recovery clears pending redirects when the page unmounts", async 
   expect(mockNavigate).not.toHaveBeenCalled();
 });
 
+test("password reset blocks requests when verification state is missing", async () => {
+  sessionStorage.clear();
+  await renderPage(<PasswordResetPage />);
+
+  await act(async () => {
+    fireEvent.change(screen.getByLabelText("New password"), { target: { name: "new_password1", value: "new-password-123" } });
+    fireEvent.change(screen.getByLabelText("Confirm new password"), { target: { name: "new_password2", value: "new-password-123" } });
+    fireEvent.submit(document.querySelector("form"));
+  });
+
+  expect(screen.getByText("Invalid or expired password recovery authorization.")).toBeInTheDocument();
+  expect(postWithCsrf).not.toHaveBeenCalled();
+});
+
+test("password reset shows backend field-level password errors", async () => {
+  jest.useFakeTimers();
+  rememberVerification({ challenge_id: "reset-challenge" });
+  const { rememberResetToken } = require("../../src/utils/verification");
+  rememberResetToken("reset-proof", "reset-challenge");
+  postWithCsrf.mockRejectedValue({
+    response: { data: { new_password1: ["This password is too common."] } },
+  });
+  await renderPage(<PasswordResetPage />);
+
+  await act(async () => {
+    fireEvent.change(screen.getByLabelText("New password"), { target: { name: "new_password1", value: "password123" } });
+    fireEvent.change(screen.getByLabelText("Confirm new password"), { target: { name: "new_password2", value: "password123" } });
+    fireEvent.submit(document.querySelector("form"));
+  });
+
+  expect(screen.getByText("This password is too common.")).toBeInTheDocument();
+  expect(postWithCsrf).toHaveBeenCalledTimes(1);
+});
+
 test("password reset blocks mismatched passwords and submits matching passwords with proof", async () => {
   jest.useFakeTimers();
   rememberVerification({ challenge_id: "reset-challenge" });
@@ -240,6 +274,32 @@ test("password reset blocks mismatched passwords and submits matching passwords 
   );
   await act(async () => jest.advanceTimersByTime(900));
   expect(mockNavigate).toHaveBeenCalledWith("/accounts/login");
+});
+
+test("password reset clears pending redirects when the page unmounts", async () => {
+  jest.useFakeTimers();
+  rememberVerification({ challenge_id: "reset-challenge" });
+  const { rememberResetToken } = require("../../src/utils/verification");
+  rememberResetToken("reset-proof", "reset-challenge");
+  postWithCsrf.mockResolvedValue({ data: { detail: "Password reset successful." } });
+  await renderPage(<PasswordResetPage />);
+
+  await act(async () => {
+    fireEvent.change(screen.getByLabelText("New password"), { target: { name: "new_password1", value: "new-password-123" } });
+    fireEvent.change(screen.getByLabelText("Confirm new password"), { target: { name: "new_password2", value: "new-password-123" } });
+    fireEvent.submit(document.querySelector("form"));
+  });
+
+  await act(async () => {
+    root.unmount();
+    root = null;
+  });
+
+  await act(async () => {
+    jest.advanceTimersByTime(2000);
+  });
+
+  expect(mockNavigate).not.toHaveBeenCalled();
 });
 
 test("about and reservation-pending pages render their primary content and return link", async () => {

@@ -49,6 +49,13 @@ test("legacy password recovery submits the email and redirects to verification",
   await expect(page).toHaveURL(/\/accounts\/confirm-code\/$/);
 });
 
+test("legacy password reset form is available without prior verification state", async ({ page }) => {
+  await page.goto("/accounts/reset-password/");
+  await expect(page.getByRole("heading", { name: "Reset Your Password" })).toBeVisible();
+  await expect(page.locator('input[name="new_password1"]')).toBeVisible();
+  await expect(page.locator('input[name="new_password2"]')).toBeVisible();
+});
+
 test("legacy profile page renders for the signed-in user", async ({ page }) => {
   await login(page);
   await page.goto("/accounts/profile/");
